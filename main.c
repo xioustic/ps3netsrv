@@ -102,7 +102,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.29 MOD"						// webMAN version
+#define WM_VERSION			"1.43.30 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -699,6 +699,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 
 	strcat(buffer,	"</head>"
 					"<body bgcolor=\"#101010\">"
+					"<div style=\"position:fixed;right:20px;bottom:10px;opacity:0.2\"><a href=\"#Top\">&#9650;</a></div>"
 					"<font face=\"Courier New\"><b>");
 
 #ifndef ENGLISH_ONLY
