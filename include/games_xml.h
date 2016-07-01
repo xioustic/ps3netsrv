@@ -77,9 +77,10 @@ static void add_launchpad_entry(char *tempstr, char *templn, const char *url, ch
 		sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
 						 "<desc>%s</desc>\n"
 						 "<url type=\"2\">%s/%s%s</url>\n"
-						 "<target type=\"u\">%s</target>\n"
-						 "<cntry agelmt=\"0\">all</cntry>\n"
-						 "<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
+						 "<target type=\"u\">%s</target>\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
+
+		strcat(tempstr, "<cntry agelmt=\"0\">all</cntry>\n"
+						"<lang>all</lang></mtrl>\n\n");
 
 		uint64_t size = strlen(tempstr);
 		cellFsWrite(fd, tempstr, size, &size);
@@ -147,13 +148,8 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 	if(p) {if(ISDIGIT(p[2])) skey[6]=p[2]; if(ISDIGIT(p[3])) skey[6]=p[3];} // sort by CD#
 	else
 	{
-		u16 tlen = strlen(templn); if(tlen > 64) tlen = 64;
-		for(u16 i = 5; i < tlen; i++)
-		{
-			if(templn[i+1]=='[') break;
-			if(templn[i]==' ') {skey[6]=templn[++i]; break;} // sort by 2nd word
-			//if(ISDIGIT(templn[i])) {skey[6]=templn[i]; break;} // sort by game number (if possible)
-		}
+		u16 tlen = strlen(templn), i = 5; if(tlen > 64) tlen = 64;
+		while(i < tlen) {if(ISDIGIT(templn[i])) {skey[6]=templn[i]; break;} else i++;} // sort by game number (if possible)
 	}
 
 	u16 xlen = strlen(tempstr);

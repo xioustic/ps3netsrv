@@ -1,54 +1,54 @@
 #ifndef __SCSI_H__
 #define __SCSI_H__
 
-#define SCSI_CMD_TEST_UNIT_READY				0x00
-#define SCSI_CMD_REQUEST_SENSE					0x03
-#define SCSI_CMD_FORMAT_UNIT					0x04
-#define SCSI_CMD_FORMAT_INQUIRY					0x12
-#define SCSI_CMD_START_STOP_UNIT				0x1B
+#define SCSI_CMD_TEST_UNIT_READY		0x00
+#define SCSI_CMD_REQUEST_SENSE			0x03
+#define SCSI_CMD_FORMAT_UNIT			0x04
+#define SCSI_CMD_FORMAT_INQUIRY			0x12
+#define SCSI_CMD_START_STOP_UNIT		0x1B
 #define SCSI_CMD_PREVENT_ALLOW_MEDIUM_REMOVAL	0x1E
-#define SCSI_CMD_READ_FORMAT_CAPACITIES			0x23
-#define SCSI_CMD_READ_CAPACITY					0x25
-#define SCSI_CMD_READ_10						0x28
-#define SCSI_CMD_WRITE_10						0x2A
-#define SCSI_CMD_SEEK_10						0x2B
-#define SCSI_CMD_WRITE_AND_VERIFY_10			0x2E
-#define SCSI_CMD_VERIFY_10						0x2F
-#define SCSI_CMD_SYNCHRONIZE_CACHE				0x35
-#define SCSI_CMD_WRITE_BUFFER					0x3B
-#define SCSI_CMD_READ_BUFFER					0x3C
-#define SCSI_CMD_READ_TOC_PMA_ATIP				0x43
-#define SCSI_CMD_GET_CONFIGURATION				0x46
+#define SCSI_CMD_READ_FORMAT_CAPACITIES		0x23
+#define SCSI_CMD_READ_CAPACITY			0x25
+#define SCSI_CMD_READ_10			0x28
+#define SCSI_CMD_WRITE_10			0x2A
+#define SCSI_CMD_SEEK_10			0x2B
+#define SCSI_CMD_WRITE_AND_VERIFY_10		0x2E
+#define SCSI_CMD_VERIFY_10			0x2F
+#define SCSI_CMD_SYNCHRONIZE_CACHE		0x35
+#define SCSI_CMD_WRITE_BUFFER			0x3B
+#define SCSI_CMD_READ_BUFFER			0x3C
+#define SCSI_CMD_READ_TOC_PMA_ATIP		0x43
+#define SCSI_CMD_GET_CONFIGURATION		0x46
 #define SCSI_CMD_GET_EVENT_STATUS_NOTIFICATION	0x4A
-#define SCSI_CMD_READ_DISC_INFORMATION			0x51
-#define SCSI_CMD_READ_TRACK_INFORMATION			0x52
-#define SCSI_CMD_RESERVE_TRACK					0x53
-#define SCSI_CMD_SEND_OPC_INFORMATION			0x54
-#define SCSI_CMD_MODE_SELECT_10					0x55
-#define SCSI_CMD_REPAIR_TRACK					0x58
-#define SCSI_CMD_MODE_SENSE_10					0x5A
-#define SCSI_CMD_CLOSE_TRACK_SESSION			0x5B
-#define SCSI_CMD_READ_BUFFER_CAPACITY			0x5C
-#define SCSI_CMD_SEND_CUE_SHEET					0x5D
-#define SCSI_CMD_REPORT_LUNS					0xA0
-#define SCSI_CMD_BLANK							0xA1
-#define SCSI_CMD_SECURITY_PROTOCOL_IN			0xA2
-#define SCSI_CMD_SEND_KEY						0xA3
-#define SCSI_CMD_REPORT_KEY						0xA4
-#define SCSI_CMD_LOAD_UNLOAD_MEDIUM				0xA6
-#define SCSI_CMD_SET_READ_AHEAD					0xA7
-#define SCSI_CMD_READ_12						0xA8
-#define SCSI_CMD_WRITE_12						0xAA
-#define SCSI_CMD_READ_MEDIA_SERIAL_NUMBER		0xAB
-#define SCSI_CMD_GET_PERFORMANCE				0xAC
-#define SCSI_CMD_READ_DISC_STRUCTURE			0xAD
-#define SCSI_CMD_SECURITY_PROTOCOL_OUT			0xB5
-#define SCSI_CMD_SET_STREAMING					0xB6
-#define SCSI_CMD_READ_CD_MSF					0xB9
-#define SCSI_CMD_SET_CD_SPEED					0xBB
-#define SCSI_CMD_MECHANISM_STATUS				0xBD
-#define SCSI_CMD_READ_CD 						0xBE
-#define SCSI_CMD_SEND_DISC_STRUCTURE			0xBF
+#define SCSI_CMD_READ_DISC_INFORMATION		0x51
+#define SCSI_CMD_READ_TRACK_INFORMATION		0x52
+#define SCSI_CMD_RESERVE_TRACK			0x53
+#define SCSI_CMD_SEND_OPC_INFORMATION		0x54
+#define SCSI_CMD_MODE_SELECT_10			0x55
+#define SCSI_CMD_REPAIR_TRACK			0x58
+#define SCSI_CMD_MODE_SENSE_10			0x5A
+#define SCSI_CMD_CLOSE_TRACK_SESSION		0x5B
+#define SCSI_CMD_READ_BUFFER_CAPACITY		0x5C
+#define SCSI_CMD_SEND_CUE_SHEET			0x5D
+#define SCSI_CMD_REPORT_LUNS			0xA0
+#define SCSI_CMD_BLANK				0xA1
+#define SCSI_CMD_SECURITY_PROTOCOL_IN		0xA2
+#define SCSI_CMD_SEND_KEY			0xA3
+#define SCSI_CMD_REPORT_KEY			0xA4
+#define SCSI_CMD_LOAD_UNLOAD_MEDIUM		0xA6
+#define SCSI_CMD_SET_READ_AHEAD			0xA7
+#define SCSI_CMD_READ_12			0xA8
+#define SCSI_CMD_WRITE_12			0xAA
+#define SCSI_CMD_READ_MEDIA_SERIAL_NUMBER	0xAB
+#define SCSI_CMD_GET_PERFORMANCE		0xAC
+#define SCSI_CMD_READ_DISC_STRUCTURE		0xAD
+#define SCSI_CMD_SECURITY_PROTOCOL_OUT		0xB5
+#define SCSI_CMD_SET_STREAMING			0xB6
+#define SCSI_CMD_READ_CD_MSF			0xB9
+#define SCSI_CMD_SET_CD_SPEED			0xBB
+#define SCSI_CMD_MECHANISM_STATUS		0xBD
+#define SCSI_CMD_READ_CD 			0xBE
+#define SCSI_CMD_SEND_DISC_STRUCTURE		0xBF
 
 enum DvdBookType
 {
@@ -62,7 +62,7 @@ enum DvdBookType
 	BOOKTYPE_DVDPRW = 9,
 	BOOKTYPE_DVDPR,
 	BOOKTYPE_DVDPRWDL = 13,
-	BOOKTYPE_DVDPRDL
+	BOOKTYPE_DVDPRDL	
 };
 
 typedef struct _ScsiCmdTestUnitReady
@@ -72,7 +72,7 @@ typedef struct _ScsiCmdTestUnitReady
 	uint8_t control;
 } __attribute__((packed)) ScsiCmdTestUnitReady;
 
-enum
+enum 
 {
 	FORMAT_TOC,
 	FORMAT_SESSION_INFO,
@@ -90,7 +90,7 @@ typedef struct _ScsiCmdReadTocPmaAtip
 	uint8_t reserved[3];
 	uint8_t track_session_num;
 	uint16_t alloc_length;
-	uint8_t control;
+	uint8_t control;	
 } __attribute__((packed)) ScsiCmdReadTocPmaAtip;
 
 typedef struct _ScsiTocResponse
@@ -217,7 +217,7 @@ typedef struct _ScsiReadDiscStructureFormat0Response
 	uint8_t end_sector[3];
 	uint8_t zero3;
 	uint8_t sector_num_layer0[3];
-	uint8_t reserved2;
+	uint8_t reserved2;	
 } __attribute__((packed)) ScsiReadDiscStructureFormat0Response;
 
 static inline void lba_to_msf(uint64_t lba, uint8_t *m, uint8_t *s, uint8_t *f)
@@ -229,7 +229,7 @@ static inline void lba_to_msf(uint64_t lba, uint8_t *m, uint8_t *s, uint8_t *f)
 
 static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
 {
-	uint64_t lba = m;
+	uint64_t lba = m;		
 	lba = (lba*60)+s;
 	lba = (lba*75)+f;
 	return lba;
@@ -239,7 +239,7 @@ static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
 
 static const char *get_scsi_cmd_name(uint8_t cmd) __attribute__((unused));
 
-static const char *get_scsi_cmd_name(uint8_t cmd)
+static const char *get_scsi_cmd_name(uint8_t cmd) 
 {
 	static const char *cmd_str[0x100] =
 	{
@@ -260,7 +260,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL, /* 0x10 */
-		NULL,
+		NULL, 
 		"INQUIRY",
 		NULL,
 		NULL,
@@ -290,7 +290,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		"WRITE AND VERIFY (10)",
-		"VERIFY (10)",
+		"VERIFY (10)", 
 		NULL, /* 0x30 */
 		NULL,
 		NULL,
@@ -354,7 +354,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL,
+		NULL, 
 		NULL, /* 0x70 */
 		NULL,
 		NULL,
@@ -424,7 +424,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		"SECUIRTY PROTOCOL OUT",
+		"SECUIRTY PROTOCOL OUT", 
 		"SET STREAMING",
 		NULL,
 		NULL,
@@ -498,9 +498,9 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL,
+		NULL,		
 	};
-
+	
 	return cmd_str[cmd];
 }
 

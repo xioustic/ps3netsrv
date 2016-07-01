@@ -18,15 +18,15 @@ extern "C" {
 
 #define MAX_PATH		0x420
 
-#define ATA_HDD				0x101000000000007ULL
-#define BDVD_DRIVE			0x101000000000006ULL
+#define ATA_HDD			0x101000000000007ULL
+#define BDVD_DRIVE		0x101000000000006ULL
 #define PATA0_HDD_DRIVE		0x101000000000008ULL
 #define PATA0_BDVD_DRIVE	BDVD_DRIVE
 #define PATA1_HDD_DRIVE		ATA_HDD
 #define PATA1_BDVD_DRIVE	0x101000000000009ULL
 #define BUILTIN_FLASH		0x100000000000001ULL
 #define MEMORY_STICK		0x103000000000010ULL
-#define SD_CARD				0x103000100000010ULL
+#define SD_CARD			0x103000100000010ULL
 #define COMPACT_FLASH		0x103000200000010ULL
 
 #define USB_MASS_STORAGE_1(n)	(0x10300000000000AULL+n) /* For 0-5 */
@@ -42,7 +42,7 @@ extern "C" {
 #define DEVICE_TYPE_PSX_CD	0xFF50
 #define DEVICE_TYPE_BDROM	0x40
 #define DEVICE_TYPE_BDMR_SR	0x41 /* Sequential record */
-#define DEVICE_TYPE_BDMR_RR 0x42 /* Random record */
+#define DEVICE_TYPE_BDMR_RR 	0x42 /* Random record */
 #define DEVICE_TYPE_BDMRE	0x43
 #define DEVICE_TYPE_DVD		0x10 /* DVD-ROM, DVD+-R, DVD+-RW etc, they are differenced by booktype field in some scsi command */
 #define DEVICE_TYPE_CD		0x08 /* CD-ROM, CD-DA, CD-R, CD-RW, etc, they are differenced somehow with scsi commands */
