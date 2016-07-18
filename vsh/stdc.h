@@ -21,7 +21,7 @@ extern uint64_t stdc_FEFBE065;  // _Stderr
 */
 
 
-
+/*  
 extern float stdc_00FDE072(float x, float y);                                         // f_powf()
 #define f_powf stdc_00FDE072
 
@@ -504,10 +504,10 @@ extern int stdc_EE303936(double);                                               
 
 extern int stdc_EF110B6B(const char *path);                                           // unlink()
 #define unlink stdc_EF110B6B
-
+*/
 extern wchar_t *stdc_F06EED36(wchar_t *ptr, wchar_t wc, size_t num);                  // wmemset()
 #define wmemset stdc_F06EED36
-
+/*
 extern int stdc_F0776A44(const wchar_t *wcs1, const wchar_t *wcs2);                   // wcscmp()
 #define wcscmp stdc_F0776A44
 
@@ -550,14 +550,15 @@ extern long int stdc_FBB4047A(float x);                                         
 extern char *stdc_FC0428A6(const char *s);                                            // strdup()
 #define strdup stdc_FC0428A6
 
+*/
 extern size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max);              // mbstowcs()
 #define mbstowcs stdc_FCAC2E8E
-
+/*
 extern float stdc_FCF08193(float x);                                                  // expf()
 #define expf stdc_FCF08193
 
 extern int stdc_FE88E97E(FILE *stream, const char *fmt, ...);                         // fscanf()
 #define fscanf stdc_FE88E97E
-
+*/
 
 #endif // __STDC_H__ 

@@ -765,7 +765,7 @@ static void setup_form(char *buffer, char *templn)
 
 	strcat(buffer,  HTML_RED_SEPARATOR
 					"<a href=\"http://github.com/aldostools/webMAN-MOD/releases\">webMAN-MOD - Latest version of webMAN-MOD on Github</a><br>"
-					"<a href=\"http://www.psx-place.com/forum/showthread.php?t=27\">webMAN-MOD - Main thread of webMAN-MOD on Psx-place</a><br>");
+					"<a href=\"http://www.psx-place.com/threads/webman-mod-general-information-thread.27/\">webMAN-MOD - Main thread of webMAN-MOD on Psx-place</a><br>");
 
 /*
 	#define VSH_GCM_OBJ			0x70A8A8 // 4.53cex

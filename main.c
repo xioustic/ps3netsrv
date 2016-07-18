@@ -102,7 +102,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.30 MOD"						// webMAN version
+#define WM_VERSION			"1.43.31 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -452,7 +452,6 @@ static void set_buffer_sizes(int footprint);
 static void waitfor(char *path, uint8_t timeout);
 static void show_msg(char* msg);
 
-
 #ifdef COBRA_ONLY
 static void select_ps1emu(void);
 #endif
@@ -615,6 +614,10 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 #include "include/_mount.h"
 #include "include/netserver.h"
 
+#ifdef PKG_HANDLER
+ #include "include/pkg_handler.h"
+#endif
+
 static void http_response(int conn_s, char *header, char *param, int code, char *msg)
 {
 	if(code == 202)
@@ -668,7 +671,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 					".list{display:inline;}"
 					"input:focus{border:2px solid #0099FF;}"
 					".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
-					"#rxml,#rhtm,#rcpy{position:absolute;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear, 0 0, 0 100%, color-stop(0, #999), color-stop(0.02, #666), color-stop(1, #222));background-image:-moz-linear-gradient(top, #999, #666 2%, #222);display:none;}"
+					"#rxml,#rhtm,#rcpy{position:absolute;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
 					"body,a.s,td,th{color:#F0F0F0;white-space:nowrap;");
 /*
 	if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
@@ -862,10 +865,13 @@ static void handleclient(u64 conn_s_p)
 
 	sys_net_sockinfo_t conn_info_main;
 
-
 #ifdef WM_REQUEST
 	struct CellFsStat buf;
 	u8 wm_request=(cellFsStat((char*)WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
+
+#ifdef PKG_HANDLER
+	wmget = (wm_request > 0);
+#endif
 
 	if(!wm_request)
 #endif
@@ -905,7 +911,7 @@ again3:
 
 	sys_addr_t sysmem = 0;
 
-	u8 is_binary = 0, served=0;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
+	u8 is_binary = 0, served = 0;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	u64 c_len = 0;
 	char cmd[16], header[HTML_RECV_SIZE];
 
@@ -1023,7 +1029,7 @@ again3:
 			if(islike(param, "/cpursx_ps3"))
 			{
 				char *cpursx = header; get_cpursx(cpursx);
-/*              // prevents flickering but cause error 80710336 in ps3 browser (silk mode)
+/*				// prevents flickering but cause error 80710336 in ps3 browser (silk mode)
 				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
 								"<script>parent.document.getElementById('lbl_cpursx').innerHTML = \"%s\";</script>",
 								"/cpursx_ps3", cpursx);
@@ -1043,6 +1049,48 @@ again3:
 				loading_html--;
 				sys_ppu_thread_exit(0);
 			}
+
+#ifdef PKG_HANDLER
+			if(islike(param, "/download.ps3"))
+			{
+				char msg[MAX_PATH_LEN + MAX_PATH_LEN]  = "";
+
+				download_file(param, wmget, msg);
+
+				#ifdef WM_REQUEST
+				if(wmget) sclose(&conn_s);
+				else
+				#endif
+				{
+					http_response(conn_s, header, param, 200, msg);
+				}
+
+				show_msg((char *)msg);
+
+				loading_html--;
+				sys_ppu_thread_exit(0);
+			}
+
+			if(islike(param, "/install.ps3"))
+			{
+				char msg[MAX_PATH_LEN] = "";  //////Conversion Debug msg
+
+				installPKG(param + 12, msg);
+
+				#ifdef WM_REQUEST
+				if(wmget) sclose(&conn_s);
+				else
+				#endif
+				{
+					http_response(conn_s, header, param, 200, msg);
+				}
+
+				show_msg((char *)msg);
+
+				loading_html--;
+				sys_ppu_thread_exit(0);
+			}
+#endif // #ifdef PKG_HANDLER
 
 #ifdef PS3_BROWSER
 			if(islike(param, "/browser.ps3"))
@@ -2183,7 +2231,7 @@ html_response:
 					if(mount_ps3 || forced_mount || islike(param, "/mount.ps3") || islike(param, "/copy.ps3"))
 #endif
 					{
-                        game_mount(buffer, templn, param, tempstr, is_binary, mount_ps3, forced_mount);
+						game_mount(buffer, templn, param, tempstr, is_binary, mount_ps3, forced_mount);
 					}
 					else
 					{
@@ -2545,3 +2593,4 @@ int wwwd_stop(void)
 
 	return SYS_PRX_STOP_OK;
 }
+

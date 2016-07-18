@@ -277,11 +277,6 @@ static char *translate_path(char *path, int del, int *viso)
 	#endif
 #endif
 
-	if(!strstr(p, ".PNG"))
-	{
-		printf("%s\n", p);
-	}
-
 	if (del)
 	{
 		free(path);
@@ -394,6 +389,7 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 	}
 
 	DPRINTF("open %s\n", filepath);
+	printf("open %s\n", filepath);
 
 	if (viso == VISO_NONE)
 	{
@@ -401,8 +397,8 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 	}
 	else
 	{
+		printf("building virtual iso...\n");
 		client->ro_file = new VIsoFile((viso == VISO_PS3));
-        printf("building virtual iso...\n");
 	}
 
 	if (client->ro_file->open(filepath, O_RDONLY) < 0)
@@ -915,14 +911,6 @@ static int process_open_dir_cmd(client_t *client, netiso_open_dir_cmd *cmd)
 
 	client->dirpath = NULL;
 
-	file_stat_t st;
-	if (stat_file(dirpath, &st) < 0)
-	{
-		DPRINTF("open dir error on \"%s\"\n", dirpath);
-		result.open_result = BE32(-1);
-		return -1;
-	}
-
 	client->dir = opendir(dirpath);
 	if (!client->dir)
 	{
@@ -936,7 +924,9 @@ static int process_open_dir_cmd(client_t *client, netiso_open_dir_cmd *cmd)
 	}
 
 	if (!client->dirpath)
+	{
 		free(dirpath);
+	}
 
 	ret = send(client->s, (char *)&result, sizeof(result), 0);
 	if (ret != sizeof(result))
@@ -1480,7 +1470,7 @@ int main(int argc, char *argv[])
 	uint32_t whitelist_end = 0;
 	uint16_t port = NETISO_PORT;
 
-	printf("ps3netsrv build 20151215.1 (mod by aldostools)\n\n");
+	printf("ps3netsrv build 20160709.1 (mod by aldostools)\n");
 
 #ifndef WIN32
 	if (sizeof(off_t) < 8)
@@ -1512,7 +1502,9 @@ int main(int argc, char *argv[])
 			break;
 	}
 
-    root_len = strlen(root_directory);
+	printf("Path: %s\n\n", root_directory);
+
+	root_len = strlen(root_directory);
 
 	if (root_len == 0)
 	{

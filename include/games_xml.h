@@ -526,6 +526,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 		}
 
 		if(( f0<7 || f0>NTFS) && file_exists(drives[f0])==false) continue;
+//
+		if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
 
 		ns=-2; uprofile=profile;
 		for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
@@ -567,11 +569,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-			if(ns==-2 && is_net) ns=connect_to_remote_server(f0-7);
+			if(is_net && (ns<0)) ns = connect_to_remote_server(f0-7);
  #endif
 #endif
 			if(is_net && (ns<0)) break;
-
 //
 			bool ls; u8 li, subfolder; li=subfolder=0; ls=false; // single letter folder
 
@@ -580,6 +581,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 		read_folder_xml:
 //
 #ifndef LITE_EDITION
+ #ifdef COBRA_ONLY
 			if(is_net)
 			{
 				char ll[4]; if(li) sprintf(ll, "/%c", '@'+li); else ll[0] = NULL;
@@ -588,6 +590,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 				if(li==99) sprintf(param, "/%s %s", paths[f1], AUTOPLAY_TAG);
 			}
 			else
+ #endif
 #endif
 			{
 				if(f0==NTFS) //ntfs
@@ -600,7 +603,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-			if(is_net && open_remote_dir(ns, param, &abort_connection) < 0) goto continue_reading_folder_xml; //continue;
+				if(is_net && open_remote_dir(ns, param, &abort_connection) < 0) goto continue_reading_folder_xml; //continue;
  #endif
 #endif
 			//led(YELLOW, ON);
@@ -627,6 +630,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 #endif
 				if(!is_net && file_exists( param) == false) goto continue_reading_folder_xml; //continue;
 				if(!is_net && cellFsOpendir( param, &fd) != CELL_FS_SUCCEEDED) goto continue_reading_folder_xml; //continue;
+
+
 
 				while((!is_net && cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
 #ifdef COBRA_ONLY
@@ -810,6 +815,7 @@ next_xml_entry:
 //////////////////////////////
 					}
 				}
+
 				if(!is_net) cellFsClosedir(fd);
 
 #ifdef COBRA_ONLY
@@ -818,7 +824,6 @@ next_xml_entry:
  #endif
 #endif
 			}
-
 //
 continue_reading_folder_xml:
 
@@ -828,6 +833,7 @@ continue_reading_folder_xml:
 		}
 		if(is_net && ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
 	}
+
 
 	if( !(webman_config->nogrp))
 	{

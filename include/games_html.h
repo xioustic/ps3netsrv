@@ -408,10 +408,10 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 
 	if(data[v3_entry].is_directory && IS_ISO_FOLDER)
 	{
-		char iso_ext[4][4] = {"iso", "bin", "mdf", "img"};
-		for(u8 e = 0; e < 5; e++)
+		char iso_ext[8][4] = {"iso", "ISO", "bin", "BIN", "mdf", "MDF", "img", "IMG"};
+		for(u8 e = 0; e < 10; e++)
 		{
-			if(e >= 4) return FAILED;
+			if(e >= 8) return FAILED;
 
 			sprintf(tempstr, "%s/%s/%s.%s", param, data[v3_entry].name, data[v3_entry].name, iso_ext[e]);
 			if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)==0) break;
@@ -629,6 +629,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 			if(( f0<7 || f0>NTFS) && file_exists(drives[f0])==false) continue;
 //
+			if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+
 			ns=-2; uprofile=profile; default_icon=0;
 			for(u8 f1=filter1; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 			{
@@ -674,11 +676,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-				if(ns==-2 && is_net) ns=connect_to_remote_server(f0-7);
+				if(is_net && (ns<0)) ns = connect_to_remote_server(f0-7);
  #endif
 #endif
 				if(is_net && (ns<0)) break;
-
 //
 				bool ls; u8 li, subfolder; li=subfolder=0; ls=false; // single letter folder
 
@@ -687,6 +688,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		read_folder_html:
 //
 #ifndef LITE_EDITION
+ #ifdef COBRA_ONLY
 				if(is_net)
 				{
 					char ll[4]; if(li) sprintf(ll, "/%c", '@'+li); else ll[0] = NULL;
@@ -695,6 +697,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					if(li==99) sprintf(param, "/%s %s", paths[f1], AUTOPLAY_TAG);
 				}
 				else
+ #endif
 #endif
 				{
 					if(f0==NTFS) //ntfs
@@ -710,6 +713,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(is_net && open_remote_dir(ns, param, &abort_connection) < 0) goto continue_reading_folder_html; //continue;
  #endif
 #endif
+
+
 				CellFsDirent entry;
 				u64 read_e;
 				u8 is_iso=0;
@@ -946,8 +951,10 @@ next_html_entry:
 				if(data2) sys_memory_free(data2);
  #endif
 #endif
+
 //
 	continue_reading_folder_html:
+
 				if((uprofile>0) && (f1<9)) {subfolder=uprofile=0; goto read_folder_html;}
 				if(is_net && ls && li<27) {li++; goto subfolder_letter_html;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_html;}
 //

@@ -73,6 +73,10 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	}
 #endif
 
+#ifdef PKG_HANDLER
+	else if( !strcmp(ext, ".pkg") || !strcmp(ext, ".PKG") )
+			sprintf(fsize, "<a href=\"/install.ps3%s\">%'llu %s</a>", templn, sz, sf);
+#endif
 
 #ifdef COPY_PS3
 	else if(   !strcmp(ext, ".pkg") || !strcmp(ext, ".p3t") || !extcmp(name, ".edat", 5)
@@ -85,7 +89,7 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 			|| !memcmp(name, "lv2_kernel", 10)
  #endif
 			)
-    		sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
+			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
 #endif //#ifdef COPY_PS3
 
 

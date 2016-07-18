@@ -249,7 +249,7 @@ body,ul,li {
 	background-image:-moz-linear-gradient(top, #999, #666666 2%, #222);
 	background-image:-o-linear-gradient(top, #999, #666666 2%, #222);
 	padding:0;
-	border:5px solid #c0c0c0;
+	border:5px solid #c0c0c0; border-radius:15px;
 	color: white;
 	z-index: 99999;
 }
@@ -1832,22 +1832,16 @@ var SwipeView = (function (window, document) {
 				var elem;
 
 				for(var i=0; i<numberOfImages; i++)
-					{
-						this.masterPages[i].style.opacity=0.5;
-						this.masterPages[i].style.top='20%';
+				{
+					this.masterPages[i].style.opacity=0.5;
+					this.masterPages[i].style.top='20%';
 
-						elem = document.getElementById('pic' + (this.currentMasterPage - i));
-						if(elem && elem.style.zoom!='60%') {elem.style.zoom='60%'; elem.style.top = '10%';}
+					elem = document.getElementById('pic' + i);
+					if(elem && elem.style.zoom!='60%') {elem.style.zoom='60%'; elem.style.top = '10%';}
 
-						elem = document.getElementById('pic' + (this.currentMasterPage + i));
-						if(elem && elem.style.zoom!='60%') {elem.style.zoom='60%'; elem.style.top = '10%';}
-
-						elem = document.getElementById('span' + (this.currentMasterPage - i));
-						if(elem) elem.style.display = 'none';
-
-						elem = document.getElementById('span' + (this.currentMasterPage + i));
-						if(elem) {elem.style.display = 'none';}
-					}
+					elem = document.getElementById('span' + i);
+					if(elem) elem.style.display = 'none';
+				}
 
 				this.masterPages[this.currentMasterPage].style.zoom='100%';
 				this.masterPages[this.currentMasterPage].style.top=0;
@@ -1962,7 +1956,7 @@ function navigate()
 </div>
 
 <div id="menu" style="display:none;">
-	<div id="header"><a id="nav-close" href="javascript:void(0)" onclick="hideMenu();"><span style="position:absolute;left:10px">&#9664;</span> webMAN MOD 1.43.30</a></div>
+	<div id="header"><a id="nav-close" href="javascript:void(0)" onclick="hideMenu();"><span style="position:absolute;left:10px">&#9664;</span> webMAN MOD 1.43.31</a></div>
 	<div id="wrapper-menu">
 		<div id="scroller">
 			<ul id="thelist">
