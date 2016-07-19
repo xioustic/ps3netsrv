@@ -17,7 +17,7 @@
 #define EXT_GDATA		1	// /extgd.ps3?status /extgd.ps3?enable /extgd.ps3?disable (external gameDATA)
 #define COPY_PS3		1	// /copy.ps3/<path>
 #define DEBUG_MEM		1	// /dump.ps3 / peek.lv1 / poke.lv1 / find.lv1 / peek.lv2 / poke.lv2 / find.lv2
-#define VIDEO_REC		1	// /videorec.ps3  start/stop video recording (in-game only)
+#define VIDEO_REC		1	// /videorec.ps3  start/stop video recording (in-game only) (thanks to mysis & 3141card)
 #define LOAD_PRX		1	// /loadprx.ps3?slot=n&prx=path/file.sprx  (load prx)
 #define FAKEISO 		1	// support .ntfs[BDFILE] (fake ISO)
 #define BDVD_REGION		1	// change BD/DVD region

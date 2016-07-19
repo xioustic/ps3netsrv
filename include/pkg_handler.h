@@ -20,8 +20,8 @@ static wchar_t pkg_durl[MAX_PATH_LEN];
 
 static bool wmget = false;
 
-#define DEFAULT_PKG_PATH 		"/dev_hdd0/packages/"
-#define INT_HDD_ROOT_PATH 		"/dev_hdd0/"
+#define DEFAULT_PKG_PATH		"/dev_hdd0/packages/"
+#define INT_HDD_ROOT_PATH		"/dev_hdd0/"
 
 static int LoadPluginById(int id, void *handler)
 {
@@ -68,7 +68,7 @@ static void installPKG_thread(void)
 	game_ext_interface->DoUnk34(pkg_path); // install PKG from path
 }
 
-static void download_file(char *param, bool wmget, char *msg)
+static void download_file(char *param, char *msg)
 {
 	char msg_durl[MAX_PATH_LEN] = "";   //////Conversion Debug msg
 	char msg_dpath[MAX_PATH_LEN] = "";  //////Conversion Debug msg
@@ -77,10 +77,12 @@ static void download_file(char *param, bool wmget, char *msg)
 
 	size_t conv_num_durl = 0;
 	size_t conv_num_dpath = 0;
-	size_t pdpath_len;
-	size_t pdurl_len;
+
 	size_t ptemp_len;
+	int pdurl_len;
+
 	size_t dparam_len;
+	int pdpath_len;
 
 	wmemset(pkg_dpath, 0, MAX_PATH_LEN);
 	wmemset(pkg_durl, 0, MAX_PATH_LEN); // Use wmemset from stdc.h instead of reinitialising wchar_t with a loop.
@@ -119,18 +121,18 @@ static void download_file(char *param, bool wmget, char *msg)
 
 		if(pdpath_len > 0) strncpy(pdpath, (const char *)param + 17, pdpath_len);
 
-		conv_num_durl = mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl,pdurl_len+1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
+		conv_num_durl = mbstowcs((wchar_t *)pkg_durl, (const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 
 	}
-	else if(islike(param+13, "?url=")) //
+	else if(islike(param + 13, "?url=")) //
 	{
-		pdurl_len=strlen(param)-18;
+		pdurl_len = strlen(param) - 18;
 		if((pdurl_len>0) && (pdurl_len<MAX_PATH_LEN))
 		{
-			pdpath_len=strlen((const char *)DEFAULT_PKG_PATH);
-			strncpy(pdpath,(const char *)DEFAULT_PKG_PATH,pdpath_len);
-			strncpy(pdurl,param+18,pdurl_len);
-			conv_num_durl = mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl,pdurl_len+1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
+			pdpath_len = strlen((const char *)DEFAULT_PKG_PATH);
+			strncpy(pdpath, (const char *)DEFAULT_PKG_PATH, pdpath_len);
+			strncpy(pdurl, param + 18, pdurl_len);
+			conv_num_durl = mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 		}
 		else
 		{
@@ -144,72 +146,29 @@ static void download_file(char *param, bool wmget, char *msg)
 
 	if(conv_num_durl > 0)
 	{
-		if((pdpath_len > 0) && (pdpath_len < MAX_PATH_LEN) && isDir((const char *)pdpath))
+		conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
+		sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)DEFAULT_PKG_PATH);
+
+		if((pdpath_len > 0) && (pdpath_len < MAX_PATH_LEN) && (isDir((const char *)pdpath) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED))
 		{
-			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath,(const char *)pdpath,pdpath_len+1);
+			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)pdpath, pdpath_len + 1);
 			sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)pdpath);
 		}
-		else if((pdpath_len > 0) && (pdpath_len < MAX_PATH_LEN))
+		else if(isDir((const char *)DEFAULT_PKG_PATH) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
 		{
-			//Try to create the folder in proposed path
-			//if success set given path if failure set default path
-			if(cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
-			{
-				conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath,(const char *)pdpath,pdpath_len+1);
-				sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)pdpath);
-			}
-			else
-			{
-				if(isDir((const char *)DEFAULT_PKG_PATH))
-				{
-					conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-					sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)DEFAULT_PKG_PATH);
-				}
-				else
-				{
-					//create default dir
-					//if success set default path if failure use /dev_hdd0 & show message explaining error + download will be in /dev_hdd0/tmp/downloader
-					if(cellFsMkdir((const char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
-					{
-
-						conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-						sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)DEFAULT_PKG_PATH);
-					}
-					else
-					{
-						conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH) + 1);
-						sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)INT_HDD_ROOT_PATH);
-					}
-				}
-			}
+			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH) + 1);
+			sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)DEFAULT_PKG_PATH);
 		}
 		else
 		{
-			if(isDir((const char *)DEFAULT_PKG_PATH))
-			{
-				conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-				sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)DEFAULT_PKG_PATH);
-			}
-			else
-			{
-				//create default dir
-				//if success set default path if failure use /dev_hdd0 & show message explaining error + download will be in /dev_hdd0/tmp/downloader
-				if(cellFsMkdir((char *)DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
-				{
-					conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-					sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)DEFAULT_PKG_PATH);
-				}
-				else
-				{
-					conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH)+1);
-					sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)INT_HDD_ROOT_PATH);
-				}
-			}
+			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)INT_HDD_ROOT_PATH, strlen((const char *)INT_HDD_ROOT_PATH) + 1);
+			sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)INT_HDD_ROOT_PATH);
 		}
 
 		if(conv_num_dpath > 0)
 		{
-			int ret=-1;
+			int ret = -1;
+
 			if (View_Find("webrender_plugin"))
 			{
 				ret = UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
