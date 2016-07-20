@@ -1055,7 +1055,7 @@ again3:
 			{
 				char msg[MAX_PATH_LEN + MAX_PATH_LEN]  = "";
 
-				download_file(header, msg);
+				download_file(strstr(header, "%") ? header : param, msg);
 
 				#ifdef WM_REQUEST
 				if(!wmget)

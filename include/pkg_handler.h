@@ -99,16 +99,16 @@ static void download_file(char *param, char *msg)
 
 		if(ptemp != NULL)
 		{
-				ptemp_len = strlen((const char *)ptemp);
-				pdurl_len = ptemp_len - 5;
-				if((pdurl_len > 0) && (pdurl_len < MAX_PATH_LEN))
-				{
-					strncpy(pdurl, ptemp + 5, pdurl_len);
-				}
-				else
-				{
-					goto end_download_process;
-				}
+			ptemp_len = strlen((const char *)ptemp);
+			pdurl_len = ptemp_len - 5;
+			if((pdurl_len > 0) && (pdurl_len < MAX_PATH_LEN))
+			{
+				strncpy(pdurl, ptemp + 5, pdurl_len);
+			}
+			else
+			{
+				goto end_download_process;
+			}
 		}
 		else
 		{
@@ -146,9 +146,6 @@ static void download_file(char *param, char *msg)
 
 	if(conv_num_durl > 0)
 	{
-		conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)DEFAULT_PKG_PATH, strlen((const char *)DEFAULT_PKG_PATH)+1);
-		sprintf(msg_dpath, (const char *)"To: %s\n", (const char *)DEFAULT_PKG_PATH);
-
 		if((pdpath_len > 0) && (pdpath_len < MAX_PATH_LEN) && (isDir((const char *)pdpath) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED))
 		{
 			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)pdpath, pdpath_len + 1);
