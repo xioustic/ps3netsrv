@@ -63,7 +63,6 @@ static void urlenc(char *dst, char *src, u8 rel_mode)
 			dst[j++] = h2a((unsigned char)src[i]>>4);
 			dst[j] = h2a(src[i] & 0xf);
 		}
-		else if(src[i]==34) {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '2';}
 		else if(src[i]=='"') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '2';}
 		else if(src[i]=='%') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '5';}
 		else if(src[i]=='&') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '6';}
