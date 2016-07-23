@@ -470,6 +470,14 @@ static void check_cover_folders(char *buffer)
 
 #ifndef ENGLISH_ONLY
 	if(!covers_exist[0]) {use_custom_icon_path = strstr(COVERS_PATH, "%s"); use_icon_region = strstr(COVERS_PATH, "%s/%s");} else {use_icon_region = use_custom_icon_path = false;}
+
+	// disable custom icon from web repository if network is disabled //
+	if(use_custom_icon_path && islike(COVERS_PATH, "http"))
+	{
+		char ip[ip_size] = "";
+		netctl_main_9A528B81(ip_size, ip);
+		if(ip[0] == NULL) use_custom_icon_path = false;
+	}
 #endif
 }
 

@@ -484,6 +484,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 	}
 #endif
 
+	check_cover_folders(tempstr);
+
 	int ns=-2; u8 uprofile=profile;
 
 	for(u8 f0=0; f0<16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"

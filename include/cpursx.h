@@ -235,7 +235,6 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	if (info.device == 0) strcpy(net_type, "LAN"); else
 	if (info.device == 1) strcpy(net_type, "WLAN");
 
-	int32_t ip_size = 0x10;
 	char ip[ip_size];
 	netctl_main_9A528B81(ip_size, ip);
 

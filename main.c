@@ -274,7 +274,8 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 
 #define FAILED		-1
 
-#define HTML_RECV_SIZE 2048
+#define HTML_RECV_SIZE	2048
+#define ip_size			0x10
 
 ////////////
 #ifdef COBRA_ONLY
