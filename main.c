@@ -670,6 +670,9 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 
 	strcat(buffer,	"a:active,a:active:hover,a:visited:hover,a:link:hover{color:#FFFFFF;}"
 					".list{display:inline;}"
+#ifdef PS3MAPI
+					".la{text-align:left;float:left}.ra{text-align:right;float:right;}"
+#endif
 					"input:focus{border:2px solid #0099FF;}"
 					".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
 					"#rxml,#rhtm,#rcpy{position:absolute;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
@@ -1201,7 +1204,7 @@ again3:
 						if(strstr(param, ".ps3/")) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param+12); vshmain_AE35CF2D(header, 0);} else
 						if(strstr(param, ".ps3$")) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->DoUnk6(param+13,0,0);}} else
 						if(strstr(param, ".ps3?")) {do_umount(false); vshmain_AE35CF2D((char*)param+13, 0);} else
-						vshmain_AE35CF2D((char*)param+13, 1);  // example: /browser.ps3*regcam:reg?   More examples: http://www.ps3devwiki.com/ps3/Xmb_plugin#Function_23
+						vshmain_AE35CF2D((char*)param+13, 1);  // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
 
 						show_msg((char*)param+13);
 					}

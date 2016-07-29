@@ -146,7 +146,7 @@ static void ps3mapi_home(char *buffer, char *templn)
 		//IDPS/PSID
 		if(version >= 0x0120)
 		{
-            ps3mapi_setidps(buffer, templn, (char*)" ");
+			ps3mapi_setidps(buffer, templn, (char*)" ");
 		}
 		else
 		{
@@ -200,7 +200,7 @@ static void ps3mapi_buzzer(char *buffer, char *templn, char *param)
 						HTML_BLU_SEPARATOR,
 						"PS3MAPI", "PS3 Commands", "Buzzer");
     else
-		sprintf(templn, "<td width=\"260\" style=\"text-align:left; float:left;\"><u>%s:</u><br>", "Buzzer");
+		sprintf(templn, "<td width=\"260\" class=\"la\"><u>%s:</u><br>", "Buzzer");
 	strcat(buffer, templn);
 
 	sprintf(templn, "<form id=\"buzzer\" action=\"/buzzer.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><br>"
@@ -238,7 +238,7 @@ static void ps3mapi_led(char *buffer, char *templn, char *param)
 						HTML_BLU_SEPARATOR,
 						"PS3MAPI", "PS3 Commands", "Led");
     else
-		sprintf(templn, "<td width=\"260\" style=\"text-align:left; float:left;\"><u>%s:</u><br>", "Led");
+		sprintf(templn, "<td width=\"260\" class=\"la\"><u>%s:</u><br>", "Led");
 
 	strcat(buffer, templn);
 
@@ -282,14 +282,14 @@ static void ps3mapi_notify(char *buffer, char *templn, char *param)
 						HTML_BLU_SEPARATOR,
 						"PS3MAPI", "PS3 Commands", "Notify");
 	else
-		sprintf(templn, "<tr><td style=\"text-align:left; float:left;\"><br><u>%s:</u><br><br>", "Notify");
+		sprintf(templn, "<tr><td class=\"la\"><br><u>%s:</u><br><br>", "Notify");
 
 	strcat(buffer, templn);
 
 	sprintf(templn, "<form action=\"/notify.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td style=\"text-align:left; float:left;\">"
+					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td class=\"la\">"
 					"<textarea name=\"msg\" cols=\"111\" rows=\"2\" maxlength=\"199\">%s</textarea></td></tr>"
-					"<tr><td style=\"text-align:right; float:right;\"><br><input type=\"submit\" value=\" %s \"/></td></tr></table></form>", msg, "Send");
+					"<tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr></table></form>", msg, "Send");
 
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR); else strcat(templn, "</td>");
 	strcat(buffer, templn);
@@ -321,12 +321,12 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 						"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">", "PS3MAPI", "PS3 Commands", "CFW syscall");
 	else
 		sprintf(templn, "<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-						"<tr><td style=\"text-align:left; float:left;\"><u>%s:</u><br><br></td></tr>", "CFW syscall");
+						"<tr><td class=\"la\"><u>%s:</u><br><br></td></tr>", "CFW syscall");
 
 	strcat(buffer, templn);
 
 	sprintf(templn, "<form id=\"syscall\" action=\"/syscall.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-					"<br><tr><td width=\"260\" style=\"text-align:left; float:left;\">");
+					"<br><tr><td width=\"260\" class=\"la\">");
 	strcat(buffer, templn);
 
 	int ret_val = -1; u8 sc_count; sc_count = 0;
@@ -351,7 +351,7 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 	if( ret_val != 0 )  {add_check_box("sc11", "1\" disabled=\"disabled", "[11]LV1 Peek", _BR_, true, buffer);}
 	else {/*ret_val = -1;*/ add_check_box("sc11", "1", "[11]LV1 Peek", _BR_, false, buffer);}
 
-	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" style=\"text-align:left; float:left;\">");
+	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" class=\"la\">");
 
 	ret_val = is_syscall_disabled(35);
 	if( ret_val != 0 )  add_check_box("sc35", "1\" disabled=\"disabled", "[35]Map Path", _BR_, true, buffer);
@@ -369,7 +369,7 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 	if( ret_val != 0 )  {add_check_box("sc1022", "1\" disabled=\"disabled", "[1022]PRX Loader", _BR_, true, buffer);}
 	else {/*ret_val = -1;*/ add_check_box("sc1022", "1", "[1022]PRX Loader", _BR_, false, buffer);}
 
-	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" style=\"text-align:left; float:left;\">");
+	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" class=\"la\">");
 
 	ret_val = is_syscall_disabled(200);
 	if( ret_val != 0 )  add_check_box("sc200", "1\" disabled=\"disabled", "[200]sys_dbg_read_process_memory", _BR_, true, buffer);
@@ -393,7 +393,7 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 				 add_check_box("scd", "1", "Disable Syscalls & Lock syscall 8"  , _BR_, false, buffer);
 #endif
 
-	sprintf(templn, "</td></tr><tr><td style=\"text-align:right; float:right;\"><br><input id=\"b\" type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Disable");
+	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input id=\"b\" type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Disable");
 	strcat(buffer, templn);
 
 	if(!is_ps3mapi_home && islike(param, "/syscall.ps3mapi")) {ps3mapi_syscall8(buffer, templn, param);}
@@ -433,7 +433,7 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 					HTML_BLU_SEPARATOR
 					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
 					"<form id=\"syscall8\" action=\"/syscall8.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-					"<br><tr><td style=\"text-align:left; float:left;\">",
+					"<br><tr><td class=\"la\">",
 					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "CFW syscall 8");
 	strcat(buffer, templn);
 	{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); ret_val = (int)p1;}
@@ -461,7 +461,7 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 	else
 		add_radio_button("mode", "4", "sc8_4", "Fully disabled (can't be re-enabled)", _BR_, false, buffer);
 
-	sprintf(templn, "</td></tr><tr><td style=\"text-align:right; float:right;\"><br><input type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Set");
+	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Set");
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR);
 	strcat(buffer, templn);
 }
@@ -473,6 +473,7 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 	u32 pid = 0;
 	u64 address = 0;
 	int length = 8;
+
 	if(strstr(param, ".ps3mapi?"))
 	{
 		char *pos;
@@ -482,16 +483,15 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 			char addr_tmp[17];
 			get_value(addr_tmp, pos + 5, 16);
 			address = convertH(addr_tmp);
+
+			length = get_valuen16(param, "len=");
+			if(length == 0) {pos = strstr(param, "val="); if(pos) length = strlen(pos + 4) / 2;}
+			length = RANGE(length, 1, 2048);
+
+			pid = get_valuen32(param, "proc=");
 		}
-		else goto getmem_err_arg;
-
-		length = get_valuen16(param, "len=");
-		length = RANGE(length, 0, 2048);
-
-		pid = get_valuen32(param, "proc=");
 	}
 
- getmem_err_arg:
 	if(!is_ps3mapi_home)
 		sprintf(templn, "<b>%s --> %s --> %s</b>"
 						HTML_BLU_SEPARATOR,
@@ -578,6 +578,7 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 	int length = 0;
 	char value[130];
 	char val_tmp[260];
+
 	if(strstr(param, ".ps3mapi?"))
 	{
 		char *pos;
@@ -587,24 +588,21 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 			char addr_tmp[17];
 			get_value(addr_tmp, pos + 5, 16);
 			address = convertH(addr_tmp);
-		}
-		else goto setmem_err_arg;
 
-		pos = strstr(param, "val=");
-		if(pos)
-		{
-			get_value(val_tmp, pos + 4, 259);
-			length = (strlen(val_tmp) / 2);
-			Hex2Bin(val_tmp, value);
-		}
-		else goto setmem_err_arg;
+			pos = strstr(param, "val=");
+			if(pos)
+			{
+				get_value(val_tmp, pos + 4, 259);
+				length = (strlen(val_tmp) / 2);
+				Hex2Bin(val_tmp, value);
 
-		pid = get_valuen32(param, "proc=");
+				pid = get_valuen32(param, "proc=");
+			}
+		}
 	}
 
 	if(!is_ps3mapi_home && islike(param, "/setmem.ps3mapi")) ps3mapi_getmem(buffer, templn, param);
 
- setmem_err_arg:
 	if(!is_ps3mapi_home)
 		sprintf(templn, "<b>%s --> %s --> %s</b>"
 						HTML_BLU_SEPARATOR,
@@ -648,9 +646,9 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 	sprintf(templn, "<b><u>%s:</u></b> "  HTML_INPUT("addr", "%llX", "16", "18")
 					"<br><br><b><u>%s:</u></b><br><br>"
 					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-					"<tr><td style=\"text-align:left; float:left;\">"
+					"<tr><td class=\"la\">"
 					"<textarea id=\"val\" name=\"val\" cols=\"111\" rows=\"3\" maxlength=\"199\">%s</textarea></td></tr>"
-					"<tr><td style=\"text-align:right; float:right;\"><br>"
+					"<tr><td class=\"ra\"><br>"
 					"<input type=\"submit\" value=\" %s \"/></td></tr></table></form>", "Address", address, "Value", val_tmp, "Set");
 	strcat(buffer, templn);
 	if(pid != 0 && length != 0)
@@ -685,19 +683,17 @@ static void ps3mapi_setidps(char *buffer, char *templn, char *param)
 			char idps1_tmp[17];
 			get_value(idps1_tmp, pos + 6, 16);
 			_new_IDPS[0] = convertH(idps1_tmp);
-		}
-		else goto setidps_err_arg1;
-		pos = strstr(param, "idps2=");
-		if(pos)
-		{
-			char idps2_tmp[17];
-			get_value(idps2_tmp, pos + 6, 16);
-			_new_IDPS[1] = convertH(idps2_tmp);
-		}
-		else goto setidps_err_arg1;
-		{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_IDPS, (u64)_new_IDPS[0], (u64)_new_IDPS[1]);}
 
-	 setidps_err_arg1:
+			pos = strstr(param, "idps2=");
+			if(pos)
+			{
+				char idps2_tmp[17];
+				get_value(idps2_tmp, pos + 6, 16);
+				_new_IDPS[1] = convertH(idps2_tmp);
+
+				{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_IDPS, (u64)_new_IDPS[0], (u64)_new_IDPS[1]);}
+			}
+		}
 
 		pos = strstr(param, "psid1=");
 		if(pos)
@@ -705,29 +701,29 @@ static void ps3mapi_setidps(char *buffer, char *templn, char *param)
 			char psid1_tmp[17];
 			get_value(psid1_tmp, pos + 6, 16);
 			_new_PSID[0] = convertH(psid1_tmp);
-		}
-		else goto setidps_err_arg2;
-		pos = strstr(param, "psid2=");
-		if(pos)
-		{
-			char psid2_tmp[17];
-			get_value(psid2_tmp, pos + 6, 16);
-			_new_PSID[1] = convertH(psid2_tmp);
-		}
-		else goto setidps_err_arg2;
-		{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_PSID, (u64)_new_PSID[0], (u64)_new_PSID[1]);}
-	}
 
- setidps_err_arg2:
+			pos = strstr(param, "psid2=");
+			if(pos)
+			{
+				char psid2_tmp[17];
+				get_value(psid2_tmp, pos + 6, 16);
+				_new_PSID[1] = convertH(psid2_tmp);
+
+				{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_PSID, (u64)_new_PSID[0], (u64)_new_PSID[1]);}
+			}
+		}
+	}
 
 	sprintf(templn, "<b>%s%s --> %s</b>"
 					HTML_BLU_SEPARATOR
 					"<form action=\"/setidps.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><br>"
-					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td width=\"400\" style=\"text-align:left; float:left;\">"
+					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+					"<tr><td width=\"400\" class=\"la\">"
 					"<br><b><u>%s:</u></b><br>" HTML_INPUT("idps1", "%016llX", "16", "18") HTML_INPUT("idps2", "%016llX", "16", "18") "</td>"
-					"<td style=\"text-align:left; float:left;\">"
+					"<td class=\"la\">"
 					"<br><b><u>%s:</u></b><br>" HTML_INPUT("psid1", "%016llX", "16", "18") HTML_INPUT("psid2", "%016llX", "16", "18") "</td></tr>"
-					"<tr><td style=\"text-align:right; float:right;\"><br><input type=\"submit\" value=\" %s \"/></td></tr></table></form><br>",
+					"<tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr>"
+					"</table></form><br>",
 					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "Set IDPS/PSID", "IDPS", _new_IDPS[0], _new_IDPS[1], "PSID", _new_PSID[0], _new_PSID[1], "Set");
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR);
 	strcat(buffer, templn);
@@ -817,29 +813,26 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 				if(pos)
 				{
 					uslot = get_valuen(param, "load_slot=", 0, 6);
-				}
-				else goto loadvshplug_err_arg;
 
-				pos = strstr(param, "prx=");
-				if(pos)
-				{
-					char prx_path[256];
-					get_value(prx_path, pos + 4, 256);
-					if ( uslot ) {{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_LOAD_VSH_PLUGIN, (u64)uslot, (u64)(u32)prx_path, NULL, 0);}}
+					pos = strstr(param, "prx=");
+					if(pos)
+					{
+						char prx_path[256];
+						get_value(prx_path, pos + 4, 256);
+						if ( uslot ) {{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_LOAD_VSH_PLUGIN, (u64)uslot, (u64)(u32)prx_path, NULL, 0);}}
+					}
 				}
 			}
 		}
 	}
 
-loadvshplug_err_arg:
-
 	sprintf(templn, "<b>%s%s</b>"
 					HTML_BLU_SEPARATOR "<br>"
 					"<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-					"<tr><td width=\"75\" style=\"text-align:left; float:left;\">%s</td>"
-					"<td width=\"120\" style=\"text-align:left; float:left;\">%s</td>"
-					"<td width=\"500\" style=\"text-align:left; float:left;\">%s</td>"
-					"<td width=\"125\" style=\"text-align:right; float:right;\"> </td></tr>",
+					"<tr><td width=\"75\" class=\"la\">%s</td>"
+					"<td width=\"120\" class=\"la\">%s</td>"
+					"<td width=\"500\" class=\"la\">%s</td>"
+					"<td width=\"125\" class=\"ra\"> </td></tr>",
 					is_ps3mapi_home ? "" : "PS3MAPI --> ", "VSH Plugins", "Slot", "Name", "File name");
 
 	strcat(buffer, templn);
@@ -850,22 +843,22 @@ loadvshplug_err_arg:
 		{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO, (u64)slot, (u64)(u32)tmp_name, (u64)(u32)tmp_filename); }
 		if(strlen(tmp_filename) > 0)
 		{
-			sprintf(templn, "<tr><td width=\"75\" style=\"text-align:left; float:left;\">%i</td>"
-							"<td width=\"120\" style=\"text-align:left; float:left;\">%s</td>"
-							"<td width=\"500\" style=\"text-align:left; float:left;\">%s</td>"
-							"<td width=\"100\" style=\"text-align:right; float:right;\">"
+			sprintf(templn, "<tr><td width=\"75\" class=\"la\">%i</td>"
+							"<td width=\"120\" class=\"la\">%s</td>"
+							"<td width=\"500\" class=\"la\">%s</td>"
+							"<td width=\"100\" class=\"ra\">"
 							"<form action=\"/vshplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 							"<input name=\"unload_slot\" type=\"hidden\" value=\"%i\"><input type=\"submit\" %s/></form></td></tr>",
 							slot, tmp_name, tmp_filename, slot, (slot) ? "value=\" Unload \"" : "value=\" Reserved \" disabled=\"disabled\"" );
 		}
 		else
  		{
-			sprintf(templn, "<tr><td width=\"75\" style=\"text-align:left; float:left;\">%i</td>"
-							"<td width=\"120\" style=\"text-align:left; float:left;\">%s</td>"
+			sprintf(templn, "<tr><td width=\"75\" class=\"la\">%i</td>"
+							"<td width=\"120\" class=\"la\">%s</td>"
 							"<form action=\"/vshplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-							"<td width=\"500\" style=\"text-align:left; float:left;\">"
+							"<td width=\"500\" class=\"la\">"
 							HTML_INPUT("prx\" style=\"width:555px\" list=\"plugins", "", "128", "75") "<input name=\"load_slot\" type=\"hidden\" value=\"%i\"></td>"
-							"<td width=\"100\" style=\"text-align:right; float:right;\"><input type=\"submit\" %s/></td></form></tr>",
+							"<td width=\"100\" class=\"ra\"><input type=\"submit\" %s/></td></form></tr>",
 							slot, "NULL", slot, (slot) ? "value=\" Load \"" : "value=\" Reserved \" disabled=\"disabled\"" );
 		}
 			strcat(buffer, templn);
@@ -902,35 +895,31 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 		if(pos)
 		{
 			pid = get_valuen32(param, "proc=");
-		}
-		else goto loadgameplug_err_arg;
 
-		pos = strstr(param, "unload_slot=");
-		if(pos)
-		{
-			uslot = get_valuen32(param, "unload_slot=");
-			{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_UNLOAD_PROC_MODULE, (u64)pid, (u64)uslot); }
-		}
-		else
-		{
-			pos = strstr(param, "load_slot=");
+			pos = strstr(param, "unload_slot=");
 			if(pos)
 			{
-				uslot = get_valuen32(param, "load_slot=");
+				uslot = get_valuen32(param, "unload_slot=");
+				{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_UNLOAD_PROC_MODULE, (u64)pid, (u64)uslot); }
 			}
-			else goto loadgameplug_err_arg;
-
-			pos = strstr(param, "prx=");
-			if(pos)
+			else
 			{
-				char prx_path[256];
-				get_value(prx_path, pos + 4, 256);
-				{system_call_6(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_LOAD_PROC_MODULE, (u64)pid, (u64)(u32)prx_path, NULL, 0); }
+				pos = strstr(param, "load_slot=");
+				if(pos)
+				{
+					uslot = get_valuen32(param, "load_slot=");
+
+					pos = strstr(param, "prx=");
+					if(pos)
+					{
+						char prx_path[256];
+						get_value(prx_path, pos + 4, 256);
+						{system_call_6(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_LOAD_PROC_MODULE, (u64)pid, (u64)(u32)prx_path, NULL, 0); }
+					}
+				}
 			}
 		}
 	}
-
-loadgameplug_err_arg:
 
 	if(!is_ps3mapi_home)
 		sprintf(templn, "<b>%s --> %s</b>"
@@ -986,10 +975,10 @@ loadgameplug_err_arg:
 	{
 		sprintf(templn,
 					"<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-					"<tr><td width=\"75\" style=\"text-align:left; float:left;\">%s</td>"
-					"<td width=\"300\" style=\"text-align:left; float:left;\">%s</td>"
-					"<td width=\"500\" style=\"text-align:left; float:left;\">%s</td>"
-					"<td width=\"125\" style=\"text-align:right; float:right;\"> </td></tr>",
+					"<tr><td width=\"75\" class=\"la\">%s</td>"
+					"<td width=\"300\" class=\"la\">%s</td>"
+					"<td width=\"500\" class=\"la\">%s</td>"
+					"<td width=\"125\" class=\"ra\"> </td></tr>",
 					"Slot", "Name", "File name");
 		strcat(buffer, templn);
 
@@ -1012,10 +1001,10 @@ loadgameplug_err_arg:
 			{
 				sprintf(templn,
 						"<tr>"
-						 "<td width=\"75\" style=\"text-align:left; float:left;\">%i</td>"
-						 "<td width=\"300\" style=\"text-align:left; float:left;\">%s</td>"
-						 "<td width=\"500\" style=\"text-align:left; float:left;\">%s</td>"
-						 "<td width=\"100\" style=\"text-align:right; float:right;\">"
+						 "<td width=\"75\" class=\"la\">%i</td>"
+						 "<td width=\"300\" class=\"la\">%s</td>"
+						 "<td width=\"500\" class=\"la\">%s</td>"
+						 "<td width=\"100\" class=\"ra\">"
 						  "<form action=\"/gameplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 						  "<input name=\"proc\" type=\"hidden\" value=\"%u\">"
 						  "<input name=\"unload_slot\" type=\"hidden\" value=\"%i\">"
@@ -1031,11 +1020,11 @@ loadgameplug_err_arg:
 				//sprintf(tmp_filename, "/dev_hdd0/tmp/my_plugin_%i.sprx", slot);
 				sprintf(templn,
 						"<tr>"
-						  "<td width=\"75\" style=\"text-align:left; float:left;\">%i</td>"
-						  "<td width=\"300\" style=\"text-align:left; float:left;\">%s</td>"
-						  "<td width=\"100\" style=\"text-align:right; float:right;\">"
+						  "<td width=\"75\" class=\"la\">%i</td>"
+						  "<td width=\"300\" class=\"la\">%s</td>"
+						  "<td width=\"100\" class=\"ra\">"
 						    "<form action=\"/gameplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-						      "<td width=\"500\" style=\"text-align:left; float:left\">"
+						      "<td width=\"500\" class=\"la\">"
 						        "<input name=\"proc\" type=\"hidden\" value=\"%u\">"
 						        HTML_INPUT("prx\" list=\"plugins", "", "128", "75")
 						        "<input name=\"load_slot\" type=\"hidden\" value=\"%i\">"

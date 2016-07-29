@@ -102,7 +102,7 @@ static void launch_disc(char *category, char *seg_name)
 
 	if(view)
 	{
-		char explore_command[128]; // info: http://www.ps3devwiki.com/ps3/explore_plugin
+		char explore_command[128]; // info: http://www.psdevwiki.com/ps3/explore_plugin
 
 		// default segment
 		if(!seg_name[0]) sprintf(seg_name, "seg_device");

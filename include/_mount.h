@@ -2192,7 +2192,7 @@ mount_again:
 			//else
 			//	sys_timer_usleep(50000);
 
-			u8 iso_num=1;
+			u8 iso_parts = 1;
 			char templn[MAX_LINE_LEN];
 			char iso_list[MAX_ISO_PARTS][MAX_PATH_LEN];
 			char *cobra_iso_list[MAX_ISO_PARTS];
@@ -2211,7 +2211,7 @@ mount_again:
 					sprintf(templn, "%s.%i", path2, n);
 					if(file_exists(templn))
 					{
-						iso_num++;
+						iso_parts++;
 						strcpy(iso_list[n], templn);
 						cobra_iso_list[n] = (char*)iso_list[n];
 					}
@@ -2397,7 +2397,7 @@ mount_again:
 					}
  #endif //#ifdef FIX_GAME
 
-					cobra_mount_ps3_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_ps3_disc_image(cobra_iso_list, iso_parts);
 					sys_timer_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
@@ -2579,13 +2579,13 @@ copy_ps2iso_to_hdd0:
 					}
 				}
 				else if(strstr(_path, "/DVDISO") || mount_unk == EMU_DVD)
-					cobra_mount_dvd_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_dvd_disc_image(cobra_iso_list, iso_parts);
 				else if(strstr(_path, "/BDISO")  || mount_unk == EMU_BD)
-					cobra_mount_bd_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_bd_disc_image(cobra_iso_list, iso_parts);
 				else
 				{
 					// mount iso as data
-					cobra_mount_bd_disc_image(cobra_iso_list, iso_num);
+					cobra_mount_bd_disc_image(cobra_iso_list, iso_parts);
 					sys_timer_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 

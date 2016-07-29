@@ -22,6 +22,8 @@
  MANUAL TEMP  : SELECT+UP/DOWN
 
  REC VIDEO    : SELECT+R3
+ REC VIDEO SET: SELECT+R3+L2  Select video rec setting
+ REC VIDEO VAL: SELECT+R3+R2  Change value of video rec setting
  XMB SCRNSHOT : L2+R2+SELECT+START
 
  SYSCALLS     : R2+TRIANGLE                     *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_r2_triangle
@@ -34,6 +36,7 @@
 
  TOGGLE PS2CLASSIC    : SELECT+L2+TRIANGLE
  SWITCH PS2EMU        : SELECT+L2+R2
+
 
  COBRA TOGGLE         : L3+L2+TRIANGLE
  REBUG  Mode Switcher : L3+L2+□
@@ -86,16 +89,16 @@
 					if((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_SELECT))
 					{
 						if( !(webman_config->combo2 & (EXTGAMDAT | MOUNTNET0 | MOUNTNET1))         // Toggle External Game Data
-                            && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_SQUARE)) // SELECT+SQUARE
+							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_SQUARE)) // SELECT+SQUARE
 						{
 #ifndef LITE_EDITION
 							if(!(webman_config->combo2 & MOUNTNET0) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2))
-							{if(webman_config->netp0 && webman_config->neth0[0]) mount_with_mm((char*)"/net0", 1);}
+							{if(webman_config->netp0 && webman_config->neth0[0]) mount_with_mm((char*)"/net0", 1);} // SELECT+SQUARE+R2
 							else
 							if(!(webman_config->combo2 & MOUNTNET1) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))
-							{if(webman_config->netp1 && webman_config->neth1[0]) mount_with_mm((char*)"/net1", 1);}
+							{if(webman_config->netp1 && webman_config->neth1[0]) mount_with_mm((char*)"/net1", 1);} // SELECT+SQUARE+L2
 							else
 #endif
 							{
@@ -108,7 +111,7 @@
 #endif
 								{
 #ifdef EXT_GDATA
-									set_gamedata_status(extgd^1, true);
+									set_gamedata_status(extgd^1, true); // SELECT+SQUARE
 #endif
 									sys_timer_sleep(2);
 									break;
@@ -187,7 +190,7 @@
 							{
 								if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
 								{
-									rec_setting_to_change++; if(rec_setting_to_change>5) rec_setting_to_change = 0;
+									rec_setting_to_change++; if(rec_setting_to_change>5) rec_setting_to_change = 0; 	// SELECT+R3+L2  Select video rec setting
 									set_setting_to_change(msg, (char*)"Change : ");
 
 									strcat(msg, "\n\nCurrent recording format:");
@@ -196,7 +199,7 @@
 								else
 								if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2)
 								{
-									set_setting_to_change(msg, (char*)"Changed : ");
+									set_setting_to_change(msg, (char*)"Changed : ");									// SELECT+R3+R2  Change value of video rec setting
 
 									strcat(msg, "\n\nCurrent recording format:");
 									if(rec_setting_to_change == 0)
