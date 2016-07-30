@@ -90,6 +90,8 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
  #endif
 			)
 			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
+	else if( !extcmp(name, ".bak", 4) )
+			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
 #endif //#ifdef COPY_PS3
 
 

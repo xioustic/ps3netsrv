@@ -293,6 +293,8 @@ static void prepare_header(char *header, char *param, u8 is_binary)
 
 static bool islike(const char *param, const char *text)
 {
+	if(param == NULL) return false;
+
 	return (memcmp(param, text, strlen(text)) == 0);
 }
 

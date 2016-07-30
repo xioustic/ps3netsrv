@@ -504,6 +504,13 @@ show_popup:
 								led(GREEN, ON);
 							}
 						}
+#ifdef PKG_HANDLER
+						else
+						if(!(webman_config->combo2 & INSTALPKG) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_CIRCLE | CELL_PAD_CTRL_R2)) ) // SELECT+R2+O
+						{
+							installPKG_combo(msg);
+						}
+#endif
 						else
 						if(!(webman_config->combo & UMNT_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_CIRCLE) ) // SELECT+O (unmount)
 						{

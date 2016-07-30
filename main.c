@@ -102,7 +102,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.31 MOD"						// webMAN version
+#define WM_VERSION			"1.43.32 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -541,6 +541,10 @@ static void restore_cfw_syscalls(void);
 #endif
 #endif
 
+#ifdef PKG_HANDLER
+static int installPKG_combo(char *msg);
+#endif
+
 static void handleclient(u64 conn_s_p);
 
 static void do_umount(bool clean);
@@ -592,7 +596,6 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 	return (int)p1;
 }
 
-
 #include "include/gamedata.h"
 #include "include/psxemu.h"
 
@@ -636,10 +639,10 @@ static void http_response(int conn_s, char *header, char *param, int code, char 
 			sprintf(templn, "%s", msg);
 
 		sprintf(header, HTML_RESPONSE_FMT,
-						code, param, 182+strlen(templn), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", templn);
+						code, param, 182 + strlen(templn) + ((code == 203) ? 0 : 32), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", templn);
 
 		sprintf(templn, "<hr>" HTML_BUTTON_FMT "%s",
-						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, "/", HTML_BODY_END); strcat(header, templn);
+						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == 203) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(header, templn);
 	}
 
 	ssend(conn_s, header);
@@ -824,8 +827,8 @@ static void handleclient(u64 conn_s_p)
 			{   // cobra spoofer not working on 4.53
     			if(c_firmware!=4.53f)
 				{
-					cobra_config->spoof_version = 0x0478;
-					cobra_config->spoof_revision = 66041;
+					cobra_config->spoof_version = 0x0480;
+					cobra_config->spoof_revision = 66412;
 				}
 			}
 
@@ -1010,7 +1013,9 @@ again3:
 			{
 				u8 is_combo = (param[2] == 'a') ? 0 : (param[1] == 'c') ? 2 : 1; // 0 = /pad.ps3   1 = /play.ps3   2 = /combo.ps3
 
-				if(is_combo != 1) {if(!webman_config->nopad) parse_pad_command(param+9+is_combo, is_combo);}
+				char *buttons = param + 9 + is_combo;
+
+				if(is_combo != 1) {if(!webman_config->nopad) parse_pad_command(buttons, is_combo);}
 				else
 				{   // default: play.ps3?col=game&seg=seg_device
 					char *pos, col[16] = {NULL}, seg[80] = {NULL};
@@ -1022,7 +1027,7 @@ again3:
 				if(is_combo == 1 && param[10] != '?') sprintf(param, "/cpursx.ps3");
 				else
 				{
-					http_response(conn_s, header, param, 202, (param+9+is_combo));
+					http_response(conn_s, header, param, 202, buttons);
 					loading_html--;
 					sys_ppu_thread_exit(0);
 					return;
@@ -1057,7 +1062,7 @@ again3:
 #ifdef PKG_HANDLER
 			if(islike(param, "/download.ps3"))
 			{
-				char msg[MAX_PATH_LEN + MAX_PATH_LEN]  = "";
+				char msg[MAX_LINE_LEN] = ""; // Debug msg
 
 				download_file(strstr(header, "%") ? header : param, msg);
 
@@ -1076,7 +1081,7 @@ again3:
 
 			if(islike(param, "/install.ps3"))
 			{
-				char msg[MAX_PATH_LEN] = "";  //////Conversion Debug msg
+				char msg[MAX_LINE_LEN] = ""; // Debug msg
 
 				installPKG(param + 12, msg);
 
@@ -1097,7 +1102,8 @@ again3:
 #ifdef PS3_BROWSER
 			if(islike(param, "/browser.ps3"))
 			{
-				char *param2 = param + 12;
+				char *param2 = param + 12, *url = param + 13;
+
 				if(islike(param2, "$rsx"))
 				{
 					static u8 rsx = 1;
@@ -1197,22 +1203,22 @@ again3:
 				if(View_Find("game_plugin") == 0)
 				{   // in-XMB
  #ifdef XMB_SCREENSHOT
-					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param+27); saveBMP(header, false); sprintf(param+13, HTML_URL, header, header);} else
+					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param+27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
  #endif
 					{
 						if(strlen(param) < 13)     {do_umount(false); sprintf(header, "http://%s/", local_ip); vshmain_AE35CF2D(header, 0);} else
 						if(strstr(param, ".ps3/")) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param+12); vshmain_AE35CF2D(header, 0);} else
-						if(strstr(param, ".ps3$")) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->DoUnk6(param+13,0,0);}} else
-						if(strstr(param, ".ps3?")) {do_umount(false); vshmain_AE35CF2D((char*)param+13, 0);} else
-						vshmain_AE35CF2D((char*)param+13, 1);  // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
+						if(strstr(param, ".ps3$")) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->DoUnk6(url,0,0);}} else
+						if(strstr(param, ".ps3?")) {do_umount(false); vshmain_AE35CF2D((char*)url, 0);} else
+						vshmain_AE35CF2D(url, 1);  // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
 
-						show_msg((char*)param+13);
+						show_msg(url);
 					}
 				}
 				else
- 					sprintf(param+13, "ERROR: Not in XMB!");
+ 					sprintf(url, "ERROR: Not in XMB!");
 
-				http_response(conn_s, header, param, 200, param+13);
+				http_response(conn_s, header, param, 200, url);
 				loading_html--;
 				sys_ppu_thread_exit(0);
 				return;
@@ -1430,6 +1436,9 @@ again3:
 			{
 				char *source = param + 11, *target = strstr(source, "|");
 				if(target) {target[0] = NULL; target++;} else {*target = strstr(source, "&to="); if(target) {target[0] = NULL; target+=4;}}
+
+				if((!islike(target, "/")) && !extcmp(source, ".bak", 4)) {size_t flen = strlen(source); *target = param + flen; strncpy(target, source, flen - 4);}
+
 				if(islike(target, "/"))
 				{
 					cellFsRename(source, target);
