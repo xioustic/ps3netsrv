@@ -118,7 +118,7 @@ static void setup_parse_settings(char *param)
 
 #ifdef PKG_HANDLER
 	if(!strstr(param, "pkg=1")) webman_config->combo2|=INSTALPKG;
-#endif	
+#endif
 	if(!strstr(param, "p2s=1")) webman_config->combo2|=PS2SWITCH;
 	if(!strstr(param, "pgd=1")) webman_config->combo2|=EXTGAMDAT;
 #ifndef LITE_EDITION
@@ -742,9 +742,9 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 	add_check_box("p2s", "1", "PS2 SWITCH",   " : <b>SELECT+L2+R2</b><br>"     , !(webman_config->combo2 & PS2SWITCH), buffer);
-#ifdef PKG_HANDLER	
+#ifdef PKG_HANDLER
 	add_check_box("pkg", "1", "INSTALL PKG",  " : <b>SELECT+R2+O</b><br>"      , !(webman_config->combo2 & INSTALPKG), buffer);
-#endif	
+#endif
 	add_check_box("pld", "1", "PLAY DISC",    " : <b>L2+START</b><br>"
 							  "</td></tr></table>"                             , !(webman_config->combo2 & PLAY_DISC), buffer);
 

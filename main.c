@@ -271,6 +271,7 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define LINELEN			512 // file listing
 #define MAX_LINE_LEN	640 // html games
 #define MAX_PATH_LEN	512 // do not change!
+#define MAX_TEXT_LEN	2000 // should not exceed HTML_RECV_SIZE
 
 #define FAILED		-1
 
@@ -922,9 +923,9 @@ again3:
 	u64 c_len = 0;
 	char cmd[16], header[HTML_RECV_SIZE];
 
-	u8 is_ps3_http=0;
-	u8 is_cpursx=0;
-	u8 is_popup=0;
+	u8 is_ps3_http = 0;
+	u8 is_cpursx = 0;
+	u8 is_popup = 0;
 
 #ifdef WM_REQUEST
 	if(!wm_request)
@@ -988,7 +989,9 @@ again3:
 				u16 pos=0, len=strlen(param);
 				for(u16 i = 0; i < len; i++, pos++)
 				{
-					if(header[i]!='%')
+					if(header[i]=='+')
+						param[pos]=' ';
+					else if(header[i]!='%')
 						param[pos]=header[i];
 					else
 					{
@@ -1394,6 +1397,12 @@ again3:
 				is_binary = 2;
 				goto html_response;
 			}
+			if(islike(param, "/edit.ps3"))
+			{
+				is_popup = 1; is_binary = 0;
+				goto html_response;
+			}
+ #ifdef COPY_PS3
 			if(islike(param, "/rmdir.ps3"))
 			{
 				if(param[10] == '/')
@@ -1430,7 +1439,6 @@ again3:
 				}
 				goto html_response;
 			}
- #ifdef COPY_PS3
 			else
 			if(islike(param, "/rename.ps3"))
 			{
@@ -1921,6 +1929,35 @@ html_response:
 #ifndef LITE_EDITION
 				if(is_popup)
 				{
+					if(islike(param, "/edit.ps3"))
+					{
+						char *filename = templn, *txt = buffer + BUFFER_SIZE_HTML - _6KB_; memset(txt, 0, _2KB_);
+
+						get_value(filename, param + ((param[9] == '/') ? 9 : 12), MAX_PATH_LEN); // /edit.ps3?f=<file>&t=<txt>
+
+						char *pos = strstr(param, "&t=");
+						if(pos)
+						{
+							sprintf(txt, "%s", pos + 3);
+							savefile(filename, txt, strlen(txt));
+						}
+						else
+						{
+							int fd;
+							if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+							{
+								cellFsRead(fd, (void *)txt, MAX_TEXT_LEN, NULL);
+								cellFsClose(fd);
+							}
+						}
+
+						sprintf(tempstr,"<form action=\"/edit.ps3\"><input type=hidden name=\"f\" value=\"%s\"><textarea name=\"t\" maxlength=%i style=\"width:800px;height:400px;\">%s</textarea><br><input type=submit value=\" %s \">", filename, MAX_TEXT_LEN, txt, STR_SAVE); strcat(buffer, tempstr);
+
+						char *p = strrchr(filename, '/');
+						if(p) {strcpy(txt, p); p[0] = NULL; sprintf(tempstr," &nbsp; <a href=\"%s\">%s</a><a href=\"%s%s\">%s</a></form>", filename, filename, filename, txt, txt); strcat(buffer, tempstr);}
+
+						is_popup = 0; goto send_response;
+					}
 #ifdef WEB_CHAT
 					if(islike(param, "/chat.ps3"))
 					{
@@ -1947,7 +1984,7 @@ html_response:
 						sprintf(templn, "Message sent: %s", param+11); strcat(buffer, templn);
 					}
 
-					is_popup=0; goto send_response;
+					is_popup = 0; goto send_response;
 				}
 #endif
 				if(is_binary == 2) // folder listing

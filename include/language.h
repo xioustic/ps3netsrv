@@ -642,14 +642,7 @@ static void update_language(void)
 		language("STR_FANCTRL5", STR_FANCTRL5);
 		language("STR_UPDN", STR_UPDN);
 		language("STR_LFRG", STR_LFRG);
-#ifdef COBRA_ONLY
-		language("STR_DISCOBRA", STR_DISCOBRA);
-#endif
-#ifdef REX_ONLY
-		language("STR_RBGMODE", STR_RBGMODE);
-		language("STR_RBGNORM", STR_RBGNORM);
-		language("STR_RBGMENU", STR_RBGMENU);
-#endif
+
 		language("STR_SAVE", STR_SAVE);
 		language("STR_SETTINGSUPD", STR_SETTINGSUPD);
 		language("STR_ERROR", STR_ERROR);
@@ -723,6 +716,15 @@ static void update_language(void)
 		language("COVERS_PATH", COVERS_PATH);
 		language("IP_ADDRESS", local_ip);
 		language("SEARCH_URL", search_url);
+
+#ifdef COBRA_ONLY
+		language("STR_DISCOBRA", STR_DISCOBRA);
+#endif
+#ifdef REX_ONLY
+		language("STR_RBGMODE", STR_RBGMODE);
+		language("STR_RBGNORM", STR_RBGNORM);
+		language("STR_RBGMENU", STR_RBGMENU);
+#endif
 	}
 
 	if(fh) {cellFsClose(fh); lang_pos=fh=0;}

@@ -94,11 +94,12 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
 #endif //#ifdef COPY_PS3
 
-
 #ifdef LOAD_PRX
 	else if(!is_net && ( !extcmp(name, ".sprx", 5)))
 		sprintf(fsize, "<a href=\"/loadprx.ps3?slot=6&prx=%s\">%'llu %s</a>", templn, sz, sf);
 #endif
+	else if( (sz <= MAX_TEXT_LEN) && (strcasestr(".txt|.ini|.log|.sfx|.xml|.cfg|.css|.html|.conf|name", ext)!=NULL || strstr(templn, "wm_custom")!=NULL ) )
+			sprintf(fsize, "<a href=\"/edit.ps3%s\">%'llu %s</a>", templn, sz, sf);
 	else
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 
