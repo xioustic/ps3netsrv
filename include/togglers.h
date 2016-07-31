@@ -1,3 +1,21 @@
+#if defined(COBRA_ONLY) || defined(REX_ONLY)
+static void swap_file(const char *path, const char *curfile, const char *rento, const char *newfile)
+{
+	char file1[64], file2[64], file3[64];
+
+	sprintf(file3, "%s%s", path, newfile);
+
+	if(file_exists(file3))
+	{
+		sprintf(file1, "%s%s", path, curfile);
+		sprintf(file2, "%s%s", path, rento);
+
+		cellFsRename(file1, file2);
+		cellFsRename(file3, file1);
+	}
+}
+#endif
+
 #ifdef REX_ONLY
 static bool toggle_rebug_mode(void)
 {
@@ -8,20 +26,9 @@ static bool toggle_rebug_mode(void)
 		show_msg((char*)"Normal Mode detected!\r\nSwitch to REBUG Mode Debug XMB...");
 		sys_timer_sleep(3);
 
-		if(file_exists(VSH_ETC_PATH "index.dat.swp"))
-		{
-			cellFsRename(VSH_ETC_PATH "index.dat", VSH_ETC_PATH "index.dat.nrm");
-			cellFsRename(VSH_ETC_PATH "index.dat.swp", VSH_ETC_PATH "index.dat");
-		}
-
-		if(file_exists(VSH_ETC_PATH "version.txt.swp"))
-		{
-			cellFsRename(VSH_ETC_PATH "version.txt", VSH_ETC_PATH "version.txt.nrm");
-			cellFsRename(VSH_ETC_PATH "version.txt.swp", VSH_ETC_PATH "version.txt");
-		}
-
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.nrm");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.swp", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.nrm", "index.dat.swp");
+		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.nrm", "version.txt.swp");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.nrm", "vsh.self.swp");
 
 		return true; // vsh reboot
 	}
@@ -32,8 +39,7 @@ static bool toggle_rebug_mode(void)
 		show_msg((char*)"REBUG Mode Debug XMB detected!\r\nSwitch to Retail XMB...");
 		sys_timer_sleep(3);
 
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.dexsp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.cexsp", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.dexsp", "vsh.self.cexsp");
 
 		return true; // vsh reboot
 	}
@@ -43,8 +49,7 @@ static bool toggle_rebug_mode(void)
 		show_msg((char*)"REBUG Mode Retail XMB detected!\r\nSwitch to Debug XMB...");
 		sys_timer_sleep(3);
 
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.cexsp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.dexsp", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.cexsp", "vsh.self.dexsp");
 
 		return true; // vsh reboot
 	}
@@ -60,20 +65,9 @@ static bool toggle_normal_mode(void)
 	{
 		show_msg((char*)"REBUG Mode Debug XMB detected!\r\nSwitch to Normal Mode...");
 
-		if(file_exists(VSH_ETC_PATH "index.dat.nrm"))
-		{
-			cellFsRename(VSH_ETC_PATH "index.dat", VSH_ETC_PATH "index.dat.swp");
-			cellFsRename(VSH_ETC_PATH "index.dat.nrm", VSH_ETC_PATH "index.dat");
-		}
-
-		if(file_exists(VSH_ETC_PATH "version.txt.nrm"))
-		{
-			cellFsRename(VSH_ETC_PATH "version.txt", VSH_ETC_PATH "version.txt.swp");
-			cellFsRename(VSH_ETC_PATH "version.txt.nrm", VSH_ETC_PATH "version.txt");
-		}
-
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.swp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.nrm", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.swp", "index.dat.nrm");
+		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.swp", "version.txt.nrm");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.swp", "vsh.self.nrm");
 
 		return true; // vsh reboot
 	}
@@ -82,21 +76,11 @@ static bool toggle_normal_mode(void)
 	{
 		show_msg((char*)"REBUG Mode Retail XMB detected!\r\nSwitch to Normal Mode...");
 
-		if(file_exists(VSH_ETC_PATH "index.dat.nrm"))
-		{
-			cellFsRename(VSH_ETC_PATH "index.dat", VSH_ETC_PATH "index.dat.swp");
-			cellFsRename(VSH_ETC_PATH "index.dat.nrm", VSH_ETC_PATH "index.dat");
-		}
-
-		if(file_exists(VSH_ETC_PATH "version.txt.nrm"))
-		{
-			cellFsRename(VSH_ETC_PATH "version.txt", VSH_ETC_PATH "version.txt.swp");
-			cellFsRename(VSH_ETC_PATH "version.txt.nrm", VSH_ETC_PATH "version.txt");
-		}
+		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.swp", "index.dat.nrm");
+		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.swp", "version.txt.nrm");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.cexsp", "vsh.self.nrm");
 
 		cellFsRename(VSH_MODULE_PATH "vsh.self.dexsp", VSH_MODULE_PATH "vsh.self.swp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.cexsp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.nrm", VSH_MODULE_PATH "vsh.self");
 
 		return true; // vsh reboot
 	}
@@ -118,16 +102,14 @@ static void toggle_debug_menu(void)
 	{
 		show_msg((char*)"CEX QA Menu is active!\r\nSwitch to DEX Debug Menu...");
 
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx", VSH_MODULE_PATH "sysconf_plugin.sprx.cex");
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx.dex", VSH_MODULE_PATH "sysconf_plugin.sprx");
+		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.cex", "sysconf_plugin.sprx.dex");
 	}
 	else
 	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.cex"))
 	{
 		show_msg((char*)"DEX Debug Menu is active!\r\nSwitch to CEX QA Menu...");
 
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx", VSH_MODULE_PATH "sysconf_plugin.sprx.dex");
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx.cex", VSH_MODULE_PATH "sysconf_plugin.sprx");
+		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.dex", "sysconf_plugin.sprx.cex");
 	}
 	sys_timer_sleep(1);
 	{system_call_3(SC_FS_UMOUNT, (u64)(char*)"/dev_blind", 0, 1);}
@@ -206,9 +188,7 @@ static bool toggle_cobra(void)
  #endif //#ifdef REX_ONLY
 	return false;
 }
-#endif //#ifdef COBRA_ONLY
 
-#ifdef COBRA_ONLY
 static void toggle_ps2emu(void)
 {
 	enable_dev_blind((char*)"Swapping ps2emu activated!");
@@ -219,22 +199,22 @@ static void toggle_ps2emu(void)
 		uint64_t size1, size2;
 
 		// ---- Backup PS2Emus to Rebug Toolbox folder ----
-		if( cellFsStat( (char*)REBUG_TOOLBOX "ps2_netemu.self.cobra", &s)!=CELL_FS_SUCCEEDED )
+		if( file_exists(REBUG_TOOLBOX "ps2_netemu.self.cobra") == false )
 			  filecopy( (char*)PS2_EMU_PATH  "ps2_netemu.self",
 						(char*)REBUG_TOOLBOX "ps2_netemu.self.cobra", COPY_WHOLE_FILE);
 
-		if( cellFsStat( (char*)REBUG_TOOLBOX "ps2_gxemu.self.cobra", &s)!=CELL_FS_SUCCEEDED )
+		if( file_exists(REBUG_TOOLBOX "ps2_gxemu.self.cobra") == false )
 			  filecopy( (char*)PS2_EMU_PATH  "ps2_gxemu.self",
 						(char*)REBUG_TOOLBOX "ps2_gxemu.self.cobra", COPY_WHOLE_FILE);
 
-		if( cellFsStat( (char*)REBUG_TOOLBOX "ps2_emu.self.cobra", &s)!=CELL_FS_SUCCEEDED )
+		if( file_exists(REBUG_TOOLBOX "ps2_emu.self.cobra") == false )
 			  filecopy( (char*)PS2_EMU_PATH  "ps2_emu.self",
 						(char*)REBUG_TOOLBOX "ps2_emu.self.cobra", COPY_WHOLE_FILE);
 
 		// ---- Swap ps2_netemu.self ----
 		size1 = size2 = 0;
-		if( file_exists(PS2_EMU_PATH  "ps2_netemu.self")) size1 = s.st_size;
-		if( file_exists(REBUG_TOOLBOX "ps2_netemu.self")) size2 = s.st_size;
+		if( cellFsStat(PS2_EMU_PATH  "ps2_netemu.self", &s) == CELL_FS_SUCCEEDED ) size1 = s.st_size;
+		if( cellFsStat(REBUG_TOOLBOX "ps2_netemu.self", &s) == CELL_FS_SUCCEEDED ) size2 = s.st_size;
 
 		show_msg((size1==size2) ?   (char*)"Restoring original Cobra ps2emu...":
 									(char*)"Switching to custom ps2emu...");
@@ -246,8 +226,8 @@ static void toggle_ps2emu(void)
 
 		// ---- Swap ps2_gxemu.self ----
 		size1 = size2 = 0;
-		if( file_exists(PS2_EMU_PATH  "ps2_gxemu.self")) size1 = s.st_size;
-		if( file_exists(REBUG_TOOLBOX "ps2_gxemu.self")) size2 = s.st_size;
+		if( cellFsStat(PS2_EMU_PATH  "ps2_gxemu.self", &s) == CELL_FS_SUCCEEDED ) size1 = s.st_size;
+		if( cellFsStat(REBUG_TOOLBOX "ps2_gxemu.self", &s) == CELL_FS_SUCCEEDED ) size2 = s.st_size;
 
 		if(size1>0 && size2>0)
 			filecopy((size1==size2) ?   (char*)REBUG_TOOLBOX "ps2_gxemu.self.cobra":
@@ -256,8 +236,8 @@ static void toggle_ps2emu(void)
 
 		// ---- Swap ps2_emu.self ----
 		size1 = size2 = 0;
-		if( file_exists(PS2_EMU_PATH  "ps2_emu.self")) size1 = s.st_size;
-		if( file_exists(REBUG_TOOLBOX "ps2_emu.self")) size2 = s.st_size;
+		if( cellFsStat(PS2_EMU_PATH  "ps2_emu.self", &s) == CELL_FS_SUCCEEDED ) size1 = s.st_size;
+		if( cellFsStat(REBUG_TOOLBOX "ps2_emu.self", &s) == CELL_FS_SUCCEEDED ) size2 = s.st_size;
 
 		if(size1>0 && size2>0)
 			filecopy((size1==size2) ?   (char*)REBUG_TOOLBOX "ps2_emu.self.cobra":
@@ -270,27 +250,17 @@ static void toggle_ps2emu(void)
 	{
 		show_msg((char*)"Switch to custom ps2emu...");
 
-		cellFsRename(PS2_EMU_PATH "ps2_netemu.self"     , PS2_EMU_PATH "ps2_netemu.tmp");
-		cellFsRename(PS2_EMU_PATH "ps2_netemu.self.swap", PS2_EMU_PATH "ps2_netemu.self");
-
-		cellFsRename(PS2_EMU_PATH "ps2_gxemu.self"      , PS2_EMU_PATH "ps2_gxemu.tmp");
-		cellFsRename(PS2_EMU_PATH "ps2_gxemu.self.swap" , PS2_EMU_PATH "ps2_gxemu.self");
-
-		cellFsRename(PS2_EMU_PATH "ps2_emu.self"        , PS2_EMU_PATH "ps2_emu.tmp");
-		cellFsRename(PS2_EMU_PATH "ps2_emu.self.swap"   , PS2_EMU_PATH "ps2_emu.self");
+		swap_file(PS2_EMU_PATH, "ps2_netemu.self", "ps2_netemu.tmp", "ps2_netemu.self.swap");
+		swap_file(PS2_EMU_PATH, "ps2_gxemu.self", "ps2_gxemu.tmp", "ps2_gxemu.self.swap");
+		swap_file(PS2_EMU_PATH, "ps2_emu.self", "ps2_emu.tmp", "ps2_emu.self.swap");
 	}
 	else if(file_exists(PS2_EMU_PATH "ps2_netemu.self.sp"))
 	{
 		show_msg((char*)"Switching to custom ps2emu...");
 
-		cellFsRename(PS2_EMU_PATH "ps2_netemu.self"   , PS2_EMU_PATH "ps2_netemu.tmp");
-		cellFsRename(PS2_EMU_PATH "ps2_netemu.self.sp", PS2_EMU_PATH "ps2_netemu.self");
-
-		cellFsRename(PS2_EMU_PATH "ps2_gxemu.self"    , PS2_EMU_PATH "ps2_gxemu.tmp");
-		cellFsRename(PS2_EMU_PATH "ps2_gxemu.self.sp" , PS2_EMU_PATH "ps2_gxemu.self");
-
-		cellFsRename(PS2_EMU_PATH "ps2_emu.self"      , PS2_EMU_PATH "ps2_emu.tmp");
-		cellFsRename(PS2_EMU_PATH "ps2_emu.self.sp"   , PS2_EMU_PATH "ps2_emu.self");
+		swap_file(PS2_EMU_PATH, "ps2_netemu.self", "ps2_netemu.tmp", "ps2_netemu.self.sp");
+		swap_file(PS2_EMU_PATH, "ps2_gxemu.self", "ps2_gxemu.tmp", "ps2_gxemu.self.sp");
+		swap_file(PS2_EMU_PATH, "ps2_emu.self", "ps2_emu.tmp", "ps2_emu.self.sp");
 	}
 	else if(file_exists(PS2_EMU_PATH "ps2_netemu.tmp"))
 	{
@@ -298,25 +268,15 @@ static void toggle_ps2emu(void)
 
 		if(c_firmware>=4.65f)
 		{
-			cellFsRename(PS2_EMU_PATH "ps2_netemu.self", PS2_EMU_PATH "ps2_netemu.self.swap");
-			cellFsRename(PS2_EMU_PATH "ps2_netemu.tmp" , PS2_EMU_PATH "ps2_netemu.self");
-
-			cellFsRename(PS2_EMU_PATH "ps2_gxemu.self" , PS2_EMU_PATH "ps2_gxemu.self.swap");
-			cellFsRename(PS2_EMU_PATH "ps2_gxemu.tmp"  , PS2_EMU_PATH "ps2_gxemu.self");
-
-			cellFsRename(PS2_EMU_PATH "ps2_emu.self"   , PS2_EMU_PATH "ps2_emu.self.swap");
-			cellFsRename(PS2_EMU_PATH "ps2_emu.tmp"    , PS2_EMU_PATH "ps2_emu.self");
+			swap_file(PS2_EMU_PATH, "ps2_netemu.self", "ps2_netemu.self.swap", "ps2_netemu.tmp");
+			swap_file(PS2_EMU_PATH, "ps2_gxemu.self", "ps2_gxemu.self.swap", "ps2_gxemu.tmp");
+			swap_file(PS2_EMU_PATH, "ps2_emu.self", "ps2_emu.self.swap", "ps2_emu.tmp");
 		}
 		else
 		{
-			cellFsRename(PS2_EMU_PATH "ps2_netemu.self", PS2_EMU_PATH "ps2_netemu.self.sp");
-			cellFsRename(PS2_EMU_PATH "ps2_netemu.tmp" , PS2_EMU_PATH "ps2_netemu.self");
-
-			cellFsRename(PS2_EMU_PATH "ps2_gxemu.self" , PS2_EMU_PATH "ps2_gxemu.self.sp");
-			cellFsRename(PS2_EMU_PATH "ps2_gxemu.tmp"  , PS2_EMU_PATH "ps2_gxemu.self");
-
-			cellFsRename(PS2_EMU_PATH "ps2_emu.self"   , PS2_EMU_PATH "ps2_emu.self.sp");
-			cellFsRename(PS2_EMU_PATH "ps2_emu.tmp"    , PS2_EMU_PATH "ps2_emu.self");
+			swap_file(PS2_EMU_PATH, "ps2_netemu.self", "ps2_netemu.self.sp", "ps2_netemu.tmp");
+			swap_file(PS2_EMU_PATH, "ps2_gxemu.self", "ps2_gxemu.self.sp", "ps2_gxemu.tmp");
+			swap_file(PS2_EMU_PATH, "ps2_emu.self", "ps2_emu.self.sp", "ps2_emu.tmp");
 		}
 	}
 }

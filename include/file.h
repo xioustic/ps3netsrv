@@ -18,10 +18,6 @@ static int folder_copy(char *path1, char *path2);
 static int del(const char *path, bool recursive);
 #endif
 
-static void enable_dev_blind(char *msg);
-
-static void delete_history(bool delete_folders);
-
 #ifdef COPY_PS3
 static void  import_edats(char *path1, char *path2);
 #endif
@@ -380,6 +376,11 @@ static void enable_dev_blind(char *msg)
 	sys_timer_sleep(2);
 }
 
+static void unlink_file(const char *drive, const char *path, const char *file, char *buffer)
+{
+	sprintf(buffer, "%s/%s%s", drive, path, file); cellFsUnlink(buffer);
+}
+
 static void delete_history(bool delete_folders)
 {
 	int fd; char path[128];
@@ -391,27 +392,23 @@ static void delete_history(bool delete_folders)
 		while(!cellFsReaddir(fd, &dir, &read))
 		{
 			if(!read) break;
-			sprintf(path, "%s/%s/etc/boot_history.dat", "/dev_hdd0/home", dir.d_name);
-			cellFsUnlink(path);
-			sprintf(path, "%s/%s/etc/community/CI.TMP", "/dev_hdd0/home", dir.d_name);
-			cellFsUnlink(path);
-			sprintf(path, "%s/%s/community/MI.TMP", "/dev_hdd0/home", dir.d_name);
-			cellFsUnlink(path);
-			sprintf(path, "%s/%s/community/PTL.TMP", "/dev_hdd0/home", dir.d_name);
-			cellFsUnlink(path);
+			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/boot_history.dat", path);
+			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/community/CI.TMP", path);
+			unlink_file("/dev_hdd0/home", dir.d_name, "/community/MI.TMP", path);
+			unlink_file("/dev_hdd0/home", dir.d_name, "/community/PTL.TMP", path);
 		}
 		cellFsClosedir(fd);
 	}
 
-	cellFsUnlink("/dev_hdd0/vsh/pushlist/game.dat");
-	cellFsUnlink("/dev_hdd0/vsh/pushlist/patch.dat");
+	unlink_file("/dev_hdd0", "vsh/pushlist/", "game.dat", path);
+	unlink_file("/dev_hdd0", "vsh/pushlist/", "patch.dat", path);
 
 	if(!delete_folders) return;
 
-	for(u8 p=0; p<10; p++)
+	for(u8 p = 0; p < 10; p++)
 	{
 		sprintf(path, "%s/%s", drives[0], paths[p]); cellFsRmdir(path);
-		strcat(path, " [auto]"); cellFsRmdir(path);
+		strcat(path, AUTOPLAY_TAG); cellFsRmdir(path);
 	}
 	cellFsRmdir("/dev_hdd0/PKG");
 }

@@ -488,7 +488,7 @@ static char cp_path[MAX_PATH_LEN]; // cut/copy/paste buffer
 static u8   cp_mode = 0;           // 0 = none / 1 = copy / 2 = cut/move
 #endif
 
-#define AUTOPLAY_TAG		"[auto]"
+#define AUTOPLAY_TAG		" [auto]"
 
 static char wm_icons[12][60]={WM_ICONS_PATH "icon_wm_album_ps3.png", //024.png  [0]
                               WM_ICONS_PATH "icon_wm_album_psx.png", //026.png  [1]
@@ -1428,16 +1428,18 @@ again3:
 
 					cellFsMkdir("/dev_hdd0/packages", DMODE);
 					cellFsMkdir("/dev_hdd0/GAMES", DMODE);
-					cellFsMkdir("/dev_hdd0/GAMES " AUTOPLAY_TAG, DMODE);
 					cellFsMkdir("/dev_hdd0/PS3ISO", DMODE);
-					cellFsMkdir("/dev_hdd0/PS3ISO " AUTOPLAY_TAG, DMODE);
 					cellFsMkdir("/dev_hdd0/PSXISO", DMODE);
-					cellFsMkdir("/dev_hdd0/PSXISO " AUTOPLAY_TAG, DMODE);
 					cellFsMkdir("/dev_hdd0/PS2ISO", DMODE);
-					cellFsMkdir("/dev_hdd0/PS2ISO " AUTOPLAY_TAG, DMODE);
 					cellFsMkdir("/dev_hdd0/PSPISO", DMODE);
 					cellFsMkdir("/dev_hdd0/DVDISO", DMODE);
 					cellFsMkdir("/dev_hdd0/BDISO", DMODE);
+
+					// Let the user create these folders manually or enable webman_config->autoplay
+					//cellFsMkdir("/dev_hdd0/GAMES" AUTOPLAY_TAG, DMODE);
+					//cellFsMkdir("/dev_hdd0/PS3ISO" AUTOPLAY_TAG, DMODE);
+					//cellFsMkdir("/dev_hdd0/PSXISO" AUTOPLAY_TAG, DMODE);
+					//cellFsMkdir("/dev_hdd0/PS2ISO" AUTOPLAY_TAG, DMODE);
 				}
 				goto html_response;
 			}
@@ -1933,14 +1935,19 @@ html_response:
 				{
 					if(islike(param, "/edit.ps3"))
 					{
-						char *filename = templn, *txt = buffer + BUFFER_SIZE_HTML - _6KB_; memset(txt, 0, _2KB_);
+						char *filename = templn, *txt = buffer + BUFFER_SIZE_HTML - _6KB_, *backup = txt; memset(txt, 0, _2KB_);
 
 						// get file name
-						get_value(filename, param + ((param[9] == '/') ? 9 : 12), MAX_PATH_LEN); // /edit.ps3?f=<file>&t=<txt>
+						get_value(filename, param + ((param[9] == '/') ? 9 : 12), MAX_PATH_LEN); // /edit.ps3<file>  *or* /edit.ps3?f=<file>&t=<txt>
 
 						char *pos = strstr(param, "&t=");
 						if(pos)
 						{
+							// backup the original text file
+							sprintf(backup, "%s.bak", filename);
+							cellFsUnlink(backup); // delete previous backup
+							cellFsRename(filename, backup);
+
 							// save text file
 							sprintf(txt, "%s", pos + 3);
 							savefile(filename, txt, strlen(txt));
@@ -1991,8 +1998,9 @@ html_response:
 					else
 #endif
 					{
-						show_msg((char*)(param+11));
-						sprintf(templn, "Message sent: %s", param+11); strcat(buffer, templn);
+						char *msg = (param + 11); // /popup.ps3?<msg>
+						show_msg(msg);
+						sprintf(templn, "Message sent: %s", msg); strcat(buffer, templn);
 					}
 
 					is_popup = 0; goto send_response;
@@ -2043,10 +2051,10 @@ html_response:
 						if(param[12] == '/') sprintf(templn, "%s", param+12); else
 						if(param[14] == '/') sprintf(templn, "%s", param+14); else
 						{
-							sprintf(templn, "%s/webftp_server.sprx", "/dev_hdd0/plugins");
-							if(file_exists(templn) == false) sprintf(templn, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0/plugins");
-							if(file_exists(templn) == false) sprintf(templn, "%s/webftp_server.sprx", "/dev_hdd0");
-							if(file_exists(templn) == false) sprintf(templn, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0");
+							sprintf(templn, "%s/%s", "/dev_hdd0/plugins", "webftp_server.sprx");
+							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0/plugins", "webftp_server_ps3mapi.sprx");
+							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0", "webftp_server.sprx");
+							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0", "webftp_server_ps3mapi.sprx");
 
 							pos=strstr(param, "prx=");
 							if(pos) get_value(templn, pos + 4, MAX_PATH_LEN);
@@ -2173,32 +2181,38 @@ html_response:
 					else
 					if(islike(param, "/delete.ps3") || islike(param, "/delete_ps3"))
 					{
-						bool is_reset = false; char name[MAX_PATH_LEN];
+						bool is_reset = false; char name[MAX_PATH_LEN], *param2 = param + 11;
 						if(strstr(param, "?wmreset")) is_reset=true;
 						if(is_reset || strstr(param, "?wmconfig")) {cellFsUnlink(WMCONFIG); reset_settings(); sprintf(param, "/delete_ps3%s", WMCONFIG);}
 						if(is_reset || strstr(param, "?wmtmp")) strcpy(param, "/delete_ps3/dev_hdd0/tmp/wmtmp\0");
 
-						if(strstr(param, "?history"))
+						if(islike(param2 , "?history"))
 						{
 							delete_history(true);
 							sprintf(tempstr, "%s : history", STR_DELETE);
+							sprintf(param, "/");
 						}
-						else if(strstr(param, "?uninstall"))
+						else if(islike(param2 , "?uninstall"))
 						{
 							struct CellFsStat buf;
 							if(cellFsStat("/dev_hdd0/boot_plugins.txt", &buf) == CELL_FS_SUCCEEDED && buf.st_size < 40) cellFsUnlink((char*)"/dev_hdd0/boot_plugins.txt");
-							cellFsUnlink("/dev_hdd0/webftp_server.sprx");
-							cellFsUnlink("/dev_hdd0/webftp_server_ps3mapi.sprx");
-							cellFsUnlink("/dev_hdd0/webftp_server_noncobra.sprx");
-							cellFsUnlink("/dev_hdd0/plugins/webftp_server.sprx");
-							cellFsUnlink("/dev_hdd0/plugins/webftp_server_ps3mapi.sprx");
-							cellFsUnlink("/dev_hdd0/plugins/webftp_server_noncobra.sprx");
-							cellFsUnlink("/dev_hdd0/plugins/wm_vsh_menu.sprx");
-							cellFsUnlink("/dev_hdd0/tmp/wm_vsh_menu.cfg");
-							cellFsUnlink("/dev_hdd0/plugins/raw_iso.sprx");
-							cellFsUnlink("/dev_hdd0/raw_iso.sprx");
-							cellFsUnlink("/dev_hdd0/tmp/wm_custom_combo");
+
+							unlink_file("/dev_hdd0", "webftp_server.sprx", "", tempstr);
+							unlink_file("/dev_hdd0", "webftp_server_ps3mapi.sprx", "", tempstr);
+							unlink_file("/dev_hdd0", "webftp_server_noncobra.sprx", "", tempstr);
+							unlink_file("/dev_hdd0", "raw_iso.sprx", "", tempstr);
+
+							unlink_file("/dev_hdd0", "plugins/", "webftp_server.sprx", tempstr);
+							unlink_file("/dev_hdd0", "plugins/", "webftp_server_ps3mapi.sprx", tempstr);
+							unlink_file("/dev_hdd0", "plugins/", "webftp_server_noncobra.sprx", tempstr);
+							unlink_file("/dev_hdd0", "plugins/", "raw_iso.sprx", tempstr);
+							unlink_file("/dev_hdd0", "plugins/", "wm_vsh_menu.sprx", tempstr);
+
+							unlink_file("/dev_hdd0", "tmp/", "wm_vsh_menu.cfg", tempstr);
+							unlink_file("/dev_hdd0", "tmp/", "wm_custom_combo", tempstr);
+
 							cellFsUnlink(WMCONFIG);
+
 							del(WMTMP, true);
 							del("/dev_hdd0/xmlhost", true);
 							del("/dev_hdd0/tmp/wm_lang", true);
@@ -2207,16 +2221,16 @@ html_response:
 							del("/dev_hdd0/plugins/images", true);
 							goto restart;
 						}
-						else if(del(param+11, islike(param, "/delete.ps3")))
+						else if(del(param2, islike(param, "/delete.ps3")))
 						{
-							sprintf(tempstr, "%s", param+11); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
-							htmlenc(name, param+11+strlen(tempstr), 0); urlenc(param, tempstr, 0); htmlenc(templn, tempstr, 0);
+							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
+							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr, 0); htmlenc(templn, tempstr, 0);
 							sprintf(tempstr, "%s %s : <a href=\"%s\">%s</a>%s<br>", STR_DELETE, STR_ERROR, param, templn, name);
 						}
 						else
 						{
-							sprintf(tempstr, "%s", param+11); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
-							htmlenc(name, param+11+strlen(tempstr), 0); urlenc(param, tempstr, 0); htmlenc(templn, tempstr, 0);
+							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
+							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr, 0); htmlenc(templn, tempstr, 0);
 							sprintf(tempstr, "%s : <a href=\"%s\">%s</a>%s<br>", STR_DELETE, param, templn, name);
 						}
 						strcat(buffer, tempstr);
@@ -2327,7 +2341,7 @@ send_response:
 				if(mobile_mode && allow_retry_response) {allow_retry_response=false; goto mobile_response;}
 
 				if(mount_ps3)
-					strcat(buffer, "<script type=\"text/javascript\">window.close(this);</script>"); //auto-close
+					strcat(buffer, "<script>window.close(this);</script>"); //auto-close
 				else if(islike(param, "/mount.ps3?http"))
 					{http_response(conn_s, header, param, 200, param + 11); break;}
 				else

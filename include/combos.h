@@ -106,7 +106,7 @@
 #ifdef WM_CUSTOM_COMBO
 								if(file_exists(WM_CUSTOM_COMBO "select_square"))
 								{
-									filecopy(WM_CUSTOM_COMBO "select_square", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+									filecopy(WM_CUSTOM_COMBO "select_square", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 								}
 								else
 #endif
@@ -368,7 +368,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_up"))
 							{
-								filecopy(WM_CUSTOM_COMBO "select_up", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "select_up", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -402,7 +402,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_down"))
 							{
-								filecopy(WM_CUSTOM_COMBO "select_down", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "select_down", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -435,7 +435,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_left"))
 							{
-								filecopy(WM_CUSTOM_COMBO "select_left", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "select_left", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -456,7 +456,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_right"))
 							{
-								filecopy(WM_CUSTOM_COMBO "select_right", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "select_right", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -477,7 +477,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_l1"))
 							{
-								filecopy(WM_CUSTOM_COMBO "select_l1", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "select_l1", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -494,7 +494,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_r1"))
 							{
- 								filecopy(WM_CUSTOM_COMBO "select_r1", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+ 								filecopy(WM_CUSTOM_COMBO "select_r1", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -512,7 +512,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_r2_circle"))
 							{
- 								filecopy(WM_CUSTOM_COMBO "select_r2_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+ 								filecopy(WM_CUSTOM_COMBO "select_r2_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -525,7 +525,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "select_circle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "select_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "select_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -537,7 +537,7 @@ show_popup:
 						{
 							if(file_exists(WM_CUSTOM_COMBO "select_triangle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "select_triangle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "select_triangle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 						}
 #endif
@@ -622,22 +622,22 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "l2_r2_circle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE);
+								filecopy(WM_CUSTOM_COMBO "l2_r2_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
 							}
 							else
 							if(file_exists(WM_CUSTOM_COMBO "l2_r2_l1_circle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_l1_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE);
+								filecopy(WM_CUSTOM_COMBO "l2_r2_l1_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
 							}
 							else
 							if(file_exists(WM_CUSTOM_COMBO "l2_r2_r1_circle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_r1_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE);
+								filecopy(WM_CUSTOM_COMBO "l2_r2_r1_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
 							}
 							else
 							if(file_exists(WM_CUSTOM_COMBO "l2_r2_l1_r1_circle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_l1_r1_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE);
+								filecopy(WM_CUSTOM_COMBO "l2_r2_l1_r1_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
 							}
 							else
 #endif
@@ -668,7 +668,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "r2_triangle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "r2_triangle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "r2_triangle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -684,14 +684,14 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "r2_square"))
 							{
-								filecopy(WM_CUSTOM_COMBO "r2_square", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "r2_square", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
 #ifdef WM_REQUEST
 							if(file_exists("/dev_hdd0/tmp/wm_custom_combo"))
 							{
-								filecopy("/dev_hdd0/tmp/wm_custom_combo", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy("/dev_hdd0/tmp/wm_custom_combo", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif
@@ -705,7 +705,7 @@ show_popup:
 #ifdef WM_CUSTOM_COMBO
 							if(file_exists(WM_CUSTOM_COMBO "r2_circle"))
 							{
-								filecopy(WM_CUSTOM_COMBO "r2_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+								filecopy(WM_CUSTOM_COMBO "r2_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
 							}
 							else
 #endif

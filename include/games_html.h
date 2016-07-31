@@ -702,7 +702,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					char ll[4]; if(li) sprintf(ll, "/%c", '@'+li); else ll[0] = NULL;
 					sprintf(param, "/%s%s%s",    paths[f1], SUFIX(uprofile), ll);
 
-					if(li==99) sprintf(param, "/%s %s", paths[f1], AUTOPLAY_TAG);
+					if(li==99) sprintf(param, "/%s%s", paths[f1], AUTOPLAY_TAG);
 				}
 				else
  #endif
@@ -713,7 +713,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					else
 						sprintf(param, "%s/%s%s", drives[f0], paths[f1], SUFIX(uprofile));
 
-					if(li==99) sprintf(param, "%s/%s %s", drives[f0], paths[f1], AUTOPLAY_TAG);
+					if(li==99) sprintf(param, "%s/%s%s", drives[f0], paths[f1], AUTOPLAY_TAG);
 				}
 
 #ifdef COBRA_ONLY

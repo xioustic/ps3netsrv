@@ -589,7 +589,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 				char ll[4]; if(li) sprintf(ll, "/%c", '@'+li); else ll[0] = NULL;
 				sprintf(param, "/%s%s%s",    paths[f1], SUFIX(uprofile), ll);
 
-				if(li==99) sprintf(param, "/%s %s", paths[f1], AUTOPLAY_TAG);
+				if(li==99) sprintf(param, "/%s%s", paths[f1], AUTOPLAY_TAG);
 			}
 			else
  #endif
@@ -600,7 +600,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 				else
 					sprintf(param, "%s/%s%s", drives[f0], paths[f1], SUFIX(uprofile));
 
-				if(li==99) sprintf(param, "%s/%s %s", drives[f0], paths[f1], AUTOPLAY_TAG);
+				if(li==99) sprintf(param, "%s/%s%s", drives[f0], paths[f1], AUTOPLAY_TAG);
 			}
 
 #ifdef COBRA_ONLY
