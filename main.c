@@ -703,8 +703,8 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 			strcat(buffer, ".gi{max-height:210px;max-width:260px;");
 	}
 
-	strcat(buffer, "position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}"
-				   ".gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}--></style>");
+	strcat(buffer,	"position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}"
+					".gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}--></style>");
 
 	if(param[1] != NULL && !strstr(param, ".ps3")) {strcat(buffer, "<base href=\""); urlenc(templn, param, 0); strcat(templn, "/\">"); strcat(buffer, templn);}
 
@@ -845,7 +845,7 @@ static void handleclient(u64 conn_s_p)
 #ifdef COBRA_ONLY
 	#ifdef REMOVE_SYSCALLS
 			if(webman_config->spp & 1) //remove syscalls & history
-            {
+			{
 				sys_timer_sleep(5);
 
 				remove_cfw_syscalls(webman_config->keep_ccapi);
@@ -1245,7 +1245,7 @@ again3:
 				if(npklic_struct_offset == 0)
 				{
 					// get klicensee struct
-					vshnet_5EE098BC = (void*)((int)getNIDfunc("vshnet", 0x5EE098BC, 0));
+					vshnet_5EE098BC = getNIDfunc("vshnet", 0x5EE098BC, 0);
 					int* func_start = (int*)(*((int*)vshnet_5EE098BC));
 					npklic_struct_offset = (((*func_start) & 0x0000FFFF) << 16) + ((*(func_start+5)) & 0x0000FFFF) + 0xC;//8;
 				}
@@ -1377,7 +1377,9 @@ again3:
 					if(isremap && path2[0]!=NULL)
 					{
 						htmlenc(path1, path2, 0);
-						sprintf(param, "Remap: <a href=\"%s\">%s</a><br>To: <a href=\"%s\">%s</a><p>Unmap: <a href=\"/unmap.ps3%s\">%s</a>", url, title, path1, path2, url, title);
+						sprintf(param,  "Remap: <a href=\"%s\">%s</a><br>"
+										"To: <a href=\"%s\">%s</a><p>"
+										"Unmap: <a href=\"/unmap.ps3%s\">%s</a>", url, title, path1, path2, url, title);
 					}
 					else
 					{
@@ -1933,16 +1935,19 @@ html_response:
 					{
 						char *filename = templn, *txt = buffer + BUFFER_SIZE_HTML - _6KB_; memset(txt, 0, _2KB_);
 
+						// get file name
 						get_value(filename, param + ((param[9] == '/') ? 9 : 12), MAX_PATH_LEN); // /edit.ps3?f=<file>&t=<txt>
 
 						char *pos = strstr(param, "&t=");
 						if(pos)
 						{
+							// save text file
 							sprintf(txt, "%s", pos + 3);
 							savefile(filename, txt, strlen(txt));
 						}
 						else
 						{
+							// load text file
 							int fd;
 							if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 							{
@@ -1951,8 +1956,14 @@ html_response:
 							}
 						}
 
-						sprintf(tempstr,"<form action=\"/edit.ps3\"><input type=hidden name=\"f\" value=\"%s\"><textarea name=\"t\" maxlength=%i style=\"width:800px;height:400px;\">%s</textarea><br><input type=submit value=\" %s \">", filename, MAX_TEXT_LEN, txt, STR_SAVE); strcat(buffer, tempstr);
+						// show text box
+						sprintf(tempstr,"<form action=\"/edit.ps3\">"
+										"<input type=hidden name=\"f\" value=\"%s\">"
+										"<textarea name=\"t\" maxlength=%i style=\"width:800px;height:400px;\">%s</textarea><br>"
+										"<input type=submit value=\" %s \">",
+										filename, MAX_TEXT_LEN, txt, STR_SAVE); strcat(buffer, tempstr);
 
+						// show filename link
 						char *p = strrchr(filename, '/');
 						if(p) {strcpy(txt, p); p[0] = NULL; sprintf(tempstr," &nbsp; <a href=\"%s\">%s</a><a href=\"%s%s\">%s</a></form>", filename, filename, filename, txt, txt); strcat(buffer, tempstr);}
 
@@ -2175,25 +2186,25 @@ html_response:
 						else if(strstr(param, "?uninstall"))
 						{
 							struct CellFsStat buf;
-							if(cellFsStat((char*)"/dev_hdd0/boot_plugins.txt", &buf) == CELL_FS_SUCCEEDED && buf.st_size < 40) cellFsUnlink((char*)"/dev_hdd0/boot_plugins.txt");
-							cellFsUnlink((char*)"/dev_hdd0/webftp_server.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/webftp_server_ps3mapi.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/webftp_server_noncobra.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/plugins/webftp_server.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/plugins/webftp_server_ps3mapi.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/plugins/webftp_server_noncobra.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/plugins/wm_vsh_menu.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/tmp/wm_vsh_menu.cfg");
-							cellFsUnlink((char*)"/dev_hdd0/plugins/raw_iso.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/raw_iso.sprx");
-							cellFsUnlink((char*)"/dev_hdd0/tmp/wm_custom_combo");
-							cellFsUnlink((char*)WMCONFIG);
-							del((char*)WMTMP, true);
-							del((char*)"/dev_hdd0/xmlhost", true);
-							del((char*)"/dev_hdd0/tmp/wm_lang", true);
-							del((char*)"/dev_hdd0/tmp/wm_icons", true);
-							del((char*)"/dev_hdd0/tmp/wm_combo", true);
-							del((char*)"/dev_hdd0/plugins/images", true);
+							if(cellFsStat("/dev_hdd0/boot_plugins.txt", &buf) == CELL_FS_SUCCEEDED && buf.st_size < 40) cellFsUnlink((char*)"/dev_hdd0/boot_plugins.txt");
+							cellFsUnlink("/dev_hdd0/webftp_server.sprx");
+							cellFsUnlink("/dev_hdd0/webftp_server_ps3mapi.sprx");
+							cellFsUnlink("/dev_hdd0/webftp_server_noncobra.sprx");
+							cellFsUnlink("/dev_hdd0/plugins/webftp_server.sprx");
+							cellFsUnlink("/dev_hdd0/plugins/webftp_server_ps3mapi.sprx");
+							cellFsUnlink("/dev_hdd0/plugins/webftp_server_noncobra.sprx");
+							cellFsUnlink("/dev_hdd0/plugins/wm_vsh_menu.sprx");
+							cellFsUnlink("/dev_hdd0/tmp/wm_vsh_menu.cfg");
+							cellFsUnlink("/dev_hdd0/plugins/raw_iso.sprx");
+							cellFsUnlink("/dev_hdd0/raw_iso.sprx");
+							cellFsUnlink("/dev_hdd0/tmp/wm_custom_combo");
+							cellFsUnlink(WMCONFIG);
+							del(WMTMP, true);
+							del("/dev_hdd0/xmlhost", true);
+							del("/dev_hdd0/tmp/wm_lang", true);
+							del("/dev_hdd0/tmp/wm_icons", true);
+							del("/dev_hdd0/tmp/wm_combo", true);
+							del("/dev_hdd0/plugins/images", true);
 							goto restart;
 						}
 						else if(del(param+11, islike(param, "/delete.ps3")))
@@ -2382,12 +2393,12 @@ static void wwwd_thread(uint64_t arg)
  #endif
 #endif
 
-	View_Find = (void*)((int)getNIDfunc("paf", 0xF21655F3, 0));
-	plugin_GetInterface = (void*)((int)getNIDfunc("paf", 0x23AFB290, 0));
+	View_Find = getNIDfunc("paf", 0xF21655F3, 0);
+	plugin_GetInterface = getNIDfunc("paf", 0x23AFB290, 0);
 
 #ifdef SYS_BGM
-	BgmPlaybackEnable  = (void*)((int)getNIDfunc("vshmain", 0xEDAB5E5E, 16*2));
-	BgmPlaybackDisable = (void*)((int)getNIDfunc("vshmain", 0xEDAB5E5E, 17*2));
+	BgmPlaybackEnable  = getNIDfunc("vshmain", 0xEDAB5E5E, 16*2);
+	BgmPlaybackDisable = getNIDfunc("vshmain", 0xEDAB5E5E, 17*2);
 #endif
 
 	//pokeq(0x8000000000003560ULL, 0x386000014E800020ULL); // li r3, 0 / blr
@@ -2641,4 +2652,3 @@ int wwwd_stop(void)
 
 	return SYS_PRX_STOP_OK;
 }
-

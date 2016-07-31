@@ -32,7 +32,7 @@ static int LoadPluginById(int id, void *handler)
 {
 	if(xmm0_interface == 0) // getting xmb_plugin xmm0 interface for loading plugin sprx
 	{
-		xmm0_interface = (xmb_plugin_xmm0 *)plugin_GetInterface(View_Find("xmb_plugin"),'XMM0');
+		xmm0_interface = (xmb_plugin_xmm0 *)plugin_GetInterface(View_Find("xmb_plugin"), 'XMM0');
 	}
 	return xmm0_interface->LoadPlugin3(id, handler,0);
 }
@@ -41,7 +41,7 @@ static int UnloadPluginById(int id, void *handler)
 {
 	if(xmm0_interface == 0) // getting xmb_plugin xmm0 interface for loading plugin sprx
 	{
-		xmm0_interface = (xmb_plugin_xmm0 *)plugin_GetInterface(View_Find("xmb_plugin"),'XMM0');
+		xmm0_interface = (xmb_plugin_xmm0 *)plugin_GetInterface(View_Find("xmb_plugin"), 'XMM0');
 	}
 	return xmm0_interface->Shutdown(id, handler,1);
 }

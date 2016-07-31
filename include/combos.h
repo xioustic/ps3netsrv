@@ -34,9 +34,10 @@
  MOUNT net0/  : SELECT+R2+□
  MOUNT net1/  : SELECT+L2+□
 
+ QUICK INSTALL: SELECT+R2+O                     *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_select_r2_circle
+
  TOGGLE PS2CLASSIC    : SELECT+L2+TRIANGLE
  SWITCH PS2EMU        : SELECT+L2+R2
-
 
  COBRA TOGGLE         : L3+L2+TRIANGLE
  REBUG  Mode Switcher : L3+L2+□
@@ -508,6 +509,13 @@ show_popup:
 						else
 						if(!(webman_config->combo2 & INSTALPKG) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_CIRCLE | CELL_PAD_CTRL_R2)) ) // SELECT+R2+O
 						{
+#ifdef WM_CUSTOM_COMBO
+							if(file_exists(WM_CUSTOM_COMBO "select_r2_circle"))
+							{
+ 								filecopy(WM_CUSTOM_COMBO "select_r2_circle", (char*)"/dev_hdd0/tmp/wm_request", COPY_WHOLE_FILE); break;
+							}
+							else
+#endif
 							installPKG_combo(msg);
 						}
 #endif

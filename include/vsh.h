@@ -15,9 +15,7 @@ int (*set_SSHT_)(int) = NULL;
 
 int opd[2] = {0, 0};
 
-void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset);
-
-void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
+static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
 {
 	// 0x10000 = ELF
 	// 0x10080 = segment 2 start
@@ -54,7 +52,7 @@ void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
 static void show_msg(char* msg)
 {
 	if(!vshtask_notify)
-		vshtask_notify = (void*)((int)getNIDfunc("vshtask", 0xA02D46E7, 0));
+		vshtask_notify = getNIDfunc("vshtask", 0xA02D46E7, 0);
 
 	if(strlen(msg) > 200) msg[200] = NULL;
 
@@ -77,7 +75,7 @@ static char* get_game_info(void)
 
 static void enable_ingame_screenshot(void)
 {
-	vshmain_is_ss_enabled = (void*)((int)getNIDfunc("vshmain", 0x981D7E9F, 0)); //is screenshot enabled?
+	vshmain_is_ss_enabled = getNIDfunc("vshmain", 0x981D7E9F, 0); //is screenshot enabled?
 
 	if(vshmain_is_ss_enabled()==0)
 	{

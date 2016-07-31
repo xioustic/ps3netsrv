@@ -783,7 +783,7 @@ static void setup_form(char *buffer, char *templn)
 	uint32_t *gcm_obj1 = VSH_GCM_OBJ + ((uint32_t) 1 << 4); // offset, pitch, width, height
 
 
-	_cellGcmIoOffsetToAddress = (void*)((int)getNIDfunc("sdk", 0x2a6fba9c, 0));
+	_cellGcmIoOffsetToAddress = getNIDfunc("sdk", 0x2a6fba9c, 0);
 
 	void *buf_adr[2];
 

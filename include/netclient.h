@@ -19,7 +19,7 @@ static sys_event_queue_t command_queue = -1;
 
 static u8 netiso_loaded = 0;
 
-static int remote_stat(int s, char *path, int *is_directory, int64_t *file_size, uint64_t *mtime, uint64_t *ctime, uint64_t *atime, int *abort_connection)
+static int remote_stat(int s, const char *path, int *is_directory, int64_t *file_size, uint64_t *mtime, uint64_t *ctime, uint64_t *atime, int *abort_connection)
 {
 	netiso_stat_cmd cmd;
 	netiso_stat_result res;
@@ -104,7 +104,7 @@ static int read_remote_file(int s, void *buf, uint64_t offset, uint32_t size, in
 	return bytes_read;
 }
 
-static int64_t open_remote_file(int s, char *path, int *abort_connection)
+static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 {
 	netiso_open_cmd cmd;
 	netiso_open_result res;
@@ -147,7 +147,7 @@ static int64_t open_remote_file(int s, char *path, int *abort_connection)
 	return (res.file_size);
 }
 /*
-static int64_t open_remote_file(char *path)
+static int64_t open_remote_file(const char *path)
 {
 	netiso_open_cmd cmd;
 	netiso_open_result res;
@@ -602,7 +602,7 @@ static int connect_to_remote_server(u8 server_id)
 	return ns;
 }
 
-static int open_remote_dir(int s, char *path, int *abort_connection)
+static int open_remote_dir(int s, const char *path, int *abort_connection)
 {
 	netiso_open_dir_cmd cmd;
 	netiso_open_dir_result res;

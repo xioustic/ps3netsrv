@@ -123,7 +123,7 @@ static int concat(char *file1, char *file2)
 				copy_aborted = false;
 
 				while(size>0ULL)
-        	    {
+				{
 					if(copy_aborted) break;
 
 					cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &msiz1);
