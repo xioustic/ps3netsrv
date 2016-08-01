@@ -39,7 +39,7 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		else if(show_play && isDir("/dev_bdvd/AVCHD"))
 			sprintf(fsize, HTML_URL, "/play.ps3", "&lt;AVCHD>");
 #ifdef FIX_GAME
-		else if(flen == 9 && islike(templn, HDD0_GAME_DIR))
+		else if(islike(templn, HDD0_GAME_DIR) || (strstr(templn + 10, "/PS3_GAME" ) != NULL))
 			sprintf(fsize, "<a href=\"/fixgame.ps3%s\">%s</a>", templn, HTML_DIR);
 #endif
 #ifdef COPY_PS3
@@ -98,7 +98,7 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	else if(!is_net && ( !extcmp(name, ".sprx", 5)))
 		sprintf(fsize, "<a href=\"/loadprx.ps3?slot=6&prx=%s\">%'llu %s</a>", templn, sz, sf);
 #endif
-	else if( (sz <= MAX_TEXT_LEN) && (strcasestr(".txt|.ini|.log|.sfx|.xml|.cfg|.css|.html|.conf|name", ext)!=NULL || strstr(templn, "wm_custom")!=NULL ) )
+	else if( (sz <= MAX_TEXT_LEN) && (strcasestr(".txt|.ini|.log|.sfx|.xml|.cfg|.his|.hip|.bup|.css|.html|.conf|name", ext)!=NULL || strstr(templn, "wm_custom")!=NULL ) )
 			sprintf(fsize, "<a href=\"/edit.ps3%s\">%'llu %s</a>", templn, sz, sf);
 	else
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);

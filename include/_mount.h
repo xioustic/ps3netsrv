@@ -1956,7 +1956,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 	char titleID[10];
 
-	if(!strcmp(_path, "/dev_bdvd")) {do_umount(false); goto exit_mount;}
+	if(islike(_path, "/dev_bdvd")) {do_umount(false); goto exit_mount;}
 
 #ifndef COBRA_ONLY
  #ifdef EXT_GDATA
