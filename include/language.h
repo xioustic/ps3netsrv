@@ -172,7 +172,7 @@ static char STR_HOME[8] = "Home";
 #define STR_FANCH3		"MIN FAN SPEED: "
 
 #define STR_OVERHEAT	"System overheat warning!"
-#define STR_OVERHEAT2	"  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!"
+#define STR_OVERHEAT2	"  OVERHEAT DANGER!\nFAN SPEED INCREASED!"
 
 #define STR_NOTFOUND	"Not found!"
 
@@ -338,7 +338,7 @@ static char STR_FANCH2[50]			= "FAN SPEED: ";
 static char STR_FANCH3[50]			= "MIN FAN SPEED: ";
 
 static char STR_OVERHEAT[100]		= "System overheat warning!";
-static char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\r\nFAN SPEED INCREASED!";
+static char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
 
 static char STR_NOTFOUND[50]		= "Not found!";
 
@@ -657,7 +657,7 @@ static void update_language(void)
 		language("STR_EJECTDISC", STR_EJECTDISC);
 		language("STR_UNMOUNTGAME", STR_UNMOUNTGAME);
 
-        language("STR_WMSTART", STR_WMSTART);
+		language("STR_WMSTART", STR_WMSTART);
 		language("STR_WMUNL", STR_WMUNL);
 		language("STR_CFWSYSALRD", STR_CFWSYSALRD);
 		language("STR_CFWSYSRIP", STR_CFWSYSRIP);

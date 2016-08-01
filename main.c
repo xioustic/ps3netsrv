@@ -1447,9 +1447,9 @@ again3:
 			if(islike(param, "/rename.ps3"))
 			{
 				char *source = param + 11, *target = strstr(source, "|");
-				if(target) {target[0] = NULL; target++;} else {*target = strstr(source, "&to="); if(target) {target[0] = NULL; target+=4;}}
+				if(target) {target[0] = NULL; target++;} else {target = strstr(source, "&to="); if(target) {target[0] = NULL; target+=4;}}
 
-				if((!islike(target, "/")) && !extcmp(source, ".bak", 4)) {size_t flen = strlen(source); *target = param + flen; strncpy(target, source, flen - 4);}
+				if((!islike(target, "/")) && !extcmp(source, ".bak", 4)) {size_t flen = strlen(source); *target = *param + flen; strncpy(target, source, flen - 4);}
 
 				if(islike(target, "/"))
 				{

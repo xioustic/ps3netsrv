@@ -170,7 +170,7 @@ static void poll_thread(uint64_t poll)
 			{
 				if(!webman_config->warn)
 				{
-					sprintf((char*) msg, "%s\r\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
+					sprintf((char*) msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
 					show_msg((char*) msg);
 					sys_timer_sleep(2);
 				}

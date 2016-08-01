@@ -12,7 +12,7 @@ static int set_gamedata_status(u8 status, bool do_mount)
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
 #ifndef COBRA_ONLY
-	sprintf(gamei_path, "//dev_hdd0/game");
+	sprintf(gamei_path, "/%s", "/dev_hdd0/game");
 	if(do_mount) max_mapped=0;
 #endif
 

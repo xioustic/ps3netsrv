@@ -23,7 +23,7 @@ static bool toggle_rebug_mode(void)
 
 	if(file_exists(VSH_MODULE_PATH "vsh.self.swp"))
 	{
-		show_msg((char*)"Normal Mode detected!\r\nSwitch to REBUG Mode Debug XMB...");
+		show_msg((char*)"Normal Mode detected!\nSwitch to REBUG Mode Debug XMB...");
 		sys_timer_sleep(3);
 
 		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.nrm", "index.dat.swp");
@@ -36,7 +36,7 @@ static bool toggle_rebug_mode(void)
 	if((file_exists(VSH_MODULE_PATH "vsh.self.nrm"))
 	&& (file_exists(VSH_MODULE_PATH "vsh.self.cexsp")))
 	{
-		show_msg((char*)"REBUG Mode Debug XMB detected!\r\nSwitch to Retail XMB...");
+		show_msg((char*)"REBUG Mode Debug XMB detected!\nSwitch to Retail XMB...");
 		sys_timer_sleep(3);
 
 		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.dexsp", "vsh.self.cexsp");
@@ -46,7 +46,7 @@ static bool toggle_rebug_mode(void)
 	else
 	if(file_exists(VSH_MODULE_PATH "vsh.self.dexsp"))
 	{
-		show_msg((char*)"REBUG Mode Retail XMB detected!\r\nSwitch to Debug XMB...");
+		show_msg((char*)"REBUG Mode Retail XMB detected!\nSwitch to Debug XMB...");
 		sys_timer_sleep(3);
 
 		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.cexsp", "vsh.self.dexsp");
@@ -63,7 +63,7 @@ static bool toggle_normal_mode(void)
 	if((file_exists(VSH_MODULE_PATH "vsh.self.nrm"))
 	&& (file_exists(VSH_MODULE_PATH "vsh.self.cexsp")))
 	{
-		show_msg((char*)"REBUG Mode Debug XMB detected!\r\nSwitch to Normal Mode...");
+		show_msg((char*)"REBUG Mode Debug XMB detected!\nSwitch to Normal Mode...");
 
 		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.swp", "index.dat.nrm");
 		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.swp", "version.txt.nrm");
@@ -74,7 +74,7 @@ static bool toggle_normal_mode(void)
 	else
 	if(file_exists(VSH_MODULE_PATH "vsh.self.dexsp"))
 	{
-		show_msg((char*)"REBUG Mode Retail XMB detected!\r\nSwitch to Normal Mode...");
+		show_msg((char*)"REBUG Mode Retail XMB detected!\nSwitch to Normal Mode...");
 
 		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.swp", "index.dat.nrm");
 		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.swp", "version.txt.nrm");
@@ -87,7 +87,7 @@ static bool toggle_normal_mode(void)
 	else
 	if(file_exists(VSH_MODULE_PATH "vsh.self.swp"))
 	{
-		show_msg((char*)"Normal Mode detected!\r\nNo need to switch!");
+		show_msg((char*)"Normal Mode detected!\nNo need to switch!");
 		sys_timer_sleep(3);
 		{system_call_3(SC_FS_UMOUNT, (u64)(char*)"/dev_blind", 0, 1);}
 	}
@@ -100,14 +100,14 @@ static void toggle_debug_menu(void)
 
 	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.dex"))
 	{
-		show_msg((char*)"CEX QA Menu is active!\r\nSwitch to DEX Debug Menu...");
+		show_msg((char*)"CEX QA Menu is active!\nSwitch to DEX Debug Menu...");
 
 		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.cex", "sysconf_plugin.sprx.dex");
 	}
 	else
 	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.cex"))
 	{
-		show_msg((char*)"DEX Debug Menu is active!\r\nSwitch to CEX QA Menu...");
+		show_msg((char*)"DEX Debug Menu is active!\nSwitch to CEX QA Menu...");
 
 		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.dex", "sysconf_plugin.sprx.cex");
 	}
@@ -124,7 +124,7 @@ static bool toggle_cobra(void)
 	if( (file_exists(REBUG_COBRA_PATH "stage2.cex")) /* &&
 		(file_exists(REBUG_COBRA_PATH "stage2.dex")) */)
 	{
-		show_msg((char*)"REBUG COBRA is active!\r\nDeactivating COBRA...");
+		show_msg((char*)"REBUG COBRA is active!\nDeactivating COBRA...");
 
 		cellFsRename(REBUG_COBRA_PATH "stage2.cex", REBUG_COBRA_PATH "stage2.cex.bak");
 		cellFsRename(REBUG_COBRA_PATH "stage2.dex", REBUG_COBRA_PATH "stage2.dex.bak");
@@ -133,7 +133,7 @@ static bool toggle_cobra(void)
 	else if((file_exists(REBUG_COBRA_PATH "stage2.cex.bak")) /* &&
 			(file_exists(REBUG_COBRA_PATH "stage2.dex.bak")) */)
 	{
-		show_msg((char*)"REBUG COBRA is inactive!\r\nActivating COBRA...");
+		show_msg((char*)"REBUG COBRA is inactive!\nActivating COBRA...");
 
 		cellFsRename(REBUG_COBRA_PATH "stage2.cex.bak", REBUG_COBRA_PATH "stage2.cex");
 		cellFsRename(REBUG_COBRA_PATH "stage2.dex.bak", REBUG_COBRA_PATH "stage2.dex");
@@ -142,7 +142,7 @@ static bool toggle_cobra(void)
  #else
 	if(file_exists(HABIB_COBRA_PATH "stage2.cex"))
 	{
-		show_msg((char*)"COBRA is active!\r\nDeactivating COBRA...");
+		show_msg((char*)"COBRA is active!\nDeactivating COBRA...");
 
 		cellFsRename(HABIB_COBRA_PATH "stage2.cex", HABIB_COBRA_PATH "stage2_disabled.cex");
 
@@ -150,7 +150,7 @@ static bool toggle_cobra(void)
 	}
 	else if(file_exists(HABIB_COBRA_PATH "stage2_disabled.cex"))
 	{
-		show_msg((char*)"COBRA is inactive!\r\nActivating COBRA...");
+		show_msg((char*)"COBRA is inactive!\nActivating COBRA...");
 
 		cellFsRename(HABIB_COBRA_PATH "stage2_disabled.cex", HABIB_COBRA_PATH "stage2.cex");
 
@@ -159,29 +159,21 @@ static bool toggle_cobra(void)
 
 	if(file_exists(SYS_COBRA_PATH "stage2.bin"))
 	{
-		show_msg((char*)"COBRA is active!\r\nDeactivating COBRA...");
+		show_msg((char*)"COBRA is active!\nDeactivating COBRA...");
 
 		cellFsRename(SYS_COBRA_PATH "stage2.bin", SYS_COBRA_PATH "stage2_disabled.bin");
 
-		if(file_exists(COLDBOOT_PATH ".normal"))
-		{
-			cellFsRename(COLDBOOT_PATH          , COLDBOOT_PATH ".cobra");
-			cellFsRename(COLDBOOT_PATH ".normal", COLDBOOT_PATH);
-		}
+		swap_file(COLDBOOT_PATH, "", ".cobra", ".normal");
 
 		return true; // vsh reboot
 	}
-	else if(file_exists(SYS_COBRA_PATH "stage2_disabled.bin"))
+	else if(file_exists(SYS_COBRA_PATH "stage2_disabled.zbin"))
 	{
-		show_msg((char*)"COBRA is inactive!\r\nActivating COBRA...");
+		show_msg((char*)"COBRA is inactive!\nActivating COBRA...");
 
 		cellFsRename(SYS_COBRA_PATH "stage2_disabled.bin", SYS_COBRA_PATH "stage2.bin");
 
-		if(file_exists(COLDBOOT_PATH ".cobra"))
-		{
-			cellFsRename(COLDBOOT_PATH         , COLDBOOT_PATH ".normal");
-			cellFsRename(COLDBOOT_PATH ".cobra", COLDBOOT_PATH);
-		}
+		swap_file(COLDBOOT_PATH, "", ".normal", ".cobra");
 
 		return true; // vsh reboot
 	}

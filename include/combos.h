@@ -334,16 +334,16 @@ show_popup:
 #endif
 								char smax[32]; if(fan_ps2_mode) sprintf(smax, "   PS2 Mode"); else if(max_temp) sprintf(smax, "   MAX: %i°C", max_temp); else if(webman_config->fanc==0) sprintf(smax, "   SYSCON"); else memset(smax, 0, 16);
 
-								sprintf((char*)tmp, "CPU: %i°C  RSX: %i°C  FAN: %i%%   \r\n"
-													"%s: %id %02d:%02d:%02d%s\r\n"
-													"Firmware : %i.%02i %s\r\n"
+								sprintf((char*)tmp, "CPU: %i°C  RSX: %i°C  FAN: %i%%   \n"
+													"%s: %id %02d:%02d:%02d%s\n"
+													"Firmware : %i.%02i %s\n"
 													"IP: %s  %s%s",
 													t1>>24, t2>>24, (int)(((int)speed*100)/255),
 													bb?"Play":"Startup", dd, hh, mm, ss, smax,
 													(int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, cfw_info, ip, net_type, syscalls_removed ? "  [noSC]" : "");
 
-								sprintf((char*)msg, "%s\r\n%s: %'i %s\r\n"
-													"%s: %'i %s\r\n", tmp,
+								sprintf((char*)msg, "%s\n%s: %'i %s\n"
+													"%s: %'i %s\n", tmp,
 													STR_STORAGE, (int)((blockSize*freeSize)>>20), STR_MBFREE,
 													STR_MEMORY, meminfo.avail>>10, STR_KBFREE);
 
@@ -353,7 +353,7 @@ show_popup:
 									ss = (u32)((pTick.tick-gTick.tick)/1000000);
 									dd = (u32)(ss / 86400); ss = ss % 86400; hh = (u32)(ss / 3600); ss = ss % 3600; mm = (u32)(ss / 60); ss = ss % 60;
 
-									if(dd<100) {char gname[200]; get_game_info(); sprintf(gname, "%s %s\r\n\r\n", _game_TitleID, _game_Title); sprintf((char*) msg, "%sPlay: %id %02d:%02d:%02d\r\n%s", gname, dd, hh, mm, ss, tmp); }
+									if(dd<100) {char gname[200]; get_game_info(); sprintf(gname, "%s %s\n\n", _game_TitleID, _game_Title); sprintf((char*) msg, "%sPlay: %id %02d:%02d:%02d\n%s", gname, dd, hh, mm, ss, tmp); }
 								}
 
 								{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
@@ -380,7 +380,7 @@ show_popup:
 									if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) max_temp+=5; else max_temp+=1;
 									if(max_temp>85) max_temp=85;
 									webman_config->temp1=max_temp;
-									sprintf((char*) msg, "%s\r\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
+									sprintf((char*) msg, "%s\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
 								}
 								else
 								{
@@ -389,7 +389,7 @@ show_popup:
 									webman_config->temp0= (u8)(((float)(webman_config->manu+1) * 255.f)/100.f);
 									webman_config->temp0=RANGE(webman_config->temp0, 0x33, MAX_FANSPEED);
 									fan_control(webman_config->temp0, 0);
-									sprintf((char*) msg, "%s\r\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
+									sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
 								}
 								save_settings();
 								show_msg((char*) msg);
@@ -413,7 +413,7 @@ show_popup:
 								{
 									if(max_temp>30) {if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) max_temp-=5; else max_temp-=1;}
 									webman_config->temp1=max_temp;
-									sprintf((char*) msg, "%s\r\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
+									sprintf((char*) msg, "%s\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
 								}
 								else
 								{
@@ -422,7 +422,7 @@ show_popup:
 									if(webman_config->temp0<0x33) webman_config->temp0=0x33;
 									if(webman_config->temp0>MAX_FANSPEED) webman_config->temp0=MAX_FANSPEED;
 									fan_control(webman_config->temp0, 0);
-									sprintf((char*) msg, "%s\r\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
+									sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
 								}
 								save_settings();
 								show_msg((char*) msg);
@@ -443,7 +443,7 @@ show_popup:
 								if(webman_config->fanc==0) enable_fan_control(3, msg);
 
 								if(webman_config->minfan-5>=MIN_FANSPEED) webman_config->minfan-=5;
-								sprintf((char*) msg, "%s\r\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
+								sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
 
 								save_settings();
 								show_msg((char*) msg);
@@ -464,7 +464,7 @@ show_popup:
 								if(webman_config->fanc==0) enable_fan_control(3, msg);
 
 								if(webman_config->minfan+5<100) webman_config->minfan+=5;
-								sprintf((char*) msg, "%s\r\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
+								sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
 
 								save_settings();
 								show_msg((char*) msg);

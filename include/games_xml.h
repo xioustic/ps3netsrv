@@ -208,10 +208,9 @@ static void make_fb_xml(char *myxml, char *templn)
 					XML_PAIR("title","%s%s")
 					XML_PAIR("info","%s")
 					"</Table>"
-					"</Attributes>"
-					"<Items>"
+					"%s"
 					QUERY_XMB("mgames", "xmb://localhost%s#seg_mygames")
-					"%s</XMBML>", XML_HEADER, templn, STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, MY_GAMES_XML, "</Items></View>");
+					"%s</XMBML>", XML_HEADER, templn, STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
 
 	savefile((char*)FB_XML, (char*)myxml, strlen(myxml));
 }
@@ -1087,7 +1086,7 @@ continue_reading_folder_xml:
 		cellFsWrite(fdxml, (char*)myxml_ps3, strlen(myxml_ps3), NULL);
 		cellFsWrite(fdxml, (char*)"</Attributes><Items>", 20, NULL);
 		cellFsWrite(fdxml, (char*)myxml_items, strlen(myxml_items), NULL);
-		sprintf(myxml, "</Items></View></XMBML>\r\n");
+		sprintf(myxml, "%s%s", "</Items></View>", "</XMBML>\r\n");
 	}
 	else
 	{
