@@ -67,6 +67,7 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Support for change BD/DVD region
 - NETISO server on PS3 (ISO only)
 - Support for local web chat
+- Support for edit small text files
 
 ## How to build
 Requirements for Windows:
