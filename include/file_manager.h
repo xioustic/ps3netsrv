@@ -468,7 +468,6 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			if(tlen > BUFFER_SIZE_HTML) break;
 		}
 
-		//if(sysmem_html) sys_memory_free(sysmem_html);
 		strcat(buffer + tlen, "</table>");
 
 		if(strlen(param) > 4)
