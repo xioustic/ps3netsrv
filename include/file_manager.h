@@ -245,8 +245,14 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			show_icon0 = jb_games || ((strlen(param) >= 14) && (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/")));
 			sprintf(templn, "<img id=\"icon\"%s>"
 							"<script>"
-							"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}"
-							"</script>", ICON_STYLE, jb_games ? "/PS3_GAME" : ""); strcat(buffer, templn);
+							"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}%s"
+							"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : ""),
+
+							// F2 = rename/move file pointed with mouse
+							islike(param, "/dev_") ?
+							"document.addEventListener('keyup',ku,false);"
+							"function ku(e){e=e||window.event;if(e.keyCode == 113)"
+							"{var a=document.querySelectorAll('a:hover')[0].href,f=a.substring(a.indexOf('/',8));if(f.substring(0,5)=='/dev_'){t=prompt('Rename to:',f);if(t&&t!=a)window.location='/rename.ps3'+f+'|'+t;}}}" : ""); strcat(buffer, templn);
 		}
 
 		strcat(buffer, "<table class=\"propfont\"><tr><td>");

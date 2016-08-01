@@ -232,10 +232,10 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	sprintf(templn, " <a id=\"pblk\" href=\"/peek.lv%i?%llx\">&lt;&lt;</a> <a id=\"back\" href=\"/peek.lv%i?%llx\">&lt;Back</a>", lv1?1:2, ((int)(address-0x1000)>=0)?(address-0x1000):0, lv1?1:2, ((int)(address-0x200)>=0)?(address-0x200):0); strcat(buffer, templn);
 	sprintf(templn, " <a id=\"next\" href=\"/peek.lv%i?%llx\">Next&gt;</a> <a id=\"nblk\" href=\"/peek.lv%i?%llx\">&gt;&gt;</a></pre>", lv1?1:2, ((int)(address+0x400)<(int)upper_memory)?(address+0x200):(upper_memory-0x200), lv1?1:2, ((int)(lv1+0x1200)<(int)upper_memory)?(address+0x1000):(upper_memory-0x200)); strcat(buffer, templn);
 
-	strcat(buffer,  "<script type=\"text/javascript\">"
-					"document.addEventListener(\"keydown\", keyDownEvent, false);"
-					"function keyDownEvent(e)"
-					"{e=e||window.event;var keyCode=e.keyCode;if(keyCode==37){self.location=e.ctrlKey?pblk.href:back.href;}if(keyCode==39){self.location=e.ctrlKey?nblk.href:next.href;}}"
+	strcat(buffer,  "<script>"
+					"document.addEventListener('keydown',kd,false);"
+					"function kd(e)"
+					"{e=e||window.event;var kc=e.keyCode;if(kc==37){self.location=e.ctrlKey?pblk.href:back.href;}if(kc==39){self.location=e.ctrlKey?nblk.href:next.href;}}"
 					"</script>");
 }
 
