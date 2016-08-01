@@ -2941,7 +2941,7 @@ exit_mount:
 
 #ifdef FIX_GAME
 	// re-check PARAM.SFO to notify if game needs to be fixed
-	if(ret && (c_firmware<4.80f))
+	if(ret && (c_firmware<LATEST_CFW))
 	{
 		char filename[64];
 		sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");

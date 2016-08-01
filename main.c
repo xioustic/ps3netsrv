@@ -581,7 +581,6 @@ static char current_file[MAX_PATH_LEN];
 #include "include/webchat.h"
 #include "include/file.h"
 #include "include/vsh.h"
-#include "include/fix_game.h"
 #include "include/ps2_disc.h"
 #include "include/xmb_savebmp.h"
 
@@ -601,6 +600,7 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 #include "include/psxemu.h"
 
 #include "include/debug_mem.h"
+#include "include/fix_game.h"
 #include "include/ftp.h"
 #include "include/fancontrol.h"
 #include "include/ps3mapi.h"

@@ -68,6 +68,7 @@ We would like to integrate all existing features available on the PS3 Scene like
 - NETISO server on PS3 (ISO only)
 - Support for local web chat
 - Support for edit small text files
+- Download files & install PKG remotely or with shortcut
 
 ## How to build
 Requirements for Windows:
@@ -88,6 +89,7 @@ Requirements for GNU/Linux:
 - Zar my mate since the first day
 - NzV for Ps3mapi, Mamba prxloader
 - OsirisX for PS3XPAD
+- bguerville for web downloader & package installer module
 - Mysis, who wrote some useful libs and reverse engineering VSH Exports functions: http://www.ps3devwiki.com/ps3/VSH#Exports
 - 3141card for VSH Menu POC & Littlebalup for his enhancement/new features
 - PSX-SCENE, PSX-PLACE, PLAYSTATIONHAX, PS3HAX & other scene websites/users, who translated, helped in the testing process
