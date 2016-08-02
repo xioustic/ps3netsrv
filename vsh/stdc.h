@@ -21,7 +21,7 @@ extern uint64_t stdc_FEFBE065;  // _Stderr
 */
 
 
-/*
+
 extern float stdc_00FDE072(float x, float y);                                         // f_powf()
 #define f_powf stdc_00FDE072
 
@@ -39,10 +39,10 @@ extern double stdc_0F428F0F(double x);                                          
 
 extern long stdc_116CDA13(const wchar_t *restrict nptr, wchar_t **restrict endptr, int base);  // wcstol
 #define wcstol stdc_116CDA13
-
+/*
 extern size_t stdc_12A55FB7(wchar_t *restrict pwc, const char *restrict s, size_t n, mbstate_t *restrict ps);  // mbrtowc
 #define mbrtowc stdc_12A55FB7
-
+*/
 extern double stdc_1313A420(double x);                                                // acos()
 #define acos stdc_1313A420
 
@@ -80,13 +80,13 @@ extern int stdc_2677568C(int c);                                                
 
 extern int stdc_26F023D5(FILE *stream);                                               // ftell()
 #define ftell stdc_26F023D5
-*/
+
 extern int stdc_273B9711(char *str, const char *fmt, ...);                            // sprintf()
 #define sprintf stdc_273B9711
 /*
 extern struct dirent *stdc_2B81FB7F(DIR *dirp);                                       // readdir()
 #define readdir stdc_2B81FB7F
-
+*/
 // stdc_2D8BE7E8  // _ZNKSt9exception6_RaiseEv
 
 extern size_t stdc_2F45D39C(const char *str);                                         // strlen()
@@ -125,10 +125,10 @@ extern float stdc_3C057FBD(float x);                                            
 
 extern int stdc_3D85D6F8(const char *str1, const char *str2);                         // strcmp()
 #define strcmp stdc_3D85D6F8
-
+/*
 extern DIR *stdc_3DBC3BEE(const char *name);                                          // opendir()
 #define opendir stdc_3DBC3BEE
-
+*/
 // stdc_3EEEDB0E  // _Dclass()
 
 extern float stdc_411434BB(float x);                                                  // asinf()
@@ -205,13 +205,13 @@ extern size_t stdc_65E8D4D0(const wchar_t *ws);                                 
 
 extern void stdc_692B497F(const char *str);                                           // perror()
 #define perror stdc_692B497F
-*/
+
 extern FILE *stdc_69C27C12(const char *filename, const char *mode);                   // fopen()
 #define fopen stdc_69C27C12
 
 extern int stdc_69FF1B9B(FILE *stream, long int offset, int whence);                  // fseek()
 #define fseek stdc_69FF1B9B
-/*
+
 extern int stdc_6D5115B0(const wchar_t *ws1, const wchar_t *ws2, size_t n);           // wcsncmp()
 #define wcsncmp stdc_6D5115B0
 
@@ -329,10 +329,10 @@ extern float stdc_9A81E583(float numer, float denom);                           
 
 extern long long int stdc_A30D4797(const wchar_t* str, wchar_t** endptr, int base);   // wcstoll()
 #define wcstoll stdc_A30D4797
-
+/*
 extern int stdc_A3440924(DIR *dirp);                                                  // closedir()
 #define closedir stdc_A3440924
-
+*/
 extern int stdc_A5BC0E19(void);                                                       // getchar()
 #define getchar stdc_A5BC0E19
 
@@ -379,10 +379,10 @@ extern int stdc_B120F6CA(int fd);                                               
 
 extern int stdc_B1F4779D(sys_spu_thread_t id, uint32_t arg_addr);                     // spu_thread_printf()
 #define spu_thread_printf stdc_B1F4779D
-
+/*
 extern size_t stdc_B2702E15(char *pmb, wchar_t wc, mbstate_t *ps);                    // wcrtomb()
 #define wcrtomb stdc_B2702E15
-
+*/
 extern float stdc_B54CC9A1(float x);                                                  // f_sinf()
 #define f_sinf stdc_B54CC9A1
 
@@ -468,10 +468,10 @@ extern char *stdc_DEBEE2AF(char *str, int c);                                   
 
 extern float stdc_DECE76A6(float x);                                                  // acosf()
 #define acosf stdc_DECE76A6
-*/
+
 extern int stdc_E1BD3587(FILE *stream);                                               // fclose()
 #define fclose stdc_E1BD3587
-/*
+
 extern int stdc_E1E83C65(const char *str1, const char *str2, size_t num);             // strncmp()
 #define strncmp stdc_E1E83C65
 
@@ -504,10 +504,10 @@ extern int stdc_EE303936(double);                                               
 
 extern int stdc_EF110B6B(const char *path);                                           // unlink()
 #define unlink stdc_EF110B6B
-*/
+
 extern wchar_t *stdc_F06EED36(wchar_t *ptr, wchar_t wc, size_t num);                  // wmemset()
 #define wmemset stdc_F06EED36
-/*
+
 extern int stdc_F0776A44(const wchar_t *wcs1, const wchar_t *wcs2);                   // wcscmp()
 #define wcscmp stdc_F0776A44
 
@@ -525,10 +525,10 @@ extern size_t stdc_F3EF3678(const wchar_t *wcs1, const wchar_t *wcs2);          
 
 extern wchar_t *stdc_F41355F9(wchar_t *dest, const wchar_t *src);                     // wcscpy()
 #define wcscpy stdc_F41355F9
-*/
+
 extern size_t stdc_F88F26C4(const void *ptr, size_t size, size_t count, FILE *stream);  // fwrite()
 #define fwrite stdc_F88F26C4
-/*
+
 extern char *stdc_F89DC648(const char *str1, const char *str2);                       // strpbrk()
 #define strpbrk stdc_F89DC648
 
@@ -550,15 +550,14 @@ extern long int stdc_FBB4047A(float x);                                         
 extern char *stdc_FC0428A6(const char *s);                                            // strdup()
 #define strdup stdc_FC0428A6
 
-*/
 extern size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max);              // mbstowcs()
 #define mbstowcs stdc_FCAC2E8E
-/*
+
 extern float stdc_FCF08193(float x);                                                  // expf()
 #define expf stdc_FCF08193
 
 extern int stdc_FE88E97E(FILE *stream, const char *fmt, ...);                         // fscanf()
 #define fscanf stdc_FE88E97E
-*/
+
 
 #endif // __STDC_H__

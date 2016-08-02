@@ -169,10 +169,10 @@ int32_t vsh_menu_stop(void);
 static void finalize_module(void);
 static void vsh_menu_stop_thread(uint64_t arg);
 
-static char tempstr[512];
+static char tempstr[512] = "";
 static uint16_t t_icon_X;
-static char netstr[64];
-static char cfw_str[64];
+static char netstr[64] = "";
+static char cfw_str[64] = "";
 static char drivestr[6][64];
 static uint8_t drive_type[6];
 
@@ -634,61 +634,54 @@ static void mount_dev_blind(void)
 	system_call_8(837, (uint64_t)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (uint64_t)(char*)"CELL_FS_FAT", (uint64_t)(char*)"/dev_blind", 0, 0, 0, 0, 0);
 }
 
+static void swap_file(const char *path, const char *curfile, const char *rento, const char *newfile)
+{
+	char file1[64], file2[64], file3[64];
+
+	sprintf(file3, "%s%s", path, newfile);
+
+	if(file_exists(file3))
+	{
+		sprintf(file1, "%s%s", path, curfile);
+		sprintf(file2, "%s%s", path, rento);
+
+		cellFsRename(file1, file2);
+		cellFsRename(file3, file1);
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////
 //                        TOGGLE NORMAL/REBUG MODE                    //
 ////////////////////////////////////////////////////////////////////////
 
 static void toggle_normal_rebug_mode(void)
 {
-	struct CellFsStat s;
 	mount_dev_blind();
 
-	if(cellFsStat((char*) VSH_MODULE_PATH "vsh.self.swp", &s)==CELL_FS_SUCCEEDED)
+	if(file_exists(VSH_MODULE_PATH "vsh.self.swp"))
 	{
 		stop_VSH_Menu();
 		vshtask_notify("Normal Mode detected!\r\nSwitch to REBUG Mode...");
 		play_rco_sound("system_plugin", "snd_system_ok");
 		sys_timer_sleep(1);
 
-		if(cellFsStat((char*) VSH_ETC_PATH "index.dat.swp", &s)==CELL_FS_SUCCEEDED)
-		{
-			cellFsRename(VSH_ETC_PATH "index.dat", VSH_ETC_PATH "index.dat.nrm");
-			cellFsRename(VSH_ETC_PATH "index.dat.swp", VSH_ETC_PATH "index.dat");
-		}
-
-		if(cellFsStat((char*) VSH_ETC_PATH "version.txt.swp", &s)==CELL_FS_SUCCEEDED)
-		{
-			cellFsRename(VSH_ETC_PATH "version.txt", VSH_ETC_PATH "version.txt.nrm");
-			cellFsRename(VSH_ETC_PATH "version.txt.swp", VSH_ETC_PATH "version.txt");
-		}
-
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.nrm");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.swp", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.nrm", "index.dat.swp");
+		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.nrm", "version.txt.swp");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.nrm", "vsh.self.swp");
 
 		soft_reboot();
 	}
 	else
-	if(cellFsStat((char*) VSH_MODULE_PATH "vsh.self.nrm", &s)==CELL_FS_SUCCEEDED)
+	if(file_exists(VSH_MODULE_PATH "vsh.self.nrm"))
 	{
 		stop_VSH_Menu();
 		vshtask_notify("Rebug Mode detected!\r\nSwitch to Normal Mode...");
 		play_rco_sound("system_plugin", "snd_system_ok");
 		sys_timer_sleep(1);
 
-		if(cellFsStat((char*) VSH_ETC_PATH "index.dat.nrm", &s)==CELL_FS_SUCCEEDED)
-		{
-			cellFsRename(VSH_ETC_PATH "index.dat", VSH_ETC_PATH "index.dat.swp");
-			cellFsRename(VSH_ETC_PATH "index.dat.nrm", VSH_ETC_PATH "index.dat");
-		}
-
-		if(cellFsStat((char*) VSH_ETC_PATH "version.txt.nrm", &s)==CELL_FS_SUCCEEDED)
-		{
-			cellFsRename(VSH_ETC_PATH "version.txt", VSH_ETC_PATH "version.txt.swp");
-			cellFsRename(VSH_ETC_PATH "version.txt.nrm", VSH_ETC_PATH "version.txt");
-		}
-
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.swp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.nrm", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.swp", "index.dat.nrm");
+		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.swp", "version.txt.nrm");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.swp", "vsh.self.nrm");
 
 		soft_reboot();
 	}
@@ -700,31 +693,28 @@ static void toggle_normal_rebug_mode(void)
 
 static void toggle_xmb_mode(void)
 {
-    struct CellFsStat s;
 	mount_dev_blind();
 
-	if((cellFsStat((char*) VSH_MODULE_PATH "vsh.self.cexsp", &s)==CELL_FS_SUCCEEDED))
+	if(file_exists(VSH_MODULE_PATH "vsh.self.cexsp"))
 	{
 		stop_VSH_Menu();
 		vshtask_notify("Debug XMB detected!\r\nSwitch to Retail XMB...");
 		play_rco_sound("system_plugin", "snd_system_ok");
 		sys_timer_sleep(1);
 
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.dexsp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.cexsp", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.dexsp", "vsh.self.cexsp");
 
 		soft_reboot();
 	}
 	else
-	if(cellFsStat((char*) VSH_MODULE_PATH "vsh.self.dexsp", &s)==CELL_FS_SUCCEEDED)
+	if(file_exists(VSH_MODULE_PATH "vsh.self.dexsp"))
 	{
 		stop_VSH_Menu();
 		vshtask_notify("Retail XMB detected!\r\nSwitch to Debug XMB...");
 		play_rco_sound("system_plugin", "snd_system_ok");
 		sys_timer_sleep(1);
 
-		cellFsRename(VSH_MODULE_PATH "vsh.self", VSH_MODULE_PATH "vsh.self.cexsp");
-		cellFsRename(VSH_MODULE_PATH "vsh.self.dexsp", VSH_MODULE_PATH "vsh.self");
+		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.cexsp", "vsh.self.dexsp");
 
 		soft_reboot();
 	}
@@ -736,10 +726,9 @@ static void toggle_xmb_mode(void)
 
 static void toggle_debug_menu(void)
 {
-    struct CellFsStat s;
 	mount_dev_blind();
 
-	if(cellFsStat((char*) VSH_MODULE_PATH "sysconf_plugin.sprx.dex", &s)==CELL_FS_SUCCEEDED)
+	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.dex"))
 	{
 
 		stop_VSH_Menu();
@@ -747,19 +736,17 @@ static void toggle_debug_menu(void)
 		play_rco_sound("system_plugin", "snd_system_ok");
 		sys_timer_sleep(1);
 
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx", VSH_MODULE_PATH "sysconf_plugin.sprx.cex");
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx.dex", VSH_MODULE_PATH "sysconf_plugin.sprx");
+		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.cex", "sysconf_plugin.sprx.dex");
 	}
 	else
-	if(cellFsStat((char*) VSH_MODULE_PATH "sysconf_plugin.sprx.cex", &s)==CELL_FS_SUCCEEDED)
+	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.cex"))
 	{
 		stop_VSH_Menu();
 		vshtask_notify("DEX Debug Menu is active!\r\nSwitch to CEX QA Menu...");
 		play_rco_sound("system_plugin", "snd_system_ok");
 		sys_timer_sleep(1);
 
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx", VSH_MODULE_PATH "sysconf_plugin.sprx.dex");
-		cellFsRename(VSH_MODULE_PATH "sysconf_plugin.sprx.cex", VSH_MODULE_PATH "sysconf_plugin.sprx");
+		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.dex", "sysconf_plugin.sprx.cex");
 	}
 	sys_timer_sleep(1);
 	{system_call_3(838, (uint64_t)(char*)"/dev_blind", 0, 1);}
@@ -801,11 +788,9 @@ static void disable_cobra_stage2(void)
 
 static void disable_webman(void)
 {
-	struct CellFsStat s;
-
 	stop_VSH_Menu();
 
-	if(cellFsStat("/dev_flash/vsh/module/webftp_server.sprx", &s)==CELL_FS_SUCCEEDED)
+	if(file_exists("/dev_flash/vsh/module/webftp_server.sprx"))
 	{
 		mount_dev_blind();
 		vshtask_notify("webMAN MOD is Enabled!\r\nNow will be Disabled...");
@@ -815,7 +800,7 @@ static void disable_webman(void)
 		cellFsRename("/dev_blind/vsh/module/webftp_server.sprx", "/dev_blind/vsh/module/webftp_server.sprx.vsh");
 		soft_reboot();
 	}
-	else if(cellFsStat("/dev_blind/vsh/module/webftp_server.sprx.vsh", &s)==CELL_FS_SUCCEEDED)
+	else if(file_exists("/dev_blind/vsh/module/webftp_server.sprx.vsh"))
 	{
 		mount_dev_blind();
 		vshtask_notify("webMAN MOD Disabled!\r\nNow will be Enabled...");
@@ -1132,7 +1117,7 @@ static void do_file_manager_action(uint32_t curpad)
   // do file action
   else if(curpad & (PAD_CROSS | PAD_START | PAD_TRIANGLE))
   {
-      int ext_offset = strlen(items[cur_item]) - 4; if(ext_offset<0) ext_offset = 0;
+      int ext_offset = strlen(items[cur_item]) - 4; if(ext_offset<0) ext_offset = 0; bool is_file = !items_isdir[cur_item];
 
       // go folder up
       if(curpad & PAD_TRIANGLE)
@@ -1145,8 +1130,21 @@ static void do_file_manager_action(uint32_t curpad)
       }
       else
 
+      // edit txt
+      if( is_file && (strstr(items[cur_item], "_plugins.txt")!=NULL) )
+      {
+          char url[MAX_PATH_LEN];
+          sprintf(tempstr, "%s/%s", curdir, items[cur_item]);
+          urlenc(url, tempstr);
+          sprintf(tempstr, "GET /edit.ps3%s", url);
+          send_wm_request(tempstr);
+          return_to_xmb();
+          return;
+      }
+      else
+
       // open file in browser
-      if(strcasestr(".png|.bmp|.jpg|.gif|.sht|.txt|.htm|.log|.cfg|.hip|.his", items[cur_item] + ext_offset)!=NULL)
+      if( is_file && (strcasestr(".png|.bmp|.jpg|.gif|.sht|.txt|.htm|.log|.cfg|.hip|.his", items[cur_item] + ext_offset)!=NULL) )
       {
           char url[MAX_PATH_LEN];
           sprintf(tempstr, "%s/%s", curdir, items[cur_item]);
@@ -1161,8 +1159,32 @@ static void do_file_manager_action(uint32_t curpad)
       }
       else
 
+      // rename file
+      if( is_file && (strcasestr(".bak", items[cur_item] + ext_offset)!=NULL) )
+      {
+          char source[MAX_PATH_LEN];
+          sprintf(source, "%s/%s", curdir, items[cur_item]); items[cur_item][ext_offset] = NULL;
+          sprintf(tempstr, "%s/%s", curdir, items[cur_item]);
+          cellFsRename(source, tempstr);
+          return;
+      }
+      else
+
+      // install pkg
+      if( is_file && (strcasestr(".pkg", items[cur_item] + ext_offset)!=NULL) )
+      {
+          char url[MAX_PATH_LEN];
+          sprintf(tempstr, "%s/%s", curdir, items[cur_item]);
+          urlenc(url, tempstr);
+          sprintf(tempstr, "GET /install.ps3%s", url);
+          send_wm_request(tempstr);
+          return_to_xmb();
+          return;
+      }
+      else
+
       // copy file from hdd0->usb000 / usb000->hdd0
-      if(((!items_isdir[cur_item]) && (strcasestr(".pkg|.p3t|.mp3|.mp4|.mkv|.avi|sprx|edat|.rco|.qrc", items[cur_item] + ext_offset)!=NULL || strstr(items[cur_item], "coldboot")!=NULL)) || (strstr(curdir, "/dev_hdd0/home")!=NULL))
+      if( (is_file && (strcasestr(".p3t|.mp3|.mp4|.mkv|.avi|sprx|edat|.rco|.qrc", items[cur_item] + ext_offset)!=NULL || strstr(items[cur_item], "coldboot")!=NULL)) || (strstr(curdir, "/dev_hdd0/home")==curdir) )
       {
           char url[MAX_PATH_LEN];
           sprintf(tempstr, "%s/%s", curdir, items[cur_item]);
@@ -1175,7 +1197,7 @@ static void do_file_manager_action(uint32_t curpad)
       else
 
       // mount game
-      if(((!items_isdir[cur_item]) && (strcasestr(".iso|so.0|.img|.mdf|.cue|.bin", items[cur_item] + ext_offset)!=NULL || strstr(curdir, "/PS3_GAME")!=NULL)) || (strcmp(items[cur_item], "PS3_DISC.SFB")==0) || (items_isdir[cur_item] && (curpad & PAD_START)))
+      if( (is_file && (strcasestr(".iso|so.0|.img|.mdf|.cue|.bin", items[cur_item] + ext_offset)!=NULL || strstr(curdir, "/PS3_GAME")!=NULL)) || (strcmp(items[cur_item], "PS3_DISC.SFB")==0) || (items_isdir[cur_item] && (curpad & PAD_START)) )
       {
           if(strcmp(items[cur_item], "PS3_DISC.SFB")==0)
               sprintf(tempstr, "%s", curdir);
@@ -1185,7 +1207,7 @@ static void do_file_manager_action(uint32_t curpad)
           char url[MAX_PATH_LEN];
           urlenc(url, tempstr);
 
-          if(strstr(curdir, "/dev_hdd0/game"))
+          if(strstr(curdir, "/dev_hdd0/game")==curdir)
               sprintf(tempstr, "GET /fixgame.ps3%s", url);
           else if(strstr(url, "/dev_bdvd") || strstr(url, "/app_home"))
               sprintf(tempstr, "GET /play.ps3");
@@ -1426,7 +1448,7 @@ static void draw_background_and_title(void)
                                                     (view == FILE_MANAGER)    ? curdir + curdir_offset :
                                                     (view == PLUGINS_MANAGER) ? "Plugins Manager"      :
                                                                                "VSH Menu for webMAN") );
-  set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.09");
+  set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.10");
 }
 
 static void draw_menu_options(void)
@@ -1521,15 +1543,21 @@ static void draw_legend(void)
   // print X legend
   if(view == FILE_MANAGER)
   {
-      int ext_offset = strlen(items[cur_item]) - 4; if(ext_offset < 0) ext_offset = 0;
+      int ext_offset = strlen(items[cur_item]) - 4; if(ext_offset < 0) ext_offset = 0; bool is_file = !items_isdir[cur_item];
 
-      if(strcasestr(".png|.bmp|.jpg|.gif|.sht|.txt|.htm|.log|.cfg|.hip|.his", items[cur_item] + ext_offset)!=NULL)
+      if( is_file && (strcasestr(".png|.bmp|.jpg|.gif|.sht|.txt|.htm|.log|.cfg|.hip|.his", items[cur_item] + ext_offset)!=NULL) )
           print_text(570, 266, "View");
       else
-      if(((!items_isdir[cur_item]) && (strcasestr(".pkg|.p3t|.mp3|.mp4|.mkv|.avi|sprx|edat|.rco|.qrc", items[cur_item] + ext_offset)!=NULL || strstr(items[cur_item], "coldboot")!=NULL)) || (strstr(curdir, "/dev_hdd0/home")!=NULL))
+      if( is_file && (strcasestr(".pkg", items[cur_item] + ext_offset)!=NULL) )
+          print_text(570, 266, "Install");
+      else
+      if( is_file && (strcasestr(".bak", items[cur_item] + ext_offset)!=NULL) )
+          print_text(570, 266, "Rename");
+      else
+      if( (is_file && (strcasestr(".p3t|.mp3|.mp4|.mkv|.avi|sprx|edat|.rco|.qrc", items[cur_item] + ext_offset)!=NULL || strstr(items[cur_item], "coldboot")!=NULL)) || (strstr(curdir, "/dev_hdd0/home")==curdir) )
           print_text(570, 266, "Copy");
       else
-      if(((!items_isdir[cur_item]) && (strcasestr(".iso|so.0|.img|.mdf|.cue|.bin", items[cur_item] + ext_offset)!=NULL || strstr(curdir, "/PS3_GAME")!=NULL)) || (strcmp(items[cur_item], "PS3_DISC.SFB")==0))
+      if( is_file && ((strcasestr(".iso|so.0|.img|.mdf|.cue|.bin", items[cur_item] + ext_offset)!=NULL || strstr(curdir, "/PS3_GAME")!=NULL) || (strcmp(items[cur_item], "PS3_DISC.SFB")==0)) )
           print_text(570, 266, "Mount");
       else
           print_text(570, 266, "Select");  // draw X button
@@ -1597,24 +1625,23 @@ static void draw_drives_info(void)
 {
   set_font(20.f, 17.f, 1.f, 1);
   set_foreground_color(YELLOW);
-  print_text(20, 208, "Available free space on device(s):");
+  //print_text(20, 208, "Available free space on device(s):");
 
-  int fd;
+  int fd, j;
 
   //draw drives info
-  if((frame == 1) && cellFsOpendir("/", &fd) == CELL_FS_SUCCEEDED)
+  if( (frame == 1) && (cellFsOpendir("/", &fd) == CELL_FS_SUCCEEDED) )
   {
     char drivepath[32], freeSizeStr[32], devSizeStr[32];
     uint64_t read, freeSize, devSize;
     CellFsDirent dir;
 
-    int8_t j; for(j = 0; j < 6; j++) {memset(drivestr[j], 0, 64); drive_type[j] = 0;} j = 0;
+    for(j = 0; j < 6; j++) {memset(drivestr[j], 0, 64); drive_type[j] = 0;}
 
-    read = sizeof(CellFsDirent);
-    while(!cellFsReaddir(fd, &dir, &read))
+    j = 0;
+
+    while(cellFsReaddir(fd, &dir, &read) == 0 && read > 0)
     {
-      if(!read) break;
-
       if (strncmp("dev_hdd", dir.d_name, 7) == 0)
         drive_type[j] = 1;
       else if (strncmp("dev_usb", dir.d_name, 7) == 0)
@@ -1630,20 +1657,27 @@ static void draw_drives_info(void)
 
       system_call_3(840, (uint64_t)(uint32_t)drivepath, (uint64_t)(uint32_t)&devSize, (uint64_t)(uint32_t)&freeSize);
 
-      if (freeSize < 1073741824) sprintf(freeSizeStr, "%.2f MB", (double) (freeSize / 1048576.00f));
-      else  sprintf(freeSizeStr, "%.2f GB", (double) (freeSize / 1073741824.00f));
-      if (devSize < 1073741824) sprintf(devSizeStr, "%.2f MB", (double) (devSize / 1048576.00f));
-      else  sprintf(devSizeStr, "%.2f GB", (double) (devSize / 1073741824.00f));
+      if (freeSize < 1073741824)
+          sprintf(freeSizeStr, "%.2f MB", (double) (freeSize / 1048576.00f));
+      else
+          sprintf(freeSizeStr, "%.2f GB", (double) (freeSize / 1073741824.00f));
+
+      if (devSize < 1073741824)
+          sprintf(devSizeStr, "%.2f MB", (double) (devSize / 1048576.00f));
+      else
+          sprintf(devSizeStr, "%.2f GB", (double) (devSize / 1073741824.00f));
 
       sprintf(drivestr[j], "%s :  %s / %s", drivepath, freeSizeStr, devSizeStr);
 
-      j++; if(j > 5) break;
+      j++; if(j >= 6) break;
     }
 
     cellFsClosedir(fd);
   }
 
-  for(int8_t j = 0; j < 6; j++)
+  print_text(20, 208, "Available free space on device(s):");
+
+  for(j = 0; j < 6; j++)
   {
         if(drive_type[j]) {draw_png(0, 25, 230 + (26 * j), 32 + (32 * drive_type[j]), 464, 32, 32); print_text(60, 235 + (26 * j), drivestr[j]);}
   }
@@ -1662,7 +1696,7 @@ static void draw_frame(void)
   {
       draw_system_info();
   }
-  else if(has_icon0 && clipboard_mode == 0) return;
+  else if(has_icon0 && (clipboard_mode == 0)) return;
 
   draw_drives_info();
 }
