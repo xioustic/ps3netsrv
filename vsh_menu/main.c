@@ -1136,7 +1136,7 @@ static void do_file_manager_action(uint32_t curpad)
           char url[MAX_PATH_LEN];
           sprintf(tempstr, "%s/%s", curdir, items[cur_item]);
           urlenc(url, tempstr);
-          sprintf(tempstr, "GET /edit.ps3%s", url);
+          sprintf(tempstr, "GET /browser.ps3/edit.ps3%s", url);
           send_wm_request(tempstr);
           return_to_xmb();
           return;
@@ -1559,6 +1559,9 @@ static void draw_legend(void)
       else
       if( is_file && ((strcasestr(".iso|so.0|.img|.mdf|.cue|.bin", items[cur_item] + ext_offset)!=NULL || strstr(curdir, "/PS3_GAME")!=NULL) || (strcmp(items[cur_item], "PS3_DISC.SFB")==0)) )
           print_text(570, 266, "Mount");
+      else
+      if( is_file && (strstr(items[cur_item], "_plugins.txt")!=NULL) )
+          print_text(570, 266, "Edit");
       else
           print_text(570, 266, "Select");  // draw X button
 
