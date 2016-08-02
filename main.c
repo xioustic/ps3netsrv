@@ -543,6 +543,7 @@ static void restore_cfw_syscalls(void);
 #endif
 
 #ifdef PKG_HANDLER
+static int installPKG(const char *pkgpath, char *msg);
 static int installPKG_combo(char *msg);
 #endif
 

@@ -269,6 +269,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							ssend(conn_s_ftp, "214-CMDs:\r\n"
 #ifndef LITE_EDITION
 											  " SITE FLASH\r\n"
+ #ifdef PKG_HANDLER
+											  " SITE INSTALL <file>\r\n"
+ #endif
  #ifdef EXT_GDATA
 											  " SITE EXTGD <ON/OFF>\r\n"
  #endif
@@ -323,6 +326,20 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								enable_dev_blind(NULL);
 						}
 #ifndef LITE_EDITION
+ #ifdef PKG_HANDLER
+						else
+						if(strcasecmp(cmd, "INSTALL") == 0)
+						{
+							absPath(param, filename, cwd); char *msg = filename;
+
+							if(installPKG(param, msg) == 0)
+								ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
+							else
+								ssend(conn_s_ftp, FTP_ERROR_451); // Requested action aborted. Local error in processing.
+
+							show_msg(msg);
+						}
+ #endif
  #ifdef EXT_GDATA
 						else
 						if(strcasecmp(cmd, "EXTGD") == 0)

@@ -193,7 +193,7 @@ end_download_process:
 	return ret;
 }
 
-static int installPKG(char *pkgpath, char *msg)
+static int installPKG(const char *pkgpath, char *msg)
 {
 	int ret = FAILED;
 	if(View_Find("game_plugin"))
@@ -208,8 +208,7 @@ static int installPKG(char *pkgpath, char *msg)
 
 	if (pkg_path_len < MAX_PKGPATH_LEN)
 	{
-		memset(pkg_path, 0, MAX_PKGPATH_LEN);
-		strcpy(pkg_path, pkgpath);
+		snprintf(pkg_path, MAX_PKGPATH_LEN, "%s", pkgpath);
 
 		if( file_exists(pkg_path) )
 		{
@@ -227,6 +226,7 @@ static int installPKG(char *pkgpath, char *msg)
 				}
 				ret = LoadPluginById(0x16, (void *)installPKG_thread);
 				sprintf(msg,(const char *)"Installing %s", pkg_path);
+				ret = 0;
 			}
 		}
 	}

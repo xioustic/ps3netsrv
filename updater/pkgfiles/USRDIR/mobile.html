@@ -1913,7 +1913,16 @@ function navigate()
 	url=prompt('URL',url); if(url.length==0) return;
 
 	if(url.indexOf('http://')>-1 || url.indexOf('https://')>-1)
-		window.open('/browser.ps3?'+url, 'webMAN');
+	{
+		if((url.indexOf('url=')>10) && (url.indexOf('to=/dev_')>=0))
+			window.open('/download.ps3?'+url, 'webMAN');
+		else if ((url.indexOf('.pkg')>8) && (url.indexOf('http')==0))
+			window.open('/download.ps3?url='+url, 'webMAN');
+		else if(url.indexOf('.sprx')>-1)
+			window.open('/download.ps3?to=/dev_hdd0/plugins&url='+url, 'webMAN');
+		else
+			window.open('/browser.ps3?'+url, 'webMAN');
+	}
 	else if(url.indexOf('.com')>-1 || url.indexOf('.net')>-1 || url.indexOf('.org')>-1 || url.indexOf('.biz')>-1 || url.indexOf('.info')>-1)
 		window.open('/browser.ps3?http://'+url, 'webMAN');
 	else if(url=='.' || url=='aldostools')
