@@ -523,7 +523,6 @@ static char local_ip[16] = "127.0.0.1";
 #include "include/html.h"
 #include "include/language.h"
 
-#include "include/ps2_classic.h"
 #include "include/vpad.h"
 #include "include/idps.h"
 #include "include/singstar.h"
@@ -583,6 +582,7 @@ static char current_file[MAX_PATH_LEN];
 #include "include/file.h"
 #include "include/vsh.h"
 #include "include/ps2_disc.h"
+#include "include/ps2_classic.h"
 #include "include/xmb_savebmp.h"
 
 
@@ -1315,8 +1315,8 @@ again3:
 
 							if(cellFsOpen("/dev_hdd0/klic.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 							{
-								uint64_t nrw; int size = strlen(buffer);
-								cellFsWrite(fd, buffer, size, &nrw);
+								int size = strlen(buffer);
+								cellFsWrite(fd, buffer, size, NULL);
 								cellFsClose(fd);
 							}
 
@@ -2185,7 +2185,7 @@ html_response:
 						bool is_reset = false; char name[MAX_PATH_LEN], *param2 = param + 11;
 						if(strstr(param, "?wmreset")) is_reset=true;
 						if(is_reset || strstr(param, "?wmconfig")) {cellFsUnlink(WMCONFIG); reset_settings(); sprintf(param, "/delete_ps3%s", WMCONFIG);}
-						if(is_reset || strstr(param, "?wmtmp")) strcpy(param, "/delete_ps3/dev_hdd0/tmp/wmtmp\0");
+						if(is_reset || strstr(param, "?wmtmp")) sprintf(param, "/delete_ps3%s", WMTMP);
 
 						if(islike(param2 , "?history"))
 						{

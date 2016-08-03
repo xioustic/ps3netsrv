@@ -33,20 +33,13 @@ static u32 mtrl_items = 0;
 
 static void add_launchpad_header(void)
 {
-	int fd; mtrl_items = 0;
+	mtrl_items = 0;
 
-	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_OK)
-	{
-		char tempstr[200];
-		sprintf(tempstr, "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-						 "<nsx anno=\"\" lt-id=\"131\" min-sys-ver=\"1\" rev=\"1093\" ver=\"1.0\">\n"
-						 "<spc anno=\"csxad=1&amp;adspace=9,10,11,12,13\" id=\"33537\" multi=\"o\" rep=\"t\">\n\n");
+	char *tempstr =  (char*)"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+							"<nsx anno=\"\" lt-id=\"131\" min-sys-ver=\"1\" rev=\"1093\" ver=\"1.0\">\n"
+							"<spc anno=\"csxad=1&amp;adspace=9,10,11,12,13\" id=\"33537\" multi=\"o\" rep=\"t\">\n\n";
 
-		uint64_t size = strlen(tempstr);
-		cellFsWrite(fd, tempstr, size, &size);
-
-		cellFsClose(fd);
-	}
+	savefile(LAUNCHPAD_FILE_XML, tempstr, strlen(tempstr));
 }
 
 static void add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID)
@@ -82,7 +75,7 @@ static void add_launchpad_entry(char *tempstr, char *templn, const char *url, ch
 						 "<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
 
 		uint64_t size = strlen(tempstr);
-		cellFsWrite(fd, tempstr, size, &size);
+		cellFsWrite(fd, tempstr, size, NULL);
 
 		cellFsClose(fd);
 
@@ -128,7 +121,7 @@ static void add_launchpad_footer(char *tempstr)
 						 "</spc></nsx>");
 
 		uint64_t size = strlen(tempstr);
-		cellFsWrite(fd, tempstr, size, &size);
+		cellFsWrite(fd, tempstr, size, NULL);
 
 		cellFsClose(fd);
 	}
@@ -137,17 +130,17 @@ static void add_launchpad_footer(char *tempstr)
 
 static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)
 {
-	if(strlen(templn)<6) strcat(templn, "      ");
+	u16 tlen = strlen(templn); if(tlen < 6) strcat(templn, "      ");
 
 	u8 c = 0;
 	if(templn[0]=='[' && templn[4]==']') {c = (templn[5]!=' ') ? 5 : 6;} // ignore tag prefixes. e.g. [PS3] [PS2] [PSX] [PSP] [DVD] [BDV] [ISO] etc.
 	sprintf(skey, "!%c%c%c%c%c%c%04i", templn[c], templn[c+1], templn[c+2], templn[c+3], templn[c+4], templn[c+5], key);
 
-	char *p = strstr(templn, "CD");
+	char *p = strstr(templn + 5, "CD");
 	if(p) {if(ISDIGIT(p[2])) skey[6]=p[2]; if(ISDIGIT(p[3])) skey[6]=p[3];} // sort by CD#
 	else
 	{
-		u16 tlen = strlen(templn); if(tlen > 64) tlen = 64;
+		if(tlen > 64) tlen = 64;
 		for(u16 i = 5; i < tlen; i++)
 		{
 			if(templn[i+1]=='[') break;
@@ -460,8 +453,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 	char param[MAX_PATH_LEN];
 	char icon[MAX_PATH_LEN], enc_dir_name[1024], subpath[MAX_PATH_LEN];
 
-	u8 is_net=0;
-	int abort_connection=0;
+	u8 is_net = 0;
+	int abort_connection = 0;
 
 	xml_len[0] = strlen(myxml_dvd);
 	xml_len[1] = strlen(myxml_psx);
@@ -542,7 +535,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 			if(f1>=10) {if(f0<7 || f0>NTFS) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else continue;}
 			if(f0==NTFS) {if(f1>6 || !cobra_mode) break; else if(IS_JB_FOLDER || IS_PS2_FOLDER) continue;}
 
-			is_net=(f0>=7 && f0<NTFS);
+			is_net = (f0>=7 && f0<NTFS);
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -634,7 +627,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 
 
-				while((!is_net && cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
+				while((!is_net && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 					|| (is_net && (v3_entry < v3_entries))
@@ -647,7 +640,7 @@ static bool update_mygames_xml(u64 conn_s_p)
  #ifndef LITE_EDITION
 					if(is_net)
 					{
-						if((ls==false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (strlen(data[v3_entry].name)==1)) ls=true;
+						if((ls==false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1]==NULL)) ls=true; // single letter folder was found
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0)==FAILED) {v3_entry++; continue;}
 
@@ -829,7 +822,7 @@ next_xml_entry:
 continue_reading_folder_xml:
 
 			if((uprofile>0) && (f1<9)) {subfolder=uprofile=0; goto read_folder_xml;}
-			if(is_net && ls && li<27) {li++; goto subfolder_letter_xml;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_xml;}
+			if(is_net && ls && (li<27)) {li++; goto subfolder_letter_xml;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_xml;}
 //
 		}
 		if(is_net && ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
@@ -1046,7 +1039,7 @@ continue_reading_folder_xml:
 
 	if(!(webman_config->nogrp))
 	{
-        strcat(myxml, "</Attributes><Items>");
+		strcat(myxml, "</Attributes><Items>");
 		if( !(webman_config->noset) )
 		{
 			if(add_xmbm_plus)

@@ -799,20 +799,11 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(templn, "OFFSET#1: %x, P: %i, W: %i, H: %i, E: %x <br>",
 		gcm_obj1[0], gcm_obj1[1], gcm_obj1[2], gcm_obj1[3], buf_adr[1]); strcat(buffer, templn);
 */
-
 }
 
 static int save_settings()
 {
-	u64 written; int fdwm=0;
-	if(cellFsOpen(WMCONFIG, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
-	{
-		cellFsWrite(fdwm, (void *)wmconfig, sizeof(WebmanCfg), &written);
-		cellFsClose(fdwm);
-		return CELL_FS_SUCCEEDED;
-	}
-	else
-		return FAILED;
+	savefile(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
 }
 
 static void reset_settings()

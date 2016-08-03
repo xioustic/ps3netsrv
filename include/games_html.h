@@ -568,7 +568,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	if(loading_games)
 	{
 		int abort_connection=0;
-		u8 is_net=0;
+		u8 is_net = 0;
 
 		char ename[8];
 		u16 idx=0;
@@ -651,7 +651,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(f1>=10) {if(f0<7 || f0>NTFS) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else continue;}
 				if(f0==NTFS) {if(f1>6 || !cobra_mode) break; else if(IS_JB_FOLDER || IS_PS2_FOLDER) continue;}
 
-				is_net=(f0>=7 && f0<NTFS);
+				is_net = (f0>=7 && f0<NTFS);
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -726,7 +726,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				CellFsDirent entry;
 				u64 read_e;
 				u8 is_iso=0;
-				int fd2=0;
+				int fd2=0, flen;
 				char tempID[12];
 				cellRtcGetCurrentTick(&pTick);
 
@@ -748,7 +748,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 				default_icon = (f1 < 4) ? 5 : (f1 == 4) ? 9 : (f1 == 5) ? 7 : (f1 < 8 ) ? 6 : (f1 < 10 ) ? 8 : 5;
 
-				while((!is_net && cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
+				while((!is_net && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 					|| (is_net && (v3_entry < v3_entries))
@@ -761,7 +761,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
  #ifndef LITE_EDITION
 					if(is_net)
 					{
-						if((ls==false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (strlen(data[v3_entry].name)==1)) ls=true;
+						if((ls==false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1]==NULL)) ls=true; // single letter folder was found
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 1)==FAILED) {v3_entry++; continue;}
 
@@ -790,10 +790,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 								neth, param, enc_dir_name,
 								templn);
 
-						v3_entry++;
-						if(strlen(tempstr)>MAX_LINE_LEN) continue; //ignore lines too long
-						strncpy(line_entry[idx].path, tempstr, MAX_LINE_LEN); idx++;
-						tlen+=strlen(tempstr);
+						v3_entry++; flen = strlen(tempstr);
+						if(flen > MAX_LINE_LEN) continue; //ignore lines too long
+						strcpy(line_entry[idx].path, tempstr); idx++;
+						tlen += flen;
 					}
 					else
  #endif
@@ -813,7 +813,7 @@ next_html_entry:
 							if(entry.d_name[0]=='.') goto next_html_entry;
 							sprintf(templn, "%s/%s", subpath, entry.d_name); strcpy(entry.d_name, templn);
 						}
-						int flen = strlen(entry.d_name);
+						flen = strlen(entry.d_name);
 //////////////////////////////
 
 						if(idx>=max_entries || tlen>=BUFFER_MAXSIZE) break;
@@ -909,7 +909,7 @@ next_html_entry:
 
 							urlenc(enc_dir_name, entry.d_name, 0);
 
-							templn[64] = NULL; flen=strlen(templn);
+							templn[64] = NULL; flen = strlen(templn);
 							snprintf(ename, 6, "%s    ", templn);
 
 							urlenc(tempstr, icon, 1);
@@ -939,10 +939,11 @@ next_html_entry:
 								while(strlen(templn)>MAX_LINE_LEN);
 							}
 
-							if(strlen(tempstr)>MAX_LINE_LEN) continue; //ignore lines too long
+							flen = strlen(tempstr);
+							if(flen > MAX_LINE_LEN) continue; //ignore lines too long
 
-							strncpy(line_entry[idx].path, tempstr, MAX_LINE_LEN); idx++;
-							tlen+=strlen(tempstr);
+							strcpy(line_entry[idx].path, tempstr); idx++;
+							tlen += flen;
 
 							cellRtcGetCurrentTick(&pTick);
 						}
@@ -964,7 +965,7 @@ next_html_entry:
 	continue_reading_folder_html:
 
 				if((uprofile>0) && (f1<9)) {subfolder=uprofile=0; goto read_folder_html;}
-				if(is_net && ls && li<27) {li++; goto subfolder_letter_html;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_html;}
+				if(is_net && ls && (li<27)) {li++; goto subfolder_letter_html;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_html;}
 //
 			}
 			if(is_net && ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}

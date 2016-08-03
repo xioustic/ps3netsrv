@@ -269,31 +269,9 @@ static int connect_to_webman(void)
 static void send_wm_request(char *cmd)
 {
 	// send command
-	int conn_s=-1;
-	conn_s=connect_to_webman();
-	if(conn_s>=0) ssend(conn_s, cmd);
-/*
-	uint64_t written; int fd=0;
-	if(cellFsOpen("/dev_hdd0/tmp/wm_request", CELL_FS_O_CREAT|CELL_FS_O_WRONLY|CELL_FS_O_TRUNC, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-	{
-		cellFsWrite(fd, (void *)cmd, strlen(cmd), &written);
-		cellFsClose(fd);
-        return CELL_FS_SUCCEEDED;
-	}
-	else
-
-		return -1;
-
-}
-
-static void wait_for_request(void)
-{
-    struct CellFsStat s;
-    int timeout = 20;
-    while(timeout > 0 && cellFsStat((char*)"/dev_hdd0/tmp/wm_request", &s) == CELL_FS_SUCCEEDED) {sys_timer_usleep(250000); --timeout;}
-
-    sys_timer_usleep(100000);
-*/
+	int conn_s = -1;
+	conn_s = connect_to_webman();
+	if(conn_s >= 0) ssend(conn_s, cmd);
 }
 
 
@@ -1055,10 +1033,10 @@ static void do_rebug_menu_action(void)
       strcpy(entry_str[view][line], (config->dnotify) ? "7: Startup Message : OFF\0" : "7: Startup Message : ON\0");
 
       // save config
-      int fd=0;
+      int fd = 0;
       if(cellFsOpen((char*)"/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
       {
-         cellFsWrite(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), 0);
+         cellFsWrite(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), NULL);
          cellFsClose(fd);
       }
       return;
@@ -1338,7 +1316,7 @@ static void do_plugins_manager_action(uint32_t curpad)
               if(items_isdir[i])
               {
                   sprintf(tempstr, "%s\n", items[i]);
-                  cellFsWrite(fd, (void *)tempstr, strlen(tempstr), 0);
+                  cellFsWrite(fd, (void *)tempstr, strlen(tempstr), NULL);
               }
           }
           cellFsClose(fd);
@@ -2019,10 +1997,10 @@ static void vsh_menu_thread(uint64_t arg)
           start_VSH_Menu();
 
           // save config
-          int fd=0;
+          int fd = 0;
           if(cellFsOpen((char*)"/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
           {
-             cellFsWrite(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), 0);
+             cellFsWrite(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), NULL);
              cellFsClose(fd);
           }
         }

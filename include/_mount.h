@@ -336,7 +336,7 @@ static void cache_icon0_and_param_sfo(char *templn)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(filecopy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", templn, _4KB_)==CELL_FS_SUCCEEDED) break;
+			if(file_copy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", templn, _4KB_)==CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
@@ -347,12 +347,13 @@ static void cache_icon0_and_param_sfo(char *templn)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(filecopy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", templn, COPY_WHOLE_FILE)==CELL_FS_SUCCEEDED) break;
+			if(file_copy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", templn, COPY_WHOLE_FILE)==CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
 }
-#ifndef LITE_EDITION
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
 static void cache_file_to_hdd(char *source, char *target, const char *basepath, char *templn)
 {
 	strcpy(target, basepath);
@@ -364,7 +365,7 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 		sprintf(templn, "%s %s\n%s %s", STR_COPYING, source, STR_CPYDEST, basepath);
 		show_msg((char*)templn);
 		copy_in_progress = true; copied_count = 1;
-		filecopy(source, target, COPY_WHOLE_FILE);
+		file_copy(source, target, COPY_WHOLE_FILE);
 		copy_in_progress = false;
 
 		if(copy_aborted)
@@ -374,7 +375,9 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 		}
 	}
 }
+ #endif
 #endif
+
 static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u8 is_binary, bool mount_ps3, bool forced_mount)
 {
 	//unmount game
@@ -556,19 +559,19 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 								sprintf(target, "/dev_flash/rebug/cobra/stage2.cex");
 						}
 
-						if(file_exists(target)==false)
+						if(file_exists(target) == false)
 						{
 							sprintf(tempstr, "%s", source);
 							strcpy(strrchr(tempstr, '/'), "/stage2.bin");
-							if(file_exists(tempstr)) filecopy(tempstr, target, COPY_WHOLE_FILE);
+							if(file_exists(tempstr)) file_copy(tempstr, target, COPY_WHOLE_FILE);
 						}
 
 						// copy: /dev_flash/sys/lv2_self
 						sprintf(target, "/dev_blind/sys/lv2_self");
-						if(cellFsStat(target, &buf) != CELL_FS_SUCCEEDED || buf.st_size != size)
-							filecopy(source, target, COPY_WHOLE_FILE);
+						if((cellFsStat(target, &buf) != CELL_FS_SUCCEEDED) || (buf.st_size != size))
+							file_copy(source, target, COPY_WHOLE_FILE);
 
-						if(cellFsStat(target, &buf)==CELL_FS_SUCCEEDED && buf.st_size == size)
+						if((cellFsStat(target, &buf) == CELL_FS_SUCCEEDED) && (buf.st_size == size))
 						{
 							uint64_t lv2_offset=0x15DE78; // 4.xx CFW LV1 memory location for: /flh/os/lv2_kernel.self
 							if(peek_lv1(lv2_offset)!=0x2F666C682F6F732FULL)
@@ -866,7 +869,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				else if(isDir(source))
 					folder_copy(source, target);
 				else
-					filecopy(source, target, COPY_WHOLE_FILE);
+					file_copy(source, target, COPY_WHOLE_FILE);
 
 				copy_in_progress = false;
 
@@ -2103,19 +2106,19 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			}
 
 			cellFsUnlink(PS2_CLASSIC_ISO_PATH);
-			if(filecopy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
+			if(file_copy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
 			{
 				if(file_exists(PS2_CLASSIC_ISO_ICON ".bak")==false)
-					filecopy((char*)PS2_CLASSIC_ISO_ICON, (char*)(PS2_CLASSIC_ISO_ICON ".bak"), COPY_WHOLE_FILE);
+					file_copy((char*)PS2_CLASSIC_ISO_ICON, (char*)(PS2_CLASSIC_ISO_ICON ".bak"), COPY_WHOLE_FILE);
 
 				sprintf(temp, "%s.png", _path);
 				if(file_exists(temp)==false) sprintf(temp, "%s.PNG", _path);
 
 				cellFsUnlink(PS2_CLASSIC_ISO_ICON);
 				if(file_exists(temp))
-					filecopy(temp, (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
+					file_copy(temp, (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
 				else
-					filecopy((char*)(PS2_CLASSIC_ISO_ICON ".bak"), (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
+					file_copy((char*)(PS2_CLASSIC_ISO_ICON ".bak"), (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
 
 				if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 

@@ -102,6 +102,8 @@ typedef struct
 } __attribute__((packed)) netiso_args;
 
 
+int file_copy(char *file1, char *file2, uint64_t maxbytes);
+
 // storage.h inline functions merged
 static int sys_storage_ext_get_emu_state(sys_emu_state_t *state)
 {
@@ -529,14 +531,13 @@ static void build_blank_iso(char *title_id)
 	buf[0xC844] = buf[0xC847] = buf[0xC848] = buf[0xC849] = 1;
 
 	int f=0;
-	uint64_t nwritten=0;
 	cellFsOpen((char*)"/dev_hdd0/vsh/task.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &f, NULL, 0);
-	cellFsWrite(f, buf, _128KB_, &nwritten);
+	cellFsWrite(f, buf, _128KB_, NULL);
 	cellFsClose(f);
 	if(sysmem) sys_memory_free(sysmem);
 	return;
 }
-
+/*
 static int copy_file(char *src, char *dst)
 {
 
@@ -589,7 +590,7 @@ static int copy_file(char *src, char *dst)
 	//free(buf);
 	return ret;
 }
-
+*/
 static int sys_get_hw_config(uint8_t *ret, uint8_t *config)
 {
 	system_call_2(393, (uint64_t)(uint32_t)ret, (uint64_t)(uint32_t)config);
@@ -1911,7 +1912,8 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/ICON0.PNG", root);
 
-	if (copy_file(umd_file, icon_save_path) == 0)
+	//if (copy_file(umd_file, icon_save_path) == 0)
+	if(file_copy(umd_file, icon_save_path, 0) == CELL_FS_SUCCEEDED)
 	{
 		int fd;
 

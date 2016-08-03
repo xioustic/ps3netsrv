@@ -438,7 +438,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								if(isDir(source))
 									folder_copy(source, param);
 								else
-									filecopy(source, param, COPY_WHOLE_FILE);
+									file_copy(source, param, COPY_WHOLE_FILE);
 
 								show_msg((char*)STR_CPYFINISH);
 								//memset(source, 0, 512);

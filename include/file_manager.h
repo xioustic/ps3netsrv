@@ -8,7 +8,7 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 
 static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http)
 {
-	unsigned long long sbytes = sz;
+	unsigned long long sbytes = sz; bool is_root = false;
 
 	if(sz < 10240)			{sprintf(sf, "%s", STR_BYTE);} else
 	if(sz < 0x200000ULL)	{sprintf(sf, "%s", STR_KILOBYTE); sz >>= 10;} else
@@ -49,10 +49,12 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		else
 		if(strlen(templn) <= 11 && islike(templn, "/dev_"))
 		{
-			uint64_t freeSize, devSize;
-			system_call_3(SC_FS_DISK_FREE, (uint64_t)templn, (uint64_t)&devSize, (uint64_t)&freeSize);
+			uint64_t freeSize = 0, devSize = 0; is_root = true;
+			system_call_3(SC_FS_DISK_FREE, (uint64_t)(uint32_t)templn, (uint64_t)(uint32_t)&devSize, (uint64_t)(uint32_t)&freeSize);
 
-			sprintf(fsize, "<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s)\">%'8llu %s</a>", templn, (unsigned long long)((devSize)>>20), STR_MEGABYTE, devSize, STR_BYTE, (unsigned long long)((freeSize)>>20), STR_MEGABYTE);
+			sprintf(fsize,  "<div style='height:18px;background:#121;text-align:left;'><div style='height:18px;background:#444;width:%i%%'></div><div style='position:relative;top:-18px;text-align:right'>"
+							"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
+							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), templn, (unsigned long long)((freeSize)>>20), STR_MBFREE, freeSize, STR_BYTE, (unsigned long long)((devSize)>>20), STR_MEGABYTE, devSize, STR_BYTE, (unsigned long long)((freeSize)>>20), STR_MEGABYTE);
 		}
 		else
 #ifdef PS2_DISC
@@ -132,9 +134,9 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		}
 	}
 
-	sprintf(templn, "<td> %s &nbsp; </td>"
+	sprintf(templn, "<td> %s%s</td>"
 					"<td>%02i-%s-%04i %02i:%02i</td></tr>",
-					fsize,
+					fsize, is_root ? "" : " &nbsp; ",
 					rDate.day, smonth[rDate.month-1], rDate.year, rDate.hour, rDate.minute);
 	strcat(tempstr, templn);
 

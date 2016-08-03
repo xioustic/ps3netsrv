@@ -104,10 +104,7 @@
 #endif
 							{
 #ifdef WM_CUSTOM_COMBO
-								if(file_exists(WM_CUSTOM_COMBO "select_square"))
-								{
-									filecopy(WM_CUSTOM_COMBO "select_square", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-								}
+								if(do_custom_combo(WM_CUSTOM_COMBO "select_square")) break;
 								else
 #endif
 								{
@@ -366,10 +363,7 @@ show_popup:
 						if(webman_config->fanc && !(webman_config->combo & MANUALFAN) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_UP) ) // SELECT+UP increase TEMP/FAN
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_up"))
-							{
-								filecopy(WM_CUSTOM_COMBO "select_up", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_up")) break;
 							else
 #endif
 							{
@@ -400,10 +394,7 @@ show_popup:
 						if(webman_config->fanc && !(webman_config->combo & MANUALFAN) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_DOWN) ) // SELECT+DOWN increase TEMP/FAN
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_down"))
-							{
-								filecopy(WM_CUSTOM_COMBO "select_down", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_down")) break;
 							else
 #endif
 							{
@@ -433,10 +424,7 @@ show_popup:
 						if(webman_config->minfan && !(webman_config->combo & MINDYNFAN) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_LEFT) ) // SELECT+LEFT decrease Minfan
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_left"))
-							{
-								filecopy(WM_CUSTOM_COMBO "select_left", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_left")) break;
 							else
 #endif
 							{
@@ -454,10 +442,7 @@ show_popup:
 						if(webman_config->minfan && !(webman_config->combo & MINDYNFAN) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_RIGHT) ) // SELECT+RIGHT increase Minfan
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_right"))
-							{
-								filecopy(WM_CUSTOM_COMBO "select_right", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_right")) break;
 							else
 #endif
 							{
@@ -475,10 +460,7 @@ show_popup:
 						if(!(webman_config->combo & PREV_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L1) ) // SELECT+L1 (previous title)
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_l1"))
-							{
-								filecopy(WM_CUSTOM_COMBO "select_l1", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_l1")) break;
 							else
 #endif
 							{
@@ -492,10 +474,7 @@ show_popup:
 						if(!(webman_config->combo & NEXT_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_R1) ) // SELECT+R1 (next title)
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_r1"))
-							{
- 								filecopy(WM_CUSTOM_COMBO "select_r1", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_r1")) break;
 							else
 #endif
 							{
@@ -510,10 +489,7 @@ show_popup:
 						if(!(webman_config->combo2 & INSTALPKG) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_CIRCLE | CELL_PAD_CTRL_R2)) ) // SELECT+R2+O
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_r2_circle"))
-							{
- 								filecopy(WM_CUSTOM_COMBO "select_r2_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_r2_circle")) break;
 							else
 #endif
 							installPKG_combo(msg);
@@ -523,10 +499,7 @@ show_popup:
 						if(!(webman_config->combo & UMNT_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_CIRCLE) ) // SELECT+O (unmount)
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "select_circle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "select_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_circle")) break;
 							else
 #endif
 								do_umount(true);
@@ -535,10 +508,7 @@ show_popup:
 						else
 						if(!(webman_config->combo & UMNT_GAME) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_TRIANGLE) ) // SELECT+TRIANGLE
 						{
-							if(file_exists(WM_CUSTOM_COMBO "select_triangle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "select_triangle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "select_triangle")) break;
 						}
 #endif
 					}
@@ -620,25 +590,10 @@ show_popup:
 						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE))==(CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE) && View_Find("game_plugin")==0) // L2+R2+O
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "l2_r2_circle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
-							}
-							else
-							if(file_exists(WM_CUSTOM_COMBO "l2_r2_l1_circle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_l1_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
-							}
-							else
-							if(file_exists(WM_CUSTOM_COMBO "l2_r2_r1_circle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_r1_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
-							}
-							else
-							if(file_exists(WM_CUSTOM_COMBO "l2_r2_l1_r1_circle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "l2_r2_l1_r1_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
-							}
+								 if(do_custom_combo(WM_CUSTOM_COMBO "l2_r2_circle")) ;
+							else if(do_custom_combo(WM_CUSTOM_COMBO "l2_r2_l1_circle")) ;
+							else if(do_custom_combo(WM_CUSTOM_COMBO "l2_r2_r1_circle")) ;
+							else if(do_custom_combo(WM_CUSTOM_COMBO "l2_r2_l1_r1_circle")) ;
 							else
 #endif
 							{
@@ -654,8 +609,8 @@ show_popup:
 								else
 									{vshmain_AE35CF2D((char*)"http://127.0.0.1/", 0); show_msg((char*)"webMAN " WM_VERSION);}     // L2+R2+O
 #endif
-								sys_timer_sleep(3);
 							}
+							sys_timer_sleep(3);
 							break;
 						}
 						if((copy_in_progress || fix_in_progress) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE)) // R2+O Abort copy process
@@ -666,10 +621,7 @@ show_popup:
 						if(!(webman_config->combo & DISABLESH) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_TRIANGLE) ) // R2+TRIANGLE Disable CFW Sycalls
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "r2_triangle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "r2_triangle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "r2_triangle")) break;
 							else
 #endif
 							{
@@ -682,17 +634,11 @@ show_popup:
 						if(!(webman_config->combo2 & CUSTOMCMB) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_SQUARE) ) // R2+SQUARE
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "r2_square"))
-							{
-								filecopy(WM_CUSTOM_COMBO "r2_square", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "r2_square")) break;
 							else
 #endif
 #ifdef WM_REQUEST
-							if(file_exists("/dev_hdd0/tmp/wm_custom_combo"))
-							{
-								filecopy("/dev_hdd0/tmp/wm_custom_combo", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WMTMP "/wm_custom_combo")) break;
 							else
 #endif
 							{
@@ -703,10 +649,7 @@ show_popup:
 						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE) ) // R2+O Show IDPS EID0+LV2
 						{
 #ifdef WM_CUSTOM_COMBO
-							if(file_exists(WM_CUSTOM_COMBO "r2_circle"))
-							{
-								filecopy(WM_CUSTOM_COMBO "r2_circle", (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); break;
-							}
+							if(do_custom_combo(WM_CUSTOM_COMBO "r2_circle")) break;
 							else
 #endif
 							{

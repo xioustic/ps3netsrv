@@ -7,7 +7,7 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 {
 	struct CellFsStat buf;
 
-	int fd; uint64_t msiz = 0; int size = 0;
+	int fd, size = 0;
 
 	// truncate msg log
 	if(cellFsStat((char*)WMCHATFILE, &buf)!=CELL_FS_SUCCEEDED || buf.st_size>0x8000UL || buf.st_size==0)
@@ -18,8 +18,8 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 		{
 			if(cellFsOpen((char*)WMCHATFILE, CELL_FS_O_RDONLY, &fd, NULL, 0)==CELL_FS_SUCCEEDED)
 			{
-				cellFsLseek(fd, (buf.st_size-4080), CELL_FS_SEEK_SET, &msiz);
-				cellFsRead(fd, (void *)&tempstr, 4080, &msiz);
+				cellFsLseek(fd, (buf.st_size-4080), CELL_FS_SEEK_SET, NULL);
+				cellFsRead(fd, (void *)&tempstr, 4080, NULL);
 				cellFsClose(fd);
 			}
 		}
@@ -33,9 +33,9 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 							"<script>window.onload=toBottom;function toBottom(){window.scrollTo(0, document.body.scrollHeight);}</script>\0");
 			if(tempstr[0]) strcat(templn, "<!--");
 			size = strlen(templn);
-			cellFsWrite(fd, templn, size, &msiz);
+			cellFsWrite(fd, templn, size, NULL);
 			size = strlen(templn);
-            if(size) cellFsWrite(fd, tempstr, size, &msiz);
+            if(size) cellFsWrite(fd, tempstr, size, NULL);
 		}
 		cellFsClose(fd);
     }
@@ -53,7 +53,7 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 		if(cellFsOpen((char*)WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 		{
 		    size = strlen(templn);
-		    cellFsWrite(fd, templn, size, &msiz);
+		    cellFsWrite(fd, templn, size, NULL);
 		}
 		cellFsClose(fd);
 

@@ -780,8 +780,8 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 				default : sprintf(tmp_filename, "/dev_hdd0/boot_plugins.txt");
 			}
 
-			u64 written; int fdwm=0;
-			if(cellFsOpen(tmp_filename, CELL_FS_O_CREAT|CELL_FS_O_WRONLY|CELL_FS_O_TRUNC, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
+			int fdw = 0;
+			if(cellFsOpen(tmp_filename, CELL_FS_O_CREAT|CELL_FS_O_WRONLY|CELL_FS_O_TRUNC, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
 				sprintf(templn, "<p><a href=\"%s\" style=\"padding:8px;background:#900;border-radius:8px;\">%s</a><p>", tmp_filename, tmp_filename); strcat(buffer, templn);
 
@@ -793,10 +793,10 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 					if(strlen(tmp_filename) > 0)
 					{
 						sprintf(templn, "%s\n", tmp_filename);
-						cellFsWrite(fdwm, (void *)templn, strlen(templn), &written);
+						cellFsWrite(fdw, (void *)templn, strlen(templn), NULL);
 					}
 				}
-				cellFsClose(fdwm);
+				cellFsClose(fdw);
 			}
 		}
 		else

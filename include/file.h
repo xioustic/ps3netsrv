@@ -4,15 +4,13 @@
 #define SC_STORAGE_CLOSE 				(601)
 #define SC_STORAGE_INSERT_EJECT			(616)
 
+int file_copy(char *file1, char *file2, uint64_t maxbytes);
+
 static bool copy_in_progress = false;
 
 static u32 copied_count = 0;
 
 static int isDir(const char* path);
-
-static int savefile(char *file, char *mem, u64 size);
-static int filecopy(const char *file1, char *file2, uint64_t maxbytes);
-static int folder_copy(char *path1, char *path2);
 
 #ifndef LITE_EDITION
 static int del(const char *path, bool recursive);
@@ -35,8 +33,8 @@ static void add_log(const char *fmt, int value1, int value2)
 
 	if(cellFsOpen("/dev_hdd0/webMAN.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 	{
-		uint64_t nrw; int size = strlen(buffer);
-		cellFsWrite(fd, buffer, size, &nrw);
+		int size = strlen(buffer);
+		cellFsWrite(fd, buffer, size, NULL);
 		cellFsClose(fd);
 	}
 }
@@ -63,18 +61,20 @@ static bool file_exists(const char* path)
 	return (cellFsStat(path, &s) == CELL_FS_SUCCEEDED);
 }
 
-static int savefile(char *file, char *mem, u64 size)
+static int savefile(const char *file, char *mem, u64 size)
 {
-	u64 written; int fd=0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
+	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
 	cellFsChmod(file, MODE);
 
 	if(!extcmp(file, "/PARAM.SFO", 10)) flags = CELL_FS_O_CREAT | CELL_FS_O_WRONLY;
 
 	if(cellFsOpen(file, flags, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		if(size) cellFsWrite(fd, (void *)mem, size, &written);
+		if(size) cellFsWrite(fd, (void *)mem, size, NULL);
 		cellFsClose(fd);
+
 		cellFsChmod(file, MODE);
+
 		return CELL_FS_SUCCEEDED;
 	}
 
@@ -83,10 +83,10 @@ static int savefile(char *file, char *mem, u64 size)
 /*
 static int appendfile(char *file, char *mem, u64 size)
 {
-	u64 written; int fd=0;
+	int fd = 0;
 	if(cellFsOpen(file, CELL_FS_O_CREAT | CELL_FS_O_APPEND | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		if(size) cellFsWrite(fd, (void *)mem, size, &written);
+		if(size) cellFsWrite(fd, (void *)mem, size, NULL);
 		cellFsClose(fd);
 		return CELL_FS_SUCCEEDED;
 	}
@@ -107,29 +107,29 @@ static int concat(char *file1, char *file2)
 	{
 		uint64_t size = buf.st_size;
 
-		sys_addr_t buf1 = 0; uint64_t chunk_size = _64KB_;
+		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
-		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &buf1)==0)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
 		{
 			// append
 			if(cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_RDWR | CELL_FS_O_APPEND, &fd2, 0, 0) == CELL_FS_SUCCEEDED)
 			{
-				char *chunk=(char*)buf1;
-				uint64_t msiz1 = 0, msiz2 = 0, pos=0;
+				char *chunk = (char*)sysmem;
+				uint64_t read = 0, written = 0, pos=0;
 				copy_aborted = false;
 
-				while(size>0ULL)
+				while(size > 0)
 				{
 					if(copy_aborted) break;
 
-					cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &msiz1);
-					cellFsRead(fd1, chunk, chunk_size, &msiz1);
+					cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &read);
+					cellFsRead(fd1, chunk, chunk_size, &read);
 
-					cellFsWrite(fd2, chunk, msiz1, &msiz2);
-					if(!msiz2) {break;}
+					cellFsWrite(fd2, chunk, read, &written);
+					if(!written) {break;}
 
-					pos+=msiz2;
-					size-=msiz2;
+					pos+=written;
+					size-=written;
 					if(chunk_size>size) chunk_size=(int) size;
 				}
 				cellFsClose(fd2);
@@ -141,7 +141,7 @@ static int concat(char *file1, char *file2)
 
 				ret=size;
 			}
-			sys_memory_free(buf1);
+			sys_memory_free(sysmem);
 		}
 		cellFsClose(fd1);
 	}
@@ -149,7 +149,7 @@ static int concat(char *file1, char *file2)
 	return ret;
 }
 */
-static int filecopy(const char *file1, char *file2, uint64_t maxbytes)
+int file_copy(char *file1, char *file2, uint64_t maxbytes)
 {
 	struct CellFsStat buf;
 	int fd1, fd2;
@@ -196,9 +196,9 @@ static int filecopy(const char *file1, char *file2, uint64_t maxbytes)
 
 	if(cellFsOpen((char*)file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		sys_addr_t buf1 = 0; uint64_t chunk_size = _64KB_;
+		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
-		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &buf1)==0)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
 		{
 			uint64_t size = buf.st_size, part_size = buf.st_size; u8 part = 0;
 			if(maxbytes > 0 && size > maxbytes) size = maxbytes;
@@ -209,29 +209,29 @@ static int filecopy(const char *file1, char *file2, uint64_t maxbytes)
 				part++; part_size = 0xFFFF0000ULL; //4Gb - 64kb
 			}
 
-			uint64_t msiz1 = 0, msiz2 = 0, pos=0;
-			char *chunk=(char*)buf1;
+			uint64_t read = 0, written = 0, pos=0;
+			char *chunk = (char*)sysmem;
 			u16 flen = strlen(file2);
 next_part:
 			// copy_file
 			if(cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd2, 0, 0) == CELL_FS_SUCCEEDED)
 			{
-				while(size > 0ULL)
-        	    {
+				while(size > 0)
+				{
 					if(copy_aborted) break;
 
-					cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &msiz1);
-					cellFsRead(fd1, chunk, chunk_size, &msiz1);
-					if(!msiz1) break;
+					cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &read);
+					cellFsRead(fd1, chunk, chunk_size, &read);
+					if(!read) break;
 
-					cellFsWrite(fd2, chunk, msiz1, &msiz2);
-					if(!msiz2) break;
+					cellFsWrite(fd2, chunk, read, &written);
+					if(!written) break;
 
-					pos+=msiz2;
-					size-=msiz2;
+					pos+=written;
+					size-=written;
 					if(chunk_size>size) chunk_size=(int) size;
 
-					part_size-=msiz2;
+					part_size-=written;
 					if(part_size == 0) break;
 
 					sys_timer_usleep(1000);
@@ -240,7 +240,7 @@ next_part:
 
 				if(copy_aborted)
 					cellFsUnlink(file2); //remove incomplete file
-				else if((part>0) && (size > 0ULL))
+				else if((part > 0) && (size > 0))
 				{
 					if(part < 10)
 						file2[flen-1] = '0' + part;
@@ -263,7 +263,7 @@ next_part:
 
 				ret=size;
 			}
-			sys_memory_free(buf1);
+			sys_memory_free(sysmem);
 		}
 		cellFsClose(fd1);
 	}
@@ -302,7 +302,7 @@ static int folder_copy(char *path1, char *path2)
 				folder_copy(source, target);
 			}
 			else
-				filecopy(source, target, COPY_WHOLE_FILE);
+				file_copy(source, target, COPY_WHOLE_FILE);
 		}
 		cellFsClosedir(fd);
 
@@ -381,6 +381,17 @@ static void unlink_file(const char *drive, const char *path, const char *file, c
 	sprintf(buffer, "%s/%s%s", drive, path, file); cellFsUnlink(buffer);
 }
 
+#if defined(WM_CUSTOM_COMBO) || defined(WM_REQUEST)
+static bool do_custom_combo(const char *combo_file)
+{
+	if(file_exists(combo_file))
+	{
+		file_copy((char*)combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); return true;
+	}
+	return false;
+}
+#endif
+
 static void delete_history(bool delete_folders)
 {
 	int fd; char path[128];
@@ -442,9 +453,9 @@ static void import_edats(char *path1, char *path2)
 			sprintf(target, "%s/%s", path2, dir.d_name);
 
 			if(cellFsStat(target, &buf) != CELL_FS_SUCCEEDED)
-				filecopy(source, target, COPY_WHOLE_FILE);
+				file_copy(source, target, COPY_WHOLE_FILE);
 			if(from_usb && cellFsStat(target, &buf) == CELL_FS_SUCCEEDED)
-                {sprintf(target, "%s.bak", source); cellFsRename(source, target);}
+				{sprintf(target, "%s.bak", source); cellFsRename(source, target);}
 		}
 		cellFsClosedir(fd);
 	}

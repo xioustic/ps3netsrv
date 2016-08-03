@@ -12,12 +12,11 @@ static void poll_thread(uint64_t poll)
 		if(u0<128)
 		{
 			int fd;
-			u64 read_e;
 			bool toupd0, toupd1;
 			cellFsOpen((char*)"/dev_hdd0/vsh/task/00000001/d0.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
-			cellFsRead(fd, (void *)&d0, 157, &read_e); cellFsClose(fd);
+			cellFsRead(fd, (void *)&d0, 157, NULL); cellFsClose(fd);
 			cellFsOpen((char*)"/dev_hdd0/vsh/task/00000001/d1.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
-			cellFsRead(fd, (void *)&d1, 157, &read_e); cellFsClose(fd);
+			cellFsRead(fd, (void *)&d1, 157, NULL); cellFsClose(fd);
 			toupd0=0;
 			toupd1=0;
 			for(u8 b=0;b<157;b++)
@@ -32,7 +31,7 @@ static void poll_thread(uint64_t poll)
 				u0++;
 				sprintf(un, "/dev_hdd0/tmp/d0-%03i.bin", u0);
 				cellFsOpen(un, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0);
-				cellFsWrite(fd, (void *)d0, 157, &read_e);
+				cellFsWrite(fd, (void *)d0, 157, NULL);
 				cellFsClose(fd);
 			}
 			if(toupd1)
@@ -40,7 +39,7 @@ static void poll_thread(uint64_t poll)
 				u1++;
 				sprintf(un, "/dev_hdd0/tmp/d1-%03i.bin", u1);
 				cellFsOpen(un, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0);
-				cellFsWrite(fd, (void *)d1, 157, &read_e);
+				cellFsWrite(fd, (void *)d1, 157, NULL);
 				cellFsClose(fd);
 			}
 		}
