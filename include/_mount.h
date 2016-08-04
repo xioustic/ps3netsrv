@@ -510,20 +510,20 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				sprintf(_path, "%s", source);
 			}
 
-			sprintf(tempstr, "%s/PS3_GAME/ICON0.PNG", source);
+			char *filename = strrchr(_path, '/'), *icon = tempstr;
+			sprintf(icon, "%s/PS3_GAME/ICON0.PNG", source);
 
-			if(file_exists(tempstr)==false)
+			if(file_exists(icon)==false)
 			{
-				char fpath[MAX_PATH_LEN], fname[MAX_PATH_LEN], tempID[10]; tempstr[0] = tempID[0] = NULL;
+				char fpath[MAX_PATH_LEN], tempID[10]; icon[0] = tempID[0] = NULL;
 
 				// get iso name
-				strcpy(fname, strrchr(source, '/') + 1);
-				strcpy(fpath, source); fpath[strlen(fpath)-strlen(fname)-1] = NULL;
+				strcpy(fpath, source); fpath[strlen(fpath)-strlen(filename)] = NULL;
 
-				get_default_icon(tempstr, fpath, fname, 0, tempID, -1, 0);
+				get_default_icon(icon, fpath, filename + 1, 0, tempID, -1, 0);
 			}
 
-			urlenc(enc_dir_name, tempstr, 0);
+			urlenc(enc_dir_name, icon, 0);
 			htmlenc(_path, source, 0);
 
 #ifdef COPY_PS3
@@ -536,7 +536,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					sprintf(target, "%s", cp_path);
 				}
 				else
-				if(target[0]) {if(!isDir(source) && isDir(target)) strcat(target, strrchr(source, '/'));}
+				if(target[0]) {if(!isDir(source) && isDir(target)) strcat(target, filename);}
 				else
 #ifdef SWAP_KERNEL
 				if(strstr(source, "/lv2_kernel"))
@@ -555,9 +555,9 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 						if(isDir("/dev_flash/rebug/cobra"))
 						{
 							if(!extcmp(source, ".dex", 4))
-								sprintf(target, "/dev_flash/rebug/cobra/stage2.dex");
+								sprintf(target, "%s/stage2.dex", "/dev_flash/rebug/cobra");
 							else if(!extcmp(source, ".cex", 4))
-								sprintf(target, "/dev_flash/rebug/cobra/stage2.cex");
+								sprintf(target, "%s/stage2.cex", "/dev_flash/rebug/cobra");
 						}
 
 						if(file_exists(target) == false)
@@ -607,7 +607,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "/dev_hdd0/packages");
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(!extcmp(source, ".bmp", 4))
 				{
@@ -616,7 +616,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "/dev_hdd0/PICTURE");
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(strcasestr(source, ".JPG") || strcasestr(source, ".PNG"))
 				{
@@ -627,7 +627,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "/dev_hdd0/PICTURE");
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(strcasestr(source, "/covers"))
 				{
@@ -643,7 +643,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "/dev_hdd0/VIDEO");
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(strcasestr(source, ".mp3"))
 				{
@@ -652,7 +652,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "/dev_hdd0/MUSIC");
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(!extcmp(source, ".p3t", 4))
 				{
@@ -661,7 +661,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "/dev_hdd0/theme");
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(!extcmp(source, ".edat", 5))
 				{
@@ -670,7 +670,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "%s/%s/exdata", "/dev_hdd0/home", webman_config->uaccount);
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(!extcmp(source, ".rco", 4) || strstr(param, "/coldboot"))
 				{
@@ -680,7 +680,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					if(!extcmp(param, ".raf", 4))
 						strcat(target, "/coldboot.raf");
 					else
-						strcat(target, strrchr(param, '/'));
+						strcat(target, filename);
 				}
 				else if(!extcmp(source, ".qrc", 4))
 				{
@@ -690,7 +690,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					if(strstr(param, "/lines"))
 						strcat(target, "/lines.qrc");
 					else
-						strcat(target, strrchr(param, '/'));
+						strcat(target, filename);
 				}
 				else if(strstr(source, "/exdata"))
 				{
@@ -708,7 +708,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "%s/%s/savedata", "/dev_hdd0/home", webman_config->uaccount);
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(strcasestr(source, "/trophy/"))
 				{
@@ -717,7 +717,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					else
 						sprintf(target, "%s/%s/trophy", "/dev_hdd0/home", webman_config->uaccount);
 
-					strcat(target, strrchr(param, '/'));
+					strcat(target, filename);
 				}
 				else if(strstr(source, "/webftp_server"))
 				{
@@ -1805,37 +1805,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x800000000005C780ULL, 0x419E0038E8610098ULL ); // just restore the original
 
-		 /*
-			//anti-ode patches by deank
-			if(!is_rebug)
-			{
-				//pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL );
-				pokeq(0x8000000000059654ULL, 0x6000000060000000ULL );
-				pokeq(0x800000000005965CULL, 0x600000003BA00000ULL );
-			}
-
-			//pokeq(0x800000000005C780ULL, 0x60000000E8610098ULL );
-
-			// habib patches (newest ones)
-			pokeq(0x8000000000059668ULL, 0x38600000EB610148ULL); //Original: 0x7FA307B4EB610148EB8101507C0803A6
-			pokeq(0x800000000005C79CULL, 0x38600000EBA100C8ULL); //Original: 0x7FE307B4EBA100C8EBC100D07C0803A6
-
-			// enable new habib patches (now obsolete) //replaced by deank's patch (2015-01-03)
-			pokeq(0x800000000005C780ULL + 0x00, 0x60000000E8610098ULL);
-			pokeq(0x800000000005C780ULL + 0x08, 0x2FA30000419E000CULL);
-			pokeq(0x800000000005C780ULL + 0x10, 0x388000334800BE15ULL);
-			pokeq(0x800000000005C780ULL + 0x18, 0xE80100F07FE307B4ULL);
-
-			pokeq(0x800000000005962CULL + 0x00, 0x386000004E800020ULL);
-			pokeq(0x800000000005962CULL + 0x08, 0xFBC10160FBE10168ULL);
-			pokeq(0x800000000005962CULL + 0x10, 0xFB610148FB810150ULL);
-			pokeq(0x800000000005962CULL + 0x18, 0xFBA10158F8010180ULL);
-
-			//patch to prevent blackscreen on usb games in jb format
-			pokeq(0x8000000000059654ULL, 0x386000002F830141ULL);
-			pokeq(0x800000000005965CULL, 0x9E00303BA0000000ULL);
-		 */
-
 #ifndef COBRA_ONLY
 			sc_600=0x364DF0; //0x38A120 + 600*8 = 0038B3E0 -> 80 00 00 00 00 36 4D F0
 			sc_604=0x364EC8; //0x38A120 + 604*8 = 0038B400 -> 80 00 00 00 00 36 4E C8
@@ -2780,7 +2749,7 @@ patch:
 
  #endif //#ifdef EXT_GDATA
 
-	if(_path[0] && strstr(_path, "/PS3_GAME/USRDIR/EBOOT.BIN")) _path[strlen(_path)-26] = NULL;
+	if(_path[0] && (strstr(_path, "/PS3_GAME/USRDIR/EBOOT.BIN")!=NULL)) _path[strlen(_path)-26] = NULL;
 
 	sprintf(path, "%s", _path);
 

@@ -490,21 +490,21 @@ static u8   cp_mode = 0;           // 0 = none / 1 = copy / 2 = cut/move
 
 #define AUTOPLAY_TAG		" [auto]"
 
-static char wm_icons[12][60]={WM_ICONS_PATH "icon_wm_album_ps3.png", //024.png  [0]
-                              WM_ICONS_PATH "icon_wm_album_psx.png", //026.png  [1]
-                              WM_ICONS_PATH "icon_wm_album_ps2.png", //025.png  [2]
-                              WM_ICONS_PATH "icon_wm_album_psp.png", //022.png  [3]
-                              WM_ICONS_PATH "icon_wm_album_dvd.png", //023.png  [4]
+static char wm_icons[12][60] = {WM_ICONS_PATH "icon_wm_album_ps3.png", //024.png  [0]
+								WM_ICONS_PATH "icon_wm_album_psx.png", //026.png  [1]
+								WM_ICONS_PATH "icon_wm_album_ps2.png", //025.png  [2]
+								WM_ICONS_PATH "icon_wm_album_psp.png", //022.png  [3]
+								WM_ICONS_PATH "icon_wm_album_dvd.png", //023.png  [4]
 
-                              WM_ICONS_PATH "icon_wm_ps3.png",       //024.png  [5]
-                              WM_ICONS_PATH "icon_wm_psx.png",       //026.png  [6]
-                              WM_ICONS_PATH "icon_wm_ps2.png",       //025.png  [7]
-                              WM_ICONS_PATH "icon_wm_psp.png",       //022.png  [8]
-                              WM_ICONS_PATH "icon_wm_dvd.png",       //023.png  [9]
+								WM_ICONS_PATH "icon_wm_ps3.png",       //024.png  [5]
+								WM_ICONS_PATH "icon_wm_psx.png",       //026.png  [6]
+								WM_ICONS_PATH "icon_wm_ps2.png",       //025.png  [7]
+								WM_ICONS_PATH "icon_wm_psp.png",       //022.png  [8]
+								WM_ICONS_PATH "icon_wm_dvd.png",       //023.png  [9]
 
-                              WM_ICONS_PATH "icon_wm_settings.png",  //icon/icon_home.png  [10]
-                              WM_ICONS_PATH "icon_wm_eject.png",     //icon/icon_home.png  [11]
-                             };
+								WM_ICONS_PATH "icon_wm_settings.png",  //icon/icon_home.png  [10]
+								WM_ICONS_PATH "icon_wm_eject.png",     //icon/icon_home.png  [11]
+								};
 
 #ifndef ENGLISH_ONLY
 static bool use_custom_icon_path = false, use_icon_region = false;
@@ -676,6 +676,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 	strcat(buffer,	"a:active,a:active:hover,a:visited:hover,a:link:hover{color:#FFFFFF;}"
 					".list{display:inline;}"
 #ifdef PS3MAPI
+					"table{border-spacing:0;border-collapse:collapse;}"
 					".la{text-align:left;float:left}.ra{text-align:right;float:right;}"
 #endif
 					"input:focus{border:2px solid #0099FF;}"
@@ -1866,7 +1867,7 @@ html_response:
 #ifdef EXT_GDATA
 									, HTML_BUTTON, "gameDATA", HTML_ONCLICK, "/extgd.ps3"
 #endif
-                    ); strcat(buffer, templn);
+					); strcat(buffer, templn);
 #ifdef COPY_PS3
 					if(((islike(param, "/dev_") && strlen(param) > 12 && !strstr(param,"?")) || islike(param, "/dev_bdvd")) && !strstr(param,".ps3/") && !strstr(param,".ps3?"))
 					{

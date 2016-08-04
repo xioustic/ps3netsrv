@@ -67,7 +67,7 @@ static void fan_control(u8 set_fanspeed, u8 initial)
 				sys_sm_set_fan_policy(0, 2, 0x33);
 
 				{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
-		    }
+			}
 		}
 
 		if(set_fanspeed<0x33)

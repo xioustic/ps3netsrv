@@ -194,7 +194,7 @@ static int process_read_file_critical(u8 index, netiso_read_file_critical_cmd *c
 
 		///////////////
 		if(clients[index].is_multipart)
-        {
+		{
 			cellFsRead(clients[index].fp[clients[index].part], &buffer, read_size, &bytes_read);
 
 			if(bytes_read < read_size && clients[index].part < (clients[index].is_multipart-1))

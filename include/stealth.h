@@ -32,7 +32,7 @@ static void restore_cfw_syscalls(void)
 	//ps3mapi_key = 0;
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-    syscalls_removed = false;
+	syscalls_removed = false;
 }
 #endif
 
@@ -121,7 +121,7 @@ static void disable_cfw_syscalls(bool keep_ccapi)
 			{ BEEP1 }
 			show_msg((char*)STR_RMVCFWSYS);
 		}
-        else
+		else
 		{
 			{ BEEP2 }
 			show_msg((char*)STR_RMVCFWSYSF);
@@ -152,7 +152,7 @@ static bool block_url(u64 addr, u64 value)
 static void block_online_servers(bool notify)
 {
 	if(url_count == 0)
-    {
+	{
 		if(View_Find("game_plugin")) return; // not in XMB
 
 		if(notify) show_msg((char*)"Blocking PSN servers");

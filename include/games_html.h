@@ -23,6 +23,8 @@
 
 #define PS3_ '3'
 
+#define HTML_KEY_LEN  6
+
 static void get_name(char *name, char *filename, u8 cache)
 {
 	int pos = 0;
@@ -108,11 +110,18 @@ static bool get_cover(char *icon, char *titleid)
 	}
 
 #ifndef ENGLISH_ONLY
-	if(use_custom_icon_path) {{if(use_icon_region) sprintf(icon, COVERS_PATH, (titleid[2]=='U')?"US":(titleid[2]=='J')?"JA":"EN", titleid); else sprintf(icon, COVERS_PATH, titleid);} return true;}
+	if(use_custom_icon_path)
+	{
+		if(use_icon_region) sprintf(icon, COVERS_PATH,  (titleid[2] == 'U') ? "US" :
+														(titleid[2] == 'J') ? "JA" : "EN", titleid);
+		else
+							sprintf(icon, COVERS_PATH, titleid);
+		return true;
+	}
 #endif
 
 	icon[0] = NULL;
-    return false;
+	return false;
 }
 
 static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
@@ -452,8 +461,8 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 
 static void add_query_html(char *buffer, char *param, char *label)
 {
-    char templn[64];
-    sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); strcat(buffer, templn);
+	char templn[64];
+	sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); strcat(buffer, templn);
 }
 
 static void check_cover_folders(char *buffer)
@@ -483,7 +492,7 @@ static void check_cover_folders(char *buffer)
 
 static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, bool mobile_mode)
 {
-    u64 c_len = 0;
+	u64 c_len = 0;
 	CellRtcTick pTick;
 
 	struct CellFsStat buf;
@@ -491,8 +500,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 	gmobile_mode = mobile_mode;
 
-	//if(cobra_mode) strcat(buffer, "[Cobra] ");
-	//strcat(buffer, "PS3 Game List:<br>");
 	if(!mobile_mode && strstr(param, "/index.ps3"))
 	{
 		strcat(buffer, "<font style=\"font-size:18px\">");
@@ -523,11 +530,11 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	else
 		strcat(buffer, " <br>");
 
-	c_len = 0; while(loading_games && working && c_len < 500) {sys_timer_usleep(200000); c_len++;}
+	c_len = 0; while(loading_games && working && (c_len < 500)) {sys_timer_usleep(200000); c_len++;}
 
-	if(c_len >= 500 || !working) {strcat(buffer, "503 Server is busy"); return true;}
+	if(c_len >= 500 || !working) {strcat(buffer, "503 Server is busy"); return false;}
 
-	u32 buf_len=strlen(buffer);
+	u32 buf_len = strlen(buffer);
 
 /*
 	CellRtcTick pTick, pTick2;
@@ -547,8 +554,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	if(strstr(param, "/index.ps3?") || ((pTick.tick-pTick2.tick)/1000000)>43200) {DELETE_CACHED_GAMES}
 */
 
+	// use cached page
 	loading_games = 1;
-	if(mobile_mode) {cellFsUnlink((char*)GAMELIST_JS); buf_len=0;}
+	if(mobile_mode) {cellFsUnlink((char*)GAMELIST_JS); buf_len = 0;}
 	else
 	{
 		if(strstr(param, "/index.ps3?")) cellFsUnlink((char*)WMTMP "/games.html");
@@ -558,9 +566,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			int fdu;
 			if(cellFsOpen((char*)WMTMP "/games.html", CELL_FS_O_RDONLY, &fdu, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
-				cellFsRead(fdu, (char*)(buffer+buf_len), buf.st_size, NULL);
+				cellFsRead(fdu, (char*)(buffer + buf_len), buf.st_size, NULL);
 				cellFsClose(fdu);
-				loading_games = 0;
+
+				loading_games = 0; // return
 			}
 		}
 	}
@@ -570,8 +579,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		int abort_connection=0;
 		u8 is_net = 0;
 
-		char ename[8];
-		u16 idx=0;
+		u16 idx = 0;
 		u32 tlen = buf_len; buffer[tlen] = NULL;
 		char *sysmem_html=buffer+_8KB_;
 
@@ -771,9 +779,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						if(filter_name[0]>=' ' && strcasestr(templn, filter_name)==NULL && strcasestr(param, filter_name)==NULL && strcasestr(data[v3_entry].name, filter_name)==NULL) {v3_entry++; continue;}
 
-						snprintf(ename, 6, "%s    ", templn);
 
 						strcpy(tempstr, icon); urlenc(icon, tempstr, 0);
+
+						snprintf(tempstr, 8, "%s      ", templn); // sort key
 
 						if(mobile_mode)
 						{
@@ -782,17 +791,14 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 							int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320; h=176;} else if(strstr(icon, "icon_wm_")) {w=280; h=280;}
 
-							sprintf(tempstr, "%c%c%c%c{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s%s/%s\"},",
-								ename[0], ename[1], ename[2], ename[3],
-								icon[0] ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
+							sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s%s/%s\"},",
+									icon[0] ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
 						}
 						else
-							sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
-								ename[0], ename[1], ename[2], ename[3],
-								neth, param, enc_dir_name, (u16)pTick.tick, idx,
-								icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
-								neth, param, enc_dir_name,
-								templn);
+							sprintf(tempstr + HTML_KEY_LEN, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
+									neth, param, enc_dir_name, (u16)pTick.tick, idx,
+									icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
+									neth, param, enc_dir_name, templn);
 
 						v3_entry++; flen = strlen(tempstr);
 						if(flen > MAX_LINE_LEN) continue; //ignore lines too long
@@ -914,9 +920,10 @@ next_html_entry:
 							urlenc(enc_dir_name, entry.d_name, 0);
 
 							templn[64] = NULL; flen = strlen(templn);
-							snprintf(ename, 6, "%s    ", templn);
 
 							urlenc(tempstr, icon, 1);
+
+							snprintf(tempstr, 8, "%s      ", templn); // sort key
 
 							if(mobile_mode)
 							{
@@ -925,17 +932,15 @@ next_html_entry:
 
 								int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320; h=176;} else if(strstr(icon, "icon_wm_")) {w=280; h=280;}
 
-								sprintf(tempstr, "%c%c%c%c{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s/%s\"},",
-									ename[0], ename[1], ename[2], ename[3],
-									icon, w, h, templn, param, enc_dir_name);
+								sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s/%s\"},",
+										icon, w, h, templn, param, enc_dir_name);
 							}
 							else
 							{
 								do
 								{
-									sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
-										ename[0], ename[1], ename[2], ename[3],
-										param, "", enc_dir_name, (u16)pTick.tick, idx, icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
+									sprintf(tempstr + HTML_KEY_LEN, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
+											param, "", enc_dir_name, (u16)pTick.tick, idx, icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
 
 									flen-=4; if(flen<32) break;
 									templn[flen] = NULL;
@@ -980,14 +985,13 @@ next_html_entry:
 #endif
 		}
 
-
 		if(idx)
 		{   // sort html game items
 			u16 n, m;
 			char *swap = tempstr;
 			for(n=0; n<(idx-1); n++)
 				for(m=(n+1); m<idx; m++)
-					if(strcasecmp(line_entry[n].path, line_entry[m].path)>0)
+					if(strncasecmp(line_entry[n].path, line_entry[m].path, HTML_KEY_LEN) > 0)
 					{
 						strcpy(swap, line_entry[n].path);
 						strcpy(line_entry[n].path, line_entry[m].path);
@@ -1003,24 +1007,30 @@ next_html_entry:
 			sprintf(buffer, "slides = [");
 		else
 		{
-			sprintf(templn, "<div id=\"wmsg\"><h1>. . .</h1></div><script>window.onclick=function(e){if(e.target.id.indexOf('im')==0||typeof(e.target.href)=='string')wmsg.style.display='block';}</script>"
-							" <a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.open('/index.ps3?'+s,'_self');}\">%'i %s &#x1F50D;</a></font><HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
+			sprintf(templn, // wait dialog div
+							"<div id=\"wmsg\"><H1>. . .</H1></div>"
+							"<script>window.onclick=function(e){if(e.target.id.indexOf('im')==0||typeof(e.target.href)=='string')wmsg.style.display='block';}</script>"
+							// show games count + find icon
+							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.open('/index.ps3?'+s,'_self');}\">%'i %s &#x1F50D;</a></font>"
+							// separator
+							"<HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
 
 #ifndef LITE_EDITION
 			sortable = file_exists(HTML_BASE_PATH "/jquery.min.js") && file_exists(HTML_BASE_PATH "/jquery-ui.min.js");
 			if(sortable)
-			{
-				strcat(buffer,  "<script src=\"" HTML_BASE_PATH "/jquery.min.js\"></script>"
-								"<script src=\"" HTML_BASE_PATH "/jquery-ui.min.js\"></script>"
-								"<script>$(function(){$(\"#mg\").sortable();});</script><div id=\"mg\">");
+			{	// add external jquery libraries
+				sprintf(templn, "<script src=\"%s\"></script>"
+								"<script src=\"%s\"></script>"
+								"<script>$(function(){$(\"#mg\").sortable();});</script><div id=\"mg\">",
+								HTML_BASE_PATH "/jquery.min.js", HTML_BASE_PATH "/jquery-ui.min.js"); strcat(buffer, templn);
 			}
 #endif
 		}
 
-		tlen=buf_len;
-		for(u16 m=0;m<idx;m++)
+		tlen = buf_len;
+		for(u16 m = 0; m < idx; m++)
 		{
-			strcat(buffer+tlen, (line_entry[m].path)+4); tlen+=strlen((line_entry[m].path)+4);
+			strcat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN); tlen += strlen((line_entry[m].path) + HTML_KEY_LEN);
 			if(tlen>(BUFFER_MAXSIZE)) break;
 		}
 
@@ -1028,7 +1038,6 @@ next_html_entry:
 		if(sortable) strcat(buffer+tlen, "</div>");
 #endif
 
-		//if(sysmem_html) sys_memory_free(sysmem_html);
 		loading_games = 0;
 
 		if(mobile_mode)
@@ -1037,7 +1046,7 @@ next_html_entry:
 			savefile((char*)GAMELIST_JS, (char*)(buffer), strlen(buffer));
 		}
 		else
-			savefile((char*)WMTMP "/games.html", (char*)(buffer+buf_len), (strlen(buffer)-buf_len));
+			savefile((char*)WMTMP "/games.html", (char*)(buffer + buf_len), (strlen(buffer) - buf_len));
 	}
 	return true;
 }

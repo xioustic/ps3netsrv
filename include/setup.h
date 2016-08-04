@@ -154,7 +154,7 @@ static void setup_parse_settings(char *param)
 #endif
 
 	if(strstr(param, "nsp=1")) webman_config->nospoof=1; //don't spoof fw version
-    if(c_firmware==4.53f) webman_config->nospoof=1;
+	if(c_firmware==4.53f) webman_config->nospoof=1;
 
 	if(strstr(param, "fc=1")) webman_config->fanc=1;
 
@@ -416,7 +416,7 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("ip", "bind",  STR_ACCESS,  " : ", (webman_config->bind) , buffer);
 
 	sprintf(templn, HTML_INPUT("aip", "%s", "15", "16") " Pwd: "
-	                HTML_PASSW("pwd", "%s", "20", "20") "<br>", webman_config->allow_ip, webman_config->ftp_password); strcat(buffer, templn);
+					HTML_PASSW("pwd", "%s", "20", "20") "<br>", webman_config->allow_ip, webman_config->ftp_password); strcat(buffer, templn);
 #endif
 
 #ifdef COBRA_ONLY
@@ -516,18 +516,18 @@ static void setup_form(char *buffer, char *templn)
 	//Change idps and psid in lv2 memory at system startup
 	sprintf(templn, HTML_BLU_SEPARATOR "<u> %s:</u><br>", STR_SPOOFID); strcat(buffer, templn);
 
-    if(!webman_config->vIDPS1[0] && !webman_config->vIDPS1[1]) {get_idps_psid(); sprintf(webman_config->vIDPS1, "%016llX", IDPS[0]); sprintf(webman_config->vIDPS2, "%016llX", IDPS[1]);}
-    if(!webman_config->vPSID1[0] && !webman_config->vPSID1[1]) {get_idps_psid(); sprintf(webman_config->vPSID1, "%016llX", PSID[0]); sprintf(webman_config->vPSID2, "%016llX", PSID[1]);}
+	if(!webman_config->vIDPS1[0] && !webman_config->vIDPS1[1]) {get_idps_psid(); sprintf(webman_config->vIDPS1, "%016llX", IDPS[0]); sprintf(webman_config->vIDPS2, "%016llX", IDPS[1]);}
+	if(!webman_config->vPSID1[0] && !webman_config->vPSID1[1]) {get_idps_psid(); sprintf(webman_config->vPSID1, "%016llX", PSID[0]); sprintf(webman_config->vPSID2, "%016llX", PSID[1]);}
 
 	add_check_box("id1", "1", "IDPS", " : ", (webman_config->sidps), buffer);
 	sprintf(templn, HTML_INPUT("vID1", "%s", "16", "22"), webman_config->vIDPS1); strcat(buffer, templn);
 	sprintf(templn, HTML_INPUT("vID2", "%s", "16", "22"), webman_config->vIDPS2); strcat(buffer, templn);
-    sprintf(templn, HTML_BUTTON_FMT "<br>", HTML_BUTTON, " ", "onclick=\"vID2.value=", "1000000000000000"); strcat(buffer, templn);
+	sprintf(templn, HTML_BUTTON_FMT "<br>", HTML_BUTTON, " ", "onclick=\"vID2.value=", "1000000000000000"); strcat(buffer, templn);
 
 	add_check_box("id2", "1", "PSID", " : ", (webman_config->spsid), buffer);
 	sprintf(templn, HTML_INPUT("vPS1", "%s", "16", "22"), webman_config->vPSID1); strcat(buffer, templn);
 	sprintf(templn, HTML_INPUT("vPS2", "%s", "16", "22"), webman_config->vPSID2); strcat(buffer, templn);
-    sprintf(templn, HTML_BUTTON_FMT "<br><br>", HTML_BUTTON, " ", "onclick=\"vPS1.value=vPS2.value=", "0000000000000000"); strcat(buffer, templn);
+	sprintf(templn, HTML_BUTTON_FMT "<br><br>", HTML_BUTTON, " ", "onclick=\"vPS1.value=vPS2.value=", "0000000000000000"); strcat(buffer, templn);
 #else
 	strcat(buffer, HTML_BLU_SEPARATOR);
 #endif

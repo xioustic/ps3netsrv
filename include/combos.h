@@ -180,7 +180,7 @@
 
 							refresh_xml((char*)msg);
 						}
-                        else
+						else
 						if( (!(webman_config->combo & SHOW_TEMP) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & (CELL_PAD_CTRL_R3 | CELL_PAD_CTRL_START)))) // SELECT+START show temperatures / hdd space
 						{
 #ifdef VIDEO_REC

@@ -14,6 +14,8 @@
 #define LAUNCHPAD_COVER_SVR		"http://xmbmods.co/wmlp/covers"
 //#define LAUNCHPAD_COVER_SVR	"http://ps3extra.free.fr/covers"
 
+#define XML_KEY_LEN 7
+
 static void refresh_xml(char *msg)
 {
 	webman_config->profile=profile; save_settings();
@@ -89,7 +91,7 @@ static void add_launchpad_extras(char *tempstr, char *url)
 	sprintf(url, "http://%s/setup.ps3", local_ip);
 	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png");
 
-	sprintf(url, "http://%s/mount.ps3/unmount", local_ip);
+	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
 	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png");
 
 	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
@@ -864,7 +866,7 @@ continue_reading_folder_xml:
 		{
 			for(n=0; n<(key-1); n++)
 				for(m=(n+1); m<key; m++)
-					if(strcasecmp(skey[n]+1, skey[m]+1)>0)
+					if(strncasecmp(skey[n]+1, skey[m]+1, XML_KEY_LEN) > 0)
 					{
 						strcpy(swap, skey[n]);
 						strcpy(skey[n], skey[m]);
@@ -874,7 +876,7 @@ continue_reading_folder_xml:
 		else
 			for(n=0; n<(key-1); n++)
 				for(m=(n+1); m<key; m++)
-					if(strcasecmp(skey[n], skey[m])>0)
+					if(strncasecmp(skey[n], skey[m], XML_KEY_LEN)>0)
 					{
 						strcpy(swap, skey[n]);
 						strcpy(skey[n], skey[m]);
@@ -1020,7 +1022,7 @@ continue_reading_folder_xml:
 															XML_PAIR("info","%'i %s") "%s",
 															wm_icons[3], item_count[4], STR_PSPFORMAT, STR_NOITEM_PAIR);strcat(myxml, templn);}
 		if( !(webman_config->cmask & DVD) ||
-            !(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"wm_dvd\">"
+			!(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"wm_dvd\">"
 															XML_PAIR("icon","%s")
 															XML_PAIR("title","%s")
 															XML_PAIR("info","%'i %s") "%s",

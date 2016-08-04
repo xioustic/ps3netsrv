@@ -63,22 +63,22 @@ static void Hex2Bin(const char* src, char* target);
 
 static int Char2Int(char input)
 {
-  if(input >= '0' && input <= '9')
-    return input - '0';
-  if(input >= 'A' && input <= 'F')
-    return input - 'A' + 10;
-  if(input >= 'a' && input <= 'f')
-    return input - 'a' + 10;
-  return NULL;
+	if(input >= '0' && input <= '9')
+		return input - '0';
+	if(input >= 'A' && input <= 'F')
+		return input - 'A' + 10;
+	if(input >= 'a' && input <= 'f')
+		return input - 'a' + 10;
+	return NULL;
 }
 
 static void Hex2Bin(const char* src, char* target)
 {
-  while(*src && src[1])
-  {
-    *(target++) = Char2Int(*src)*16 + Char2Int(src[1]);
-    src += 2;
-  }
+	while(*src && src[1])
+	{
+		*(target++) = Char2Int(*src)*16 + Char2Int(src[1]);
+		src += 2;
+	}
 }
 
 static void ps3mapi_buzzer(char *buffer, char *templn, char *param);
@@ -117,7 +117,7 @@ static void ps3mapi_home(char *buffer, char *templn)
 	//---------------------------------------------
 	sprintf(templn, "<b>%s</b>"
 					HTML_BLU_SEPARATOR
-					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr>", "PS3 Commands");
+					"<table width=\"800\"><tr>", "PS3 Commands");
 	strcat(buffer, templn);
 
 	//RingBuzzer
@@ -130,11 +130,11 @@ static void ps3mapi_home(char *buffer, char *templn)
 	strcat(buffer, templn);
 
 	//Notify
-    ps3mapi_notify(buffer, templn, (char*)" ");
+	ps3mapi_notify(buffer, templn, (char*)" ");
 
 	if (syscall8_state >= 0 && syscall8_state < 3)
 	{
-        ps3mapi_syscall(buffer, templn, (char*)" ");
+		ps3mapi_syscall(buffer, templn, (char*)" ");
 	}
 	if (syscall8_state >= 0)
 	{
@@ -199,12 +199,12 @@ static void ps3mapi_buzzer(char *buffer, char *templn, char *param)
 		sprintf(templn, "<b>%s --> %s --> %s</b>"
 						HTML_BLU_SEPARATOR,
 						"PS3MAPI", "PS3 Commands", "Buzzer");
-    else
+	else
 		sprintf(templn, "<td width=\"260\" class=\"la\"><u>%s:</u><br>", "Buzzer");
 	strcat(buffer, templn);
 
-	sprintf(templn, "<form id=\"buzzer\" action=\"/buzzer.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><br>"
-					"<b>%s:</b>  <select name=\"mode\">", "Mode");
+	sprintf(templn, "<form id=\"buzzer\" action=\"/buzzer%s<br>"
+					"<b>%s:</b>  <select name=\"mode\">", HTML_FORM_METHOD, "Mode");
 	strcat(buffer, templn);
 	add_option_item("1" , "Simple", strstr(param, "mode=1"), buffer);
 	add_option_item("2" , "Double", strstr(param, "mode=2"), buffer);
@@ -237,15 +237,13 @@ static void ps3mapi_led(char *buffer, char *templn, char *param)
 		sprintf(templn, "<b>%s --> %s --> %s</b>"
 						HTML_BLU_SEPARATOR,
 						"PS3MAPI", "PS3 Commands", "Led");
-    else
+	else
 		sprintf(templn, "<td width=\"260\" class=\"la\"><u>%s:</u><br>", "Led");
 
 	strcat(buffer, templn);
 
-	sprintf(templn, "<form id=\"led\" action=\"/led.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><br>"
-					"<b>%s:</b>  <select name=\"color\">",
-					"Color");
-	strcat(buffer, templn);
+	sprintf(templn, "<form id=\"led\" action=\"/led%s<br>"
+					"<b>%s:</b>  <select name=\"color\">", HTML_FORM_METHOD,  "Color"); strcat(buffer, templn);
 
 	add_option_item("0" , "Red", strstr(param, "color=0"), buffer);
 	add_option_item("1" , "Green", strstr(param, "color=1"), buffer);
@@ -286,10 +284,11 @@ static void ps3mapi_notify(char *buffer, char *templn, char *param)
 
 	strcat(buffer, templn);
 
-	sprintf(templn, "<form action=\"/notify.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td class=\"la\">"
+	sprintf(templn, "<form action=\"/notify" HTML_FORM_METHOD_FMT
+					"<table width=\"800\"><tr><td class=\"la\">"
 					"<textarea name=\"msg\" cols=\"111\" rows=\"2\" maxlength=\"199\">%s</textarea></td></tr>"
-					"<tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr></table></form>", msg, "Send");
+					"<tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr></table></form>",
+					HTML_FORM_METHOD, msg, "Send");
 
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR); else strcat(templn, "</td>");
 	strcat(buffer, templn);
@@ -318,73 +317,73 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 	if(!is_ps3mapi_home)
 		sprintf(templn, "<b>%s --> %s --> %s</b>"
 						HTML_BLU_SEPARATOR
-						"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">", "PS3MAPI", "PS3 Commands", "CFW syscall");
+						"<table width=\"800\">", "PS3MAPI", "PS3 Commands", "CFW syscall");
 	else
-		sprintf(templn, "<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+		sprintf(templn, "<table width=\"800\">"
 						"<tr><td class=\"la\"><u>%s:</u><br><br></td></tr>", "CFW syscall");
 
 	strcat(buffer, templn);
 
-	sprintf(templn, "<form id=\"syscall\" action=\"/syscall.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-					"<br><tr><td width=\"260\" class=\"la\">");
-	strcat(buffer, templn);
+	sprintf(templn, "<form id=\"syscall\" action=\"/syscall%s"
+					"<br><tr><td width=\"260\" class=\"la\">",
+					HTML_FORM_METHOD); strcat(buffer, templn);
 
 	int ret_val = -1; u8 sc_count; sc_count = 0;
 
 	ret_val = is_syscall_disabled(6);
-	if( ret_val != 0 )  {add_check_box("sc6", "1\" disabled=\"disabled", "[6]LV2 Peek", _BR_, true, buffer); sc_count++;}
+	if( ret_val != 0 )  {add_check_box("sc6", HTML_DISABLED_CHECKBOX, "[6]LV2 Peek", _BR_, true, buffer); sc_count++;}
 	else {/*ret_val = -1;*/ add_check_box("sc6", "1", "[6]LV2 Peek", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(7);
-	if( ret_val != 0 )  {add_check_box("sc7", "1\" disabled=\"disabled", "[7]LV2 Poke", _BR_, true, buffer); sc_count++;}
+	if( ret_val != 0 )  {add_check_box("sc7", HTML_DISABLED_CHECKBOX, "[7]LV2 Poke", _BR_, true, buffer); sc_count++;}
 	else {/*ret_val = -1;*/ add_check_box("sc7", "1", "[7]LV2 Poke", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(9);
-	if( ret_val != 0 )  {add_check_box("sc9", "1\" disabled=\"disabled", "[9]LV1 Poke", _BR_, true, buffer); sc_count++;}
+	if( ret_val != 0 )  {add_check_box("sc9", HTML_DISABLED_CHECKBOX, "[9]LV1 Poke", _BR_, true, buffer); sc_count++;}
 	else {/*ret_val = -1;*/ add_check_box("sc9", "1", "[9]LV1 Poke", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(10);
-	if( ret_val != 0 )  {add_check_box("sc10", "1\" disabled=\"disabled", "[10]LV1 Call", _BR_, true, buffer);}
+	if( ret_val != 0 )  {add_check_box("sc10", HTML_DISABLED_CHECKBOX, "[10]LV1 Call", _BR_, true, buffer);}
 	else {/*ret_val = -1;*/ add_check_box("sc10", "1", "[10]LV1 Call", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(11);
-	if( ret_val != 0 )  {add_check_box("sc11", "1\" disabled=\"disabled", "[11]LV1 Peek", _BR_, true, buffer);}
+	if( ret_val != 0 )  {add_check_box("sc11", HTML_DISABLED_CHECKBOX, "[11]LV1 Peek", _BR_, true, buffer);}
 	else {/*ret_val = -1;*/ add_check_box("sc11", "1", "[11]LV1 Peek", _BR_, false, buffer);}
 
 	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" class=\"la\">");
 
 	ret_val = is_syscall_disabled(35);
-	if( ret_val != 0 )  add_check_box("sc35", "1\" disabled=\"disabled", "[35]Map Path", _BR_, true, buffer);
+	if( ret_val != 0 )  add_check_box("sc35", HTML_DISABLED_CHECKBOX, "[35]Map Path", _BR_, true, buffer);
 	else {/*ret_val = -1;*/ add_check_box("sc35", "1", "[35]Map Path", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(36);
-	if( ret_val != 0 )  add_check_box("sc36", "1\" disabled=\"disabled", "[36]Map Game", _BR_, true, buffer);
+	if( ret_val != 0 )  add_check_box("sc36", HTML_DISABLED_CHECKBOX, "[36]Map Game", _BR_, true, buffer);
 	else {/*ret_val = -1;*/ add_check_box("sc36", "1", "[36]Map Game", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(38);
-	if( ret_val != 0 )  add_check_box("sc38", "1\" disabled=\"disabled", "[38]New sk1e", _BR_, true, buffer);
+	if( ret_val != 0 )  add_check_box("sc38", HTML_DISABLED_CHECKBOX, "[38]New sk1e", _BR_, true, buffer);
 	else {/*ret_val = -1;*/ add_check_box("sc38", "1", "[38]New sk1e", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(1022);
-	if( ret_val != 0 )  {add_check_box("sc1022", "1\" disabled=\"disabled", "[1022]PRX Loader", _BR_, true, buffer);}
+	if( ret_val != 0 )  {add_check_box("sc1022", HTML_DISABLED_CHECKBOX, "[1022]PRX Loader", _BR_, true, buffer);}
 	else {/*ret_val = -1;*/ add_check_box("sc1022", "1", "[1022]PRX Loader", _BR_, false, buffer);}
 
 	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" class=\"la\">");
 
 	ret_val = is_syscall_disabled(200);
-	if( ret_val != 0 )  add_check_box("sc200", "1\" disabled=\"disabled", "[200]sys_dbg_read_process_memory", _BR_, true, buffer);
+	if( ret_val != 0 )  add_check_box("sc200", HTML_DISABLED_CHECKBOX, "[200]sys_dbg_read_process_memory", _BR_, true, buffer);
 	else {/*ret_val = -1;*/ add_check_box("sc200", "1", "[200]sys_dbg_read_process_memory", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(201);
-	if( ret_val != 0 )  add_check_box("sc201", "1\" disabled=\"disabled", "[201]sys_dbg_write_process_memory", _BR_, true, buffer);
+	if( ret_val != 0 )  add_check_box("sc201", HTML_DISABLED_CHECKBOX, "[201]sys_dbg_write_process_memory", _BR_, true, buffer);
 	else {/*ret_val = -1;*/ add_check_box("sc201", "1", "[201]sys_dbg_write_process_memory", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(203);
-	if( ret_val != 0 )  add_check_box("sc203", "1\" disabled=\"disabled", "[203]LV2 Peek CCAPI", _BR_, true, buffer);
+	if( ret_val != 0 )  add_check_box("sc203", HTML_DISABLED_CHECKBOX, "[203]LV2 Peek CCAPI", _BR_, true, buffer);
 	else {/*ret_val = -1;*/ add_check_box("sc203", "1", "[203]LV2 Peek CCAPI", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(204);
-	if( ret_val != 0 )  add_check_box("sc204", "1\" disabled=\"disabled", "[204]LV2 Poke CCAPI", _BR_, true, buffer);
+	if( ret_val != 0 )  add_check_box("sc204", HTML_DISABLED_CHECKBOX, "[204]LV2 Poke CCAPI", _BR_, true, buffer);
 	else {/*ret_val = -1;*/ add_check_box("sc204", "1", "[204]LV2 Poke  CCAPI", _BR_, false, buffer);}
 
 #ifdef REMOVE_SYSCALLS
@@ -431,11 +430,11 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 
 	sprintf(templn, "<b>%s%s --> %s</b>"
 					HTML_BLU_SEPARATOR
-					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-					"<form id=\"syscall8\" action=\"/syscall8.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+					"<table width=\"800\">"
+					"<form id=\"syscall8\" action=\"/syscall8%s"
 					"<br><tr><td class=\"la\">",
-					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "CFW syscall 8");
-	strcat(buffer, templn);
+					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "CFW syscall 8", HTML_FORM_METHOD); strcat(buffer, templn);
+
 	{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); ret_val = (int)p1;}
 	if(ret_val < 0)
 	{
@@ -503,8 +502,8 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 
 	strcat(buffer, templn);
 
-	sprintf(templn, "<form action=\"/getmem.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><br>"
-					"<b><u>%s:</u></b>  ", "Process");
+	sprintf(templn, "<form action=\"/getmem" HTML_FORM_METHOD_FMT
+					"<b><u>%s:</u></b>  ", HTML_FORM_METHOD, "Process");
 	strcat(buffer, templn); memset(templn, 0, MAX_LINE_LEN);
 	if(pid == 0 )
 	{
@@ -541,7 +540,7 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 	if(pid != 0 && length != 0)
 	{
 		sprintf(templn, "<br><br><b><u>%s:</u></b><br><br><textarea id=\"output\" name=\"output\" cols=\"111\" rows=\"10\" readonly=\"true\">", "Output");
-	    strcat(buffer, templn);
+		strcat(buffer, templn);
 		char buffer_tmp[length + 1];
 		memset(buffer_tmp, 0, sizeof(buffer_tmp));
 		int retval = -1;
@@ -612,9 +611,9 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 
 	strcat(buffer, templn);
 
-	sprintf(templn, "<form action=\"/setmem.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-					"<b><u>%s:</u></b>  ", "Process");
-	strcat(buffer, templn); memset(templn, 0, MAX_LINE_LEN);
+	sprintf(templn, "<form action=\"/setmem" HTML_FORM_METHOD_FMT
+					"<b><u>%s:</u></b>  ", HTML_FORM_METHOD, "Process"); strcat(buffer, templn); memset(templn, 0, MAX_LINE_LEN);
+
 	if(pid == 0 )
 	{
 		strcat(buffer, "<select name=\"proc\">");
@@ -645,7 +644,7 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 	if(strlen(val_tmp) < 1) sprintf(val_tmp, "%02X", 0);
 	sprintf(templn, "<b><u>%s:</u></b> "  HTML_INPUT("addr", "%llX", "16", "18")
 					"<br><br><b><u>%s:</u></b><br><br>"
-					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+					"<table width=\"800\">"
 					"<tr><td class=\"la\">"
 					"<textarea id=\"val\" name=\"val\" cols=\"111\" rows=\"3\" maxlength=\"199\">%s</textarea></td></tr>"
 					"<tr><td class=\"ra\"><br>"
@@ -716,15 +715,17 @@ static void ps3mapi_setidps(char *buffer, char *templn, char *param)
 
 	sprintf(templn, "<b>%s%s --> %s</b>"
 					HTML_BLU_SEPARATOR
-					"<form action=\"/setidps.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><br>"
-					"<table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+					"<form action=\"/setidps" HTML_FORM_METHOD_FMT
+					"<table width=\"800\">"
 					"<tr><td width=\"400\" class=\"la\">"
 					"<br><b><u>%s:</u></b><br>" HTML_INPUT("idps1", "%016llX", "16", "18") HTML_INPUT("idps2", "%016llX", "16", "18") "</td>"
 					"<td class=\"la\">"
 					"<br><b><u>%s:</u></b><br>" HTML_INPUT("psid1", "%016llX", "16", "18") HTML_INPUT("psid2", "%016llX", "16", "18") "</td></tr>"
 					"<tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr>"
 					"</table></form><br>",
-					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "Set IDPS/PSID", "IDPS", _new_IDPS[0], _new_IDPS[1], "PSID", _new_PSID[0], _new_PSID[1], "Set");
+					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "Set IDPS/PSID",
+					HTML_FORM_METHOD, "IDPS", _new_IDPS[0], _new_IDPS[1], "PSID", _new_PSID[0], _new_PSID[1], "Set");
+
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR);
 	strcat(buffer, templn);
 }
@@ -828,7 +829,7 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 
 	sprintf(templn, "<b>%s%s</b>"
 					HTML_BLU_SEPARATOR "<br>"
-					"<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
+					"<table>"
 					"<tr><td width=\"75\" class=\"la\">%s</td>"
 					"<td width=\"120\" class=\"la\">%s</td>"
 					"<td width=\"500\" class=\"la\">%s</td>"
@@ -847,19 +848,21 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 							"<td width=\"120\" class=\"la\">%s</td>"
 							"<td width=\"500\" class=\"la\">%s</td>"
 							"<td width=\"100\" class=\"ra\">"
-							"<form action=\"/vshplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+							"<form action=\"/vshplugin" HTML_FORM_METHOD_FMT
 							"<input name=\"unload_slot\" type=\"hidden\" value=\"%i\"><input type=\"submit\" %s/></form></td></tr>",
-							slot, tmp_name, tmp_filename, slot, (slot) ? "value=\" Unload \"" : "value=\" Reserved \" disabled=\"disabled\"" );
+							slot, tmp_name, tmp_filename,
+							HTML_FORM_METHOD, slot, (slot) ? "value=\" Unload \"" : "value=\" Reserved \" disabled=\"disabled\"" );
 		}
 		else
  		{
 			sprintf(templn, "<tr><td width=\"75\" class=\"la\">%i</td>"
 							"<td width=\"120\" class=\"la\">%s</td>"
-							"<form action=\"/vshplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+							"<form action=\"/vshplugin" HTML_FORM_METHOD_FMT
 							"<td width=\"500\" class=\"la\">"
 							HTML_INPUT("prx\" style=\"width:555px\" list=\"plugins", "", "128", "75") "<input name=\"load_slot\" type=\"hidden\" value=\"%i\"></td>"
 							"<td width=\"100\" class=\"ra\"><input type=\"submit\" %s/></td></form></tr>",
-							slot, "NULL", slot, (slot) ? "value=\" Load \"" : "value=\" Reserved \" disabled=\"disabled\"" );
+							slot, "NULL",
+							HTML_FORM_METHOD, slot, (slot) ? "value=\" Load \"" : "value=\" Reserved \" disabled=\"disabled\"" );
 		}
 			strcat(buffer, templn);
 	}
@@ -932,8 +935,8 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 
 	strcat(buffer, templn);
 
-	sprintf(templn, "<form action=\"/gameplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\"><br>"
-					"<b><u>%s:</u></b>  ", "Process");
+	sprintf(templn, "<form action=\"/gameplugin" HTML_FORM_METHOD_FMT
+					"<b><u>%s:</u></b>  ", HTML_FORM_METHOD, "Process");
 	strcat(buffer, templn); memset(templn, 0, MAX_LINE_LEN);
 
 	if(pid == 0)
@@ -953,7 +956,7 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 				if(1 < strlen(templn))add_option_item(pid_str , templn, true, buffer);
 			}
 		}
-		strcat(buffer, "</select>   ");
+		strcat(buffer, "</select> ");
 	}
 	else
 	{
@@ -974,13 +977,14 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 	if(pid != 0)
 	{
 		sprintf(templn,
-					"<table border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-					"<tr><td width=\"75\" class=\"la\">%s</td>"
-					"<td width=\"300\" class=\"la\">%s</td>"
-					"<td width=\"500\" class=\"la\">%s</td>"
-					"<td width=\"125\" class=\"ra\"> </td></tr>",
-					"Slot", "Name", "File name");
-		strcat(buffer, templn);
+					"<table>"
+					 "<tr>"
+					  "<td width=\"75\" class=\"la\">%s</td>"
+					  "<td width=\"300\" class=\"la\">%s</td>"
+					  "<td width=\"500\" class=\"la\">%s</td>"
+					  "<td width=\"125\" class=\"ra\"> </td>"
+					 "</tr>",
+					"Slot", "Name", "File name"); strcat(buffer, templn);
 
 		char tmp_name[30];
 		char tmp_filename[256];
@@ -1005,14 +1009,15 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 						 "<td width=\"300\" class=\"la\">%s</td>"
 						 "<td width=\"500\" class=\"la\">%s</td>"
 						 "<td width=\"100\" class=\"ra\">"
-						  "<form action=\"/gameplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+						  "<form action=\"/gameplugin" HTML_FORM_METHOD_FMT
 						  "<input name=\"proc\" type=\"hidden\" value=\"%u\">"
 						  "<input name=\"unload_slot\" type=\"hidden\" value=\"%i\">"
 						  "<input type=\"submit\" value=\" Unload \">"
 						  "</form>"
 						 "</td>"
 						"</tr>",
-						slot, tmp_name, tmp_filename, pid, mod_list[slot]);
+						slot, tmp_name, tmp_filename,
+						HTML_FORM_METHOD, pid, mod_list[slot]);
 			}
 			else
 			{
@@ -1020,20 +1025,21 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 				//sprintf(tmp_filename, "/dev_hdd0/tmp/my_plugin_%i.sprx", slot);
 				sprintf(templn,
 						"<tr>"
-						  "<td width=\"75\" class=\"la\">%i</td>"
-						  "<td width=\"300\" class=\"la\">%s</td>"
-						  "<td width=\"100\" class=\"ra\">"
-						    "<form action=\"/gameplugin.ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-						      "<td width=\"500\" class=\"la\">"
-						        "<input name=\"proc\" type=\"hidden\" value=\"%u\">"
-						        HTML_INPUT("prx\" list=\"plugins", "", "128", "75")
-						        "<input name=\"load_slot\" type=\"hidden\" value=\"%i\">"
-						        "<input type=\"submit\" value=\" Load \">"
-						      "</td>"
-						    "</form>"
-						  "</td>"
+						 "<td width=\"75\" class=\"la\">%i</td>"
+						 "<td width=\"300\" class=\"la\">%s</td>"
+						 "<td width=\"100\" class=\"ra\">"
+						  "<form action=\"/gameplugin" HTML_FORM_METHOD_FMT
+						   "<td width=\"500\" class=\"la\">"
+						     "<input name=\"proc\" type=\"hidden\" value=\"%u\">"
+						     HTML_INPUT("prx\" list=\"plugins", "", "128", "75")
+						     "<input name=\"load_slot\" type=\"hidden\" value=\"%i\">"
+						     "<input type=\"submit\" value=\" Load \">"
+						   "</td>"
+						  "</form>"
+						 "</td>"
 						"</tr>",
-						slot, tmp_name, pid, slot);
+						slot, tmp_name,
+						HTML_FORM_METHOD, pid, slot);
 			}
 			strcat(buffer, templn);
 		}

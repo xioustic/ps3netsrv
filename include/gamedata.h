@@ -57,7 +57,7 @@ static int set_gamedata_status(u8 status, bool do_mount)
 		}
 	}
 	else
-    {
+	{
 		sprintf(msg, (char*)"gameDATA %s", STR_DISABLED);
 
 #ifdef COBRA_ONLY
@@ -72,7 +72,7 @@ static int set_gamedata_status(u8 status, bool do_mount)
 	{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
 	if(do_mount)
-    {
+	{
 		show_msg((char*) msg);
 #ifndef COBRA_ONLY
 		mount_with_mm(gamei_path, MOUNT_EXT_GDATA);

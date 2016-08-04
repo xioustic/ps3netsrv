@@ -10,6 +10,11 @@
 #define HTML_PASSW(n, v, m, s)	"<input name=\"" n "\" type=\"password\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\">"
 #define HTML_NUMBER(n, v, m, s, min, max)	"<input name=\"" n "\" type=\"number\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\" min=\"" min "\" max=\"" max "\">"
 
+#define HTML_DISABLED_CHECKBOX	"1\" disabled=\"disabled"
+
+#define HTML_FORM_METHOD_FMT	"%s"
+#define HTML_FORM_METHOD		".ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+
 #define _BR_					NULL
 
 #define HTML_RESPONSE_FMT		"HTTP/1.1 %i OK\r\n" \
@@ -55,7 +60,7 @@ static void urlenc(char *dst, char *src, u8 rel_mode)
 	size_t n=strlen(src);
 	for(size_t i=0; i<n; i++,j++)
 	{
-		     if(src[i]==' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
+			 if(src[i]==' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
 		else if(src[i]==':' && rel_mode) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
 		else if(src[i] & 0x80)
 		{
@@ -77,7 +82,7 @@ static void urlenc(char *dst, char *src, u8 rel_mode)
 static void htmlenc(char *dst, char *src, u8 cpy2src)
 {
 	size_t j=0;
-    size_t n=strlen(src); char tmp[8]; memset(dst, 4*n, 0); u8 t, c;
+	size_t n=strlen(src); char tmp[8]; memset(dst, 4*n, 0); u8 t, c;
 	for(size_t i=0; i<n; i++)
 	{
 		if(src[i] & 0x80)
@@ -298,34 +303,34 @@ static bool islike(const char *param, const char *text)
 
 static int val(const char *c)
 {
-    int previous_result=0, result=0;
-    int multiplier=1;
+	int previous_result=0, result=0;
+	int multiplier=1;
 
-    if(c && *c == '-')
-    {
-        multiplier = -1;
-        c++;
-    }
+	if(c && *c == '-')
+	{
+		multiplier = -1;
+		c++;
+	}
 
-    while(*c)
-    {
-        if(*c < '0' || *c > '9') return result * multiplier;
+	while(*c)
+	{
+		if(*c < '0' || *c > '9') return result * multiplier;
 
-        result *= 10;
-        if(result < previous_result)
-            return(0);
-        else
-            previous_result *= 10;
+		result *= 10;
+		if(result < previous_result)
+			return(0);
+		else
+			previous_result *= 10;
 
-        result += *c - '0';
-        if(result < previous_result)
-            return(0);
-        else
-            previous_result += *c - '0';
+		result += *c - '0';
+		if(result < previous_result)
+			return(0);
+		else
+			previous_result += *c - '0';
 
-        c++;
-    }
-    return(result * multiplier);
+		c++;
+	}
+	return(result * multiplier);
 }
 
 static void get_value(char *text, char *url, u16 size)

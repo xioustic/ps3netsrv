@@ -43,7 +43,7 @@ static void pokeq(uint64_t addr, uint64_t value) //lv2
 #ifndef COBRA_ONLY
 static void remove_lv2_memory_protection(void)
 {
-    uint64_t HV_START_OFFSET = 0;
+	uint64_t HV_START_OFFSET = 0;
 
 	//Remove Lv2 memory protection
 	if(c_firmware==3.55f)
@@ -60,7 +60,7 @@ static void remove_lv2_memory_protection(void)
 	{
 		HV_START_OFFSET = HV_START_OFFSET_430;
 	}
-    else
+	else
 	if(c_firmware>=4.55f /*&& c_firmware<=4.78f*/)
 	{
 		HV_START_OFFSET = HV_START_OFFSET_460;
@@ -113,8 +113,8 @@ static void lv2poke32(u64 addr, u32 value)
 /*
 static u32 lv2peek32(u64 addr)
 {
-    u32 ret = (u32) (peekq(addr) >> 32ULL);
-    return ret;
+	u32 ret = (u32) (peekq(addr) >> 32ULL);
+	return ret;
 }
 */
 
@@ -169,7 +169,7 @@ uint64_t find_syscall_table()
 	lv2_get_target_type(&targettype);
 
 	for(uint64_t i = 0x8000000000340000ULL; i<0x8000000000400000ULL; i+=4)
-    {
+	{
 		if(peekq(i) == 0x3235352E3235352EULL) return (i + (targettype == 2) ? 0x1228 : 0x1220);
 	}
 	return 0;

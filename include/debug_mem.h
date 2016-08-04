@@ -23,7 +23,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t size_mb)
 	uint32_t mem_size = (_128KB_), i;
 	sys_addr_t sys_mem = 0;
 
-    if(start < 0x0000028080000000ULL) start |= 0x8000000000000000ULL;
+	if(start < 0x0000028080000000ULL) start |= 0x8000000000000000ULL;
 
 	if(sys_memory_allocate(mem_size, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem)==0)
 	{
@@ -152,7 +152,7 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	}
 	else
 	if(v!=NULL && islike(param, "/poke.lv2") && (address<upper_memory))
-    {
+	{
 		value  = convertH(v+1);
 		fvalue = peekq(address);
 
@@ -165,7 +165,7 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	}
 	else
 	if(v!=NULL && islike(param, "/poke.lv1") && (address<upper_memory))
-    {
+	{
 		value = convertH(v+1);
 		fvalue = peek_lv1(address);
 
@@ -232,6 +232,7 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	sprintf(templn, " <a id=\"pblk\" href=\"/peek.lv%i?%llx\">&lt;&lt;</a> <a id=\"back\" href=\"/peek.lv%i?%llx\">&lt;Back</a>", lv1?1:2, ((int)(address-0x1000)>=0)?(address-0x1000):0, lv1?1:2, ((int)(address-0x200)>=0)?(address-0x200):0); strcat(buffer, templn);
 	sprintf(templn, " <a id=\"next\" href=\"/peek.lv%i?%llx\">Next&gt;</a> <a id=\"nblk\" href=\"/peek.lv%i?%llx\">&gt;&gt;</a></pre>", lv1?1:2, ((int)(address+0x400)<(int)upper_memory)?(address+0x200):(upper_memory-0x200), lv1?1:2, ((int)(lv1+0x1200)<(int)upper_memory)?(address+0x1000):(upper_memory-0x200)); strcat(buffer, templn);
 
+	// add navigation with left/right keys
 	strcat(buffer,  "<script>"
 					"document.addEventListener('keydown',kd,false);"
 					"function kd(e)"

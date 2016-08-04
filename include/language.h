@@ -492,9 +492,9 @@ static bool language(const char *file_str, char *default_str)
 
 	bool do_retry=true;
 
-	if(fh) f=fh; //file is already open
-    else
-    {
+	if(fh) f = fh; //file is already open
+	else
+	{
 		if(webman_config->lang>22 && webman_config->lang!=99) return false;
 
 		const char lang_codes[24][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "ZH", "DK", "CZ", "SK", "XX"};
@@ -503,7 +503,7 @@ static bool language(const char *file_str, char *default_str)
 		i=webman_config->lang; if(i>23) i=23;
 
 		sprintf(lang_code, "_%s", lang_codes[i]);
-		sprintf(lang_path, "/dev_hdd0/tmp/wm_lang/LANG%s.TXT", lang_code);
+		sprintf(lang_path, "%s/LANG%s.TXT", "/dev_hdd0/tmp/wm_lang", lang_code);
 
 		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &f, NULL, 0) != CELL_FS_SUCCEEDED) return false;
 

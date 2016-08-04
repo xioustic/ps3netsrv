@@ -147,10 +147,10 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 
 		// get titleid
 		if(opcode==GET_VERSION)
-			get_app_ver(mem, titleID);                   // get game version (app_ver)
+			get_app_ver(mem, titleID);                  // get game version (app_ver)
 		else
 		if(opcode==GET_TITLE_AND_ID)
-			parse_param_sfo(mem, titleID, filename);     // get titleid & return title in the file name (used to backup games in _mount.h)
+			parse_param_sfo(mem, titleID, filename);    // get titleid & return title in the file name (used to backup games in _mount.h)
 		else
 		{
 			ret = fix_param_sfo(mem, titleID, opcode);  // get titleid & show warning if game needs to fix PS3_SYSTEM_VER
@@ -255,18 +255,18 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update);
 
 uint64_t getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 start)
 {
-    u16 c=0; u32 lba=0;
-    for(u16 n=start+0x1F; n<n1-n2; n++)
-    {
-        c=0; while(s1[n+c]==s2[c] && c<n2) c++;
-        if(c==n2)
-        {
-            while(n>0x1D && s1[n--]!=0x01); n-=0x1C;
-            lba=(s1[n+0]&0xFF)+(s1[n+1]&0xFF)*0x100UL+(s1[n+2]&0xFF)*0x10000UL+(s1[n+3]&0xFF)*0x1000000UL;
-            start=n+0x1C+n2; return lba;
-        }
-    }
-    return 0;
+	u16 c=0; u32 lba=0;
+	for(u16 n=start+0x1F; n<n1-n2; n++)
+	{
+		c=0; while(s1[n+c]==s2[c] && c<n2) c++;
+		if(c==n2)
+		{
+			while(n>0x1D && s1[n--]!=0x01); n-=0x1C;
+			lba=(s1[n+0]&0xFF)+(s1[n+1]&0xFF)*0x100UL+(s1[n+2]&0xFF)*0x10000UL+(s1[n+3]&0xFF)*0x1000000UL;
+			start=n+0x1C+n2; return lba;
+		}
+	}
+	return 0;
 }
 
 void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
@@ -296,7 +296,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 		if(size>pos) size-=pos; else size=0;
 
 		while(size>0ULL)
-    	{
+		{
 			if(fix_aborted) break;
 
 			if(fix_sfo)
