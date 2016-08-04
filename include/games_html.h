@@ -637,8 +637,11 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 			if(( f0<7 || f0>NTFS) && file_exists(drives[f0])==false) continue;
 //
-			if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
-
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+			if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+ #endif
+#endif
 			ns=-2; uprofile=profile; default_icon=0;
 			for(u8 f1=filter1; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 			{
@@ -684,6 +687,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
+				if(is_net && (netiso_svrid == (f0-7)) && (g_socket != -1)) ns = g_socket; /* reuse current server connection */ else
 				if(is_net && (ns<0)) ns = connect_to_remote_server(f0-7);
  #endif
 #endif
@@ -783,9 +787,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 								icon[0] ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
 						}
 						else
-							sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
+							sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
 								ename[0], ename[1], ename[2], ename[3],
-								neth, param, enc_dir_name, (u16)pTick.tick,
+								neth, param, enc_dir_name, (u16)pTick.tick, idx,
 								icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
 								neth, param, enc_dir_name,
 								templn);
@@ -929,9 +933,9 @@ next_html_entry:
 							{
 								do
 								{
-									sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
+									sprintf(tempstr, "%c%c%c%c<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
 										ename[0], ename[1], ename[2], ename[3],
-										param, "", enc_dir_name, (u16)pTick.tick, icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
+										param, "", enc_dir_name, (u16)pTick.tick, idx, icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
 
 									flen-=4; if(flen<32) break;
 									templn[flen] = NULL;
@@ -968,7 +972,12 @@ next_html_entry:
 				if(is_net && ls && (li<27)) {li++; goto subfolder_letter_html;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_html;}
 //
 			}
-			if(is_net && ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+			if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+ #endif
+#endif
 		}
 
 
@@ -994,13 +1003,14 @@ next_html_entry:
 			sprintf(buffer, "slides = [");
 		else
 		{
-			sprintf(templn, " <a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.open('/index.ps3?'+s,'_self');}\">%'i %s &#x1F50D;</a></font><HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
+			sprintf(templn, "<div id=\"wmsg\"><h1>. . .</h1></div><script>window.onclick=function(e){if(e.target.id.indexOf('im')==0||typeof(e.target.href)=='string')wmsg.style.display='block';}</script>"
+							" <a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.open('/index.ps3?'+s,'_self');}\">%'i %s &#x1F50D;</a></font><HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
 
 #ifndef LITE_EDITION
-			sortable = file_exists(HTML_BASE_PATH "/jquery-1.12.3.min.js") && file_exists(HTML_BASE_PATH "/jquery-ui.min.js");
+			sortable = file_exists(HTML_BASE_PATH "/jquery.min.js") && file_exists(HTML_BASE_PATH "/jquery-ui.min.js");
 			if(sortable)
 			{
-				strcat(buffer,  "<script src=\"" HTML_BASE_PATH "/jquery-1.12.3.min.js\"></script>"
+				strcat(buffer,  "<script src=\"" HTML_BASE_PATH "/jquery.min.js\"></script>"
 								"<script src=\"" HTML_BASE_PATH "/jquery-ui.min.js\"></script>"
 								"<script>$(function(){$(\"#mg\").sortable();});</script><div id=\"mg\">");
 			}

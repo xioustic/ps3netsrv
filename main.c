@@ -680,7 +680,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 #endif
 					"input:focus{border:2px solid #0099FF;}"
 					".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
-					"#rxml,#rhtm,#rcpy{position:absolute;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
+					"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
 					"body,a.s,td,th{color:#F0F0F0;white-space:nowrap;");
 /*
 	if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))

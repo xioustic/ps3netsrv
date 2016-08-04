@@ -18,6 +18,7 @@ static sys_event_queue_t command_queue = -1;
 #define MAX_RETRIES    3
 
 static u8 netiso_loaded = 0;
+static int netiso_svrid = -1;
 
 static int remote_stat(int s, const char *path, int *is_directory, int64_t *file_size, uint64_t *mtime, uint64_t *ctime, uint64_t *atime, int *abort_connection)
 {
@@ -146,47 +147,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 
 	return (res.file_size);
 }
-/*
-static int64_t open_remote_file(const char *path)
-{
-	netiso_open_cmd cmd;
-	netiso_open_result res;
-	int len;
 
-	len = strlen(path);
-
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = NETISO_CMD_OPEN_FILE;
-	cmd.fp_len = len;
-
-	if(send(g_socket, &cmd, sizeof(cmd), 0) != sizeof(cmd))
-	{
-		//DPRINTF("send failed (open_file) (errno=%d)!\n", sys_net_errno);
-		return FAILED;
-	}
-
-	if(send(g_socket, path, len, 0) != len)
-	{
-		//DPRINTF("send failed (open_file) (errno=%d)!\n", sys_net_errno);
-		return FAILED;
-	}
-
-	if(recv(g_socket, &res, sizeof(res), MSG_WAITALL) != sizeof(res))
-	{
-		//DPRINTF("recv failed (open_file) (errno=%d)!\n", sys_net_errno);
-		return FAILED;
-	}
-
-	if(res.file_size == -1)
-	{
-		//DPRINTF("Remote file %s doesn't exist!\n", path);
-		return FAILED;
-	}
-
-	//DPRINTF("Remote file %s opened. Size = %x%08lx bytes\n", path, (res.file_size>>32), res.file_size&0xFFFFFFFF);
-	return res.file_size;
-}
-*/
 static int read_remote_file_critical(uint64_t offset, void *buf, uint32_t size)
 {
 	netiso_read_file_critical_cmd cmd;
@@ -512,6 +473,8 @@ static void netiso_thread(uint64_t arg)
 
 	//DPRINTF("Exiting main thread!\n");
 	netiso_loaded = 0;
+	netiso_svrid = -1;
+
 	sys_ppu_thread_exit(0);
 }
 
@@ -519,6 +482,7 @@ static void netiso_stop_thread(uint64_t arg)
 {
 	uint64_t exit_code;
 	netiso_loaded = 1;
+	netiso_svrid = -1;
 
 	if(g_socket >= 0)
 	{

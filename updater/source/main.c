@@ -386,6 +386,8 @@ int main()
 
 	sysLv2FsUnlink("/dev_hdd0/xmlhost/game_plugin/jquery-1.11.3.min.js");
 	sysLv2FsUnlink("/dev_hdd0/game/UPDWEBMOD/USRDIR/jquery-1.11.3.min.js");
+	sysLv2FsUnlink("/dev_hdd0/xmlhost/game_plugin/jquery-1.12.3.min.js");
+	sysLv2FsUnlink("/dev_hdd0/game/UPDWEBMOD/USRDIR/jquery-1.12.3.min.js");
 
 	// update languages
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/LANG_EN.TXT", "/dev_hdd0/tmp/wm_lang/LANG_EN.TXT");
@@ -416,8 +418,8 @@ int main()
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/mobile.html", "/dev_hdd0/xmlhost/game_plugin/mobile.html");
 	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/background.gif", "/dev_hdd0/xmlhost/game_plugin/background.gif");
 
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/jquery-1.12.3.min.js",  "/dev_hdd0/xmlhost/game_plugin/jquery-1.12.3.min.js");  // jQuery v1.12.0
-	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/jquery-ui.min.js", "/dev_hdd0/xmlhost/game_plugin/jquery-ui.min.js"); // jQuery UI v1.11.4
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/jquery.min.js",  "/dev_hdd0/xmlhost/game_plugin/jquery.min.js");  // jQuery v3.1.0
+	CopyFile("/dev_hdd0/game/UPDWEBMOD/USRDIR/jquery-ui.min.js", "/dev_hdd0/xmlhost/game_plugin/jquery-ui.min.js"); // jQuery UI v1.12.0
 
 	sysLv2FsMkdir("/dev_hdd0/tmp/wm_icons", 0777);
 

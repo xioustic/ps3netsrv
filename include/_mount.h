@@ -327,6 +327,7 @@ static void string_to_lv2(char* path, uint64_t addr)
 }
 #endif
 
+#ifdef COBRA_ONLY
 static void cache_icon0_and_param_sfo(char *templn)
 {
 	strcat(templn, ".SFO\0");
@@ -352,7 +353,7 @@ static void cache_icon0_and_param_sfo(char *templn)
 		}
 	}
 }
-#ifdef COBRA_ONLY
+
  #ifndef LITE_EDITION
 static void cache_file_to_hdd(char *source, char *target, const char *basepath, char *templn)
 {
@@ -2258,7 +2259,7 @@ mount_again:
  #ifndef LITE_EDITION
 			if(islike(_path, "/net") && _path[4]>='0' && _path[4]<='4')
 			{
-				sys_addr_t _netiso_args = 0;
+				sys_addr_t _netiso_args = 0; netiso_svrid = -1;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &_netiso_args)==0)
 				{
 					netiso_args *mynet_iso = (netiso_args*)_netiso_args;
@@ -2276,32 +2277,32 @@ mount_again:
 						if(_path[4]=='1')
 						{
 							sprintf(mynet_iso->server, "%s", webman_config->neth1);
-							mynet_iso->port=webman_config->netp1;
+							mynet_iso->port=webman_config->netp1; netiso_svrid = 1;
 						}
 						else
 						if(_path[4]=='2')
 						{
 							sprintf(mynet_iso->server, "%s", webman_config->neth2);
-							mynet_iso->port=webman_config->netp2;
+							mynet_iso->port=webman_config->netp2; netiso_svrid = 2;
 						}
  #ifdef NET3NET4
 						else
 						if(_path[4]=='3')
 						{
 							sprintf(mynet_iso->server, "%s", webman_config->neth3);
-							mynet_iso->port=webman_config->netp3;
+							mynet_iso->port=webman_config->netp3; netiso_svrid = 3;
 						}
 						else
 						if(_path[4]=='4')
 						{
 							sprintf(mynet_iso->server, "%s", webman_config->neth4);
-							mynet_iso->port=webman_config->netp4;
+							mynet_iso->port=webman_config->netp4; netiso_svrid = 4;
 						}
  #endif
 						else
 						{
 							sprintf(mynet_iso->server, "%s", webman_config->neth0);
-							mynet_iso->port=webman_config->netp0;
+							mynet_iso->port=webman_config->netp0; netiso_svrid = 0;
 						}
 					}
 					else
@@ -2332,7 +2333,7 @@ mount_again:
 						{
 							cellFsUnlink(TEMP_NET_PSXISO);
 
-							int ns = connect_to_remote_server((_path[4] & 0xFF) - '0');
+							int ns = connect_to_remote_server(netiso_svrid);
 
 							if(!extcasecmp(mynet_iso->path, ".cue", 4))
 							{
@@ -2348,7 +2349,7 @@ mount_again:
 							else
 								copy_net_file(TEMP_NET_PSXISO, mynet_iso->path, ns, _64KB_);
 
-							if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+							if(ns >= 0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
 
 							if(cellFsOpen(TEMP_NET_PSXISO, CELL_FS_O_RDONLY, &ns, NULL, 0) == CELL_FS_SUCCEEDED)
 							{

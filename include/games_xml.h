@@ -521,8 +521,11 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 		if(( f0<7 || f0>NTFS) && file_exists(drives[f0])==false) continue;
 //
-		if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
-
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+		if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+ #endif
+#endif
 		ns=-2; uprofile=profile;
 		for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 		{
@@ -563,6 +566,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
+			if(is_net && (netiso_svrid == (f0-7)) && (g_socket != -1)) ns = g_socket; /* reuse current server connection */ else
 			if(is_net && (ns<0)) ns = connect_to_remote_server(f0-7);
  #endif
 #endif
@@ -825,7 +829,11 @@ continue_reading_folder_xml:
 			if(is_net && ls && (li<27)) {li++; goto subfolder_letter_xml;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_xml;}
 //
 		}
-		if(is_net && ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+		if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+ #endif
+#endif
 	}
 
 

@@ -803,7 +803,7 @@ static void setup_form(char *buffer, char *templn)
 
 static int save_settings()
 {
-	savefile(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
+	return savefile(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
 }
 
 static void reset_settings()
