@@ -6,14 +6,21 @@ u32 _LINELEN = LINELEN;
 u32 _MAX_PATH_LEN = MAX_PATH_LEN;
 u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 
+#define _2MB_	0x200000ULL
+
 static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http)
 {
 	unsigned long long sbytes = sz; bool is_root = false;
 
+	if(sz > 0x4000000000000ULL) sz = 0, is_dir = true; // fix host_root, app_home
+
 	if(sz < 10240)			{sprintf(sf, "%s", STR_BYTE);} else
-	if(sz < 0x200000ULL)	{sprintf(sf, "%s", STR_KILOBYTE); sz >>= 10;} else
+	if(sz < _2MB_)	{sprintf(sf, "%s", STR_KILOBYTE); sz >>= 10;} else
 	if(sz < 0xC00000000ULL) {sprintf(sf, "%s", STR_MEGABYTE); sz >>= 20;} else
 							{sprintf(sf, "%s", STR_GIGABYTE); sz >>= 30;}
+
+	// encode file name for html
+	htmlenc(tempstr, name, 0); strcpy(name, tempstr);
 
 	flen = strlen(name); char *ext = name + MAX(flen - 4, 0); fsize[0] = NULL;
 
@@ -23,19 +30,10 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		getTitleID(tempstr, fsize, GET_VERSION);
 		getTitleID(tempstr, ename, GET_TITLE_AND_ID); if(fsize[0]) {strcat(tempstr, " v"); strcat(tempstr, fsize);}
 		sprintf(fsize, "<label title=\"%s\">%s</label><div style='position:absolute;top:300px;right:10px;font-size:14px'>%s</div>", tempstr, name, tempstr); strcpy(name, fsize);
-
-		// encode url for html
-		urlenc(tempstr, templn, 1); strncpy(templn, tempstr, _MAX_LINE_LEN);
-	}
-	else
-	{
-		// encode url for html
-		urlenc(tempstr, templn, 1); strncpy(templn, tempstr, _MAX_LINE_LEN);
-
-		// encode file name for html
-		strcpy(tempstr, name); htmlenc(name, tempstr, 0);
 	}
 
+	// encode url for html
+	urlenc(tempstr, templn, 1); strncpy(templn, tempstr, _MAX_LINE_LEN);
 
 	// is image?
 	u8 show_img = !is_ps3_http && (!is_dir && (!strcasecmp(ext, ".png") || !strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".bmp")));
@@ -71,9 +69,13 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 			uint64_t freeSize = 0, devSize = 0; is_root = true;
 			system_call_3(SC_FS_DISK_FREE, (uint64_t)(uint32_t)templn, (uint64_t)(uint32_t)&devSize, (uint64_t)(uint32_t)&freeSize);
 
+			unsigned long long	free_mb    = (unsigned long long)(freeSize>>20),
+								free_kb    = (unsigned long long)(freeSize>>10),
+								devsize_mb = (unsigned long long)(devSize>>20);
+
 			sprintf(fsize,  "<div style='height:18px;background:#121;text-align:left;'><div style='height:18px;background:#444;width:%i%%'></div><div style='position:relative;top:-18px;text-align:right'>"
 							"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
-							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), templn, (unsigned long long)((freeSize)>>20), STR_MBFREE, freeSize, STR_BYTE, (unsigned long long)((devSize)>>20), STR_MEGABYTE, devSize, STR_BYTE, (unsigned long long)((freeSize)>>20), STR_MEGABYTE);
+							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
 		}
 		else
 #ifdef PS2_DISC
@@ -83,9 +85,9 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 #endif
 	}
 #ifdef COBRA_ONLY
-	else if( (flen>4 && strcasestr(ISO_EXTENSIONS, ext)!=NULL && !islike(templn, HDD0_GAME_DIR)) || (!is_net && ( strstr(name + MAX(flen - 13, 0), ".ntfs[") || !extcmp(name + MAX(flen - 8, 0), ".BIN.ENC", 8) )) )
+	else if( ((flen > 4) && strcasestr(ISO_EXTENSIONS, ext)!=NULL && !islike(templn, HDD0_GAME_DIR)) || (!is_net && ( strstr(name + MAX(flen - 13, 0), ".ntfs[") || !extcmp(name + MAX(flen - 8, 0), ".BIN.ENC", 8) )) )
 	{
-		if( strcasestr(name, ".iso.") && extcasecmp(name, ".iso.0", 6) )
+		if( (strcasestr(name, ".iso.") != NULL) && extcasecmp(name, ".iso.0", 6) )
 			sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 		else
 			sprintf(fsize, "<a href=\"/mount.ps3%s\" title=\"%'llu %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, sz, sf);
@@ -117,14 +119,14 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	else if(!is_net && ( !extcmp(name, ".sprx", 5)))
 		sprintf(fsize, "<a href=\"/loadprx.ps3?slot=6&prx=%s\">%'llu %s</a>", templn, sz, sf);
 #endif
-	else if( (sz <= MAX_TEXT_LEN) && (strcasestr(".txt|.ini|.log|.sfx|.xml|.cfg|.his|.hip|.bup|.css|.html|.conf|name", ext)!=NULL || strstr(templn, "wm_custom")!=NULL ) )
+	else if( (sz <= MAX_TEXT_LEN) && (strcasestr(".txt|.ini|.log|.sfx|.xml|.cfg|.his|.hip|.bup|.css|.html|conf|name", ext)!=NULL || strstr(templn, "wm_custom")!=NULL ) )
 			sprintf(fsize, "<a href=\"/edit.ps3%s\">%'llu %s</a>", templn, sz, sf);
 	else if(sbytes < 10240)
 		sprintf(fsize, "%'llu %s", sz, sf);
 	else
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 
-	snprintf(ename, 6, "%s    ", name); if(!strstr(templn, ":")) urlenc(templn, tempstr, 1);
+	snprintf(ename, 6, "%s    ", name); //if(!strstr(templn, ":")) urlenc(templn, tempstr, 1);
 
 	sprintf(tempstr, "%c%c%c%c%c%c<tr>"
 					 "<td><a %s href=\"%s\"%s>%s</a></td>",
@@ -274,7 +276,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 							islike(param, "/dev_") ?
 							"document.addEventListener('keyup',ku,false);"
 							"function ku(e){e=e||window.event;if(e.keyCode == 113)"
-							"{var a=document.querySelectorAll('a:hover')[0].href,f=a.substring(a.indexOf('/',8));if(f.substring(0,5)=='/dev_'){t=prompt('Rename to:',f);if(t&&t!=a)window.location='/rename.ps3'+f+'|'+t;}}}" : ""); strcat(buffer, templn);
+							"{var a=document.querySelectorAll('a:hover')[0].href,f=a.substring(a.indexOf('/',8));if(f.substring(0,5)=='/dev_'){t=prompt('Rename to:',unescape(f));if(t&&t!=a)window.location='/rename.ps3'+f+'|'+escape(t)}}}" : ""); strcat(buffer, templn);
 		}
 
 		strcat(buffer, "<table class=\"propfont\"><tr><td>");
@@ -319,35 +321,35 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					idx++; dirs++;
 					tlen += flen;
 
-					sys_addr_t data2 = 0;
-					netiso_read_dir_result_data *data = NULL;
+					sys_addr_t data = 0;
+					netiso_read_dir_result_data *dir_items = NULL;
 					int v3_entries = 0;
-					v3_entries = read_remote_dir(ns, &data2, &abort_connection);
-					if(data2 != NULL)
+					v3_entries = read_remote_dir(ns, &data, &abort_connection);
+					if(data != NULL)
 					{
-						data = (netiso_read_dir_result_data*)data2;
+						dir_items = (netiso_read_dir_result_data*)data;
 
 						for(int n = 0; n < v3_entries; n++)
 						{
-							if(data[n].name[0] == '.' && data[n].name[1] == 0) continue;
+							if(dir_items[n].name[0] == '.' && dir_items[n].name[1] == 0) continue;
 							if(tlen > BUFFER_SIZE_HTML) break;
 							if(idx >= (max_entries-3)) break;
 
 							if(param[1] == 0)
-								sprintf(templn, "/%s", data[n].name);
+								sprintf(templn, "/%s", dir_items[n].name);
 							else
 							{
-								sprintf(templn, "%s%s", param, data[n].name);
+								sprintf(templn, "%s%s", param, dir_items[n].name);
 							}
 							flen = strlen(templn) - 1; if(templn[flen] == '/') templn[flen] = NULL;
 
-							cellRtcSetTime_t(&rDate, data[n].mtime);
+							cellRtcSetTime_t(&rDate, dir_items[n].mtime);
 
-							sz=(unsigned long long)data[n].file_size; dir_size+=sz;
+							sz=(unsigned long long)dir_items[n].file_size; dir_size+=sz;
 
-							is_dir=data[n].is_directory; if(is_dir) dirs++;
+							is_dir=dir_items[n].is_directory; if(is_dir) dirs++;
 
-							add_list_entry(tempstr, is_dir, ename, templn, data[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http);
+							add_list_entry(tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http);
 
 							flen = strlen(tempstr);
 							if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
@@ -356,7 +358,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 							if(!working) break;
 						}
-						sys_memory_free(data2);
+						sys_memory_free(data);
 					}
 				}
 				else //may be a file

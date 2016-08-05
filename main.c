@@ -742,6 +742,8 @@ static void handleclient(u64 conn_s_p)
 {
 	int conn_s = (int)conn_s_p; // main communications socket
 
+	sys_addr_t sysmem = NULL;
+
 	char param[HTML_RECV_SIZE];
 	int fd;
 
@@ -753,9 +755,9 @@ static void handleclient(u64 conn_s_p)
 		{
 			vshnet_setUpdateUrl("http://127.0.0.1/dev_hdd0/ps3-updatelist.txt"); // custom update file
 
-#ifndef ENGLISH_ONLY
+ #ifndef ENGLISH_ONLY
 			update_language();
-#endif
+ #endif
 			if(profile || (!(webman_config->wmdn) && strlen(STR_WMSTART)>0))
 			{
 				sys_timer_sleep(10);
@@ -828,7 +830,7 @@ static void handleclient(u64 conn_s_p)
 			}
 			else
 			{   // cobra spoofer not working on 4.53
-    			if(c_firmware!=4.53f)
+				if(c_firmware!=4.53f)
 				{
 					cobra_config->spoof_version = 0x0480;
 					cobra_config->spoof_revision = 66412;
@@ -840,11 +842,11 @@ static void handleclient(u64 conn_s_p)
 
 			cobra_write_config(cobra_config);
 
-#endif
-#ifdef SPOOF_CONSOLEID
+ #endif
+ #ifdef SPOOF_CONSOLEID
 			spoof_idps_psid();
-#endif
-#ifdef COBRA_ONLY
+ #endif
+ #ifdef COBRA_ONLY
 	#ifdef REMOVE_SYSCALLS
 			if(webman_config->spp & 1) //remove syscalls & history
 			{
@@ -860,31 +862,31 @@ static void handleclient(u64 conn_s_p)
 				delete_history(false);
 				block_online_servers(false);
 			}
-#endif
+ #endif
 		}
 
 		init_running = 0;
 		sys_ppu_thread_exit(0);
 	}
 
-#ifdef USE_DEBUG
+ #ifdef USE_DEBUG
 	ssend(debug_s, "waiting...");
-#endif
+ #endif
 	if(loading_html > 10) loading_html=0;
 	//while((init_running/* || loading_html>3*/) && working) sys_timer_usleep(10000);
 
 	sys_net_sockinfo_t conn_info_main;
 
-#ifdef WM_REQUEST
+ #ifdef WM_REQUEST
 	struct CellFsStat buf;
-	u8 wm_request=(cellFsStat((char*)WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
+	u8 wm_request = (cellFsStat((char*)WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
 
-#ifdef PKG_HANDLER
+	#ifdef PKG_HANDLER
 	wmget = (wm_request > 0);
-#endif
+	#endif
 
 	if(!wm_request)
-#endif
+ #endif
 	{
 		sys_net_get_sockinfo(conn_s, &conn_info_main, 1);
 
@@ -892,9 +894,7 @@ static void handleclient(u64 conn_s_p)
 		sprintf(ip_address, "%s", inet_ntoa(conn_info_main.remote_adr));
 		if(webman_config->bind && ((conn_info_main.local_adr.s_addr!=conn_info_main.remote_adr.s_addr) && !islike(ip_address, webman_config->allow_ip)))
 		{
-			sclose(&conn_s);
-			loading_html--;
-			sys_ppu_thread_exit(0);
+			goto exit_handleclient;
 		}
 
 		if(!webman_config->netd0 && !webman_config->neth0[0]) strcpy(webman_config->neth0, ip_address); // show client IP if /net0 is empty
@@ -903,35 +903,38 @@ static void handleclient(u64 conn_s_p)
 
 	_meminfo meminfo;
 	u8 retries=0;
-again3:
-	{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
-	if((meminfo.avail)<( (_64KB_) + MIN_MEM)) //leave if less than min memory
+
+	char cmd[16], header[HTML_RECV_SIZE];
+
+ again3:
+	{ system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo); }
+
+	if((meminfo.avail) < ( (_64KB_) + MIN_MEM)) //leave if less than min memory
 	{
-#ifdef USE_DEBUG
-	ssend(debug_s, "!!! NOT ENOUGH MEMORY!\r\n");
-#endif
+		#ifdef USE_DEBUG
+		ssend(debug_s, "!!! NOT ENOUGH MEMORY!\r\n");
+		#endif
+
 		retries++;
 		sys_timer_sleep(1);
-		if(retries<5 && working) goto again3;
-		init_running = 0;
-		sclose(&conn_s);
-		loading_html--;
-		sys_ppu_thread_exit(0);
-	}
+		if((retries < 5) && working) goto again3;
 
-	sys_addr_t sysmem = 0;
+		http_response(conn_s, header, param, 503, STR_ERROR);
+
+		init_running = 0;
+		goto exit_handleclient;
+	}
 
 	u8 is_binary = 0, served = 0;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	u64 c_len = 0;
-	char cmd[16], header[HTML_RECV_SIZE];
 
 	u8 is_ps3_http = 0;
 	u8 is_cpursx = 0;
 	u8 is_popup = 0;
 
-#ifdef WM_REQUEST
+ #ifdef WM_REQUEST
 	if(!wm_request)
-#endif
+ #endif
 	{
 		struct timeval tv;
 		tv.tv_usec = 0;
@@ -939,16 +942,18 @@ again3:
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 	}
 
+//// process commands ////
+
 	while(!served && working)
 	{
 		served++;
 		header[0] = NULL;
 
-#ifdef USE_DEBUG
-	ssend(debug_s, "ACC - ");
-#endif
+		#ifdef USE_DEBUG
+		ssend(debug_s, "ACC - ");
+		#endif
 
-#ifdef WM_REQUEST
+ #ifdef WM_REQUEST
 		if(wm_request)
 		{
 			if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && cellFsOpen((char*)WMREQUEST_FILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
@@ -959,7 +964,7 @@ again3:
 			}
 			cellFsUnlink((char*)WMREQUEST_FILE);
 		}
-#endif
+ #endif
 
 		if(((header[0] == 'G') || recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && header[0] == 'G' && header[4] == '/') // serve only GET /xxx requests
 		{
@@ -973,16 +978,16 @@ again3:
 			ssplit(header, cmd, 15, header, (HTML_RECV_SIZE-1));
 			ssplit(header, param, (HTML_RECV_SIZE-1), cmd, 15);
 
-#ifdef WM_REQUEST
+ #ifdef WM_REQUEST
 			if(wm_request) { for(size_t n = strlen(param); n > 0; n--) {if(param[n] == 9) param[n]=' ';} } wm_request = 0;
-#endif
+ #endif
 
 			bool allow_retry_response=true, small_alloc = true, mobile_mode = false;
 
-#ifdef USE_DEBUG
+ #ifdef USE_DEBUG
 	ssend(debug_s, param);
 	ssend(debug_s, "\r\n");
-#endif
+ #endif
 			//url decode (unescape)
 			if(strstr(param, "%"))
 			{
@@ -1033,38 +1038,35 @@ again3:
 				else
 				{
 					http_response(conn_s, header, param, 202, buttons);
-					loading_html--;
-					sys_ppu_thread_exit(0);
-					return;
+
+					goto exit_handleclient;
 				}
 			}
-#endif //  #ifdef VIRTUAL_PAD
+ #endif //  #ifdef VIRTUAL_PAD
 
 			if(islike(param, "/cpursx_ps3"))
 			{
 				char *cpursx = header; get_cpursx(cpursx);
-/*				// prevents flickering but cause error 80710336 in ps3 browser (silk mode)
+ /*				// prevents flickering but cause error 80710336 in ps3 browser (silk mode)
 				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
 								"<script>parent.document.getElementById('lbl_cpursx').innerHTML = \"%s\";</script>",
 								"/cpursx_ps3", cpursx);
-*/
+ */
 				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
 								"%s"
 								"<a href=\"/cpursx.ps3\" target=\"_parent\" style=\"text-decoration:none;\">"
 								"<font color=\"#fff\">%s</a>",
 								"/cpursx_ps3", HTML_BODY, cpursx);
-//
+
 				sprintf(header, HTML_RESPONSE_FMT,
 								200, "/cpursx_ps3", 390 + strlen(param), HTML_HEADER, param, HTML_BODY_END);
 
 				ssend(conn_s, header);
-				sclose(&conn_s);
 
-				loading_html--;
-				sys_ppu_thread_exit(0);
+				goto exit_handleclient;
 			}
 
-#ifdef PKG_HANDLER
+ #ifdef PKG_HANDLER
 			if(islike(param, "/download.ps3"))
 			{
 				char msg[MAX_LINE_LEN] = ""; // Debug msg
@@ -1080,8 +1082,7 @@ again3:
 
 				show_msg((char *)msg);
 
-				loading_html--;
-				sys_ppu_thread_exit(0);
+				goto exit_handleclient;
 			}
 
 			if(islike(param, "/install.ps3"))
@@ -1099,12 +1100,11 @@ again3:
 
 				show_msg((char *)msg);
 
-				loading_html--;
-				sys_ppu_thread_exit(0);
+				goto exit_handleclient;
 			}
-#endif // #ifdef PKG_HANDLER
+ #endif // #ifdef PKG_HANDLER
 
-#ifdef PS3_BROWSER
+ #ifdef PS3_BROWSER
 			if(islike(param, "/browser.ps3"))
 			{
 				char *param2 = param + 12, *url = param + 13;
@@ -1138,14 +1138,14 @@ again3:
 					enable_ingame_screenshot();
 				}
 				else
- #ifdef REMOVE_SYSCALLS
+   #ifdef REMOVE_SYSCALLS
 				if(islike(param2, "$disable_syscalls"))
 				{
 					disable_cfw_syscalls(strcasestr(param, "ccapi")!=NULL);
 				}
 				else
- #endif
- #ifdef REX_ONLY
+   #endif
+   #ifdef REX_ONLY
 				if(islike(param2, "$toggle_rebug_mode"))
 				{
 					if(toggle_rebug_mode()) goto restart;
@@ -1161,8 +1161,8 @@ again3:
 					toggle_debug_menu();
 				}
 				else
- #endif
- #ifdef COBRA_ONLY
+   #endif
+   #ifdef COBRA_ONLY
 				if(islike(param2, "$toggle_cobra"))
 				{
 					if(toggle_cobra()) goto restart;
@@ -1204,12 +1204,12 @@ again3:
 					sys_timer_sleep(3);
 				}
 				else
- #endif
+   #endif // #ifdef COBRA_ONLY
 				if(View_Find("game_plugin") == 0)
 				{   // in-XMB
- #ifdef XMB_SCREENSHOT
+   #ifdef XMB_SCREENSHOT
 					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param+27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
- #endif
+   #endif
 					{
 						if(strlen(param) < 13)     {do_umount(false); sprintf(header, "http://%s/", local_ip); vshmain_AE35CF2D(header, 0);} else
 						if(strstr(param, ".ps3/")) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param+12); vshmain_AE35CF2D(header, 0);} else
@@ -1224,13 +1224,12 @@ again3:
  					sprintf(url, "ERROR: Not in XMB!");
 
 				http_response(conn_s, header, param, 200, url);
-				loading_html--;
-				sys_ppu_thread_exit(0);
-				return;
-			}
-#endif // #ifdef PS3_BROWSER
 
-#if defined(FIX_GAME) || defined(COPY_PS3)
+				goto exit_handleclient;
+			}
+ #endif // #ifdef PS3_BROWSER
+
+ #if defined(FIX_GAME) || defined(COPY_PS3)
 			if(strstr(param, ".ps3$abort"))
 			{
 				if(copy_in_progress) {copy_aborted=true; show_msg((char*)STR_CPYABORT);}   // /copy.ps3$abort
@@ -1239,9 +1238,9 @@ again3:
 
 				sprintf(param, "/");
 			}
-#endif
+ #endif
 
-#ifdef GET_KLICENSEE
+ #ifdef GET_KLICENSEE
 			if(islike(param, "/klic.ps3"))
 			{
 				if(npklic_struct_offset == 0)
@@ -1328,21 +1327,19 @@ again3:
 					}
 				}
 
-				loading_html--;
-				sys_ppu_thread_exit(0);
-				return;
+				goto exit_handleclient;
 			}
-#endif
+ #endif
 
-#ifndef LITE_EDITION
+ #ifndef LITE_EDITION
 
- #ifdef WEB_CHAT
+			#ifdef WEB_CHAT
 			if(islike(param, "/chat.ps3"))
 			{
 				is_popup = 1; is_binary = 0;
 				goto html_response;
 			}
- #endif
+			#endif
 			if(islike(param, "/popup.ps3"))
 			{
 				if(param[10] == 0) show_info_popup = true; else is_popup = 1;
@@ -1392,9 +1389,8 @@ again3:
 					sprintf(param, STR_ERROR);
 
 				http_response(conn_s, header, param, 200, param);
-				loading_html--;
-				sys_ppu_thread_exit(0);
-				return;
+
+				goto exit_handleclient;
 			}
 			if(islike(param, "/dev_blind"))
 			{
@@ -1406,7 +1402,7 @@ again3:
 				is_popup = 1; is_binary = 0;
 				goto html_response;
 			}
- #ifdef COPY_PS3
+   #ifdef COPY_PS3
 			if(islike(param, "/rmdir.ps3"))
 			{
 				if(param[10] == '/')
@@ -1480,16 +1476,16 @@ again3:
 				sprintf(param, "%s", source); strcat(target, strrchr(param, '/'));
 				goto html_response;
 			}
- #endif
+   #endif // #ifdef COPY_PS3
 
 #endif //#ifndef LITE_EDITION
 
 			if(islike(param, "/quit.ps3"))
 			{
 				http_response(conn_s, header, param, 200, param);
-#ifdef LOAD_PRX
-quit:
-#endif
+ #ifdef LOAD_PRX
+ quit:
+ #endif
 				if((webman_config->fanc == 0) || strstr(param, "?0") || webman_config->ps2temp<33)
 					restore_fan(0); //restore syscon fan control mode
 				else
@@ -1516,8 +1512,7 @@ quit:
 				else
 					{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
 
-				sys_ppu_thread_exit(0);
-				break;
+				goto exit_handleclient;
 			}
 			if(islike(param, "/rebuild.ps3"))
 			{
@@ -1537,22 +1532,23 @@ quit:
 			}
 			if(islike(param, "/restart.ps3"))
 			{
-restart:
+ restart:
 				http_response(conn_s, header, param, 200, param);
 				working = 0;
+
 				{ DELETE_TURNOFF } { BEEP2 }
 				if(strstr(param,"?0") == NULL) savefile((char*)WMNOSCAN, NULL, 0);
 
 				vshmain_87BB0001(2); // VSH reboot
 
-				sys_ppu_thread_exit(0);
-				break;
+				goto exit_handleclient;
 			}
 			if(islike(param, "/reboot.ps3"))
 			{
-reboot:
+ reboot:
 				http_response(conn_s, header, param, 200, param);
 				working = 0;
+
 				{ DELETE_TURNOFF } { BEEP2 }
 
 				if(strstr(param, "?v")) vshmain_87BB0001(2); // VSH reboot
@@ -1565,11 +1561,10 @@ reboot:
 				else
 					{system_call_3(SC_SYS_POWER, SYS_HARD_REBOOT, NULL, 0);} // hard reboot
 
-				sys_ppu_thread_exit(0);
-				break;
+				goto exit_handleclient;
 			}
 
-#ifdef FIX_GAME
+ #ifdef FIX_GAME
 			if(islike(param, "/fixgame.ps3"))
 			{
 				// fix game folder
@@ -1578,11 +1573,11 @@ reboot:
 				is_popup = 1; is_binary = 0;
 				goto html_response;
 			}
-#endif
+ #endif
 
 			if(islike(param, "/games.ps3"))
 			{
-mobile_response:
+ mobile_response:
 				mobile_mode = true;
 
 				if(file_exists(MOBILE_HTML) == false)
@@ -1601,7 +1596,8 @@ mobile_response:
 			if(islike(param, "/index.ps3")) small_alloc=false;
 
 			if(!is_busy && (islike(param, "/index.ps3?")  ||
-#ifdef DEBUG_MEM
+
+ #ifdef DEBUG_MEM
 							islike(param, "/peek.lv2?")   ||
 							islike(param, "/poke.lv2?")   ||
 							islike(param, "/find.lv2?")   ||
@@ -1609,14 +1605,14 @@ mobile_response:
 							islike(param, "/poke.lv1?")   ||
 							islike(param, "/find.lv1?")   ||
 							islike(param, "/dump.ps3")    ||
-#endif
+ #endif
 
-#ifndef LITE_EDITION
+ #ifndef LITE_EDITION
 							islike(param, "/delete.ps3")  ||
 							islike(param, "/delete_ps3")  ||
-#endif
+ #endif
 
-#ifdef PS3MAPI
+ #ifdef PS3MAPI
 							islike(param, "/home.ps3mapi")     ||
 							islike(param, "/setmem.ps3mapi")   ||
 							islike(param, "/getmem.ps3mapi")   ||
@@ -1628,11 +1624,12 @@ mobile_response:
 							islike(param, "/setidps.ps3mapi")  ||
 							islike(param, "/vshplugin.ps3mapi")  ||
 							islike(param, "/gameplugin.ps3mapi") ||
-#endif
+ #endif
 
-#ifdef COPY_PS3
+ #ifdef COPY_PS3
 							islike(param, "/copy.ps3/") ||
-#endif
+ #endif
+
 							islike(param, "/refresh.ps3")
 			))
 				is_binary = 0;
@@ -1641,31 +1638,33 @@ mobile_response:
 					islike(param, "/mount_ps3/")  ||
 					islike(param, "/mount.ps3/")  ||
 					islike(param, "/mount.ps3?http") ||
-#ifdef PS2_DISC
+
+ #ifdef PS2_DISC
 					islike(param, "/mount.ps2/")  ||
 					islike(param, "/mount_ps2/")  ||
-#endif
+ #endif
 
-#ifdef VIDEO_REC
+ #ifdef VIDEO_REC
 					islike(param, "/videorec.ps3") ||
-#endif
+ #endif
 
-#ifdef EXT_GDATA
+ #ifdef EXT_GDATA
 					islike(param, "/extgd.ps3")   ||
-#endif
+ #endif
 
-#ifdef SYS_BGM
+ #ifdef SYS_BGM
 					islike(param, "/sysbgm.ps3")  ||
-#endif
+ #endif
 
-#ifdef LOAD_PRX
+ #ifdef LOAD_PRX
 					islike(param, "/loadprx.ps3")   ||
 					islike(param, "/unloadprx.ps3") ||
-#endif
+ #endif
 
 					islike(param, "/eject.ps3")   ||
 					islike(param, "/insert.ps3"))
 				is_binary = 0;
+
 			else if(param[1] == 'n' && param[2] == 'e' && param[3] == 't' && (param[4]>='0' && param[4]<='4')) //net0/net1/net2/net3/net4
 			{
 				is_binary = 2; small_alloc = false;
@@ -1689,15 +1688,15 @@ mobile_response:
 				}
 				else
 				{
-					c_len=0;
+					c_len = 0;
 					is_binary = 0;
 					http_response(conn_s, header, param, is_busy ? 503:400, is_busy ? (char*)"503 Server is Busy":(char*)"400 Bad Request");
-					loading_html--;
-					sys_ppu_thread_exit(0);
+
+					goto exit_handleclient;
 				}
 			}
 
-html_response:
+ html_response:
 			prepare_header(header, param, is_binary);
 			char templn[1024];
 			{u16 ulen=strlen(param); if(ulen>1 && param[ulen-1] == '/') param[ulen-1] = NULL;}
@@ -1733,15 +1732,13 @@ html_response:
 				//if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
 				if(buffer_size < _64KB_)
 				{
-					sclose(&conn_s);
-					loading_html--;
-					sys_ppu_thread_exit(0);
+					goto exit_handleclient;
 				}
 
 				if(islike(param, "/dev_bdvd"))
 					{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-				char *buffer= (char*)sysmem;
+				char *buffer = (char*)sysmem;
 				if(cellFsOpen(param, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
 					u64 read_e = 0, pos;
@@ -1764,10 +1761,8 @@ html_response:
 					}
 					cellFsClose(fd);
 				}
-				sys_memory_free(sysmem);
-				sclose(&conn_s);
-				loading_html--;
-				sys_ppu_thread_exit(0);
+
+				goto exit_handleclient;
 			}
 
 			u32 BUFFER_SIZE_HTML = _64KB_;
@@ -1776,10 +1771,9 @@ html_response:
 			{
 				if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
 				{
-					sclose(&conn_s);
-					loading_html--;
-					sys_ppu_thread_exit(0);
+					goto exit_handleclient;
 				}
+
 				is_cpursx=1;
 			}
 			else
@@ -1797,9 +1791,7 @@ html_response:
 
 				if(!sysmem && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
 				{
-					sclose(&conn_s);
-					loading_html--;
-					sys_ppu_thread_exit(0);
+					goto exit_handleclient;
 				}
 			}
 
@@ -1842,14 +1834,14 @@ html_response:
 										"<hr width=\"100%%\">"
 										"<div id=\"rxml\"><H1>%s XML ...</H1></div>"
 										"<div id=\"rhtm\"><H1>%s HTML ...</H1></div>"
-#ifdef COPY_PS3
+ #ifdef COPY_PS3
 										"<div id=\"rcpy\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
 										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
 										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
-#else
+ #else
 										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH); strcat(buffer, templn);
 										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH); strcat(buffer, templn);
-#endif
+ #endif
 					}
 
 					if((webman_config->homeb) && (strlen(webman_config->home_url)>0))
@@ -1858,17 +1850,17 @@ html_response:
 					sprintf(templn, HTML_BUTTON_FMT
 									HTML_BUTTON_FMT
 									HTML_BUTTON_FMT
-#ifdef EXT_GDATA
+ #ifdef EXT_GDATA
 									HTML_BUTTON_FMT
-#endif
+ #endif
 									, HTML_BUTTON, STR_EJECT, HTML_ONCLICK, "/eject.ps3"
 									, HTML_BUTTON, STR_INSERT, HTML_ONCLICK, "/insert.ps3"
 									, HTML_BUTTON, STR_UNMOUNT, HTML_ONCLICK, "/mount.ps3/unmount"
-#ifdef EXT_GDATA
+ #ifdef EXT_GDATA
 									, HTML_BUTTON, "gameDATA", HTML_ONCLICK, "/extgd.ps3"
-#endif
+ #endif
 					); strcat(buffer, templn);
-#ifdef COPY_PS3
+ #ifdef COPY_PS3
 					if(((islike(param, "/dev_") && strlen(param) > 12 && !strstr(param,"?")) || islike(param, "/dev_bdvd")) && !strstr(param,".ps3/") && !strstr(param,".ps3?"))
 					{
 						if(copy_in_progress)
@@ -1877,26 +1869,31 @@ html_response:
 							sprintf(templn, "%s%s\" onclick='rcpy.style.display=\"block\";location.href=\"/copy.ps3%s\";'\">", HTML_BUTTON, STR_COPY, param);
 						strcat(buffer, templn);
 					}
-#ifndef LITE_EDITION
+
+  #ifndef LITE_EDITION
 					if((islike(param, "/dev_") && !strstr(param,"?")) && !islike(param,"/dev_flash") && !strstr(param,".ps3/") && !strstr(param,".ps3?"))
-					{sprintf(templn,"<script>"
-									"function t(b,m,x,c){"
-									"var i,p,o,h,l=document.querySelectorAll('.d,.w'),s=m.length,n=1;"
-									"for(i=1;i<l.length;i++){o=l[i];"
-									"h=o.href;p=h.indexOf('/cpy.ps3');if(p>0){n=0;s=8;bCpy.value='Copy';}"
-									"if(p<1){p=h.indexOf('/cut.ps3');if(p>0){n=0;s=8;bCut.value='Cut';}}"
-									"if(p<1){p=h.indexOf('/delete.ps3');if(p>0){n=0;s=11;bDel.value='%s';}}"
-									"if(p>0){o.href=h.substring(p+s,h.length);o.style.color='#ccc';}"
-									"else{p=h.indexOf('/',8);o.href=m+h.substring(p,h.length);o.style.color=c;}"
-									"}if(n)b.value=(b.value == x)?x+' %s':x;"
-									"}</script>", STR_DELETE, STR_ENABLED); strcat(buffer, templn);
-					 sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"t(this,'/delete.ps3','%s','red');\">", HTML_BUTTON, STR_DELETE, STR_DELETE); strcat(buffer, templn);
-					 sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"t(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); strcat(buffer, templn);
-					 sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"t(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); strcat(buffer, templn);
-					 if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param, 0); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
+					{	// add buttons + javascript code to handle delete / cut / copy / paste
+						sprintf(templn, "<script>"
+										"function t(b,m,x,c){"
+										"var i,p,o,h,l=document.querySelectorAll('.d,.w'),s=m.length,n=1;"
+										"for(i=1;i<l.length;i++){o=l[i];"
+										"h=o.href;p=h.indexOf('/cpy.ps3');if(p>0){n=0;s=8;bCpy.value='Copy';}"
+										"if(p<1){p=h.indexOf('/cut.ps3');if(p>0){n=0;s=8;bCut.value='Cut';}}"
+										"if(p<1){p=h.indexOf('/delete.ps3');if(p>0){n=0;s=11;bDel.value='%s';}}"
+										"if(p>0){o.href=h.substring(p+s,h.length);o.style.color='#ccc';}"
+										"else{p=h.indexOf('/',8);o.href=m+h.substring(p,h.length);o.style.color=c;}"
+										"}if(n)b.value=(b.value == x)?x+' %s':x;"
+										"}</script>", STR_DELETE, STR_ENABLED); strcat(buffer, templn);
+
+						sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"t(this,'/delete.ps3','%s','red');\">", HTML_BUTTON, STR_DELETE, STR_DELETE); strcat(buffer, templn);
+						sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"t(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); strcat(buffer, templn);
+						sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"t(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); strcat(buffer, templn);
+
+						if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param, 0); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
 					}
-#endif
-#endif // #ifdef COPY_PS3
+  #endif
+
+ #endif // #ifdef COPY_PS3
 
 					sprintf(templn,  "%s%s XML%s\" %s'%s';\"> "
 									 "%s%s HTML%s\" %s'%s';\">"
@@ -1916,7 +1913,7 @@ html_response:
 						sprintf( templn, "</form><hr>");
 
 					strcat(buffer, templn);
-#ifdef COPY_PS3
+ #ifdef COPY_PS3
 					if(copy_in_progress)
 					{
 						sprintf(templn, "<div id=\"cps\"><font size=2>%s %s (%i %s)", STR_COPYING, current_file, copied_count, STR_FILES);
@@ -1929,10 +1926,10 @@ html_response:
 					{
 						strcat(templn, "</font><p></div><script>setTimeout(function(){cps.style.display='none'},15000);</script>"); strcat(buffer, templn);
 					}
-#endif
+ #endif
 				}
 
-#ifndef LITE_EDITION
+ #ifndef LITE_EDITION
 				if(is_popup)
 				{
 					if(islike(param, "/edit.ps3"))
@@ -1978,14 +1975,16 @@ html_response:
 
 						is_popup = 0; goto send_response;
 					}
-#ifdef WEB_CHAT
+
+ #ifdef WEB_CHAT
 					if(islike(param, "/chat.ps3"))
 					{
 						webchat(buffer, templn, param, tempstr, conn_info_main);
 					}
 					else
-#endif
-#ifdef FIX_GAME
+ #endif
+
+ #ifdef FIX_GAME
 					if(islike(param, "/fixgame.ps3"))
 					{
 						char *game_path = param + 12;
@@ -1998,7 +1997,7 @@ html_response:
 						sprintf(tempstr, HTML_REDIRECT_TO_URL, templn); strcat(buffer, tempstr);
 					}
 					else
-#endif
+ #endif
 					{
 						char *msg = (param + 11); // /popup.ps3?<msg>
 						show_msg(msg);
@@ -2007,15 +2006,15 @@ html_response:
 
 					is_popup = 0; goto send_response;
 				}
-#endif
+ #endif // #ifndef LITE_EDITION
+
+				////////////////////////////////////
+
 				if(is_binary == 2) // folder listing
 				{
 					if(folder_listing(buffer, BUFFER_SIZE_HTML, templn, param, conn_s, tempstr, header, is_ps3_http) == false)
 					{
-						sclose(&conn_s);
-						if(sysmem) sys_memory_free(sysmem);
-						loading_html--;
-						sys_ppu_thread_exit(0);
+						goto exit_handleclient;
 					}
 				}
 				else
@@ -2033,6 +2032,26 @@ html_response:
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(buffer, templn);
 					}
 					else
+					if(islike(param, "/setup.ps3?"))
+					{
+						if(strstr(param, "&") == NULL)
+						{
+							cellFsUnlink(WMCONFIG);
+							reset_settings();
+						}
+						if(save_settings() == CELL_FS_SUCCEEDED)
+						{
+							sprintf(templn, "<br> %s", STR_SETTINGSUPD); strcat(buffer, templn);
+						}
+						else
+							strcat(buffer, STR_ERROR);
+					}
+					else
+					if(islike(param, "/setup.ps3"))
+					{
+						setup_form(buffer, templn);
+					}
+					else
 					if(islike(param, "/eject.ps3"))
 					{
 						eject_insert(1, 0);
@@ -2044,7 +2063,7 @@ html_response:
 						eject_insert(0, 1);
 						strcat(buffer, STR_LOADED);
 					}
-#ifdef LOAD_PRX
+ #ifdef LOAD_PRX
 					else
 					if(islike(param, "/loadprx.ps3") || islike(param, "/unloadprx.ps3"))
 					{
@@ -2063,13 +2082,13 @@ html_response:
 						}
 
 						prx_found = file_exists(templn);
-#ifdef COBRA_ONLY
-						if(strlen(templn)>0)
+  #ifdef COBRA_ONLY
+						if(strlen(templn) > 0)
 						{
 							slot = get_vsh_plugin_slot_by_name(templn, false);
 							if(islike(param, "/unloadprx.ps3")) prx_found = false;
 						}
-#endif
+  #endif
 						if(slot>6)
 						{
 							pos=strstr(param, "slot="); slot = 6; // default (last slot)
@@ -2095,9 +2114,9 @@ html_response:
 								{cobra_load_vsh_plugin(slot, templn, NULL, 0); if(strstr(templn, "/webftp_server")) goto quit;}
 						}
 					}
-#endif
+ #endif
 
-#ifdef VIDEO_REC
+ #ifdef VIDEO_REC
 					else
 					if(islike(param, "/videorec.ps3"))
 					{
@@ -2108,9 +2127,9 @@ html_response:
 						strcat(buffer, "</a><p>");
 						if(!recording) {sprintf(param, "<a class=\"f\" href=\"%s\">%s</a><br>", (char*)recOpt[0x6], (char*)recOpt[0x6]); strcat(buffer, param);}
 					}
-#endif
+ #endif
 
-#ifdef EXT_GDATA
+ #ifdef EXT_GDATA
 					else
 					if(islike(param, "/extgd.ps3"))
 					{
@@ -2125,9 +2144,9 @@ html_response:
 						else
 							strcat(buffer, extgd?STR_ENABLED:STR_DISABLED);
 					}
-#endif
+ #endif
 
-#ifdef SYS_BGM
+ #ifdef SYS_BGM
 					else
 					if(islike(param, "/sysbgm.ps3"))
 					{
@@ -2145,41 +2164,9 @@ html_response:
 						strcat(buffer, templn);
 						show_msg((char*)templn);
 					}
-#endif
+ #endif
 
-#ifdef DEBUG_MEM
-					else
-					if(islike(param, "/dump.ps3"))
-					{
-						ps3mapi_mem_dump(buffer, templn, param);
-					}
-					else
-					if(islike(param, "/peek.lv") || islike(param, "/poke.lv") || islike(param, "/find.lv"))
-					{
-						ps3mapi_find_peek_poke(buffer, templn, param);
-					}
-#endif
-					else
-					if(islike(param, "/setup.ps3?"))
-					{
-						if(strstr(param, "&") == NULL)
-						{
-							cellFsUnlink(WMCONFIG);
-							reset_settings();
-						}
-						if(save_settings() == CELL_FS_SUCCEEDED)
-						{
-							sprintf(templn, "<br> %s", STR_SETTINGSUPD); strcat(buffer, templn);
-						}
-						else
-							strcat(buffer, STR_ERROR);
-					}
-					else
-					if(islike(param, "/setup.ps3"))
-					{
-						setup_form(buffer, templn);
-					}
-#ifndef LITE_EDITION
+ #ifndef LITE_EDITION
 					else
 					if(islike(param, "/delete.ps3") || islike(param, "/delete_ps3"))
 					{
@@ -2239,9 +2226,9 @@ html_response:
 
 						sprintf(tempstr, HTML_REDIRECT_TO_URL, param); strcat(buffer, tempstr);
 					}
-#endif
+ #endif
 
-#ifdef PS3MAPI
+ #ifdef PS3MAPI
 					else
 					if(islike(param, "/home.ps3mapi"))
 					{
@@ -2297,17 +2284,31 @@ html_response:
 					{
 						ps3mapi_gameplugin(buffer, templn, param);
 					}
-#endif
+ #endif // #ifdef PS3MAPI
+
+ #ifdef DEBUG_MEM
+					else
+					if(islike(param, "/dump.ps3"))
+					{
+						ps3mapi_mem_dump(buffer, templn, param);
+					}
+					else
+					if(islike(param, "/peek.lv") || islike(param, "/poke.lv") || islike(param, "/find.lv"))
+					{
+						ps3mapi_find_peek_poke(buffer, templn, param);
+					}
+ #endif
 
 					else
-#ifdef PS2_DISC
+ #ifdef PS2_DISC
 					if(mount_ps3 || forced_mount || islike(param, "/mount.ps3") || islike(param, "/mount.ps2") || islike(param, "/mount_ps2") || islike(param, "/copy.ps3"))
-#else
+ #else
 					if(mount_ps3 || forced_mount || islike(param, "/mount.ps3") || islike(param, "/copy.ps3"))
-#endif
+ #endif
 					{
 						game_mount(buffer, templn, param, tempstr, is_binary, mount_ps3, forced_mount);
 					}
+
 					else
 					{
 						mobile_mode|=(strstr(param, "?mob")!=NULL || strstr(param, "&mob")!=NULL);
@@ -2317,13 +2318,9 @@ html_response:
 							{ PS3MAPI_RESTORE_SC8_DISABLE_STATUS }
 							{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
-							is_busy=false;
+							is_busy = false;
 
-							sclose(&conn_s);
-							if(sysmem) sys_memory_free(sysmem);
-							loading_html--;
-							sys_ppu_thread_exit(0);
-							break;
+							goto exit_handleclient;
 						}
 
 						if(is_ps3_http)
@@ -2336,7 +2333,7 @@ html_response:
 					{ PS3MAPI_RESTORE_SC8_DISABLE_STATUS }
 					{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
-					is_busy=false;
+					is_busy = false;
 				}
 
 send_response:
@@ -2359,9 +2356,11 @@ send_response:
 		break;
 	}
 
-#ifdef USE_DEBUG
+exit_handleclient:
+
+	#ifdef USE_DEBUG
 	ssend(debug_s, "Request served.\r\n");
-#endif
+	#endif
 
 	sclose(&conn_s);
 	if(sysmem) sys_memory_free(sysmem);

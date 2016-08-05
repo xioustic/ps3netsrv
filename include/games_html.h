@@ -1011,7 +1011,7 @@ next_html_entry:
 							"<div id=\"wmsg\"><H1>. . .</H1></div>"
 							"<script>window.onclick=function(e){if(e.target.id.indexOf('im')==0||typeof(e.target.href)=='string')wmsg.style.display='block';}</script>"
 							// show games count + find icon
-							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.open('/index.ps3?'+s,'_self');}\">%'i %s &#x1F50D;</a></font>"
+							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
 							// separator
 							"<HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
 

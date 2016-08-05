@@ -50,7 +50,7 @@ static char h2a(char hex)
 	if(c>=0 && c<=9)
 		c += '0';
 	else if(c>=10 && c<=15)
-		c += 0x57; //a-f
+		c += 55; //A-F
 	return c;
 }
 
@@ -126,7 +126,7 @@ static void utf8enc(char *dst, char *src, u8 cpy2src)
 	if(cpy2src) strncpy(src, dst, MAX_LINE_LEN);
 }
 /*
-static void utf8dec(char *dst, char *src, u8 cpy2src))
+static void utf8dec(char *dst, char *src, u8 cpy2src)
 {
 	size_t j=0;
 	size_t n=strlen(src); u8 c;
