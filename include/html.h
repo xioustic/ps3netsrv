@@ -54,14 +54,16 @@ static char h2a(char hex)
 	return c;
 }
 
-static void urlenc(char *dst, char *src, u8 rel_mode)
+static bool urlenc(char *dst, char *src)
 {
-	size_t j=0;
-	size_t n=strlen(src);
-	for(size_t i=0; i<n; i++,j++)
+	size_t j = 0, n = strlen(src), pos = 0;
+
+	if(src[0] == 'h' && src[1] == 't' && src[2] == 't' && src[3] == 'p' && (src[4] == ':' || src[5] == ':') && (n > 7)) pos = MAX((*(const unsigned char*)strchr(src + 7, '/') - *(const unsigned char*)src), 0);
+
+	for(size_t i = 0; i < n; i++, j++)
 	{
 			 if(src[i]==' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
-		else if(src[i]==':' && rel_mode) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
+		else if(src[i]==':' && (i >= pos)) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
 		else if(src[i] & 0x80)
 		{
 			dst[j++] = '%';
@@ -77,6 +79,8 @@ static void urlenc(char *dst, char *src, u8 rel_mode)
 		else dst[j] = src[i];
 	}
 	dst[j] = '\0';
+
+	return (j > n); // true if dst != src
 }
 
 static void htmlenc(char *dst, char *src, u8 cpy2src)

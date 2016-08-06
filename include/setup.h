@@ -756,17 +756,23 @@ static void setup_form(char *buffer, char *templn)
 		cellFsClose(fd);
 		sprintf(templn, "&nbsp; &nbsp;" HTML_INPUT("ccbo\" list=\"cmds", "%s", "255", "50") "<br>", command); strcat(buffer, templn);
 
-		strcat(buffer, "<div style=\"display:none\"><datalist id=\"cmds\">");
-		strcat(buffer, "<option>GET /browser.ps3$block_servers</option>");
-		strcat(buffer, "<option>GET /browser.ps3$disable_syscalls?keep_ccapi</option>");
-#ifdef XMB_SCREENSHOT
-		strcat(buffer, "<option>GET /browser.ps3$screenshot_xmb</option>");
+		strcat(buffer,	"<div style=\"display:none\"><datalist id=\"cmds\">"
+#ifdef PS3_BROWSER
+						"<option>GET /browser.ps3$block_servers</option>"
+ #ifdef REMOVE_SYSCALLS
+						"<option>GET /browser.ps3$disable_syscalls?keep_ccapi</option>"
+ #endif
+ #ifdef XMB_SCREENSHOT
+						"<option>GET /browser.ps3$screenshot_xmb</option>"
+ #endif
 #endif
-		strcat(buffer, "<option>GET /cpursx.ps3?mode</option>");
-		strcat(buffer, "<option>GET /klic.ps3?log</option>");
-		strcat(buffer, "</datalist></div>");
+						"<option>GET /cpursx.ps3?mode</option>"
+#ifdef GET_KLICENSEE
+						"<option>GET /klic.ps3?log</option>"
+#endif
+						"</datalist></div>");
 	}
-#endif
+#endif // #ifdef WM_REQUEST
 
 	sprintf(templn, HTML_RED_SEPARATOR "<input type=\"submit\" value=\" %s \"/>"
 					"</form>", STR_SAVE); strcat(buffer, templn);

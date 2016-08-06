@@ -411,7 +411,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 		is_binary=1;
 
 		// mount url
-		urlenc(templn, source, 0);
+		urlenc(templn, source);
 
 		if(!(plen==IS_COPY && !copy_in_progress))
 		{
@@ -523,7 +523,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				get_default_icon(icon, fpath, filename + 1, 0, tempID, -1, 0);
 			}
 
-			urlenc(enc_dir_name, icon, 0);
+			urlenc(enc_dir_name, icon);
 			htmlenc(_path, source, 0);
 
 #ifdef COPY_PS3
@@ -768,7 +768,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				htmlenc(_path, source, 0);
 				sprintf(tempstr, "%s <a href=\"%s\">%s</a><hr>", STR_COPYING, templn, _path); strcat(buffer, tempstr);
 
-				urlenc(_path, target, 0);
+				urlenc(_path, target);
 				sprintf(tempstr, "<a href=\"%s\"><img src=\"%s\" border=0></a><hr>%s %s: ",
 								 _path, enc_dir_name, is_error ? STR_ERROR : "", STR_CPYDEST); strcat(buffer, tempstr);
 
@@ -783,7 +783,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					swap[tlen] = NULL;
 
 					strcat(buffer, "<a class=\"f\" href=\"");
-					urlenc(enc_dir_name, swap, 0);
+					urlenc(enc_dir_name, swap);
 					strcat(buffer, enc_dir_name);
 
 					htmlenc(enc_dir_name, templn, 1);
@@ -793,7 +793,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					strcpy(templn, target+tlen);
 				}
 
-				urlenc(enc_dir_name, target, 0); htmlenc(_path, templn, 0); sprintf(tempstr, HTML_URL, enc_dir_name, _path);
+				urlenc(enc_dir_name, target); htmlenc(_path, templn, 0); sprintf(tempstr, HTML_URL, enc_dir_name, _path);
 				////////////////////////
 
 				if(strstr(target, "/webftp_server")) {strcat(buffer, tempstr); sprintf(tempstr, "<HR>%s", STR_SETTINGSUPD);} else
@@ -836,7 +836,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 						if(is_iso || strstr(entry.d_name, "[PS2")!=NULL)
 						{
 							if(pcount==0) strcat(buffer, "<br><HR>");
-							urlenc(enc_dir_name, entry.d_name, 0);
+							urlenc(enc_dir_name, entry.d_name);
 							sprintf(templn, "<a href=\"/mount.ps2%s/%s\">%s</a><br>", target, enc_dir_name, entry.d_name);
 
 							tlen+=strlen(tempstr);

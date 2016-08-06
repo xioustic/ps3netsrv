@@ -421,7 +421,7 @@ static char h2a(char hex)
 	if(c>=0 && c<=9)
 		c += '0';
 	else if(c>=10 && c<=15)
-		c += 0x57; //a-f
+		c += 55; //A-F
 	return c;
 }
 
@@ -1185,7 +1185,7 @@ static void do_file_manager_action(uint32_t curpad)
           char url[MAX_PATH_LEN];
           urlenc(url, tempstr);
 
-          if(strstr(curdir, "/dev_hdd0/game")==curdir)
+          if(strstr(curdir, "/dev_hdd0/game") == curdir)
               sprintf(tempstr, "GET /fixgame.ps3%s", url);
           else if(strstr(url, "/dev_bdvd") || strstr(url, "/app_home"))
               sprintf(tempstr, "GET /play.ps3");

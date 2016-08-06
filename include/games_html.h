@@ -447,7 +447,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		sprintf(data[v3_entry].name, "%s", tempstr + strlen(param) + 1);
 	}
 
-	urlenc(enc_dir_name, data[v3_entry].name, 0);
+	urlenc(enc_dir_name, data[v3_entry].name);
 	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection);
 
 	if(webman_config->nocov<2 && (icon[0]==0 || webman_config->nocov)) {get_name(tempstr, data[v3_entry].name, 1); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
@@ -780,7 +780,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 						if(filter_name[0]>=' ' && strcasestr(templn, filter_name)==NULL && strcasestr(param, filter_name)==NULL && strcasestr(data[v3_entry].name, filter_name)==NULL) {v3_entry++; continue;}
 
 
-						strcpy(tempstr, icon); urlenc(icon, tempstr, 0);
+						strcpy(tempstr, icon); urlenc(icon, tempstr);
 
 						snprintf(tempstr, 8, "%s      ", templn); // sort key
 
@@ -917,11 +917,11 @@ next_html_entry:
 
 							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {strcat(templn, " ["); strcat(templn, tempID); strcat(templn, "]");}
 
-							urlenc(enc_dir_name, entry.d_name, 0);
+							urlenc(enc_dir_name, entry.d_name);
 
 							templn[64] = NULL; flen = strlen(templn);
 
-							urlenc(tempstr, icon, 1);
+							urlenc(tempstr, icon);
 
 							snprintf(tempstr, 8, "%s      ", templn); // sort key
 
@@ -1030,12 +1030,12 @@ next_html_entry:
 		tlen = buf_len;
 		for(u16 m = 0; m < idx; m++)
 		{
-			strcat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN); tlen += strlen((line_entry[m].path) + HTML_KEY_LEN);
-			if(tlen>(BUFFER_MAXSIZE)) break;
+			strcat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN); tlen += strlen(buffer + tlen);
+			if(tlen > (BUFFER_MAXSIZE)) break;
 		}
 
 #ifndef LITE_EDITION
-		if(sortable) strcat(buffer+tlen, "</div>");
+		if(sortable) strcat(buffer + tlen, "</div>");
 #endif
 
 		loading_games = 0;

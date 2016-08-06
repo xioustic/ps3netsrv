@@ -779,7 +779,7 @@ next_xml_entry:
 
 							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {strcat(templn, " ["); strcat(templn, tempID); strcat(templn, "]");}
 
-							urlenc(enc_dir_name, entry.d_name, 0);
+							urlenc(enc_dir_name, entry.d_name);
 
 							// subfolder name
 							if(f0==NTFS && entry.d_name[0]=='[')

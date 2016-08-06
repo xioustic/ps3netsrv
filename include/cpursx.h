@@ -160,6 +160,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		sprintf( templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"window.location='/cpursx.ps3?fan='+this.value\"><hr>", webman_config->manu, DEFAULT_MIN_FANSPEED);
 	else
 		sprintf( templn, "<hr>");
+
 	strcat(buffer, templn);
 
 	CellRtcTick pTick; cellRtcGetCurrentTick(&pTick); u32 dd, hh, mm, ss;

@@ -683,10 +683,10 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 					".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
 					"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
 					"body,a.s,td,th{color:#F0F0F0;white-space:nowrap;");
-/*
-	if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
-		strcat(buffer, "background-image: url(\"/dev_hdd0/xmlhost/game_plugin/background.jpg\");");
-*/
+
+	//if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
+	//	strcat(buffer, "background-image: url(\"/dev_hdd0/xmlhost/game_plugin/background.jpg\");");
+
 	if(is_ps3_http == 2)
 		strcat(buffer, "width:800px;}");
 	else
@@ -708,7 +708,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 	strcat(buffer,	"position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}"
 					".gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}--></style>");
 
-	if(param[1] != NULL && !strstr(param, ".ps3")) {strcat(buffer, "<base href=\""); urlenc(templn, param, 0); strcat(templn, "/\">"); strcat(buffer, templn);}
+	if(param[1] != NULL && !strstr(param, ".ps3")) {strcat(buffer, "<base href=\""); urlenc(templn, param); strcat(templn, "/\">"); strcat(buffer, templn);}
 
 	strcat(buffer,	"</head>"
 					"<body bgcolor=\"#101010\">"
@@ -1371,7 +1371,7 @@ static void handleclient(u64 conn_s_p)
 				{
 					sys_map_path(path1, path2);
 
-					htmlenc(url, path2, 1); urlenc(url, path1, 0); htmlenc(title, path1, 0);
+					htmlenc(url, path2, 1); urlenc(url, path1); htmlenc(title, path1, 0);
 
 					if(isremap && path2[0]!=NULL)
 					{
@@ -1405,6 +1405,7 @@ static void handleclient(u64 conn_s_p)
    #ifdef COPY_PS3
 			if(islike(param, "/rmdir.ps3"))
 			{
+				is_binary = 2;
 				if(param[10] == '/')
 				{
 					sprintf(param, "%s", param + 10); cellFsRmdir(param);
@@ -1416,6 +1417,7 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/mkdir.ps3"))
 			{
+				is_binary = 2;
 				if(param[10] == '/')
 				{
 					sprintf(param, "%s", param + 10); cellFsMkdir(param, DMODE);
@@ -1439,6 +1441,7 @@ static void handleclient(u64 conn_s_p)
 					//cellFsMkdir("/dev_hdd0/PSXISO" AUTOPLAY_TAG, DMODE);
 					//cellFsMkdir("/dev_hdd0/PS2ISO" AUTOPLAY_TAG, DMODE);
 				}
+
 				goto html_response;
 			}
 			else
@@ -1796,9 +1799,10 @@ static void handleclient(u64 conn_s_p)
 			}
 
 			char *buffer = (char*)sysmem;
+
 			//else	// text page
 			{
-				if(is_binary!=2 && islike(param, "/setup.ps3?"))
+				if((is_binary != 2) && islike(param, "/setup.ps3?"))
 				{
 					setup_parse_settings(param);
 				}
@@ -1867,6 +1871,7 @@ static void handleclient(u64 conn_s_p)
 							sprintf(templn, "%s&#9746; %s\" %s'%s';\">", HTML_BUTTON, STR_COPY, HTML_ONCLICK, "/copy.ps3$abort");
 						else
 							sprintf(templn, "%s%s\" onclick='rcpy.style.display=\"block\";location.href=\"/copy.ps3%s\";'\">", HTML_BUTTON, STR_COPY, param);
+
 						strcat(buffer, templn);
 					}
 
@@ -1889,7 +1894,7 @@ static void handleclient(u64 conn_s_p)
 						sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"t(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); strcat(buffer, templn);
 						sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"t(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); strcat(buffer, templn);
 
-						if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param, 0); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
+						if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
 					}
   #endif
 
@@ -1991,7 +1996,7 @@ static void handleclient(u64 conn_s_p)
 						sprintf(templn, "Fixed: %s", game_path);
 						show_msg((char*)templn);
 
-						urlenc(templn, game_path, 0);
+						urlenc(templn, game_path);
 						sprintf(tempstr, "Fixed: <a href=\"%s\">%s</a>", templn, game_path); strcat(buffer, tempstr);
 
 						sprintf(tempstr, HTML_REDIRECT_TO_URL, templn); strcat(buffer, tempstr);
@@ -2139,6 +2144,7 @@ static void handleclient(u64 conn_s_p)
 																					extgd=extgd^1;
 
 						strcat(buffer, "External Game DATA: ");
+
 						if(set_gamedata_status(extgd, true))
 							strcat(buffer, STR_ERROR);
 						else
@@ -2213,13 +2219,13 @@ static void handleclient(u64 conn_s_p)
 						else if(del(param2, islike(param, "/delete.ps3")))
 						{
 							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
-							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr, 0); htmlenc(templn, tempstr, 0);
+							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr); htmlenc(templn, tempstr, 0);
 							sprintf(tempstr, "%s %s : <a href=\"%s\">%s</a>%s<br>", STR_DELETE, STR_ERROR, param, templn, name);
 						}
 						else
 						{
 							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
-							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr, 0); htmlenc(templn, tempstr, 0);
+							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr); htmlenc(templn, tempstr, 0);
 							sprintf(tempstr, "%s : <a href=\"%s\">%s</a>%s<br>", STR_DELETE, param, templn, name);
 						}
 						strcat(buffer, tempstr);
