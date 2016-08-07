@@ -288,6 +288,16 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define HTML_RECV_SIZE	2048
 #define ip_size			0x10
 
+
+#define CODE_HTTP_OK         200
+#define CODE_BAD_REQUEST     400
+#define CODE_SERVER_BUSY     503
+#define CODE_VIRTUALPAD     1200
+#define CODE_INSTALL_PKG    1201
+#define CODE_DOWNLOAD_FILE  1202
+#define CODE_RETURN_TO_ROOT 1203
+
+
 ////////////
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -638,9 +648,11 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 
 static void http_response(int conn_s, char *header, const char *url, int code, const char *msg)
 {
-	if(code == 202)
+	if(code == CODE_VIRTUALPAD)
+	{
 		sprintf(header, HTML_RESPONSE_FMT,
-						200, url, 94 + strlen(msg), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", msg);
+						CODE_HTTP_OK, url, HTTP_RESPONSE_TITLE_LEN + strlen(msg), HTML_BODY, HTML_RESPONSE_TITLE, msg);
+	}
 	else
 	{
 		char templn[MAX_TEXT_LEN];
@@ -650,16 +662,15 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		else if(islike(msg, "http"))
 			sprintf(templn, "<a style=\"%s\" href=\"%s\">%s</a>", "color:#ccc;text-decoration:none;", msg, msg);
 #ifdef PKG_HANDLER
-		else if(code == 1200)
-			{code = 200; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", "Installing "); add_breadcrumb_trail(templn, (char*)msg + 11);}
-		else if(code == 1201)
-			{code = 200; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); p[4] = NULL; p = strstr((char*)msg, "To: "); add_breadcrumb_trail(templn, p + 4);}
+		else if(code == CODE_INSTALL_PKG)
+			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", "Installing "); add_breadcrumb_trail(templn, (char*)msg + 11);}
+		else if(code == CODE_DOWNLOAD_FILE)
+			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); p[4] = NULL; p = strstr((char*)msg, "To: "); add_breadcrumb_trail(templn, p + 4);}
 #endif
 		else
 			sprintf(templn, "%s", msg);
 
- #ifndef LITE_EDITION
-	#ifndef EMBED_JS
+#ifndef EMBED_JS
 		if(css_exists)
 		{
 			sprintf(header, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(templn, header);
@@ -668,14 +679,13 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		{
 			sprintf(header, SCRIPT_SRC_FMT, COMMON_SCRIPT_JS); strcat(templn, header);
 		}
-	#endif
- #endif
+#endif
+
+		sprintf(header, "<hr>" HTML_BUTTON_FMT "%s",
+						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == CODE_RETURN_TO_ROOT) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(templn, header);
 
 		sprintf(header, HTML_RESPONSE_FMT,
-						code, url, 182 + strlen(templn) + ((code == 203) ? 0 : 32), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", templn);
-
-		sprintf(templn, "<hr>" HTML_BUTTON_FMT "%s",
-						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == 203) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(header, templn);
+						code, url, HTTP_RESPONSE_TITLE_LEN + strlen(templn), HTML_BODY, HTML_RESPONSE_TITLE, templn);
 	}
 
 	ssend(conn_s, header);
@@ -700,7 +710,6 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 		css_exists = file_exists(COMMON_CSS);
 		common_js_exists = file_exists(COMMON_SCRIPT_JS);
 	}
-
 	if(css_exists)
 	{
 		sprintf(templn, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(buffer, templn);
@@ -977,7 +986,7 @@ static void handleclient(u64 conn_s_p)
 		sys_timer_sleep(1);
 		if((retries < 5) && working) goto again3;
 
-		http_response(conn_s, header, param, 503, STR_ERROR);
+		http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
 
 		init_running = 0;
 		goto exit_handleclient;
@@ -1095,7 +1104,7 @@ static void handleclient(u64 conn_s_p)
 				if(is_combo == 1 && param[10] != '?') sprintf(param, "/cpursx.ps3");
 				else
 				{
-					http_response(conn_s, header, param, 202, buttons);
+					http_response(conn_s, header, param, CODE_VIRTUALPAD, buttons);
 
 					goto exit_handleclient;
 				}
@@ -1126,7 +1135,7 @@ static void handleclient(u64 conn_s_p)
 				}
  #endif
 				sprintf(header, HTML_RESPONSE_FMT,
-								200, "/cpursx_ps3", 390 + strlen(buffer), HTML_HEADER, buffer, HTML_BODY_END);
+								CODE_HTTP_OK, "/cpursx_ps3", 390 + strlen(buffer), HTML_HEADER, buffer, HTML_BODY_END);
 
 				ssend(conn_s, header);
 
@@ -1144,7 +1153,7 @@ static void handleclient(u64 conn_s_p)
 				if(!wmget)
 				#endif
 				{
-					http_response(conn_s, header, param, (ret == FAILED) ? 400 : 1201, msg);
+					http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_DOWNLOAD_FILE, msg);
 				}
 
 				show_msg((char *)msg);
@@ -1162,7 +1171,7 @@ static void handleclient(u64 conn_s_p)
 				if(!wmget)
 				#endif
 				{
-					http_response(conn_s, header, param, (ret == FAILED) ? 400 : 1200, msg);
+					http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_INSTALL_PKG, msg);
 				}
 
 				show_msg((char *)msg);
@@ -1292,7 +1301,7 @@ static void handleclient(u64 conn_s_p)
 				else
  					sprintf(url, "ERROR: Not in XMB!");
 
-				http_response(conn_s, header, param, 200, url);
+				http_response(conn_s, header, param, CODE_HTTP_OK, url);
 
 				goto exit_handleclient;
 			}
@@ -1328,7 +1337,7 @@ static void handleclient(u64 conn_s_p)
 
 				if((klic_polling_status == 0) && (klic_polling == 2))
 				{
-					if(View_Find("game_plugin") == 0) http_response(conn_s, header, param, 200, (char*)"/KLIC: Waiting for game...");
+					if(View_Find("game_plugin") == 0) http_response(conn_s, header, param, CODE_HTTP_OK, (char*)"/KLIC: Waiting for game...");
 
 					// wait until game start
 					while((klic_polling == 2) && View_Find("game_plugin") == 0 && working) {sys_timer_usleep(500000);}
@@ -1358,7 +1367,7 @@ static void handleclient(u64 conn_s_p)
 							((klic_polling_status | klic_polling) == 0) ? "klic.ps3?auto" : "dev_hdd0/klic.log", prev); strcat(buffer, header);
 
 				is_binary = 0;
-				http_response(conn_s, header, param, 200, buffer);
+				http_response(conn_s, header, param, CODE_HTTP_OK, buffer);
 
 				if(kl[0]>0 && klic_polling>0)
 				{
@@ -1457,7 +1466,7 @@ static void handleclient(u64 conn_s_p)
 				else
 					sprintf(param, STR_ERROR);
 
-				http_response(conn_s, header, param, 200, param);
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 
 				goto exit_handleclient;
 			}
@@ -1554,7 +1563,7 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/quit.ps3"))
 			{
-				http_response(conn_s, header, param, 200, param);
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
  #ifdef LOAD_PRX
  quit:
  #endif
@@ -1575,7 +1584,7 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/shutdown.ps3"))
 			{
-				http_response(conn_s, header, param, 200, param);
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				working = 0;
 				{ DELETE_TURNOFF } { BEEP1 }
 
@@ -1605,7 +1614,7 @@ static void handleclient(u64 conn_s_p)
 			if(islike(param, "/restart.ps3"))
 			{
  restart:
-				http_response(conn_s, header, param, 200, param);
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				working = 0;
 
 				{ DELETE_TURNOFF } { BEEP2 }
@@ -1618,7 +1627,7 @@ static void handleclient(u64 conn_s_p)
 			if(islike(param, "/reboot.ps3"))
 			{
  reboot:
-				http_response(conn_s, header, param, 200, param);
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				working = 0;
 
 				{ DELETE_TURNOFF } { BEEP2 }
@@ -1762,7 +1771,7 @@ static void handleclient(u64 conn_s_p)
 				{
 					c_len = 0;
 					is_binary = 0;
-					http_response(conn_s, header, param, is_busy ? 503 : 400, is_busy ? (char*)"503 Server is Busy":(char*)"400 Bad Request");
+					http_response(conn_s, header, param, is_busy ? CODE_SERVER_BUSY : CODE_BAD_REQUEST, is_busy ? (char*)"503 Server is Busy":(char*)"400 Bad Request");
 
 					goto exit_handleclient;
 				}
@@ -2422,7 +2431,7 @@ send_response:
 				if(mount_ps3)
 					strcat(buffer, "<script>window.close(this);</script>"); //auto-close
 				else if(islike(param, "/mount.ps3?http"))
-					{http_response(conn_s, header, param, 200, param + 11); break;}
+					{http_response(conn_s, header, param, CODE_HTTP_OK, param + 11); break;}
 				else
 				{
  #ifndef LITE_EDITION

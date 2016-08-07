@@ -551,8 +551,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #ifdef EMBED_JS
 			sprintf(tempstr, // popup menu
 							"<div id='mnu' style='position:fixed;width:140px;background:#333;display:none;padding:5px;'>"
-							"<a id='m1'>%s<br></a><a id='m2'>%s</a><hr><a id='m3'>%s</a><a href=\"javascript:t=prompt('%s',window.location.pathname);if(t.indexOf('/dev_')==0)window.location='/mkdir.ps3'+t\">%s</a><hr><a id='m4'>%s<br></a><a id='m5'>%s<br></a><a id='m6'>%s</a><hr><a id='m7'>%s<br></a><a id='m8'>%s</a></div>"
-							"<script>var s,m;window.addEventListener('contextmenu',function(e){if(s)s.color='#ccc';t=e.target,s=t.style,c=t.className,m=mnu.style,p=t.pathname;if(c=='w'||c=='d'){e.preventDefault();s.color='#fff';m.display='block';m.left=(e.clientX+12)+'px';y=e.clientY;w=window.innerHeight;m.top=(((y+220)<w)?(y+12):(w-220))+'px';m1.href='/mount.ps3'+p;m1.style.display=(p.toLowerCase().indexOf('.iso')>0||c=='d')?'block':'none';m2.href=p;m2.text=(c=='w')?'Download':'Open';m3.href='/delete.ps3'+p;m4.href='/cut.ps3'+p;m5.href='/cpy.ps3'+p;m6.href='/paste.ps3'+window.location.pathname;m7.href='javascript:rn(\"'+p+'\")';m7.style.display=(p.substring(0,5)=='/dev_')?'block':'none';m8.href='/copy.ps3'+p}},false);window.onclick=function(e){if(m)m.display='none';}"
+							"<a id='m0'>%s</a><a id='m1'>%s</a><a id='m2'>%s</a><hr><a id='m3'>%s<br></a><a href=\"javascript:t=prompt('%s',window.location.pathname);if(t.indexOf('/dev_')==0)window.location='/mkdir.ps3'+t\">%s</a><hr><a id='m4'>%s<br></a><a id='m5'>%s<br></a><a id='m6'>%s</a><hr><a id='m7'>%s<br></a><a id='m8'>%s</a></div>"
+							"<script>var s,m;window.addEventListener('contextmenu',function(e){if(s)s.color='#ccc';t=e.target,s=t.style,c=t.className,m=mnu.style,p=t.pathname;if(c=='w'||c=='d'){e.preventDefault();s.color='#fff',b='block',n='none';m.display=b;m.left=(e.clientX+12)+'px';y=e.clientY;w=window.innerHeight;m.top=(((y+220)<w)?(y+12):(w-220))+'px';m0.href='/install.ps3'+p;m0.style.display=(p.indexOf('.pkg')>0)?b:n;m1.href='/mount.ps3'+p;m1.style.display=(p.toLowerCase().indexOf('.iso')>0||c=='d'||p.indexOf('/GAME')>0)?b:n;m2.href=p;m2.text=(c=='w')?'Download':'Open';m3.href='/delete.ps3'+p;m4.href='/cut.ps3'+p;m5.href='/cpy.ps3'+p;m6.href='/paste.ps3'+window.location.pathname;m7.href='javascript:rn(\"'+p+'\")';m7.style.display=(p.substring(0,5)=='/dev_')?b:n;m8.href='/copy.ps3'+p}},false);window.onclick=function(e){if(m)m.display=n;};"
 
 							// F2 = rename/move item pointed with mouse
 							"document.addEventListener('keyup',ku,false);"
@@ -560,7 +560,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 							"function ku(e){e=e||window.event;if(e.keyCode==113){var a=document.querySelectorAll('a:hover')[0].pathname;rn(a);}}"
 
 						 	"</script>",
-							"Mount", "Open", "Delete", "New Folder", "New Folder", "Cut", "Copy", "Paste", "Rename", "Copy To"); strcat(buffer, tempstr);
+							"Install PKG", "Mount", "Open", "Delete", "New Folder", "New Folder", "Cut", "Copy", "Paste", "Rename", "Copy To"); strcat(buffer, tempstr);
 #else
 			// add fm.js script
 			if(file_exists(FM_SCRIPT_JS))
