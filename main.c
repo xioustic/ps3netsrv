@@ -1958,7 +1958,7 @@ static void handleclient(u64 conn_s_p)
 					{	// add buttons + javascript code to handle delete / cut / copy / paste (requires fm.js)
 	#ifdef EMBED_JS
 						sprintf(templn, "<script>"
-										"function t(b,m,x,c){"
+										"function tg(b,m,x,c){"
 										"var i,p,o,h,l=document.querySelectorAll('.d,.w'),s=m.length,n=1;"
 										"for(i=1;i<l.length;i++){o=l[i];"
 										"h=o.href;p=h.indexOf('/cpy.ps3');if(p>0){n=0;s=8;bCpy.value='Copy';}"
@@ -1972,9 +1972,9 @@ static void handleclient(u64 conn_s_p)
 						if(file_exists(FM_SCRIPT_JS))
 	#endif
 						{
-							sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"t(this,'/delete.ps3','%s','red');\">", HTML_BUTTON, STR_DELETE, STR_DELETE); strcat(buffer, templn);
-							sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"t(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); strcat(buffer, templn);
-							sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"t(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); strcat(buffer, templn);
+							sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"tg(this,'/delete.ps3','%s','red');\">", HTML_BUTTON, STR_DELETE, STR_DELETE); strcat(buffer, templn);
+							sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"tg(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); strcat(buffer, templn);
+							sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"tg(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); strcat(buffer, templn);
 
 							if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
 						}

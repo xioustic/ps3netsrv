@@ -538,7 +538,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					sprintf(templn, "%s", wm_icons[5]); show_icon = true;
 				}
 
-				if(has_img)
+				if(has_img || strstr(param, "/GAME")!=NULL)
 				{
 					for(u16 m = idx; m < 7; m++) strcat(buffer, "<BR>");
 

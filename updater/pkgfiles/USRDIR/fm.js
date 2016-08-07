@@ -1,4 +1,4 @@
-function t(b,m,x,c){
+function tg(b,m,x,c){
 	var i,p,o,h,l=document.querySelectorAll('.d,.w'),s=m.length,n=1;
 	for(i=1;i<l.length;i++){
 		o=l[i];
