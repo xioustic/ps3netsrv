@@ -368,7 +368,7 @@ static void setup_form(char *buffer, char *templn)
 	if(isDir(drives[13])) add_check_box("x2", "1", drives[13], _BR_, (webman_config->dev_cf), buffer);
 
 	//Scan for content
-	sprintf(templn, "<td nowrap valign=top><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
+	sprintf(templn, "<td nowrap valign=top style=\"text-align:left\"><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
 	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    , _BR_     , !(webman_config->cmask & PS3), buffer);
 	add_check_box("ps2", "1", "PLAYSTATION\xC2\xAE\x32"    , " ("     , !(webman_config->cmask & PS2), buffer);
