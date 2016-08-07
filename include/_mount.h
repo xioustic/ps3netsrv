@@ -765,41 +765,22 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 
 				bool is_error = ((islike(target, "/dev_usb000") && file_exists("/dev_usb000")==false)) || islike(target, source);
 
-				htmlenc(_path, source, 0);
-				sprintf(tempstr, "%s <a href=\"%s\">%s</a><hr>", STR_COPYING, templn, _path); strcat(buffer, tempstr);
+				// show source path
+				sprintf(tempstr, "%s ", STR_COPYING); strcat(buffer, tempstr);
+				add_breadcrumb_trail(buffer, source); strcat(buffer, "<hr>");
 
+				// show image
 				urlenc(_path, target);
 				sprintf(tempstr, "<a href=\"%s\"><img src=\"%s\" border=0></a><hr>%s %s: ",
 								 _path, enc_dir_name, is_error ? STR_ERROR : "", STR_CPYDEST); strcat(buffer, tempstr);
 
-				// breadcrumb trail //
-				strcpy(templn, target); char *swap=tempstr; u16 tlen=0;
-				while(strchr(templn+1, '/'))
-				{
-					templn[strchr(templn+1, '/')-templn] = NULL;
-					tlen+=strlen(templn)+1;
+				// show target path
+				add_breadcrumb_trail(buffer, target);
 
-					strcpy(swap, target);
-					swap[tlen] = NULL;
+				if(strstr(target, "/webftp_server")) {sprintf(tempstr, "<HR>%s", STR_SETTINGSUPD); strcat(buffer, tempstr);} else
+				if(cp_mode) {char *p = strrchr(enc_dir_name, '/'); p[0] = NULL; sprintf(tempstr, HTML_REDIRECT_TO_URL, enc_dir_name); strcat(buffer, tempstr);}
 
-					strcat(buffer, "<a class=\"f\" href=\"");
-					urlenc(enc_dir_name, swap);
-					strcat(buffer, enc_dir_name);
-
-					htmlenc(enc_dir_name, templn, 1);
-					sprintf(swap, "\">%s</a>/", templn);
-					strcat(buffer, swap);
-
-					strcpy(templn, target+tlen);
-				}
-
-				urlenc(enc_dir_name, target); htmlenc(_path, templn, 0); sprintf(tempstr, HTML_URL, enc_dir_name, _path);
-				////////////////////////
-
-				if(strstr(target, "/webftp_server")) {strcat(buffer, tempstr); sprintf(tempstr, "<HR>%s", STR_SETTINGSUPD);} else
-				if(cp_mode) {strcat(buffer, tempstr); char *p = strrchr(enc_dir_name, '/'); p[0] = NULL; sprintf(tempstr, HTML_REDIRECT_TO_URL, enc_dir_name);}
-
-				if(is_error) {strcat(buffer, tempstr); show_msg((char*)STR_CPYABORT); cp_mode = 0; return;}
+				if(is_error) {show_msg((char*)STR_CPYABORT); cp_mode = 0; return;}
 			}
 			else
 #endif // #ifdef COPY_PS3
@@ -982,7 +963,7 @@ static void do_umount(bool clean)
 
 
 #ifdef COBRA_ONLY
-// #ifndef LITE_EDITION
+ #ifndef LITE_EDITION
 static u32 detect_cd_sector_size(int fd)
 {
 	char buffer[0x10]; buffer[0xD] = NULL; uint64_t msiz1;
@@ -994,7 +975,7 @@ static u32 detect_cd_sector_size(int fd)
 
 	return 2352;
 }
-// #endif
+ #endif
 #endif
 
 static void mount_autoboot(void)

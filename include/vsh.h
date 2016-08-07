@@ -73,6 +73,7 @@ static char* get_game_info(void)
 	return (char*)h;
 }
 
+#ifndef LITE_EDITION
 static void enable_ingame_screenshot(void)
 {
 	vshmain_is_ss_enabled = getNIDfunc("vshmain", 0x981D7E9F, 0); //is screenshot enabled?
@@ -88,6 +89,7 @@ static void enable_ingame_screenshot(void)
 		sys_timer_sleep(2);
 	}
 }
+#endif
 
 static void launch_disc(char *category, char *seg_name)
 {

@@ -180,9 +180,10 @@ static int download_file(char *param, char *msg)
 				sys_timer_usleep(5);
 			}
 
-			sprintf(msg_durl, "Downloading: %s", pdurl);
+			sprintf(msg_durl, "%s%s", "Downloading ", pdurl);
 
-			ret = LoadPluginById(0x29, (void *)downloadPKG_thread);
+			LoadPluginById(0x29, (void *)downloadPKG_thread);
+			ret = 0;
 		}
 		else
 			sprintf(msg_durl, "ERROR: Setting storage location");
@@ -224,8 +225,10 @@ static int installPKG(const char *pkgpath, char *msg)
 					ret = UnloadPluginById(0x1B, (void *)unloadSysPluginCallback);
 					sys_timer_usleep(5);
 				}
-				ret = LoadPluginById(0x16, (void *)installPKG_thread);
-				sprintf(msg, "Installing %s", pkg_path);
+
+				sprintf(msg, "%s%s", "Installing ", pkg_path);
+
+				LoadPluginById(0x16, (void *)installPKG_thread);
 				ret = 0;
 			}
 		}

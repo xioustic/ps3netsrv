@@ -364,7 +364,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 
-							if(filename[0]=='/')
+							if(filename[0] == '/')
 							{
 								sys_map_path((char*)filename, (strcmp(cwd, "/") ? (char*)cwd : NULL) ); // unmap if cwd is the root
 							}
@@ -414,6 +414,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							else
 								cellFsChmod(filename, attributes);
 						}
+ #ifdef COPY_PS3
 						else
 						if(strcasecmp(cmd, "COPY") == 0)
 						{
@@ -449,9 +450,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								ssend(conn_s_ftp, FTP_ERROR_500);
 							}
 						}
+ #endif
  #ifdef WM_REQUEST
 						else
-						if(param[0]=='/')
+						if(param[0] == '/')
 						{
 							sprintf(buffer, "GET %s", param);
 							savefile((char*)WMREQUEST_FILE, buffer, strlen(buffer));
@@ -479,7 +481,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					if(data_s > 0)
 					{
-						int nolist = (strcasecmp(cmd, "MLSD") == 0 || strcasecmp(cmd, "MLST") == 0);
+						bool is_MLSD = (strcasecmp(cmd, "MLSD") == 0);
+
+						int nolist = (is_MLSD || strcasecmp(cmd, "MLST") == 0);
 
 						strcpy(tempcwd, cwd);
 
@@ -505,7 +509,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
 							CellFsDirent entry;
-							u64 read_e;
+							u64 read_e; mode_t mode; char dirtype[2]; dirtype[1] = '\0';
 
 							while(cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
 #endif
@@ -514,18 +518,18 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 								absPath(filename, entry.d_name, cwd);
 
-								cellFsStat(filename, &buf);
+								cellFsStat(filename, &buf); mode = buf.st_mode;
 								cellRtcSetTime_t(&rDate, buf.st_mtime);
+
 								if(nolist)
 								{
 
-									char dirtype[2];
-									if(strcmp(entry.d_name, ".") == 0)
+									if(entry.d_name[0] == '.' && entry.d_name[1] == '\0')
 									{
 										dirtype[0] = 'c';
 									}
 									else
-									if(strcmp(entry.d_name, "..") == 0)
+									if(entry.d_name[0] == '.' && entry.d_name[1] == '.' && entry.d_name[2] == '\0')
 									{
 										dirtype[0] = 'p';
 									}
@@ -534,54 +538,43 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										dirtype[0] = '\0';
 									}
 
-									dirtype[1] = '\0';
-
-									if(strcasecmp(cmd, "MLSD") == 0)
-									sprintf(buffer, "type=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
+									sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
+										is_MLSD ? "" : " ",
 										dirtype,
-										((buf.st_mode & S_IFDIR) != 0) ? "dir" : "file",
-										((buf.st_mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
-										(((buf.st_mode & S_IRUSR) != 0) * 4 + ((buf.st_mode & S_IWUSR) != 0) * 2 + ((buf.st_mode & S_IXUSR) != 0) * 1),
-										(((buf.st_mode & S_IRGRP) != 0) * 4 + ((buf.st_mode & S_IWGRP) != 0) * 2 + ((buf.st_mode & S_IXGRP) != 0) * 1),
-										(((buf.st_mode & S_IROTH) != 0) * 4 + ((buf.st_mode & S_IWOTH) != 0) * 2 + ((buf.st_mode & S_IXOTH) != 0) * 1),
+										((mode & S_IFDIR) != 0) ? "dir" : "file",
+										((mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
+										(((mode & S_IRUSR) != 0) * 4 + ((mode & S_IWUSR) != 0) * 2 + ((mode & S_IXUSR) != 0) * 1),
+										(((mode & S_IRGRP) != 0) * 4 + ((mode & S_IWGRP) != 0) * 2 + ((mode & S_IXGRP) != 0) * 1),
+										(((mode & S_IROTH) != 0) * 4 + ((mode & S_IWOTH) != 0) * 2 + ((mode & S_IXOTH) != 0) * 1),
 										entry.d_name);
-									else
-										sprintf(buffer, " type=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
-											dirtype,
-											((buf.st_mode & S_IFDIR) != 0) ? "dir" : "file",
-											((buf.st_mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
-											(((buf.st_mode & S_IRUSR) != 0) * 4 + ((buf.st_mode & S_IWUSR) != 0) * 2 + ((buf.st_mode & S_IXUSR) != 0) * 1),
-											(((buf.st_mode & S_IRGRP) != 0) * 4 + ((buf.st_mode & S_IWGRP) != 0) * 2 + ((buf.st_mode & S_IXGRP) != 0) * 1),
-											(((buf.st_mode & S_IROTH) != 0) * 4 + ((buf.st_mode & S_IWOTH) != 0) * 2 + ((buf.st_mode & S_IXOTH) != 0) * 1),
-											entry.d_name);
 								}
 								else
 									sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s   1 root  root        %llu %s %02i %02i:%02i %s\r\n",
-									(buf.st_mode & S_IFDIR) ? "d" : "-",
-									(buf.st_mode & S_IRUSR) ? "r" : "-",
-									(buf.st_mode & S_IWUSR) ? "w" : "-",
-									(buf.st_mode & S_IXUSR) ? "x" : "-",
-									(buf.st_mode & S_IRGRP) ? "r" : "-",
-									(buf.st_mode & S_IWGRP) ? "w" : "-",
-									(buf.st_mode & S_IXGRP) ? "x" : "-",
-									(buf.st_mode & S_IROTH) ? "r" : "-",
-									(buf.st_mode & S_IWOTH) ? "w" : "-",
-									(buf.st_mode & S_IXOTH) ? "x" : "-",
+									(mode & S_IFDIR) ? "d" : "-",
+									(mode & S_IRUSR) ? "r" : "-",
+									(mode & S_IWUSR) ? "w" : "-",
+									(mode & S_IXUSR) ? "x" : "-",
+									(mode & S_IRGRP) ? "r" : "-",
+									(mode & S_IWGRP) ? "w" : "-",
+									(mode & S_IXGRP) ? "x" : "-",
+									(mode & S_IROTH) ? "r" : "-",
+									(mode & S_IWOTH) ? "w" : "-",
+									(mode & S_IXOTH) ? "x" : "-",
 									(unsigned long long)buf.st_size, smonth[rDate.month-1], rDate.day,
 									rDate.hour, rDate.minute, entry.d_name);
 
-								if(ssend(data_s, buffer)<0) break;
+								if(ssend(data_s, buffer) < 0) break;
 								sys_timer_usleep(1000);
 							}
 
 							cellFsClosedir(fd);
-							if(strlen(tempcwd)>6)
+							if(strlen(tempcwd) > 6)
 							{
 								uint32_t blockSize;
 								uint64_t freeSize;
-								char tempstr[128];
-								if(strchr(tempcwd+1, '/'))
-									tempcwd[strchr(tempcwd+1, '/')-tempcwd]=0;
+								char tempstr[128], *slash = strchr(tempcwd+1, '/');
+								if(slash) slash[0] = '\0';
+
 								cellFsGetFreeSize(tempcwd, &blockSize, &freeSize);
 								sprintf(tempstr, "226 [%s] [ %i %s ]\r\n", tempcwd, (int)((blockSize*freeSize)>>20), STR_MBFREE);
 								ssend(conn_s_ftp, tempstr);

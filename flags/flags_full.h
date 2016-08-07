@@ -27,6 +27,7 @@
 #define WM_REQUEST		1	// accept commands via local file /dev_hdd0/tmp/wm_request  (required by VSH Menu for webMAN)
 #define GET_KLICENSEE	1	// /klic.ps3
 #define PS3_BROWSER		1	// /browser.ps3 / open browser combos
+//#define EMBED_JS		1	// use embedded javascript instead of external js files
 
 //// EXTRA FEATURES ////
 #define XMB_SCREENSHOT		1	// screenshot XMB using L2 + R2 + SELECT + START (thanks to 3141card)

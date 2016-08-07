@@ -38,6 +38,7 @@
 #define HTML_BLU_SEPARATOR		"<hr color=\"#0099FF\"/>"
 #define HTML_RED_SEPARATOR		"<hr color=\"#FF0000\"/>"
 
+#define SCRIPT_SRC_FMT			"<script src=\"%s\"></script>"
 #define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){window.location=\"%s\"},3000);</script>"
 
 int extcmp(const char *s1, const char *s2, size_t n);

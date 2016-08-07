@@ -102,7 +102,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.32 MOD"						// webMAN version
+#define WM_VERSION			"1.43.33 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -198,6 +198,16 @@ SYS_MODULE_STOP(wwwd_stop);
 #define MY_GAMES_XML			HTML_BASE_PATH "/mygames.xml"
 #define MOBILE_HTML				HTML_BASE_PATH "/mobile.html"
 #define GAMELIST_JS				HTML_BASE_PATH "/gamelist.js"
+
+#ifndef EMBED_JS
+#define COMMON_CSS				HTML_BASE_PATH "/common.css"
+#define COMMON_SCRIPT_JS		HTML_BASE_PATH "/common.js"
+#define FM_SCRIPT_JS			HTML_BASE_PATH "/fm.js"
+#define GAMES_SCRIPT_JS			HTML_BASE_PATH "/games.js"
+#endif
+
+#define JQUERY_LIB_JS			HTML_BASE_PATH "/jquery.min.js"
+#define JQUERY_UI_LIB_JS		HTML_BASE_PATH "/jquery-ui.min.js"
 
 #define DELETE_CACHED_GAMES		{cellFsUnlink((char*)WMTMP "/games.html"); cellFsUnlink((char*)GAMELIST_JS);}
 
@@ -476,6 +486,11 @@ static bool copy_aborted = false;
 
 static bool gmobile_mode = false;
 
+#ifndef EMBED_JS
+static bool css_exists = false;
+static bool common_js_exists = false;
+#endif
+
 static char html_base_path[MAX_PATH_LEN]="";
 
 static char smonth[12][4]={"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -619,29 +634,45 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 #include "include/file_manager.h"
 #include "include/_mount.h"
 #include "include/netserver.h"
+#include "include/pkg_handler.h"
 
-#ifdef PKG_HANDLER
- #include "include/pkg_handler.h"
-#endif
-
-static void http_response(int conn_s, char *header, char *param, int code, char *msg)
+static void http_response(int conn_s, char *header, const char *url, int code, const char *msg)
 {
 	if(code == 202)
 		sprintf(header, HTML_RESPONSE_FMT,
-						200, param, 94+strlen(msg), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", msg);
+						200, url, 94 + strlen(msg), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", msg);
 	else
 	{
-		char templn[MAX_LINE_LEN];
+		char templn[MAX_TEXT_LEN];
 
 		if(msg[0] == '/')
 			{sprintf(templn, "%s : OK", msg+1); show_msg(templn);}
 		else if(islike(msg, "http"))
-			sprintf(templn, "<a href=\"%s\" style=\"color:#ccc;text-decoration:none;\">%s</a>", msg, msg);
+			sprintf(templn, "<a style=\"%s\" href=\"%s\">%s</a>", "color:#ccc;text-decoration:none;", msg, msg);
+#ifdef PKG_HANDLER
+		else if(code == 1200)
+			{code = 200; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", "Installing "); add_breadcrumb_trail(templn, (char*)msg + 11);}
+		else if(code == 1201)
+			{code = 200; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); p[4] = NULL; p = strstr((char*)msg, "To: "); add_breadcrumb_trail(templn, p + 4);}
+#endif
 		else
 			sprintf(templn, "%s", msg);
 
+ #ifndef LITE_EDITION
+	#ifndef EMBED_JS
+		if(css_exists)
+		{
+			sprintf(header, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(templn, header);
+		}
+		if(common_js_exists)
+		{
+			sprintf(header, SCRIPT_SRC_FMT, COMMON_SCRIPT_JS); strcat(templn, header);
+		}
+	#endif
+ #endif
+
 		sprintf(header, HTML_RESPONSE_FMT,
-						code, param, 182 + strlen(templn) + ((code == 203) ? 0 : 32), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", templn);
+						code, url, 182 + strlen(templn) + ((code == 203) ? 0 : 32), HTML_BODY, "webMAN MOD " WM_VERSION "<hr><h2>", templn);
 
 		sprintf(templn, "<hr>" HTML_BUTTON_FMT "%s",
 						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == 203) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(header, templn);
@@ -660,58 +691,80 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 
 	if(mount_ps3) {strcat(buffer, "<body bgcolor=\"#101010\">"); return;}
 
-	strcat(buffer,	"<head><title>webMAN MOD</title>"
-					"<style type=\"text/css\"><!--\r\n"
+	strcat(buffer,	"<head><title>webMAN MOD</title>");
 
-					"a.s:active{color:#F0F0F0;}"
-					"a:link{color:#909090;text-decoration:none;}"
-
-					"a.f:active{color:#F8F8F8;}"
-					"a,a.f:link,a:visited{color:#D0D0D0;}");
-
-	if(!is_cpursx)
-	strcat(buffer,	"a.d:link{color:#D0D0D0;background-position:0px 2px;background-image:url('data:image/gif;base64,R0lGODlhEAAMAIMAAOenIumzLbmOWOuxN++9Me+1Pe+9QvDAUtWxaffKXvPOcfTWc/fWe/fWhPfckgAAACH5BAMAAA8ALAAAAAAQAAwAAARQMI1Agzk4n5Sa+84CVNUwHAz4KWzLMo3SzDStOkrHMO8O2zmXsAXD5DjIJEdxyRie0KfzYChYr1jpYVAweb/cwrMbAJjP54AXwRa433A2IgIAOw == ');padding:0 0 0 20px;background-repeat:no-repeat;margin-left:auto;margin-right:auto;}"
-					"a.w:link{color:#D0D0D0;background-image:url('data:image/gif;base64,R0lGODlhDgAQAIMAAAAAAOfn5+/v7/f39////////////////////////////////////////////wAAACH5BAMAAA8ALAAAAAAOABAAAAQx8D0xqh0iSHl70FxnfaDohWYloOk6papEwa5g37gt5/zO475fJvgDCW8gknIpWToDEQA7');padding:0 0 0 20px;background-repeat:no-repeat;margin-left:auto;margin-right:auto;}");
-
-	strcat(buffer,	"a:active,a:active:hover,a:visited:hover,a:link:hover{color:#FFFFFF;}"
-					".list{display:inline;}"
-#ifdef PS3MAPI
-					"table{border-spacing:0;border-collapse:collapse;}"
-					".la{text-align:left;float:left}.ra{text-align:right;float:right;}"
-#endif
-					"input:focus{border:2px solid #0099FF;}"
-					".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
-					"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
-					"body,a.s,td,th{color:#F0F0F0;white-space:nowrap;");
-
-	//if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
-	//	strcat(buffer, "background-image: url(\"/dev_hdd0/xmlhost/game_plugin/background.jpg\");");
-
-	if(is_ps3_http == 2)
-		strcat(buffer, "width:800px;}");
-	else
-		strcat(buffer, "}");
-
-	if(!islike(param, "/setup.ps3")) strcat(buffer, "td+td{text-align:right;white-space:nowrap}");
-
-	if(islike(param, "/index.ps3"))
+#ifndef EMBED_JS
+	if(param[1] == 0)
 	{
-		strcat(buffer,	".gc{float:left;overflow:hidden;position:relative;text-align:center;width:280px;height:260px;margin:3px;border:1px dashed grey;}"
-						".ic{position:absolute;top:5px;right:5px;left:5px;bottom:40px;}");
-
-		if(is_ps3_http == 1)
-			strcat(buffer, ".gi{height:210px;width:267px;");
-		else
-			strcat(buffer, ".gi{max-height:210px;max-width:260px;");
+		// minimize times that these files are checked (at startup & root)
+		css_exists = file_exists(COMMON_CSS);
+		common_js_exists = file_exists(COMMON_SCRIPT_JS);
 	}
 
-	strcat(buffer,	"position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}"
-					".gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}--></style>");
+	if(css_exists)
+	{
+		sprintf(templn, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(buffer, templn);
+	}
+	else
+#endif
+	{
+		strcat(buffer,	"<style type=\"text/css\"><!--\r\n"
+
+						"a.s:active{color:#F0F0F0;}"
+						"a:link{color:#909090;text-decoration:none;}"
+
+						"a.f:active{color:#F8F8F8;}"
+						"a,a.f:link,a:visited{color:#D0D0D0;}");
+
+		if(!is_cpursx)
+		strcat(buffer,	"a.d:link{color:#D0D0D0;background-position:0px 2px;background-image:url('data:image/gif;base64,R0lGODlhEAAMAIMAAOenIumzLbmOWOuxN++9Me+1Pe+9QvDAUtWxaffKXvPOcfTWc/fWe/fWhPfckgAAACH5BAMAAA8ALAAAAAAQAAwAAARQMI1Agzk4n5Sa+84CVNUwHAz4KWzLMo3SzDStOkrHMO8O2zmXsAXD5DjIJEdxyRie0KfzYChYr1jpYVAweb/cwrMbAJjP54AXwRa433A2IgIAOw == ');padding:0 0 0 20px;background-repeat:no-repeat;margin-left:auto;margin-right:auto;}"
+						"a.w:link{color:#D0D0D0;background-image:url('data:image/gif;base64,R0lGODlhDgAQAIMAAAAAAOfn5+/v7/f39////////////////////////////////////////////wAAACH5BAMAAA8ALAAAAAAOABAAAAQx8D0xqh0iSHl70FxnfaDohWYloOk6papEwa5g37gt5/zO475fJvgDCW8gknIpWToDEQA7');padding:0 0 0 20px;background-repeat:no-repeat;margin-left:auto;margin-right:auto;}");
+
+		strcat(buffer,	"a:active,a:active:hover,a:visited:hover,a:link:hover{color:#FFFFFF;}"
+						".list{display:inline;}"
+#ifdef PS3MAPI
+						"table{border-spacing:0;border-collapse:collapse;}"
+						".la{text-align:left;float:left}.ra{text-align:right;float:right;}"
+#endif
+						"input:focus{border:2px solid #0099FF;}"
+						".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
+						"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
+						"body,a.s,td,th{color:#F0F0F0;white-space:nowrap;background-color:#101010");
+
+		//if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
+		//	strcat(buffer, "background-image: url(\"/dev_hdd0/xmlhost/game_plugin/background.jpg\");");
+
+		if(is_ps3_http == 2)
+			strcat(buffer, "width:800px;}");
+		else
+			strcat(buffer, "}");
+
+		if(!islike(param, "/setup.ps3")) strcat(buffer, "td+td{text-align:right;white-space:nowrap}");
+
+		if(islike(param, "/index.ps3"))
+		{
+			strcat(buffer,	".gc{float:left;overflow:hidden;position:relative;text-align:center;width:280px;height:260px;margin:3px;border:1px dashed grey;}"
+							".ic{position:absolute;top:5px;right:5px;left:5px;bottom:40px;}");
+
+			if(is_ps3_http == 1)
+				strcat(buffer, ".gi{height:210px;width:267px;");
+			else
+				strcat(buffer, ".gi{max-height:210px;max-width:260px;");
+
+			strcat(buffer,	"position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}"
+							".gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}");
+		}
+
+		strcat(buffer, ".bu{background:#444;}.bf{background:#121;}--></style>");
+	}
 
 	if(param[1] != NULL && !strstr(param, ".ps3")) {strcat(buffer, "<base href=\""); urlenc(templn, param); strcat(templn, "/\">"); strcat(buffer, templn);}
 
+	if(is_ps3_http == 1)
+		{sprintf(templn, "<style>%s</style>", ".gi{height:210px;width:267px"); strcat(buffer, templn);}
+
 	strcat(buffer,	"</head>"
-					"<body bgcolor=\"#101010\">"
+					"<body>"
 					"<div style=\"position:fixed;right:20px;bottom:10px;opacity:0.2\"><a href=\"#Top\">&#9650;</a></div>"
 					"<font face=\"Courier New\"><b>");
 
@@ -792,7 +845,7 @@ static void handleclient(u64 conn_s_p)
 
 		check_cover_folders(param);
 
-		for(u8 i=0; i<12; i++)
+		for(u8 i = 0; i < 12; i++)
 		{
 			if(file_exists(wm_icons[i]) == false)
 			{
@@ -807,6 +860,11 @@ static void handleclient(u64 conn_s_p)
 									 strcpy(wm_icons[i] + 37, "icon_home.png\0"); //setup / eject
 			}
 		}
+
+#ifndef EMBED_JS
+		css_exists = file_exists(COMMON_CSS);
+		common_js_exists = file_exists(COMMON_SCRIPT_JS);
+#endif
 
 #ifdef NOSINGSTAR
 		if(webman_config->noss) no_singstar_icon();
@@ -1046,20 +1104,29 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/cpursx_ps3"))
 			{
-				char *cpursx = header; get_cpursx(cpursx);
+				char *cpursx = header, *buffer = param; get_cpursx(cpursx);
  /*				// prevents flickering but cause error 80710336 in ps3 browser (silk mode)
-				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
+				sprintf(buffer, "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
 								"<script>parent.document.getElementById('lbl_cpursx').innerHTML = \"%s\";</script>",
 								"/cpursx_ps3", cpursx);
  */
-				sprintf(param,  "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
+				sprintf(buffer, "<meta http-equiv=\"refresh\" content=\"15;URL=%s\">"
 								"%s"
 								"<a href=\"/cpursx.ps3\" target=\"_parent\" style=\"text-decoration:none;\">"
 								"<font color=\"#fff\">%s</a>",
 								"/cpursx_ps3", HTML_BODY, cpursx);
-
+ #ifndef EMBED_JS
+				if(css_exists)
+				{
+					sprintf(header, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(buffer, header);
+				}
+				if(common_js_exists)
+				{
+					sprintf(header, SCRIPT_SRC_FMT, COMMON_SCRIPT_JS); strcat(buffer, header);
+				}
+ #endif
 				sprintf(header, HTML_RESPONSE_FMT,
-								200, "/cpursx_ps3", 390 + strlen(param), HTML_HEADER, param, HTML_BODY_END);
+								200, "/cpursx_ps3", 390 + strlen(buffer), HTML_HEADER, buffer, HTML_BODY_END);
 
 				ssend(conn_s, header);
 
@@ -1071,13 +1138,13 @@ static void handleclient(u64 conn_s_p)
 			{
 				char msg[MAX_LINE_LEN] = ""; // Debug msg
 
-				download_file(strstr(header, "%") ? header : param, msg);
+				int ret = download_file(strstr(header, "%") ? header : param, msg);
 
 				#ifdef WM_REQUEST
 				if(!wmget)
 				#endif
 				{
-					http_response(conn_s, header, param, 200, msg);
+					http_response(conn_s, header, param, (ret == FAILED) ? 400 : 1201, msg);
 				}
 
 				show_msg((char *)msg);
@@ -1089,13 +1156,13 @@ static void handleclient(u64 conn_s_p)
 			{
 				char msg[MAX_LINE_LEN] = ""; // Debug msg
 
-				installPKG(param + 12, msg);
+				int ret = installPKG(param + 12, msg);
 
 				#ifdef WM_REQUEST
 				if(!wmget)
 				#endif
 				{
-					http_response(conn_s, header, param, 200, msg);
+					http_response(conn_s, header, param, (ret == FAILED) ? 400 : 1200, msg);
 				}
 
 				show_msg((char *)msg);
@@ -1133,11 +1200,13 @@ static void handleclient(u64 conn_s_p)
 					show_idps(header);
 				}
 				else
+   #ifndef LITE_EDITION
 				if(islike(param2, "$ingame_screenshot"))
 				{
 					enable_ingame_screenshot();
 				}
 				else
+   #endif
    #ifdef REMOVE_SYSCALLS
 				if(islike(param2, "$disable_syscalls"))
 				{
@@ -1481,7 +1550,7 @@ static void handleclient(u64 conn_s_p)
 			}
    #endif // #ifdef COPY_PS3
 
-#endif //#ifndef LITE_EDITION
+ #endif //#ifndef LITE_EDITION
 
 			if(islike(param, "/quit.ps3"))
 			{
@@ -1693,7 +1762,7 @@ static void handleclient(u64 conn_s_p)
 				{
 					c_len = 0;
 					is_binary = 0;
-					http_response(conn_s, header, param, is_busy ? 503:400, is_busy ? (char*)"503 Server is Busy":(char*)"400 Bad Request");
+					http_response(conn_s, header, param, is_busy ? 503 : 400, is_busy ? (char*)"503 Server is Busy":(char*)"400 Bad Request");
 
 					goto exit_handleclient;
 				}
@@ -1836,10 +1905,10 @@ static void handleclient(u64 conn_s_p)
 										"<script>function no_error(ifrm){try{var doc=ifrm.contentDocument||ifrm.contentWindow.document;}catch(e){ifrm_err.style.display='inline-block';ifrm.style.display='none';}}</script>"
 										//
 										"<hr width=\"100%%\">"
-										"<div id=\"rxml\"><H1>%s XML ...</H1></div>"
-										"<div id=\"rhtm\"><H1>%s HTML ...</H1></div>"
+										"<div id=\"rxml\" style=\"display:none\"><H1>%s XML ...</H1></div>"
+										"<div id=\"rhtm\" style=\"display:none\"><H1>%s HTML ...</H1></div>"
  #ifdef COPY_PS3
-										"<div id=\"rcpy\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
+										"<div id=\"rcpy\" style=\"display:none\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
 										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
 										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
  #else
@@ -1877,7 +1946,8 @@ static void handleclient(u64 conn_s_p)
 
   #ifndef LITE_EDITION
 					if((islike(param, "/dev_") && !strstr(param,"?")) && !islike(param,"/dev_flash") && !strstr(param,".ps3/") && !strstr(param,".ps3?"))
-					{	// add buttons + javascript code to handle delete / cut / copy / paste
+					{	// add buttons + javascript code to handle delete / cut / copy / paste (requires fm.js)
+	#ifdef EMBED_JS
 						sprintf(templn, "<script>"
 										"function t(b,m,x,c){"
 										"var i,p,o,h,l=document.querySelectorAll('.d,.w'),s=m.length,n=1;"
@@ -1889,12 +1959,16 @@ static void handleclient(u64 conn_s_p)
 										"else{p=h.indexOf('/',8);o.href=m+h.substring(p,h.length);o.style.color=c;}"
 										"}if(n)b.value=(b.value == x)?x+' %s':x;"
 										"}</script>", STR_DELETE, STR_ENABLED); strcat(buffer, templn);
+	#else
+						if(file_exists(FM_SCRIPT_JS))
+	#endif
+						{
+							sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"t(this,'/delete.ps3','%s','red');\">", HTML_BUTTON, STR_DELETE, STR_DELETE); strcat(buffer, templn);
+							sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"t(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); strcat(buffer, templn);
+							sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"t(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); strcat(buffer, templn);
 
-						sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"t(this,'/delete.ps3','%s','red');\">", HTML_BUTTON, STR_DELETE, STR_DELETE); strcat(buffer, templn);
-						sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"t(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); strcat(buffer, templn);
-						sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"t(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); strcat(buffer, templn);
-
-						if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
+							if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
+						}
 					}
   #endif
 
@@ -1981,15 +2055,15 @@ static void handleclient(u64 conn_s_p)
 						is_popup = 0; goto send_response;
 					}
 
- #ifdef WEB_CHAT
+  #ifdef WEB_CHAT
 					if(islike(param, "/chat.ps3"))
 					{
 						webchat(buffer, templn, param, tempstr, conn_info_main);
 					}
 					else
- #endif
+  #endif
 
- #ifdef FIX_GAME
+  #ifdef FIX_GAME
 					if(islike(param, "/fixgame.ps3"))
 					{
 						char *game_path = param + 12;
@@ -2002,7 +2076,7 @@ static void handleclient(u64 conn_s_p)
 						sprintf(tempstr, HTML_REDIRECT_TO_URL, templn); strcat(buffer, tempstr);
 					}
 					else
- #endif
+  #endif
 					{
 						char *msg = (param + 11); // /popup.ps3?<msg>
 						show_msg(msg);
@@ -2025,9 +2099,9 @@ static void handleclient(u64 conn_s_p)
 				else
 				{
 					{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
-
+ #ifndef LITE_EDITION
 					if(!strstr(param, "$nobypass")) { PS3MAPI_REENABLE_SYSCALL8 }
-
+ #endif
 					is_busy=true;
 
 					if(islike(param, "/refresh.ps3") && init_running == 0)
@@ -2082,7 +2156,7 @@ static void handleclient(u64 conn_s_p)
 							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0", "webftp_server.sprx");
 							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0", "webftp_server_ps3mapi.sprx");
 
-							pos=strstr(param, "prx=");
+							pos = strstr(param, "prx=");
 							if(pos) get_value(templn, pos + 4, MAX_PATH_LEN);
 						}
 
@@ -2094,9 +2168,9 @@ static void handleclient(u64 conn_s_p)
 							if(islike(param, "/unloadprx.ps3")) prx_found = false;
 						}
   #endif
-						if(slot>6)
+						if(slot > 6)
 						{
-							pos=strstr(param, "slot="); slot = 6; // default (last slot)
+							pos = strstr(param, "slot="); slot = 6; // default (last slot)
 							if(pos)
 							{
 								get_value(param, pos + 5, 2);
@@ -2350,8 +2424,18 @@ send_response:
 				else if(islike(param, "/mount.ps3?http"))
 					{http_response(conn_s, header, param, 200, param + 11); break;}
 				else
+				{
+ #ifndef LITE_EDITION
+	#ifndef EMBED_JS
+					// extend web content using custom javascript
+					if(common_js_exists)
+					{
+						sprintf(templn, SCRIPT_SRC_FMT, COMMON_SCRIPT_JS); strcat(buffer, templn);
+					}
+	#endif
+ #endif
 					strcat(buffer, HTML_BODY_END); //end-html
-
+				}
 				sprintf(templn, "Content-Length: %llu\r\n\r\n", (unsigned long long)strlen(buffer)); strcat(header, templn);
 				ssend(conn_s, header);
 				ssend(conn_s, buffer);
@@ -2538,9 +2622,11 @@ relisten:
 			if((conn_s = accept(list_s, NULL, NULL)) > 0)
 			{
 				loading_html++;
+
 				#ifdef USE_DEBUG
 				ssend(debug_s, "*** Incoming connection... ");
 				#endif
+
 				sys_ppu_thread_t id;
 				if(working) sys_ppu_thread_create(&id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 				else {sclose(&conn_s); break;}

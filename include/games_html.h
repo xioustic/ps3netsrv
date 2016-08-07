@@ -1008,21 +1008,27 @@ next_html_entry:
 		else
 		{
 			sprintf(templn, // wait dialog div
-							"<div id=\"wmsg\"><H1>. . .</H1></div>"
-							"<script>window.onclick=function(e){if(e.target.id.indexOf('im')==0||typeof(e.target.href)=='string')wmsg.style.display='block';}</script>"
+							"<div id=\"wmsg\" style=\"display:none\"><H1>. . .</H1></div>"
+							"<script>window.onclick=function(e){t=e.target;if(t.id.indexOf('im')==0||typeof(t.href)=='string')wmsg.style.display='block';}</script>"
 							// show games count + find icon
 							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
 							// separator
 							"<HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
 
 #ifndef LITE_EDITION
-			sortable = file_exists(HTML_BASE_PATH "/jquery.min.js") && file_exists(HTML_BASE_PATH "/jquery-ui.min.js");
+ #ifndef EMBED_JS
+			if(file_exists(GAMES_SCRIPT_JS))
+			{
+				sprintf(templn, SCRIPT_SRC_FMT, GAMES_SCRIPT_JS); strcat(buffer, templn);
+			}
+ #endif
+			sortable = file_exists(JQUERY_LIB_JS) && file_exists(JQUERY_UI_LIB_JS);
 			if(sortable)
 			{	// add external jquery libraries
-				sprintf(templn, "<script src=\"%s\"></script>"
-								"<script src=\"%s\"></script>"
+				sprintf(templn, SCRIPT_SRC_FMT
+								SCRIPT_SRC_FMT
 								"<script>$(function(){$(\"#mg\").sortable();});</script><div id=\"mg\">",
-								HTML_BASE_PATH "/jquery.min.js", HTML_BASE_PATH "/jquery-ui.min.js"); strcat(buffer, templn);
+								JQUERY_LIB_JS, JQUERY_UI_LIB_JS); strcat(buffer, templn);
 			}
 #endif
 		}
@@ -1046,7 +1052,9 @@ next_html_entry:
 			savefile((char*)GAMELIST_JS, (char*)(buffer), strlen(buffer));
 		}
 		else
+		{
 			savefile((char*)WMTMP "/games.html", (char*)(buffer + buf_len), (strlen(buffer) - buf_len));
+		}
 	}
 	return true;
 }

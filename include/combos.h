@@ -344,7 +344,7 @@ show_popup:
 													STR_STORAGE, (int)((blockSize*freeSize)>>20), STR_MBFREE,
 													STR_MEMORY, meminfo.avail>>10, STR_KBFREE);
 
-								if(R2 && gTick.tick>rTick.tick)
+								if(R2 && (gTick.tick>rTick.tick))
 								{
 									////// play time //////
 									ss = (u32)((pTick.tick-gTick.tick)/1000000);
@@ -653,8 +653,9 @@ show_popup:
 							else
 #endif
 							{
+#ifndef LITE_EDITION
 								enable_ingame_screenshot();
-
+#endif
 								show_idps(msg);
 							}
 						}

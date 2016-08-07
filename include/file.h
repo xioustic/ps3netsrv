@@ -271,6 +271,7 @@ next_part:
 	return ret;
 }
 
+#ifdef COPY_PS3
 static int folder_copy(char *path1, char *path2)
 {
 	copy_aborted = false;
@@ -313,6 +314,7 @@ static int folder_copy(char *path1, char *path2)
 
 	return CELL_FS_SUCCEEDED;
 }
+#endif
 
 #ifndef LITE_EDITION
 static int del(const char *path, bool recursive)

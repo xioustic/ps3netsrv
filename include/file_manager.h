@@ -8,7 +8,7 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 
 #define _2MB_	0x200000ULL
 
-static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http)
+static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 *has_img)
 {
 	unsigned long long sbytes = sz; bool is_root = false;
 
@@ -37,6 +37,8 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 
 	// is image?
 	u8 show_img = !is_ps3_http && (!is_dir && (!strcasecmp(ext, ".png") || !strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".bmp")));
+
+	if(show_img) *has_img = true;
 
 	// build size column
 	if(is_dir)
@@ -73,7 +75,8 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 								free_kb    = (unsigned long long)(freeSize>>10),
 								devsize_mb = (unsigned long long)(devSize>>20);
 
-			sprintf(fsize,  "<div style='height:18px;background:#121;text-align:left;'><div style='height:18px;background:#444;width:%i%%'></div><div style='position:relative;top:-18px;text-align:right'>"
+			// show graphic of device size & free space
+			sprintf(fsize,  "<div class='bf' style='height:18px;text-align:left;'><div class='bu' style='height:18px;width:%i%%'></div><div style='position:relative;top:-18px;text-align:right'>"
 							"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
 							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
 		}
@@ -173,12 +176,12 @@ static void add_breadcrumb_trail(char *buffer, char *param)
 {
 	u32 tlen = 0;
 
-	char swap[_MAX_PATH_LEN], templn[_MAX_PATH_LEN], url[_MAX_PATH_LEN];
+	char swap[_MAX_PATH_LEN], templn[_MAX_PATH_LEN], url[_MAX_PATH_LEN], *slash;
 
 	strcpy(templn, param);
-	while(strchr(templn+1, '/'))
+	while(slash = strchr(templn+1, '/'))
 	{
-		templn[strchr(templn+1, '/')-templn] = NULL;
+		slash[0] = NULL;
 		tlen+=strlen(templn)+1;
 
 		strcpy(swap, param);
@@ -204,6 +207,9 @@ static void add_breadcrumb_trail(char *buffer, char *param)
 		sprintf(swap, "<a href=\"%s%s\">%s</a>",
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
+#endif
+#ifdef PKG_HANDLER
+						!extcmp(param, ".pkg", 4) ? "/install.ps3" :
 #endif
 						"/mount.ps3", url, label);
 	}
@@ -265,23 +271,13 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		BUFFER_SIZE_HTML -= _2KB_;
 
 		u8 jb_games = (!extcmp(param, "/GAMES", 6) || !extcmp(param, "/GAMEZ", 6));
-		u8 show_icon0 = false;
+		u8 has_img = false, show_icon0 = jb_games || ((strlen(param) >= 14) && (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/")));
 
-		if(!is_ps3_http)
-		{
-			show_icon0 = jb_games || ((strlen(param) >= 14) && (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/")));
-			sprintf(templn, "<img id=\"icon\"%s>"
-							"<script>"
-							// show icon of item pointed with mouse
-							"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}%s"
-							"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : ""),
-
-							// F2 = rename/move item pointed with mouse
-							islike(param, "/dev_") ?
-							"document.addEventListener('keyup',ku,false);"
-							"function rn(f){if(f.substring(0,5)=='/dev_'){f=unescape(f);t=prompt('Rename to:',f);if(t&&t!=f)window.location='/rename.ps3'+f+'|'+escape(t)}}"
-							"function ku(e){e=e||window.event;if(e.keyCode==113){var a=document.querySelectorAll('a:hover')[0].pathname;rn(a);}}" : ""); strcat(buffer, templn);
-		}
+		sprintf(templn, "<img id=\"icon\"%s>"
+						"<script>"
+						// show icon of item pointed with mouse
+						"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}"
+						"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : "")); strcat(buffer, templn);
 
 		strcat(buffer, "<table class=\"propfont\"><tr><td>");
 
@@ -353,7 +349,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 							is_dir=dir_items[n].is_directory; if(is_dir) dirs++;
 
-							add_list_entry(tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http);
+							add_list_entry(tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http, &has_img);
 
 							flen = strlen(tempstr);
 							if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
@@ -429,7 +425,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				is_dir = (buf.st_mode & S_IFDIR); if(is_dir) dirs++;
 
-				add_list_entry(tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http);
+				add_list_entry(tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http, &has_img);
 
 				flen = strlen(tempstr);
 				if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
@@ -542,12 +538,36 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					sprintf(templn, "%s", wm_icons[5]); show_icon = true;
 				}
 
-				for(u16 m = idx; m < 7; m++) strcat(buffer, "<BR>");
+				if(has_img)
+				{
+					for(u16 m = idx; m < 7; m++) strcat(buffer, "<BR>");
 
-				if(show_icon || show_icon0)
-					{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\"</script>", swap); strcat(buffer, templn);}
+					if(show_icon || show_icon0)
+						{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\"</script>", swap); strcat(buffer, templn);}
+				}
 			}
 			///////////
+
+#ifdef EMBED_JS
+			sprintf(tempstr, // popup menu
+							"<div id='mnu' style='position:fixed;width:140px;background:#333;display:none;padding:5px;'>"
+							"<a id='m1'>%s<br></a><a id='m2'>%s</a><hr><a id='m3'>%s</a><a href=\"javascript:t=prompt('%s',window.location.pathname);if(t.indexOf('/dev_')==0)window.location='/mkdir.ps3'+t\">%s</a><hr><a id='m4'>%s<br></a><a id='m5'>%s<br></a><a id='m6'>%s</a><hr><a id='m7'>%s<br></a><a id='m8'>%s</a></div>"
+							"<script>var s,m;window.addEventListener('contextmenu',function(e){if(s)s.color='#ccc';t=e.target,s=t.style,c=t.className,m=mnu.style,p=t.pathname;if(c=='w'||c=='d'){e.preventDefault();s.color='#fff';m.display='block';m.left=(e.clientX+12)+'px';y=e.clientY;w=window.innerHeight;m.top=(((y+220)<w)?(y+12):(w-220))+'px';m1.href='/mount.ps3'+p;m1.style.display=(p.toLowerCase().indexOf('.iso')>0||c=='d')?'block':'none';m2.href=p;m2.text=(c=='w')?'Download':'Open';m3.href='/delete.ps3'+p;m4.href='/cut.ps3'+p;m5.href='/cpy.ps3'+p;m6.href='/paste.ps3'+window.location.pathname;m7.href='javascript:rn(\"'+p+'\")';m7.style.display=(p.substring(0,5)=='/dev_')?'block':'none';m8.href='/copy.ps3'+p}},false);window.onclick=function(e){if(m)m.display='none';}"
+
+							// F2 = rename/move item pointed with mouse
+							"document.addEventListener('keyup',ku,false);"
+							"function rn(f){if(f.substring(0,5)=='/dev_'){f=unescape(f);t=prompt('Rename to:',f);if(t&&t!=f)window.location='/rename.ps3'+f+'|'+escape(t)}}"
+							"function ku(e){e=e||window.event;if(e.keyCode==113){var a=document.querySelectorAll('a:hover')[0].pathname;rn(a);}}"
+
+						 	"</script>",
+							"Mount", "Open", "Delete", "New Folder", "New Folder", "Cut", "Copy", "Paste", "Rename", "Copy To"); strcat(buffer, tempstr);
+#else
+			// add fm.js script
+			if(file_exists(FM_SCRIPT_JS))
+			{
+				sprintf(templn, SCRIPT_SRC_FMT, FM_SCRIPT_JS); strcat(buffer, templn);
+			}
+#endif
 
 			// show last mounted game
 			memset(tempstr, 0, _4KB_); memset(templn, 0, _MAX_PATH_LEN);
@@ -565,8 +585,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			}
 
 			///////////
-			if(strchr(param + 1, '/'))
-				param[strchr(param + 1, '/')-param] = NULL;
+			char *slash = strchr(param + 1, '/');
+			if(slash) slash[0] = NULL;
 
 			if(param[1] == 'n')
 				sprintf(templn, "<hr>"
@@ -581,17 +601,13 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 								param, param, (int)((blockSize*freeSize)>>20), STR_MBFREE);
 			}
 
-			// popup menu
-			sprintf(templn, "<div id='mnu' style='position:fixed;width:140px;background:#555;display:none;padding:5px;'>"
-							"<a id='m1'>%s</a><a id='m2'>%s</a><hr><a id='m3'>%s</a><hr><a id='m4'>%s</a><br><a id='m5'>%s</a><br><a id='m6'>%s</a><hr><a id='m7'>%s</a><br><a id='m8'>%s</a></div>"
-							"<script>var s,m;window.addEventListener('contextmenu',function(e){if(s)s.color='#ccc';t=e.target,s=t.style,c=t.className,m=mnu.style,p=t.pathname;if(c=='w'||c=='d'){e.preventDefault();s.color='#fff';m.display='block';m.left=(e.clientX+12)+'px';m.top=(e.clientY+12)+'px';m1.href='/mount.ps3'+p;m1.style.display=(p.toLowerCase().indexOf('.iso')>=0||c=='d')?'block':'none';m2.href=p;m3.href='/delete.ps3'+p;m4.href='/cut.ps3'+p;m5.href='/cpy.ps3'+p;m6.href='/paste.ps3'+window.location.pathname;m7.href='javascript:rn(\"'+t.pathname+'\")';m8.href='/copy.ps3'+p}},false);window.onclick=function(e){if(m)m.display='none';}</script>",
-							"Mount", "Open", "Delete", "Cut", "Copy", "Paste", "Rename", "Copy To"); strcat(buffer, templn);
+			strcat(buffer, templn);
 
 			// summary
 			sprintf(templn, "</b> &nbsp; <font color=\"#707070\">%'i Dir(s) %'d %s %'d %s</font>%s",
 							MAX(dirs - 1, 0), (idx-dirs), STR_FILES,
-							dir_size<(_1MB_)?(int)(dir_size>>10):(int)(dir_size>>20),
-							dir_size<(_1MB_)?STR_KILOBYTE:STR_MEGABYTE, tempstr);
+							dir_size<(_1MB_) ? (int)(dir_size>>10):(int)(dir_size>>20),
+							dir_size<(_1MB_) ? STR_KILOBYTE:STR_MEGABYTE, tempstr);
 
 			strcat(buffer, templn);
 			///////////
