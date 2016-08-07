@@ -702,16 +702,16 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN), buffer);
 	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS), buffer);
  #ifdef WM_REQUEST
-	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>"  , !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #else
-	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>"  , !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #endif
 #else
 	add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"             , !(webman_config->combo & SHOW_IDPS), buffer);
  #ifdef WM_REQUEST
-	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>"  , !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #else
-	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>"  , !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #endif
 	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN), buffer);
 	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS), buffer);
