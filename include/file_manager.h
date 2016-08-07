@@ -179,7 +179,7 @@ static void add_breadcrumb_trail(char *buffer, char *param)
 	char swap[_MAX_PATH_LEN], templn[_MAX_PATH_LEN], url[_MAX_PATH_LEN], *slash;
 
 	strcpy(templn, param);
-	while(slash = strchr(templn+1, '/'))
+	while((slash = strchr(templn+1, '/')))
 	{
 		slash[0] = NULL;
 		tlen+=strlen(templn)+1;

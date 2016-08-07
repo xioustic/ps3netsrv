@@ -785,13 +785,13 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 			else
 #endif // #ifdef COPY_PS3
 			if(!extcmp(param, ".BIN.ENC", 8))
-				sprintf(tempstr, "%s: <a href=\"%s\">%s</a><hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i><hr>%s", STR_GAMETOM, templn, _path, enc_dir_name, wm_icons[7],300, mounted?STR_PS2LOADED:STR_ERROR);
+				{strcat(buffer, STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i><hr>%s", enc_dir_name, wm_icons[7], 300, mounted?STR_PS2LOADED:STR_ERROR);}
 			else if((strstr(param, "/PSPISO") || strstr(param, "/ISO/")) && !extcasecmp(param, ".iso", 4))
-				sprintf(tempstr, "%s: <a href=\"%s\">%s</a><hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i><hr>%s", STR_GAMETOM, templn, _path, enc_dir_name, wm_icons[8], strcasestr(enc_dir_name,".png")?200:300, mounted?STR_PSPLOADED:STR_ERROR);
+				{strcat(buffer, STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i><hr>%s", enc_dir_name, wm_icons[8], strcasestr(enc_dir_name,".png")?200:300, mounted?STR_PSPLOADED:STR_ERROR);}
 			else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || !extcmp(param, ".ntfs[BDISO]", 12) || !extcmp(param, ".ntfs[DVDISO]", 13))
-				sprintf(tempstr, "%s: <a href=\"%s\">%s</a><hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a><hr><a href=\"/dev_bdvd\">%s</a>", STR_MOVIETOM, templn, _path, enc_dir_name, wm_icons[strstr(param,"BDISO")?5:9], mounted?STR_MOVIELOADED:STR_ERROR);
+				{strcat(buffer, STR_MOVIETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a><hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[strstr(param,"BDISO")?5:9], mounted?STR_MOVIELOADED:STR_ERROR);}
 			else
-				sprintf(tempstr, "%s: <a href=\"%s\">%s</a><hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a><hr><a href=\"/dev_bdvd\">%s</a>", STR_GAMETOM, templn, _path, enc_dir_name, wm_icons[5], mounted?STR_GAMELOADED:STR_ERROR);
+				{strcat(buffer, STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a><hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[5], mounted?STR_GAMELOADED:STR_ERROR);}
 
 			strcat(buffer, tempstr);
 
