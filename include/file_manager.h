@@ -8,7 +8,7 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 
 #define _2MB_	0x200000ULL
 
-static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 *has_img)
+static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http)
 {
 	unsigned long long sbytes = sz; bool is_root = false;
 
@@ -38,12 +38,10 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	// is image?
 	u8 show_img = !is_ps3_http && (!is_dir && (!strcasecmp(ext, ".png") || !strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".bmp")));
 
-	if(show_img) *has_img = true;
-
 	// build size column
 	if(is_dir)
 	{
-		bool show_play = ((flen == 8) && !strcmp(name, "dev_bdvd") && View_Find("game_plugin") == 0);
+		bool show_play = ((flen == 8) && !strcmp(name, "dev_bdvd") && IS_ON_XMB);
 
 		if(name[0] == '.')
 			sprintf(fsize, HTML_URL, templn, HTML_DIR);
@@ -204,7 +202,7 @@ static void add_breadcrumb_trail(char *buffer, char *param)
 		char label[_MAX_PATH_LEN];
 
 		urlenc(url, param); htmlenc(label, templn, 0);
-		sprintf(swap, "<a href=\"%s%s\">%s</a>",
+		sprintf(swap, HTML_URL2,
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
 #endif
@@ -271,7 +269,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		BUFFER_SIZE_HTML -= _2KB_;
 
 		u8 jb_games = (!extcmp(param, "/GAMES", 6) || !extcmp(param, "/GAMEZ", 6));
-		u8 has_img = false, show_icon0 = jb_games || ((strlen(param) >= 14) && (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/")));
+		u8 show_icon0 = jb_games || ((strlen(param) >= 14) && (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/")));
 
 		sprintf(templn, "<img id=\"icon\"%s>"
 						"<script>"
@@ -279,12 +277,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 						"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}"
 						"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : "")); strcat(buffer, templn);
 
-		strcat(buffer, "<table class=\"propfont\"><tr><td>");
+		strcat(buffer, "<table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
 
 		// breadcrumb trail //
 		add_breadcrumb_trail(buffer, param);
 
-		if((param[7] == 'v' || param[7] == 'm') && View_Find("game_plugin") == 0 && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF") || isDir("/dev_bdvd/BDMV") || isDir("/dev_bdvd/VIDEO_TS") || isDir("/dev_bdvd/AVCHD")))
+		if((param[7] == 'v' || param[7] == 'm') && IS_ON_XMB && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF") || isDir("/dev_bdvd/BDMV") || isDir("/dev_bdvd/VIDEO_TS") || isDir("/dev_bdvd/AVCHD")))
 			strcat(buffer, ":</td><td width=90><a href=\"/play.ps3\">&lt;Play>&nbsp;</a>");
 		else
 			strcat(buffer, ":</td><td width=90>&nbsp;");
@@ -349,7 +347,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 							is_dir=dir_items[n].is_directory; if(is_dir) dirs++;
 
-							add_list_entry(tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http, &has_img);
+							add_list_entry(tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http);
 
 							flen = strlen(tempstr);
 							if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
@@ -425,7 +423,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				is_dir = (buf.st_mode & S_IFDIR); if(is_dir) dirs++;
 
-				add_list_entry(tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http, &has_img);
+				add_list_entry(tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http);
 
 				flen = strlen(tempstr);
 				if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
@@ -538,13 +536,10 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					sprintf(templn, "%s", wm_icons[5]); show_icon = true;
 				}
 
-				if(has_img || strstr(param, "/GAME")!=NULL)
-				{
-					for(u16 m = idx; m < 7; m++) strcat(buffer, "<BR>");
+				for(u16 m = idx; m < 7; m++) strcat(buffer, "<BR>");
 
-					if(show_icon || show_icon0)
-						{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\"</script>", swap); strcat(buffer, templn);}
-				}
+				if(show_icon || show_icon0)
+					{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\"</script>", swap); strcat(buffer, templn);}
 			}
 			///////////
 

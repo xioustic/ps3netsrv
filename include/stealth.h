@@ -39,7 +39,7 @@ static void restore_cfw_syscalls(void)
 static void restore_blocked_urls(void)
 {
 	// restore blocked servers (XMB only)
-	if(View_Find("game_plugin")==0) {for(u8 u = 0; u<url_count; u++) poke_lv1(blocked_url[u][0], blocked_url[u][1]); url_count = 0;}
+	if(IS_ON_XMB) {for(u8 u = 0; u<url_count; u++) poke_lv1(blocked_url[u][0], blocked_url[u][1]); url_count = 0;}
 }
 
 static void remove_cfw_syscall8(void)
@@ -153,7 +153,7 @@ static void block_online_servers(bool notify)
 {
 	if(url_count == 0)
 	{
-		if(View_Find("game_plugin")) return; // not in XMB
+		if(IS_INGAME) return; // not in XMB
 
 		if(notify) show_msg((char*)"Blocking PSN servers");
 

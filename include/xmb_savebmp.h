@@ -93,7 +93,7 @@ static void saveBMP(char *path, bool notify_bmp)
 
 	// create bmp file
 	int fd;
-	if(View_Find("game_plugin")!=0 || cellFsOpen(path, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, NULL, 0) != CELL_FS_SUCCEEDED) { BEEP3 ; return;}
+	if(IS_INGAME || cellFsOpen(path, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, NULL, 0) != CELL_FS_SUCCEEDED) { BEEP3 ; return;}
 
 	{ BEEP2 }
 
@@ -182,7 +182,7 @@ static void saveBMP(char *path, bool notify_bmp)
 
 static void saveBMP()
 {
-	if(View_Find("game_plugin")==0) //XMB
+	if(IS_ON_XMB) //XMB
 	{
 		system_interface = (system_plugin_interface *)plugin_GetInterface(View_Find("system_plugin"),1); // 1=regular xmb, 3=ingame xmb (doesnt work)
 

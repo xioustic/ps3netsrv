@@ -238,10 +238,7 @@ bool rec_start(char *param)
 	recOpt[5] = (vsh_memory_container_by_id(1) == -1 ) ? vsh_memory_container_by_id(0) : vsh_memory_container_by_id(1);
 	recOpt[0x208] = 0x80; // 0x90 show XMB || reduce memsize // 0x80; // allow show XMB
 
-	char g[0x120];
-	game_interface = (game_plugin_interface *)plugin_GetInterface(View_Find("game_plugin"), 1);
-
-	game_interface->gameInfo(g);
+	get_game_info();
 
 	char *vidfile = strstr(param, "/dev_hdd0/");
 
@@ -256,7 +253,7 @@ bool rec_start(char *param)
 		CellRtcDateTime t;
 		cellRtcGetCurrentClockLocalTime(&t);
 		sprintf((char*)&recOpt[0x6], "/dev_hdd0/VIDEO/%s_%04d.%02d.%02d_%02d_%02d_%02d.mp4",
-									 g+0x04, t.year, t.month, t.day, t.hour, t.minute, t.second);
+									 _game_TitleID, t.year, t.month, t.day, t.hour, t.minute, t.second);
 	}
 
 	reco_open(-1); // memory container
@@ -299,7 +296,7 @@ bool rec_start(char *param)
 
 void toggle_video_rec(char *param)
 {
-	if(View_Find("game_plugin") != 0)    // if game_plugin is loaded -> there is a game/app running and we can recording...
+	if(IS_INGAME)    // if game_plugin is loaded -> there is a game/app running and we can recording...
 	{
 		if(!reco_open)
 		{

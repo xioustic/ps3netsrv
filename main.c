@@ -297,6 +297,8 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define CODE_DOWNLOAD_FILE  1202
 #define CODE_RETURN_TO_ROOT 1203
 
+#define IS_ON_XMB	(View_Find("game_plugin") == 0)
+#define IS_INGAME	(View_Find("game_plugin") != 0)
 
 ////////////
 #ifdef COBRA_ONLY
@@ -739,7 +741,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 						"input:focus{border:2px solid #0099FF;}"
 						".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
 						"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
-						"body,a.s,td,th{color:#F0F0F0;white-space:nowrap;background-color:#101010");
+						"body{background-color:#101010}body,a.s,td,th{color:#F0F0F0;white-space:nowrap");
 
 		//if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
 		//	strcat(buffer, "background-image: url(\"/dev_hdd0/xmlhost/game_plugin/background.jpg\");");
@@ -1026,7 +1028,7 @@ static void handleclient(u64 conn_s_p)
 			{
 				cellFsRead(fd, (void *)header, buf.st_size, NULL);
 				cellFsClose(fd); for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n]=9;
-				if(islike(header, "/play.ps3")) {if(View_Find("game_plugin")) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
+				if(islike(header, "/play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
 			}
 			cellFsUnlink((char*)WMREQUEST_FILE);
 		}
@@ -1282,7 +1284,7 @@ static void handleclient(u64 conn_s_p)
 				}
 				else
    #endif // #ifdef COBRA_ONLY
-				if(View_Find("game_plugin") == 0)
+				if(IS_ON_XMB)
 				{   // in-XMB
    #ifdef XMB_SCREENSHOT
 					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param+27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
@@ -1336,15 +1338,15 @@ static void handleclient(u64 conn_s_p)
 
 				if((klic_polling_status == 0) && (klic_polling == 2))
 				{
-					if(View_Find("game_plugin") == 0) http_response(conn_s, header, param, CODE_HTTP_OK, (char*)"/KLIC: Waiting for game...");
+					if(IS_ON_XMB) http_response(conn_s, header, param, CODE_HTTP_OK, (char*)"/KLIC: Waiting for game...");
 
 					// wait until game start
-					while((klic_polling == 2) && View_Find("game_plugin") == 0 && working) {sys_timer_usleep(500000);}
+					while((klic_polling == 2) && IS_ON_XMB && working) {sys_timer_usleep(500000);}
 				}
 
 				char kl[0x120], prev[0x200], buffer[0x200]; memset(kl, 0, 120);
 
-				if(View_Find("game_plugin"))
+				if(IS_INGAME)
 				{
 					hex_dump(kl, KLICENSEE_OFFSET, KLICENSEE_SIZE);
 					get_game_info(); sprintf(buffer, "%s %s</H2>"
@@ -1383,7 +1385,7 @@ static void handleclient(u64 conn_s_p)
 
 					if(klic_polling_status == 0)
 					{
-						while((klic_polling>0) && View_Find("game_plugin")!=0 && working)
+						while((klic_polling>0) && IS_INGAME && working)
 						{
 							hex_dump(kl, (int)KLICENSEE_OFFSET, KLICENSEE_SIZE);
 							sprintf(buffer, "%s %s %s %s\r\n", kl, (char*)(KLIC_CONTENT_ID_OFFSET), header, (char*)(KLIC_PATH_OFFSET));
@@ -1453,13 +1455,13 @@ static void handleclient(u64 conn_s_p)
 					if(isremap && path2[0]!=NULL)
 					{
 						htmlenc(path1, path2, 0);
-						sprintf(param,  "Remap: <a href=\"%s\">%s</a><br>"
-										"To: <a href=\"%s\">%s</a><p>"
-										"Unmap: <a href=\"/unmap.ps3%s\">%s</a>", url, title, path1, path2, url, title);
+						sprintf(param,  "Remap: " HTML_URL "<br>"
+										"To: "    HTML_URL "<p>"
+										"Unmap: " HTML_URL2, url, title, path1, path2, "/unmap.ps3", url, title);
 					}
 					else
 					{
-						sprintf(param, "Unmap: <a href=\"%s\">%s</a>", url, title);
+						sprintf(param, "Unmap: " HTML_URL, url, title);
 					}
 				}
 				else
@@ -1886,7 +1888,7 @@ static void handleclient(u64 conn_s_p)
 
 				bool mount_ps3 = !is_popup && islike(param, "/mount_ps3"), forced_mount = false;
 
-				if(mount_ps3 && View_Find("game_plugin")) {mount_ps3=false; forced_mount=true;}
+				if(mount_ps3 && IS_INGAME) {mount_ps3 = false; forced_mount = true;}
 
 				prepare_html(buffer, templn, param, is_ps3_http, is_cpursx, mount_ps3);
 
@@ -2058,7 +2060,7 @@ static void handleclient(u64 conn_s_p)
 
 						// show filename link
 						char *p = strrchr(filename, '/');
-						if(p) {strcpy(txt, p); p[0] = NULL; sprintf(tempstr," &nbsp; <a href=\"%s\">%s</a><a href=\"%s%s\">%s</a></form>", filename, filename, filename, txt, txt); strcat(buffer, tempstr);}
+						if(p) {strcpy(txt, p); p[0] = NULL; sprintf(tempstr," &nbsp; " HTML_URL HTML_URL2 "</form>", filename, filename, filename, txt, txt); strcat(buffer, tempstr);}
 
 						is_popup = 0; goto send_response;
 					}
@@ -2079,7 +2081,7 @@ static void handleclient(u64 conn_s_p)
 						show_msg((char*)templn);
 
 						urlenc(templn, game_path);
-						sprintf(tempstr, "Fixed: <a href=\"%s\">%s</a>", templn, game_path); strcat(buffer, tempstr);
+						sprintf(tempstr, "Fixed: " HTML_URL, templn, game_path); strcat(buffer, tempstr);
 
 						sprintf(tempstr, HTML_REDIRECT_TO_URL, templn); strcat(buffer, tempstr);
 					}
@@ -2304,13 +2306,13 @@ static void handleclient(u64 conn_s_p)
 						{
 							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
 							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr); htmlenc(templn, tempstr, 0);
-							sprintf(tempstr, "%s %s : <a href=\"%s\">%s</a>%s<br>", STR_DELETE, STR_ERROR, param, templn, name);
+							sprintf(tempstr, "%s %s : " HTML_URL "%s<br>", STR_DELETE, STR_ERROR, param, templn, name);
 						}
 						else
 						{
 							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
 							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr); htmlenc(templn, tempstr, 0);
-							sprintf(tempstr, "%s : <a href=\"%s\">%s</a>%s<br>", STR_DELETE, param, templn, name);
+							sprintf(tempstr, "%s : " HTML_URL "%s<br>", STR_DELETE, param, templn, name);
 						}
 						strcat(buffer, tempstr);
 

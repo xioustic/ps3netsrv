@@ -441,7 +441,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 		// auto-play
 		if(mount_ps3)
 		{
-			if(mounted && View_Find("game_plugin")==0 && strstr(param, "/PSPISO")==NULL && extcmp(param, ".BIN.ENC", 8)!=0)
+			if(mounted && IS_ON_XMB && strstr(param, "/PSPISO")==NULL && extcmp(param, ".BIN.ENC", 8)!=0)
 			{
 				CellPadData pad_data = pad_read();
 				bool atag = (strcasestr(param, AUTOPLAY_TAG)!=NULL) || (webman_config->autoplay);
@@ -1882,7 +1882,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 		is_mounting = false;
 
-		if(View_Find("game_plugin")==0)
+		if(IS_ON_XMB)
 		{
 			while(View_Find("explore_plugin")==0) sys_timer_sleep(1);
 

@@ -77,7 +77,7 @@ static int download_file(char *param, char *msg)
 {
 	int ret = FAILED;
 
-	if(View_Find("game_plugin"))
+	if(IS_INGAME)
 	{
 		sprintf(msg, "ERROR: download from XMB");
 		return ret;
@@ -197,7 +197,7 @@ end_download_process:
 static int installPKG(const char *pkgpath, char *msg)
 {
 	int ret = FAILED;
-	if(View_Find("game_plugin"))
+	if(IS_INGAME)
 	{
 		sprintf(msg, "ERROR: install from XMB");
 		return ret;

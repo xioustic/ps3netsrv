@@ -227,7 +227,7 @@
 #endif
 
 #ifdef XMB_SCREENSHOT
-							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_L2) && View_Find("game_plugin")==0)
+							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_L2) && IS_ON_XMB)
 								{memset(msg, 0, 256); saveBMP(msg, true); sys_timer_sleep(2);} // L2 + R2 + SELECT + START
 							else
 #endif
@@ -284,7 +284,7 @@ show_popup:
 								{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
 
 								// detect aprox. time when a game is launched
-								if(View_Find("game_plugin")==0) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);
+								if(IS_ON_XMB) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);
 
 								bool R2 = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_R2), bb;
 
@@ -559,7 +559,7 @@ show_popup:
 					else
 					if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2)
 					{
-						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE))==(CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE) && View_Find("game_plugin")==0) // L2+R2+O
+						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE))==(CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE) && IS_ON_XMB) // L2+R2+O
 						{
 #ifdef WM_CUSTOM_COMBO
 								 if(do_custom_combo(WM_CUSTOM_COMBO "l2_r2_circle")) ;

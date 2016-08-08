@@ -2,6 +2,8 @@
 #define ITEM_SELECTED			" selected=\"selected\""
 
 #define HTML_URL				"<a href=\"%s\">%s</a>"
+#define HTML_URL2				"<a href=\"%s%s\">%s</a>"
+
 #define HTML_DIR				"&lt;dir&gt;"
 #define HTML_BUTTON_FMT			"%s%s\" %s'%s';\">"
 #define HTML_BUTTON				" <input type=\"button\" value=\""

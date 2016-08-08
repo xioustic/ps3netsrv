@@ -189,10 +189,10 @@ static void poll_thread(uint64_t poll)
 		if(to>40) to=0;
 
 		// detect aprox. time when a game is launched
-		if((sec % 10)==0) {if(View_Find("game_plugin")==0) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);}
+		if((sec % 10) == 0) {if(IS_ON_XMB) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);}
 
 		// USB Polling
-		if(poll==0 && sec>=120) // check USB drives each 120 seconds
+		if(poll == 0 && sec >= 120) // check USB drives each 120 seconds
 		{
 			uint8_t tmp[2048];
 			uint32_t usb_handle = -1, r;

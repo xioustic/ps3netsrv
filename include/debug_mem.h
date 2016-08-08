@@ -69,7 +69,7 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 
 		sprintf(dump_file, "/dev_hdd0/dump_%s.bin", param+10);
 		dump_mem(dump_file, start, size);
-		sprintf(templn, "<p>Dumped: <a href=\"%s\">%s</a> [<a href=\"/delete.ps3%s\">%s</a>]", dump_file, dump_file+10, dump_file, STR_DELETE); strcat(buffer, templn);
+		sprintf(templn, "<p>Dumped: " HTML_URL " [" HTML_URL2 "]", dump_file, dump_file+10, "/delete.ps3", dump_file, STR_DELETE); strcat(buffer, templn);
 	}
 }
 

@@ -79,7 +79,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); strcat(buffer, templn);
 
-	if(View_Find("game_plugin"))
+	if(IS_INGAME)
 	{
 		get_game_info();
 
@@ -198,7 +198,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	CellRtcTick pTick; cellRtcGetCurrentTick(&pTick); u32 dd, hh, mm, ss;
 
 	// detect aprox. time when a game is launched
-	if(View_Find("game_plugin")==0) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);
+	if(IS_ON_XMB) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);
 
 	////// play time //////
 	if(gTick.tick>rTick.tick)
@@ -224,7 +224,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 			cellFsRead(fd, (void *)param, MAX_PATH_LEN, NULL);
 			cellFsClose(fd);
 
-			if(strlen(param) > 10) {sprintf( templn, "<hr><font size=\"3\"><a href=\"%s\">%s</a> -> ", View_Find("game_plugin") ? "/dev_bdvd" : "/play.ps3", "/dev_bdvd"); strcat(buffer, templn); add_breadcrumb_trail(buffer, param); strcat(buffer, "</font>");}
+			if(strlen(param) > 10) {sprintf( templn, "<hr><font size=\"3\">" HTML_URL " -> ", IS_ON_XMB ? "/play.ps3" : "/dev_bdvd", "/dev_bdvd"); strcat(buffer, templn); add_breadcrumb_trail(buffer, param); strcat(buffer, "</font>");}
 		}
 	}
 

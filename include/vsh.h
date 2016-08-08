@@ -1,5 +1,3 @@
-static char* get_game_info(void);
-
 //int (*_cellGcmIoOffsetToAddress)(uint32_t, void**) = NULL;
 int (*vshtask_notify)(int, const char *) = NULL;
 int (*View_Find)(const char *) = NULL;
@@ -60,17 +58,17 @@ static void show_msg(char* msg)
 		vshtask_notify(0, msg);
 }
 
-static char* get_game_info(void)
+static int get_game_info(void)
 {
 	int h = View_Find("game_plugin");
 
 	if(h)
 	{
-		game_interface = (game_plugin_interface *)plugin_GetInterface(h,1);
+		game_interface = (game_plugin_interface *)plugin_GetInterface(h, 1);
 		game_interface->gameInfo(_game_info);
 	}
 
-	return (char*)h;
+	return h;
 }
 
 #ifndef LITE_EDITION
