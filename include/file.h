@@ -360,7 +360,7 @@ static int del(const char *path, bool recursive)
 static void waitfor(char *path, uint8_t timeout)
 {
 	struct CellFsStat s;
-	for(uint8_t n=0; n < (timeout*2); n++)
+	for(uint8_t n = 0; n < (timeout*2); n++)
 	{
 		if(path[0]!=NULL && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) break;
 		sys_timer_usleep(500000); if(!working) break;

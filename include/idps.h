@@ -5,6 +5,8 @@ uint64_t idps_offset1=0;
 uint64_t idps_offset2=0;
 uint64_t psid_offset=0;
 
+uint64_t eid0_idps[2];
+
 uint64_t IDPS[2] = {0, 0};
 uint64_t PSID[2] = {0, 0};
 
@@ -96,3 +98,40 @@ static void spoof_idps_psid(void)
 	get_idps_psid();
 }
 #endif
+
+static void get_eid0_idps()
+{
+	uint64_t buffer[0x40], start_sector;
+	uint32_t read;
+	sys_device_handle_t source;
+	if(sys_storage_open(0x100000000000004ULL, 0, &source, 0) != 0)
+	{
+		start_sector = 0x204;
+		sys_storage_close(source);
+		sys_storage_open(0x100000000000001ULL, 0, &source, 0);
+	}
+	else start_sector = 0x178;
+	sys_storage_read(source, 0, start_sector, 1, buffer, &read, 0);
+	sys_storage_close(source);
+
+	eid0_idps[0] = buffer[0x0E];
+	eid0_idps[1] = buffer[0x0F];
+}
+
+static void show_idps(char *msg)
+{
+	get_eid0_idps();
+	get_idps_psid();
+
+	#define SEP "\n                  "
+	sprintf((char*) msg, "IDPS EID0 : %016llX%s"
+									 "%016llX\n"
+						 "IDPS LV2  : %016llX%s"
+									 "%016llX\n"
+						 "PSID LV2 : %016llX%s"
+									"%016llX", eid0_idps[0], SEP, eid0_idps[1], IDPS[0], SEP, IDPS[1], PSID[0], SEP, PSID[1]);
+	#undef SEP
+
+	show_msg((char*) msg);
+	sys_timer_sleep(2);
+}

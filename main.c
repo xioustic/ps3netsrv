@@ -699,7 +699,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 	if(is_cpursx)
 		strcat(buffer, "<meta http-equiv=\"refresh\" content=\"6;URL=/cpursx.ps3\">");
 
-	if(mount_ps3) {strcat(buffer, "<body bgcolor=\"#101010\">"); return;}
+	if(mount_ps3) {strcat(buffer, HTML_BODY); return;}
 
 	strcat(buffer,	"<head><title>webMAN MOD</title>");
 
@@ -712,6 +712,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 	}
 	if(css_exists)
 	{
+		sprintf(templn, "<style>a{%s}</style>", "color:#ccc;text-decoration:none;"); strcat(buffer, templn); // fallback style if external css fails
 		sprintf(templn, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(buffer, templn);
 	}
 	else
@@ -772,10 +773,8 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 	if(is_ps3_http == 1)
 		{sprintf(templn, "<style>%s</style>", ".gi{height:210px;width:267px"); strcat(buffer, templn);}
 
-	strcat(buffer,	"</head>"
-					"<body>"
-					"<div style=\"position:fixed;right:20px;bottom:10px;opacity:0.2\"><a href=\"#Top\">&#9650;</a></div>"
-					"<font face=\"Courier New\"><b>");
+	sprintf(templn, "</head>%s"
+					"<div style=\"position:fixed;right:20px;bottom:10px;opacity:0.2\"><a href=\"#Top\">&#9650;</a></div><b>", HTML_BODY); strcat(buffer, templn);
 
 #ifndef ENGLISH_ONLY
     if(strlen(STR_TRADBY) == 0) language("STR_TRADBY", STR_TRADBY); //strcpy(STR_TRADBY, "<br>");
@@ -1953,7 +1952,7 @@ static void handleclient(u64 conn_s_p)
 						strcat(buffer, templn);
 					}
 
-  #ifndef LITE_EDITION
+ #ifdef COPY_PS3
 					if((islike(param, "/dev_") && !strstr(param,"?")) && !islike(param,"/dev_flash") && !strstr(param,".ps3/") && !strstr(param,".ps3?"))
 					{	// add buttons + javascript code to handle delete / cut / copy / paste (requires fm.js)
 	#ifdef EMBED_JS
@@ -1979,7 +1978,7 @@ static void handleclient(u64 conn_s_p)
 							if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); strcat(buffer, templn);}
 						}
 					}
-  #endif
+ #endif
 
  #endif // #ifdef COPY_PS3
 
@@ -2275,6 +2274,7 @@ static void handleclient(u64 conn_s_p)
 							struct CellFsStat buf;
 							if(cellFsStat("/dev_hdd0/boot_plugins.txt", &buf) == CELL_FS_SUCCEEDED && buf.st_size < 40) cellFsUnlink((char*)"/dev_hdd0/boot_plugins.txt");
 
+							// delete files
 							unlink_file("/dev_hdd0", "webftp_server.sprx", "", tempstr);
 							unlink_file("/dev_hdd0", "webftp_server_ps3mapi.sprx", "", tempstr);
 							unlink_file("/dev_hdd0", "webftp_server_noncobra.sprx", "", tempstr);
@@ -2291,6 +2291,7 @@ static void handleclient(u64 conn_s_p)
 
 							cellFsUnlink(WMCONFIG);
 
+							// delete folders & subfolders
 							del(WMTMP, true);
 							del("/dev_hdd0/xmlhost", true);
 							del("/dev_hdd0/tmp/wm_lang", true);
@@ -2434,7 +2435,6 @@ send_response:
 					{http_response(conn_s, header, param, CODE_HTTP_OK, param + 11); break;}
 				else
 				{
- #ifndef LITE_EDITION
 	#ifndef EMBED_JS
 					// extend web content using custom javascript
 					if(common_js_exists)
@@ -2442,7 +2442,6 @@ send_response:
 						sprintf(templn, SCRIPT_SRC_FMT, COMMON_SCRIPT_JS); strcat(buffer, templn);
 					}
 	#endif
- #endif
 					strcat(buffer, HTML_BODY_END); //end-html
 				}
 				sprintf(templn, "Content-Length: %llu\r\n\r\n", (unsigned long long)strlen(buffer)); strcat(header, templn);

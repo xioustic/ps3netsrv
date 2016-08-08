@@ -18,7 +18,7 @@ function rn(f){
 	if(f.substring(0,5)=='/dev_'){
 		f=unescape(f);
 		t=prompt('Rename to:',f);
-		if(t&&t!=f)window.location='/rename.ps3'+f+'|'+escape(t)
+		if(t&&t!=f)self.location='/rename.ps3'+f+'|'+escape(t)
 	}
 }
 function ku(e){
@@ -34,7 +34,7 @@ document.write( "<div id='mnu' style='position:fixed;width:180px;background:#333
 				"<a id='ms'>Game Info<br></a>" +
 				"<hr>" +
 				"<a id='m3'>Delete<br></a>" +
-				"<a id='mf' href=\"javascript:t=prompt('New Folder', window.location.pathname);if(t.indexOf('/dev_')==0)window.location='/mkdir.ps3'+t\">New Folder</a>" +
+				"<a id='mf' href=\"javascript:t=prompt('New Folder', self.location.pathname);if(t.indexOf('/dev_')==0)self.location='/mkdir.ps3'+t\">New Folder</a>" +
 				"<hr>" +
 				"<a id='m4'>Cut<br></a>" +
 				"<a id='m5'>Copy<br></a>" +
@@ -61,7 +61,7 @@ window.addEventListener('contextmenu',function(e){
 		m3.href='/delete.ps3'+p;
 		m4.href='/cut.ps3'+p;
 		m5.href='/cpy.ps3'+p;
-		m6.href='/paste.ps3'+window.location.pathname;m6.style.display=mf.style.display=(c=='w'||c=='d')?b:n;
+		m6.href='/paste.ps3'+self.location.pathname;m6.style.display=mf.style.display=(c=='w'||c=='d')?b:n;
 		m7.href='javascript:rn(\"'+p+'\")';m7.style.display=(p.substring(0,5)=='/dev_')?b:n;
 		m8.href='/copy.ps3'+p;
 		ms.href='http://google.com/search?q='+t.text;ms.style.display=(t.parentNode.className=='gn')?b:n;

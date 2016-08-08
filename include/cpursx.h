@@ -1,3 +1,50 @@
+static void get_cobra_version(char *cfw_info)
+{
+	// returns cfw_info[20]
+
+#ifdef COBRA_ONLY
+	if(!is_mamba && !syscalls_removed) {system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_GET_MAMBA); is_mamba = ((int)p1 ==0x666);}
+
+	if(!cobra_version) sys_get_version2(&cobra_version);
+
+	char cobra_ver[8];
+	if((cobra_version & 0x0F) == 0)
+		sprintf(cobra_ver, "%X.%X", cobra_version>>8, (cobra_version & 0xFF) >> 4);
+	else
+		sprintf(cobra_ver, "%X.%02X", cobra_version>>8, (cobra_version & 0xFF));
+
+	#if defined(DECR_SUPPORT)
+		sprintf(cfw_info, "%s %s: %s", (dex_mode == 1) ? "DECR" : dex_mode ? "DEX" : "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
+	#elif defined(DEX_SUPPORT)
+		sprintf(cfw_info, "%s %s: %s", dex_mode ? "DEX" : "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
+	#else
+		sprintf(cfw_info, "%s %s: %s", "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
+	#endif
+#elif DEX_SUPPORT
+	#if defined(DECR_SUPPORT)
+		sprintf(cfw_info, "%s", (dex_mode == 1) ? "DECR" : dex_mode ? "DEX" : "CEX");
+	#else
+		sprintf(cfw_info, "%s", dex_mode ? "DEX" : "CEX");
+	#endif
+#else
+		sprintf(cfw_info, "CEX");
+#endif
+}
+
+static void get_net_info(char *net_type, char *ip)
+{
+	// returns net_type[8], ip[ip_size]
+
+	net_info info;
+	memset(&info, 0, sizeof(net_info));
+	xsetting_F48C0548()->sub_44A47C(&info); //info.ipAddress
+
+	if (info.device == 0) strcpy(net_type, "LAN"); else
+	if (info.device == 1) strcpy(net_type, "WLAN");
+
+	netctl_main_9A528B81(ip_size, ip);
+}
+
 static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_http)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
@@ -23,22 +70,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		if(strstr(param, "?u")) enable_fan_control(3, templn);
 	}
 
-	uint64_t eid0_idps[2], buffr[0x40], start_sector;
-	uint32_t read;
-	sys_device_handle_t source;
-	if(sys_storage_open(0x100000000000004ULL, 0, &source, 0)!=0)
-	{
-		start_sector = 0x204;
-		sys_storage_close(source);
-		sys_storage_open(0x100000000000001ULL, 0, &source, 0);
-	}
-	else start_sector = 0x178;
-	sys_storage_read(source, 0, start_sector, 1, buffr, &read, 0);
-	sys_storage_close(source);
-
-	eid0_idps[0]=buffr[0x0E];
-	eid0_idps[1]=buffr[0x0F];
-
+	get_eid0_idps();
 	get_idps_psid();
 
 	uint32_t blockSize;
@@ -96,7 +128,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	if(strstr(param, "?"))
 	{
 		char *pos = strstr(param, "fan=");
-		if(pos) {read = get_valuen(param, "fan=", 0, 99); max_temp = 0; if(!read) enable_fan_control(0, templn); else {webman_config->manu = read; if(webman_config->fanc == 0) enable_fan_control(1, templn);}}
+		if(pos) {u32 read = get_valuen(param, "fan=", 0, 99); max_temp = 0; if(!read) enable_fan_control(0, templn); else {webman_config->manu = read; if(webman_config->fanc == 0) enable_fan_control(1, templn);}}
 		else {pos = strstr(param, "max=");
 		if(pos) {max_temp = get_valuen(param, "max=", 40, MAX_TEMPERATURE);}
 		else
@@ -157,7 +189,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 					(int)((int)fan_speed*100)/255, fan_speed); strcat(buffer, templn);
 
 	if( !max_temp && !is_ps3_http)
-		sprintf( templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"window.location='/cpursx.ps3?fan='+this.value\"><hr>", webman_config->manu, DEFAULT_MIN_FANSPEED);
+		sprintf( templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"self.location='/cpursx.ps3?fan='+this.value\"><hr>", webman_config->manu, DEFAULT_MIN_FANSPEED);
 	else
 		sprintf( templn, "<hr>");
 
@@ -200,44 +232,11 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	u8 mac_address[0x13];
 	{system_call_3(SYS_NET_EURUS_POST_COMMAND, CMD_GET_MAC_ADDRESS, (u64)(u32)mac_address, 0x13);}
 
-#ifdef COBRA_ONLY
-	if(!is_mamba && !syscalls_removed) {system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_GET_MAMBA); is_mamba = ((int)p1 ==0x666);}
+	char *cfw_info = param;
+	get_cobra_version(cfw_info);
 
-	if(!cobra_version) sys_get_version2(&cobra_version);
-
-	char cobra_ver[8];
-	if((cobra_version & 0x0F) == 0)
-		sprintf(cobra_ver, "%X.%X", cobra_version>>8, (cobra_version & 0xFF) >> 4);
-	else
-		sprintf(cobra_ver, "%X.%02X", cobra_version>>8, (cobra_version & 0xFF));
-
- #if defined(DECR_SUPPORT)
-	sprintf(param, "%s %s: %s", (dex_mode == 1) ? "DECR" : dex_mode ? "DEX" : "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
- #elif defined(DEX_SUPPORT)
-	sprintf(param, "%s %s: %s", dex_mode ? "DEX" : "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
- #else
-	sprintf(param, "%s %s: %s", "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
- #endif
-#elif DEX_SUPPORT
-	sprintf(param, "%s", (dex_mode == 1) ? "DECR" : dex_mode ? "DEX" : "CEX");
-#else
-	sprintf(param, "CEX");
-#endif
-
-	//net_info info;
-	//memset(&info, 0, sizeof(net_info));
-	//xsetting_F48C0548()->sub_44A47C(&info); //info.ipAddress
-
-	net_info info;
-	memset(&info, 0, sizeof(net_info));
-	xsetting_F48C0548()->sub_44A47C(&info);
-
-	char net_type[8] = "";
-	if (info.device == 0) strcpy(net_type, "LAN"); else
-	if (info.device == 1) strcpy(net_type, "WLAN");
-
-	char ip[ip_size];
-	netctl_main_9A528B81(ip_size, ip);
+	char net_type[8] = "", ip[ip_size] = "-";
+	get_net_info(net_type, ip);
 
 	sprintf( templn, "<hr></font><h2><a class=\"s\" href=\"/setup.ps3\">"
 						"Firmware : %i.%02i %s<br>"
@@ -246,7 +245,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 						"IDPS EID0: %016llX%016llX<br>"
 						"IDPS LV2 : %016llX%016llX<br>"
 						"MAC Addr : %02X:%02X:%02X:%02X:%02X:%02X - %s %s</h2></a></b>",
-					(int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, param,
+					(int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, cfw_info,
 					(syscalls_removed) ? STR_CFWSYSALRD : "",
 					PSID[0], PSID[1],
 					eid0_idps[0], eid0_idps[1],

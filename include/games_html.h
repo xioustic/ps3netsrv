@@ -1011,17 +1011,17 @@ next_html_entry:
 							"<div id=\"wmsg\" style=\"display:none\"><H1>. . .</H1></div>"
 							"<script>window.onclick=function(e){t=e.target;if(t.id.indexOf('im')==0||typeof(t.href)=='string')wmsg.style.display='block';}</script>"
 							// show games count + find icon
-							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';window.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
+							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';self.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
 							// separator
 							"<HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
 
-#ifndef LITE_EDITION
- #ifndef EMBED_JS
+#ifndef EMBED_JS
 			if(file_exists(GAMES_SCRIPT_JS))
 			{
 				sprintf(templn, SCRIPT_SRC_FMT, GAMES_SCRIPT_JS); strcat(buffer, templn);
 			}
- #endif
+#endif
+#ifndef LITE_EDITION
 			sortable = file_exists(JQUERY_LIB_JS) && file_exists(JQUERY_UI_LIB_JS);
 			if(sortable)
 			{	// add external jquery libraries

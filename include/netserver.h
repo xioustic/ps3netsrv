@@ -643,7 +643,7 @@ static void handleclient_net(uint64_t arg)
 				break;
 
 				default:
-					ret = -1; // Unknown command received
+					ret = FAILED; // Unknown command received
 			}
 
 			if(ret != 0) break;
@@ -665,7 +665,7 @@ static void handleclient_net(uint64_t arg)
 
 static void netsvrd_thread(uint64_t arg)
 {
-	int list_s=FAILED;
+	int list_s = FAILED;
 	if(webman_config->netp == 0) webman_config->netp = NETPORT;
 
 relisten:

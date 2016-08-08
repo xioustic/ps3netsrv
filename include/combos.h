@@ -295,40 +295,12 @@ show_popup:
 								ss = ss % 86400; hh = (u32)(ss / 3600); ss = ss % 3600; mm = (u32)(ss / 60); ss = ss % 60;
 								/////////////////////////////
 
-								net_info info;
-								memset(&info, 0, sizeof(net_info));
-								xsetting_F48C0548()->sub_44A47C(&info);
-
-								char net_type[8] = "";
-								if (info.device == 0) strcpy(net_type, "LAN"); else
-								if (info.device == 1) strcpy(net_type, "WLAN");
-
-								char ip[ip_size] = "-";
-								netctl_main_9A528B81(ip_size, ip);
+								char net_type[8] = "", ip[ip_size] = "-";
+								get_net_info(net_type, ip);
 
 								char cfw_info[20];
-#ifdef COBRA_ONLY
-								if(!is_mamba && !syscalls_removed) {system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_GET_MAMBA); is_mamba = ((int)p1 ==0x666);}
+								get_cobra_version(cfw_info);
 
-								if(!cobra_version) sys_get_version2(&cobra_version);
-
-								char cobra_ver[8];
-								if((cobra_version & 0x0F) == 0)
-									sprintf(cobra_ver, "%X.%X", cobra_version>>8, (cobra_version & 0xFF) >> 4);
-								else
-									sprintf(cobra_ver, "%X.%02X", cobra_version>>8, (cobra_version & 0xFF));
- #if defined(DECR_SUPPORT)
-								sprintf(cfw_info, "%s %s: %s", (dex_mode == 1) ? "DECR" : dex_mode ? "DEX" : "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
- #elif defined(DEX_SUPPORT)
-								sprintf(cfw_info, "%s %s: %s", dex_mode ? "DEX" : "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
- #else
-								sprintf(cfw_info, "%s %s: %s", "CEX", is_mamba ? "Mamba" : "Cobra", cobra_ver);
- #endif
-#elif DEX_SUPPORT
-								sprintf(cfw_info, "%s", (dex_mode == 1) ? "DECR" : dex_mode ? "DEX" : "CEX");
-#else
-								sprintf(cfw_info, "CEX");
-#endif
 								char smax[32]; if(fan_ps2_mode) sprintf(smax, "   PS2 Mode"); else if(max_temp) sprintf(smax, "   MAX: %i°C", max_temp); else if(webman_config->fanc==0) sprintf(smax, "   SYSCON"); else memset(smax, 0, 16);
 
 								sprintf((char*)tmp, "CPU: %i°C  RSX: %i°C  FAN: %i%%   \n"
