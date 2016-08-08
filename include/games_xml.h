@@ -1147,8 +1147,8 @@ static void update_xml_thread(u64 conn_s_p)
 {
 	init_running = 1;
 
-	if(View_Find("game_plugin") == 0)
-		while(View_Find("explore_plugin") == 0) sys_timer_usleep(100000);
+	if(IS_ON_XMB)
+		while(View_Find("explore_plugin") == 0) sys_timer_usleep(100000); // wait for explore_plugin
 
 	if(update_mygames_xml(conn_s_p)) mount_autoboot();
 
