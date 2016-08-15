@@ -166,6 +166,6 @@ cls
 dir *.sprx
 
 echo press any key to copy and build pkg
-pause
+pause>nul
 
 _Make_pkg.bat

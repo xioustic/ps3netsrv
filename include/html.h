@@ -102,20 +102,24 @@ static bool urlenc(char *dst, char *src)
 
 	for(i = 0; i < n; i++, j++)
 	{
-			 if(src[i]==':' && (i >= pos)) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
-		else if(src[i] & 0x80)
+		if(src[i] & 0x80)
 		{
 			dst[j++] = '%';
 			dst[j++] = h2a((unsigned char)src[i]>>4);
 			dst[j] = h2a(src[i] & 0xf);
 		}
-		else if(src[i]==' ' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || src[i]=='?')
+		else if(src[i]=='?' || (src[i]==':' && (i >= pos)))
 		{
 			dst[j++] = '%';
-			dst[j++] = '0' + (u8)(src[i] / 0x10);
-			dst[j]   = '0' + (src[i] % 0x10);
+			dst[j++] = '3';
+			dst[j] = (src[i] & 0xf) + 7;
 		}
-		else if(gmobile_mode && src[i]==0x27) {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '7';}
+		else if(src[i]==' ' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == 0x27))
+		{
+			dst[j++] = '%';
+			dst[j++] = '2';
+			dst[j] = (src[i] == '+') ? 'B' : '0' + (src[i] & 0xf);
+		}
 		else dst[j] = src[i];
 	}
 	dst[j] = '\0';
@@ -192,7 +196,7 @@ static void utf8dec(char *dst, char *src, u8 cpy2src)
 static void add_radio_button(const char *name, const char *value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
-	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\"%s/> %s%s</label>", name, value, id, checked?ITEM_CHECKED:"", label, (!sufix)?"<br>":sufix);
+	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\"%s/> %s%s</label>", name, value, id, checked ? ITEM_CHECKED : "", label, (!sufix) ? "<br>" : sufix);
 	strcat(buffer, templn);
 }
 
@@ -211,7 +215,7 @@ static void add_check_box(const char *name, const char *value, const char *label
 		p = strstr(label, AUTOBOOT_PATH) + strlen(AUTOBOOT_PATH);
 		strcat(clabel, p);
 	}
-	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked?ITEM_CHECKED:"", clabel, (!sufix)?"<br>":sufix);
+	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
 	strcat(buffer, templn);
 }
 
