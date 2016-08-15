@@ -406,17 +406,17 @@ static void build_blank_iso(char *title_id)
 
 	buf[3] = 2;
 	buf[0x17] = 0x3F;
-	strcpy((char *)buf+0x800, "PlayStation3");
-	memcpy(buf+0x810, title_id, 4);
+	strcpy((char *)buf + 0x800, "PlayStation3");
+	memcpy(buf + 0x810, title_id, 4);
 	buf[0x814] = '-';
-	memcpy(buf+0x815, title_id+4, 5);
-	memset(buf+0x81A, ' ', 0x16);
+	memcpy(buf + 0x815, title_id+4, 5);
+	memset(buf + 0x81A, ' ', 0x16);
 	buf[0x8000] = 1;
-	strcpy((char *)buf+0x8001, "CD001");
+	strcpy((char *)buf + 0x8001, "CD001");
 	buf[0x8006] = 1;
-	memset(buf+0x8008, ' ', 0x20);
-	memcpy(buf+0x8028, "PS3VOLUME", 9);
-	memset(buf+0x8031, ' ', 0x17);
+	memset(buf + 0x8008, ' ', 0x20);
+	memcpy(buf + 0x8028, "PS3VOLUME", 9);
+	memset(buf + 0x8031, ' ', 0x17);
 	buf[0x8050] = buf[0x8057] = 0x40;
 	buf[0x8078] = buf[0x807B] = buf[0x807C] = buf[0x807F] = 1;
 	buf[0x8081] = buf[0x8082] = 8;
@@ -433,15 +433,15 @@ static void build_blank_iso(char *title_id)
 	buf[0x80B2] = 0x2B;
 	buf[0x80B3] = buf[0x80B5] = 2;
 	buf[0x80B8] = buf[0x80BB] = buf[0x80BC] = 1;
-	memcpy(buf+0x80be, "PS3VOLUME", 9);
-	memset(buf+0x80C7, ' ', 0x266);
-	strcpy((char *)buf+0x832d, "2013111105051300");
-	memset(buf+0x833e, '0', 0x10);
-	memset(buf+0x834f, '0', 0x10);
-	memset(buf+0x8360, '0', 0x10);
+	memcpy(buf + 0x80be, "PS3VOLUME", 9);
+	memset(buf + 0x80C7, ' ', 0x266);
+	strcpy((char *)buf + 0x832d, "2013111105051300");
+	memset(buf + 0x833e, '0', 0x10);
+	memset(buf + 0x834f, '0', 0x10);
+	memset(buf + 0x8360, '0', 0x10);
 	buf[0x8371] = 1;
 	buf[0x8800] = 2;
-	strcpy((char *)buf+0x8801, "CD001");
+	strcpy((char *)buf + 0x8801, "CD001");
 	buf[0x8806] = 1;
 	buf[0x8829] = 'P';
 	buf[0x882B] = 'S';
@@ -453,7 +453,7 @@ static void build_blank_iso(char *title_id)
 	buf[0x8837] = 'M';
 	buf[0x8839] = 'E';
 	buf[0x8850] = buf[0x8857] = 0x40;
-	strcpy((char *)buf+0x8858, "%/@");
+	strcpy((char *)buf + 0x8858, "%/@");
 	buf[0x8878] = buf[0x887B] = buf[0x887C] = buf[0x887F] = 1;
 	buf[0x8881] = buf[0x8882] = 8;
 	buf[0x8884] = buf[0x888B] = 0xA;
@@ -469,14 +469,14 @@ static void build_blank_iso(char *title_id)
 	buf[0x88B2] = 0x2B;
 	buf[0x88B3] = buf[0x88B5] = 2;
 	buf[0x88B8] = buf[0x88BB] = buf[0x88BC] = 1;
-	memcpy(buf+0x88BF, buf+0x8829, 17); // 'P S 3 V O L U M E'
-	strcpy((char *)buf+0x8B2D, "2013111105051300");
-	memset(buf+0x8B3E, '0', 0x10);
-	memset(buf+0x8B4F, '0', 0x10);
-	memset(buf+0x8B60, '0', 0x10);
+	memcpy(buf + 0x88BF, buf + 0x8829, 17); // 'P S 3 V O L U M E'
+	strcpy((char *)buf + 0x8B2D, "2013111105051300");
+	memset(buf + 0x8B3E, '0', 0x10);
+	memset(buf + 0x8B4F, '0', 0x10);
+	memset(buf + 0x8B60, '0', 0x10);
 	buf[0x8B71] = 1;
 	buf[0x9000] = 0xFF;
-	strcpy((char *)buf+0x9001, "CD001");
+	strcpy((char *)buf + 0x9001, "CD001");
 	buf[0xA000] = 1;
 	buf[0xA002] = 0x18;
 	buf[0xA006] = 1;
