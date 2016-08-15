@@ -279,7 +279,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 
 	if(!cd_cache)
 	{
-		sys_addr_t addr = 0;
+		sys_addr_t addr = NULL;
 
 		int ret = sys_memory_allocate(_192KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr);
 		if(ret != 0)
@@ -521,7 +521,7 @@ static int connect_to_remote_server(u8 server_id)
 #endif
 	  )
 	{
-		// check duplicate connection
+		// check duplicated connections
 		if(server_id == 1 && webman_config->netd0 && strcmp(webman_config->neth0, webman_config->neth1) == 0 && webman_config->netp0 == webman_config->netp1) return FAILED;
 
 		if(server_id == 2 && webman_config->netd0 && strcmp(webman_config->neth0, webman_config->neth2) == 0 && webman_config->netp0 == webman_config->netp2) return FAILED;
@@ -554,13 +554,13 @@ static int connect_to_remote_server(u8 server_id)
 				sys_timer_sleep(1);
 				goto reconnect;
 			}
-		}
 
-		// retry using IP of client (/net0 only) - update IP in neth0 if connection is successful
-		if(ns<0 && server_id == 0 && webman_config->netd0 && strcmp(webman_config->allow_ip, webman_config->neth1)!=0 && strcmp(webman_config->allow_ip, webman_config->neth2)!=0)
-		{
-			ns = connect_to_server(webman_config->allow_ip, webman_config->netp0);
-			if(ns >= 0) strcpy(webman_config->neth0, webman_config->allow_ip);
+			// retry using IP of client (/net0 only) - update IP in neth0 if connection is successful
+			if(server_id == 0 && webman_config->netd0 && strcmp(webman_config->allow_ip, webman_config->neth1)!=0 && strcmp(webman_config->allow_ip, webman_config->neth2)!=0)
+			{
+				ns = connect_to_server(webman_config->allow_ip, webman_config->netp0);
+				if(ns >= 0) strcpy(webman_config->neth0, webman_config->allow_ip);
+			}
 		}
 	}
 	return ns;
@@ -630,32 +630,32 @@ static int read_remote_dir(int s, sys_addr_t *data /*netiso_read_dir_result_data
 	//MM_LOG("OK (%i entries)\n", res.dir_size );
 	if(res.dir_size > 0)
 	{
-		sys_addr_t data1=0;
-		for(int64_t retry=16; retry>0; retry--)
+		sys_addr_t data1 = NULL;
+		for(int64_t retry = 16; retry > 0; retry--)
 		{
-			if(res.dir_size>retry*123) res.dir_size=retry*123;
+			if(res.dir_size > (retry * 123)) res.dir_size = retry * 123;
 
 			len = (sizeof(netiso_read_dir_result_data)*res.dir_size);
-			int len2= ((len+_64KB_)/_64KB_)*_64KB_;
+			int len2 = ((len + _64KB_) / _64KB_) * _64KB_;
 			if(sys_memory_allocate(len2, SYS_MEMORY_PAGE_SIZE_64K, &data1)==0)
 			{
-				*data=data1;
-				u8 *data2=(u8*)data1;
+				*data = data1;
+				u8 *data2 = (u8*)data1;
 
 				if(recv(s, data2, len, MSG_WAITALL) != len)
 				{
 					sys_memory_free(data1);
-					*data=NULL;
+					*data = NULL;
 					return FAILED;
 				}
 				break;
 			}
 			else
-				*data=NULL;
+				*data = NULL;
 		}
 	}
 	else
-		*data=NULL;
+		*data = NULL;
 
 	*abort_connection = 0;
 
@@ -678,11 +678,11 @@ static int copy_net_file(char *local_file, char *remote_file, int ns, uint64_t m
 
 	if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
 
-	sys_addr_t buf1 = 0; uint64_t chunk_size = _64KB_;
+	sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
 
-	if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &buf1)==0)
+	if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
 	{
-		char *chunk=(char*)buf1;
+		char *chunk=(char*)sysmem;
 
 		if(cellFsOpen(local_file, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdw, NULL, 0)==CELL_FS_SUCCEEDED)
 		{
@@ -702,13 +702,13 @@ static int copy_net_file(char *local_file, char *remote_file, int ns, uint64_t m
 
 			open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
 			cellFsClose(fdw);
-			sys_memory_free(buf1);
+			sys_memory_free(sysmem);
 
 			cellFsChmod(local_file, MODE);
 			return 0;
 		}
 
-		sys_memory_free(buf1);
+		sys_memory_free(sysmem);
 	}
 
 	return FAILED;

@@ -37,20 +37,20 @@ static void setup_parse_settings(char *param)
 
 	char *pos;
 
-	if(strstr(param, "u0=1")) webman_config->usb0=1;
-	if(strstr(param, "u1=1")) webman_config->usb1=1;
-	if(strstr(param, "u2=1")) webman_config->usb2=1;
-	if(strstr(param, "u3=1")) webman_config->usb3=1;
-	if(strstr(param, "u6=1")) webman_config->usb6=1;
-	if(strstr(param, "u7=1")) webman_config->usb7=1;
+	if(strstr(param, "u0=1")) webman_config->usb0 = 1;
+	if(strstr(param, "u1=1")) webman_config->usb1 = 1;
+	if(strstr(param, "u2=1")) webman_config->usb2 = 1;
+	if(strstr(param, "u3=1")) webman_config->usb3 = 1;
+	if(strstr(param, "u6=1")) webman_config->usb6 = 1;
+	if(strstr(param, "u7=1")) webman_config->usb7 = 1;
 
-	if(strstr(param, "x0=1")) webman_config->dev_sd=1;
-	if(strstr(param, "x1=1")) webman_config->dev_ms=1;
-	if(strstr(param, "x2=1")) webman_config->dev_cf=1;
+	if(strstr(param, "x0=1")) webman_config->dev_sd = 1;
+	if(strstr(param, "x1=1")) webman_config->dev_ms = 1;
+	if(strstr(param, "x2=1")) webman_config->dev_cf = 1;
 
-	if(strstr(param, "lp=1")) webman_config->lastp=1;
-	if(strstr(param, "ab=1")) webman_config->autob=1;
-	if(strstr(param, "dy=1")) webman_config->delay=1;
+	if(strstr(param, "lp=1")) webman_config->lastp = 1;
+	if(strstr(param, "ab=1")) webman_config->autob = 1;
+	if(strstr(param, "dy=1")) webman_config->delay = 1;
 
 	//Wait for any USB device to be ready
 	webman_config->bootd=get_valuen(param, "&b=", 0, 30);
@@ -58,16 +58,16 @@ static void setup_parse_settings(char *param)
 	//Wait additionally for each selected USB device to be ready
 	webman_config->boots=get_valuen(param, "&s=", 0, 30);
 
-	if(strstr(param, "bl=1")) webman_config->blind=1;
+	if(strstr(param, "bl=1")) webman_config->blind = 1;
 	if(webman_config->blind)
-		enable_dev_blind(NULL);
+		enable_dev_blind(NO_MSG);
 	else
-		{system_call_3(SC_FS_UMOUNT, (u64)(char*)"/dev_blind", 0, 1);}
+		disable_dev_blind();
 
-	if(strstr(param, "ns=1")) webman_config->noset=1;
-	if(strstr(param, "ng=1")) webman_config->nogrp=1;
+	if(strstr(param, "ns=1")) webman_config->noset = 1;
+	if(strstr(param, "ng=1")) webman_config->nogrp = 1;
 #ifdef NOSINGSTAR
-	if(strstr(param, "ss=1")) {webman_config->noss=1; no_singstar_icon();}
+	if(strstr(param, "ss=1")) {webman_config->noss = 1; no_singstar_icon();}
 #endif
 
 #ifdef COBRA_ONLY
@@ -82,10 +82,10 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "ps3=1")) webman_config->cmask|=PS3;
 	if(!strstr(param, "ps2=1")) webman_config->cmask|=PS2;
 
-	if(strstr(param, "psl=1")) webman_config->pspl=1;
-	if(strstr(param, "p2l=1")) webman_config->ps2l=1;
-	if(strstr(param, "rxv=1")) webman_config->rxvid=1;
-	if(strstr(param, "pse=1")) webman_config->ps1emu=1;
+	if(strstr(param, "psl=1")) webman_config->pspl = 1;
+	if(strstr(param, "p2l=1")) webman_config->ps2l = 1;
+	if(strstr(param, "rxv=1")) webman_config->rxvid = 1;
+	if(strstr(param, "pse=1")) webman_config->ps1emu = 1;
 
 	webman_config->combo=webman_config->combo2=0;
 	if(!strstr(param, "pfs=1")) webman_config->combo|=FAIL_SAFE;
@@ -105,9 +105,9 @@ static void setup_parse_settings(char *param)
 #ifdef COBRA_ONLY
 	if(!strstr(param, "pdc=1")) webman_config->combo|=DISACOBRA;
 
-	if(strstr(param, "bus=1")) webman_config->bus=1;
+	if(strstr(param, "bus=1")) webman_config->bus = 1;
 #endif
-	if(strstr(param, "apd=1")) webman_config->autoplay=1;
+	if(strstr(param, "apd=1")) webman_config->autoplay = 1;
 #ifdef REX_ONLY
 	if(!strstr(param, "pr0=1")) webman_config->combo2|=REBUGMODE;
 	if(!strstr(param, "pr1=1")) webman_config->combo2|=NORMAMODE;
@@ -134,15 +134,15 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "vrc=1")) webman_config->combo2|=VIDRECORD;
 #endif
 
-	if( strstr(param, "wmdn" )) webman_config->wmdn=1;
-	if( strstr(param, "tid=1")) webman_config->tid=1;
-	if(!strstr(param, "sfo=1")) webman_config->use_filename=1;
-	if( strstr(param, "pl=1" )) webman_config->poll=1;
-	if( strstr(param, "ft=1" )) webman_config->ftpd=1;
-	if( strstr(param, "np=1" )) webman_config->nopad=1;
-	if( strstr(param, "nc=1" )) {webman_config->nocov=1; if(strstr(param, "ic=2")) webman_config->nocov=2;}
+	if( strstr(param, "wmdn=1")) webman_config->wmdn = 1;
+	if( strstr(param, "tid=1"))  webman_config->tid  = 1;
+	if(!strstr(param, "sfo=1"))  webman_config->use_filename = 1;
+	if( strstr(param, "pl=1" ))  webman_config->poll = 1;
+	if( strstr(param, "ft=1" ))  webman_config->ftpd = 1;
+	if( strstr(param, "np=1" ))  webman_config->nopad = 1;
+	if( strstr(param, "nc=1" )) {webman_config->nocov = 1; if(strstr(param, "ic=2")) webman_config->nocov=2;}
 
-	if( strstr(param, "nd=1" )) webman_config->netd=1;
+	if( strstr(param, "nd=1" )) webman_config->netd = 1;
 	webman_config->netp=get_valuen16(param, "netp=");
 	if(webman_config->netp == 0) webman_config->netp = NETPORT;
 
@@ -153,26 +153,26 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "nf=3")) webman_config->fixgame=FIX_GAME_DISABLED;
 #endif
 
-	if(strstr(param, "nsp=1")) webman_config->nospoof=1; //don't spoof fw version
-	if(c_firmware==4.53f) webman_config->nospoof=1;
+	if(strstr(param, "nsp=1")) webman_config->nospoof = 1; //don't spoof fw version
+	if(c_firmware==4.53f) webman_config->nospoof = 1;
 
-	if(strstr(param, "fc=1")) webman_config->fanc=1;
+	if(strstr(param, "fc=1")) webman_config->fanc = 1;
 
 	webman_config->temp1=MY_TEMP;
 
 	webman_config->minfan=get_valuen(param, "mfan=", MIN_FANSPEED, 99); //%
 
 	webman_config->bind=0;
-	if(strstr(param, "bind")) webman_config->bind=1;
+	if(strstr(param, "bind")) webman_config->bind = 1;
 
 	pos = strstr(param, "pwd=");
 	if(pos) get_value(webman_config->ftp_password, pos + 4, 20);
 
 	webman_config->refr=0;
-	if(strstr(param, "refr")) webman_config->refr=1;
+	if(strstr(param, "refr=1")) webman_config->refr = 1;
 
 #ifdef LAUNCHPAD
-	if(strstr(param, "lx=1")) webman_config->launchpad_xml=1;
+	if(strstr(param, "lx=1")) webman_config->launchpad_xml = 1;
 #endif
 
 	webman_config->temp0=0;
@@ -196,7 +196,7 @@ static void setup_parse_settings(char *param)
 		restore_fan(0); //restore syscon fan control mode
 
 	webman_config->warn=0;
-	if(strstr(param, "warn=1")) webman_config->warn=1;
+	if(strstr(param, "warn=1")) webman_config->warn = 1;
 
 	webman_config->foot=get_valuen(param, "fp=", 0, 6);
 
@@ -209,8 +209,8 @@ static void setup_parse_settings(char *param)
 #endif
 
 #ifdef SPOOF_CONSOLEID
-	if(strstr(param, "id1=1"))  webman_config->sidps=1; //spoof IDPS
-	if(strstr(param, "id2=1"))  webman_config->spsid=1; //spoof PSID
+	if(strstr(param, "id1=1"))  webman_config->sidps = 1; //spoof IDPS
+	if(strstr(param, "id2=1"))  webman_config->spsid = 1; //spoof PSID
 
 	pos = strstr(param, "vID1=");
 	if(pos) get_value(webman_config->vIDPS1, pos + 5, 16);
@@ -264,12 +264,12 @@ static void setup_parse_settings(char *param)
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 	{
-		if(strstr(param, "nd0="))  webman_config->netd0=1;
-		if(strstr(param, "nd1="))  webman_config->netd1=1;
-		if(strstr(param, "nd2="))  webman_config->netd2=1;
+		if(strstr(param, "nd0="))  webman_config->netd0 = 1;
+		if(strstr(param, "nd1="))  webman_config->netd1 = 1;
+		if(strstr(param, "nd2="))  webman_config->netd2 = 1;
 #ifdef NET3NET4
-		if(strstr(param, "nd3="))  webman_config->netd3=1;
-		if(strstr(param, "nd4="))  webman_config->netd4=1;
+		if(strstr(param, "nd3="))  webman_config->netd3 = 1;
+		if(strstr(param, "nd4="))  webman_config->netd4 = 1;
 #endif
 		pos = strstr(param, "neth0=");
 		if(pos)
@@ -318,7 +318,7 @@ static void setup_parse_settings(char *param)
 	pos = strstr(param, "uacc=");
 	if(pos) get_value(webman_config->uaccount, pos + 5, 8);
 
-	if(strstr(param, "hm=")) webman_config->homeb=1;
+	if(strstr(param, "hm=")) webman_config->homeb = 1;
 
 	pos = strstr(param, "hurl=");
 	if(pos) get_value(webman_config->home_url, pos + 5, 255);
@@ -341,11 +341,14 @@ static void setup_parse_settings(char *param)
 #endif
 #endif
 
-#ifdef WM_REQUEST
+#if defined(WM_CUSTOM_COMBO) || defined(WM_REQUEST)
 	char command[256];
 	pos = strstr(param, "ccbo="); memset(command, 0, 256);
-	if(pos) get_value(command, pos + 5, 255);
-	savefile((char*)"/dev_hdd0/tmp/wm_custom_combo", command, strlen(command));
+	if(pos) get_value(command, pos + 5, 255); size_t cmdlen = strlen(command);
+ #ifdef WM_CUSTOM_COMBO
+	if(savefile(WM_CUSTOM_COMBO "r2_square", command, cmdlen) != CELL_FS_SUCCEEDED)
+ #endif
+	savefile("/dev_hdd0/tmp/wm_custom_combo", command, cmdlen);
 #endif
 }
 
@@ -748,30 +751,37 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("pld", "1", "PLAY DISC",    " : <b>L2+START</b><br>"
 							  "</td></tr></table>"                             , !(webman_config->combo2 & PLAY_DISC), buffer);
 
-#ifdef WM_REQUEST
-	if(cellFsOpen((char*)"/dev_hdd0/tmp/wm_custom_combo", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+#if defined(WM_CUSTOM_COMBO) || defined(WM_REQUEST)
+	char command[256]; memset(command, 0, 256);
+
+	if(
+ #ifdef WM_CUSTOM_COMBO
+		(cellFsOpen((char*)WM_CUSTOM_COMBO "r2_square", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED) ||
+ #endif
+		(cellFsOpen((char*)"/dev_hdd0/tmp/wm_custom_combo", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+	)
 	{
-		char command[256]; memset(command, 0, 256);
 		cellFsRead(fd, (void *)command, 255, NULL);
 		cellFsClose(fd);
-		sprintf(templn, "&nbsp; &nbsp;" HTML_INPUT("ccbo\" list=\"cmds", "%s", "255", "50") "<br>", command); strcat(buffer, templn);
-
-		strcat(buffer,	"<div style=\"display:none\"><datalist id=\"cmds\">"
-#ifdef PS3_BROWSER
-						"<option>GET /browser.ps3$block_servers</option>"
- #ifdef REMOVE_SYSCALLS
-						"<option>GET /browser.ps3$disable_syscalls?keep_ccapi</option>"
- #endif
- #ifdef XMB_SCREENSHOT
-						"<option>GET /browser.ps3$screenshot_xmb</option>"
- #endif
-#endif
-						"<option>GET /cpursx.ps3?mode</option>"
-#ifdef GET_KLICENSEE
-						"<option>GET /klic.ps3?log</option>"
-#endif
-						"</datalist></div>");
 	}
+
+	sprintf(templn, "&nbsp; &nbsp;" HTML_INPUT("ccbo\" list=\"cmds", "%s", "255", "50") "<br>", command); strcat(buffer, templn);
+
+	strcat(buffer,	"<div style=\"display:none\"><datalist id=\"cmds\">"
+ #ifdef PS3_BROWSER
+					"<option>GET /browser.ps3$block_servers"
+  #ifdef REMOVE_SYSCALLS
+					"<option>GET /browser.ps3$disable_syscalls?keep_ccapi"
+  #endif
+  #ifdef XMB_SCREENSHOT
+					"<option>GET /browser.ps3$screenshot_xmb"
+  #endif
+ #endif
+					"<option>GET /cpursx.ps3?mode"
+ #ifdef GET_KLICENSEE
+					"<option>GET /klic.ps3?log"
+ #endif
+					"</datalist></div>");
 #endif // #ifdef WM_REQUEST
 
 	sprintf(templn, HTML_RED_SEPARATOR "<input type=\"submit\" value=\" %s \"/>"
@@ -816,77 +826,77 @@ static void reset_settings()
 {
 	memset(webman_config, 0, sizeof(WebmanCfg));
 
-	webman_config->usb0=1;
-	webman_config->usb1=1;
-	//webman_config->usb2=0;
-	//webman_config->usb3=0;
-	webman_config->usb6=1;
-	//webman_config->usb7=0;
+	webman_config->usb0 = 1;
+	webman_config->usb1 = 1;
+	//webman_config->usb2 = 0;
+	//webman_config->usb3 = 0;
+	webman_config->usb6 = 1;
+	//webman_config->usb7 = 0;
 
-	//webman_config->dev_sd=0;
-	//webman_config->dev_ms=0;
-	//webman_config->dev_cf=0;
+	//webman_config->dev_sd = 0;
+	//webman_config->dev_ms = 0;
+	//webman_config->dev_cf = 0;
 
-	//webman_config->lastp=0;      //disable last play
-	//webman_config->autob=0;      //disable check for AUTOBOOT.ISO
-	//webman_config->delay=0;      //don't delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)
+	//webman_config->lastp = 0;      //disable last play
+	//webman_config->autob = 0;      //disable check for AUTOBOOT.ISO
+	//webman_config->delay = 0;      //don't delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)
 
-	//webman_config->bootd=0;      //don't wait for any USB device to be ready
-	webman_config->boots=3;        //wait 3 additional seconds for each selected USB device to be ready
+	//webman_config->bootd = 0;      //don't wait for any USB device to be ready
+	webman_config->boots = 3;        //wait 3 additional seconds for each selected USB device to be ready
 
-	//webman_config->nogrp=0;      //group content on XMB
-	//webman_config->wmdn=0;       //enable start up message (webMAN Loaded!)
-	//webman_config->tid=0;        //don't include the ID as part of the title of the game
-	//webman_config->noset=0;      //enable webMAN Setup entry in "webMAN Games"
+	//webman_config->nogrp = 0;      //group content on XMB
+	//webman_config->wmdn = 0;       //enable start up message (webMAN Loaded!)
+	//webman_config->tid = 0;        //don't include the ID as part of the title of the game
+	//webman_config->noset = 0;      //enable webMAN Setup entry in "webMAN Games"
 
 #ifdef COBRA_ONLY
-	webman_config->cmask=0;
+	webman_config->cmask = 0;
 #else
-	webman_config->cmask=(PSP | PS1 | BLU | DVD);
+	webman_config->cmask = (PSP | PS1 | BLU | DVD);
 #endif
 
-	webman_config->poll=1;       //disable USB polling
-	//webman_config->nopad=0;    //enable all PAD shortcuts
-	//webman_config->nocov=0;    //enable multiMAN covers    (0=Use MM covers, 1=Use ICON0.PNG, 2=No game icons)
+	webman_config->poll = 1;       //disable USB polling
+	//webman_config->nopad = 0;    //enable all PAD shortcuts
+	//webman_config->nocov = 0;    //enable multiMAN covers    (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons)
 
-	webman_config->fanc=1;       //fan control enabled
-	//webman_config->temp0=0;    //auto
-	webman_config->temp1=MY_TEMP;
-	webman_config->manu=35;      //manual temp
-	webman_config->ps2temp=37;   //ps2 temp
+	webman_config->fanc = 1;       //fan control enabled
+	//webman_config->temp0 = 0;    //auto
+	webman_config->temp1 = MY_TEMP;
+	webman_config->manu = 35;      //manual temp
+	webman_config->ps2temp = 37;   //ps2 temp
 
-	webman_config->minfan=DEFAULT_MIN_FANSPEED; // %
+	webman_config->minfan = DEFAULT_MIN_FANSPEED; // %
 
-	//webman_config->bind=0;       //enable remote access to FTP/WWW services
-	//webman_config->ftpd=0;       //enable ftp server
-	//webman_config->refr=0;       //enable content scan on startup
-	//webman_config->ftp_password = "";
+	//webman_config->bind = 0;       //enable remote access to FTP/WWW services
+	//webman_config->ftpd = 0;       //enable ftp server
+	//webman_config->refr = 0;       //enable content scan on startup
+	//webman_config->ftp_password  =  "";
 
-	//webman_config->netd0    = webman_config->netd1    = webman_config->netd2    = webman_config->netd3    = webman_config->netd4=0;
-	//webman_config->neth0[0] = webman_config->neth1[0] = webman_config->neth2[0] = webman_config->neth3[0] = webman_config->neth4[0]=0;
+	//webman_config->netd0    = webman_config->netd1    = webman_config->netd2    = webman_config->netd3    = webman_config->netd4    = 0;
+	//webman_config->neth0[0] = webman_config->neth1[0] = webman_config->neth2[0] = webman_config->neth3[0] = webman_config->neth4[0] = NULL;
 	webman_config->netp = webman_config->netp0 = webman_config->netp1 = webman_config->netp2 = webman_config->netp3 = webman_config->netp4 = NETPORT;
 
-	webman_config->foot=1;       //MIN
-	webman_config->nospoof=1;    //don't spoof fw version
+	webman_config->foot = 1;       //MIN
+	webman_config->nospoof = 1;    //don't spoof fw version
 
-	webman_config->pspl=1;       //Show PSP Launcher
-	webman_config->ps2l=1;       //Show PS2 Classic Launcher
+	webman_config->pspl = 1;       //Show PSP Launcher
+	webman_config->ps2l = 1;       //Show PS2 Classic Launcher
 
-	//webman_config->spp=0;        //disable removal of syscalls
-	webman_config->fixgame=FIX_GAME_AUTO;
+	//webman_config->spp = 0;        //disable removal of syscalls
+	webman_config->fixgame = FIX_GAME_AUTO;
 
-	//webman_config->sidps=0;      //spoof IDPS
-	//webman_config->spsid=0;      //spoof PSID
+	//webman_config->sidps = 0;      //spoof IDPS
+	//webman_config->spsid = 0;      //spoof PSID
 
-	//webman_config->vIDPS1[0]=webman_config->vIDPS2[0]=0;
-	//webman_config->vPSID1[0]=webman_config->vPSID2[0]=0;
+	//webman_config->vIDPS1[0] = webman_config->vIDPS2[0] = 0;
+	//webman_config->vPSID1[0] = webman_config->vPSID2[0] = 0;
 
-	//webman_config->bus=0;        //enable reset USB bus
+	//webman_config->bus = 0;        //enable reset USB bus
 
-	//webman_config->autoplay=0;   //enable global autoplay
+	//webman_config->autoplay = 0;   //enable global autoplay
 
-	webman_config->combo=DISACOBRA; //disable combo for cobra toggle
-	webman_config->combo2|=(REBUGMODE|NORMAMODE|DEBUGMENU|PS2SWITCH|VIDRECORD); //disable combos for rebug/ps2 switch/video record
+	webman_config->combo   = DISACOBRA; //disable combo for cobra toggle
+	webman_config->combo2 |= (REBUGMODE|NORMAMODE|DEBUGMENU|PS2SWITCH|VIDRECORD); //disable combos for rebug/ps2 switch/video record
 
 	//webman_config->rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_SMALL_512K_30FPS;
 	//webman_config->rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_96K;
@@ -909,10 +919,10 @@ static void reset_settings()
 
 	// set default language
 	struct CellFsStat buf;
-	int fdwm=0; cellFsStat(WMCONFIG, &buf);
+	int fdwm = 0; cellFsStat(WMCONFIG, &buf);
 
 	// read current settings
-	for(u8 n = 0; n < 10; n++)
+	for(u8 retry = 0; retry < 10; retry++)
 	{
 		if(cellFsOpen(WMCONFIG, CELL_FS_O_RDONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
@@ -920,6 +930,7 @@ static void reset_settings()
 			cellFsClose(fdwm);
 			break;
 		}
+
 		sys_timer_usleep(500000);
 	}
 
@@ -928,13 +939,13 @@ static void reset_settings()
 #endif
 
 	// set default autoboot path
-	if(strlen(webman_config->autoboot_path)==0) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
+	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
-	if(webman_config->warn>1) webman_config->warn=0;
+	if(webman_config->warn>1) webman_config->warn = 0;
 	webman_config->minfan=RANGE(webman_config->minfan, MIN_FANSPEED, 99);
 
 	// settings
 	save_settings();
 
-	profile=webman_config->profile;
+	profile = webman_config->profile;
 }

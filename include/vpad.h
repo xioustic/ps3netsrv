@@ -32,7 +32,7 @@ static int32_t register_ldd_controller(void)
     capability = 0xFFFF; // CELL_PAD_CAPABILITY_PS3_CONFORMITY | CELL_PAD_CAPABILITY_PRESS_MODE | CELL_PAD_CAPABILITY_HP_ANALOG_STICK | CELL_PAD_CAPABILITY_ACTUATOR;
     sys_pad_dbg_ldd_register_controller(data, (int32_t *)&(vpad_handle), 5, (uint32_t)capability << 1);
     //vpad_handle = cellPadLddRegisterController();
-    sys_timer_usleep(1000*500); // allow some time for ps3 to register ldd controller
+    sys_timer_usleep(500000); // allow some time for ps3 to register ldd controller
 
     if (vpad_handle < 0) return(vpad_handle);
 
@@ -71,16 +71,16 @@ static void parse_pad_command(char *param, u8 is_combo)
 	data.len = CELL_PAD_MAX_CODES;
 
 	// set default controller values
-	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X] = 0x0080;
-	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y] = 0x0080;
+	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]  = // 0x0080;
+	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]  = // 0x0080;
 
-	data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = 0x0080;
-	data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] = 0x0080;
+	data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = // 0x0080;
+	data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] =    0x0080;
 
-	data.button[CELL_PAD_BTN_OFFSET_SENSOR_X] = 0x0200;
-	data.button[CELL_PAD_BTN_OFFSET_SENSOR_Y] = 0x0200;
-	data.button[CELL_PAD_BTN_OFFSET_SENSOR_Z] = 0x0200;
-	data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] = 0x0200;
+	data.button[CELL_PAD_BTN_OFFSET_SENSOR_X] = // 0x0200;
+	data.button[CELL_PAD_BTN_OFFSET_SENSOR_Y] = // 0x0200;
+	data.button[CELL_PAD_BTN_OFFSET_SENSOR_Z] = // 0x0200;
+	data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] =    0x0200;
 
 	if(strcasestr(param, "off")) unregister_ldd_controller(); else
 	{
@@ -96,18 +96,18 @@ static void parse_pad_command(char *param, u8 is_combo)
 		{
 			// pad.ps3?analogL_up
 			if(strcasestr(param, "up"   )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y] = 0x00;}
-			if(strcasestr(param, "down" )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y] = 0xff;}
+			if(strcasestr(param, "down" )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y] = 0xFF;}
 			if(strcasestr(param, "left" )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X] = 0x00;}
-			if(strcasestr(param, "right")) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X] = 0xff;}
+			if(strcasestr(param, "right")) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X] = 0xFF;}
 			delay = 150000;
 		}
 		else if (strcasestr(param, "analogR"))
 		{
 			// pad.ps3?analogR_up
 			if(strcasestr(param, "up"   )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] = 0x00;}
-			if(strcasestr(param, "down" )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] = 0xff;}
+			if(strcasestr(param, "down" )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] = 0xFF;}
 			if(strcasestr(param, "left" )) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = 0x00;}
-			if(strcasestr(param, "right")) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = 0xff;}
+			if(strcasestr(param, "right")) {data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = 0xFF;}
 			delay = 150000;
 		}
 		else
@@ -144,16 +144,16 @@ static void parse_pad_command(char *param, u8 is_combo)
 			memset(&data, 0, sizeof(CellPadData));
 			data.len = CELL_PAD_MAX_CODES;
 
-			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X] = 0x0080;
-			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y] = 0x0080;
+			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]  = // 0x0080;
+			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]  = // 0x0080;
 
-			data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = 0x0080;
-			data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] = 0x0080;
+			data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = // 0x0080;
+			data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] =    0x0080;
 
-			data.button[CELL_PAD_BTN_OFFSET_SENSOR_X] = 0x0200;
-			data.button[CELL_PAD_BTN_OFFSET_SENSOR_Y] = 0x0200;
-			data.button[CELL_PAD_BTN_OFFSET_SENSOR_Z] = 0x0200;
-			data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] = 0x0200;
+			data.button[CELL_PAD_BTN_OFFSET_SENSOR_X] = // 0x0200;
+			data.button[CELL_PAD_BTN_OFFSET_SENSOR_Y] = // 0x0200;
+			data.button[CELL_PAD_BTN_OFFSET_SENSOR_Z] = // 0x0200;
+			data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] =    0x0200;
 
 			// send pad data to virtual pad
 			cellPadLddDataInsert(vpad_handle, &data);
@@ -164,9 +164,9 @@ static void parse_pad_command(char *param, u8 is_combo)
 
 static CellPadData pad_read(void)
 {
-	CellPadData pad_data; pad_data.len=0;
+	CellPadData pad_data; pad_data.len = 0;
 
-	for(u8 n=0;n<10;n++)
+	for(u8 n = 0;n < 10; n++)
 	{
 		if(cellPadGetData(0, &pad_data) != CELL_PAD_OK || pad_data.len == 0)
 			if(cellPadGetData(1, &pad_data) != CELL_PAD_OK || pad_data.len == 0)

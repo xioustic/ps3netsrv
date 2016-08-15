@@ -50,7 +50,7 @@ typedef struct
 	5 -> mode 0x14 for data, 0x10 for audio
 	6 -> track number (from 1)
 	7 -> 0
-	8, 9, 10, 11 -> countain an u32 with the LBA
+	8, 9, 10, 11 -> contain an u32 with the LBA
 
 	....
 	....

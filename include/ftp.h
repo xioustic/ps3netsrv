@@ -16,7 +16,7 @@ static void absPath(char* absPath_s, const char* path, const char* cwd)
 		strcat(absPath_s, path);
 	}
 
-	if(islike(absPath_s, "/dev_blind") && !isDir("/dev_blind")) enable_dev_blind(NULL);
+	if(islike(absPath_s, "/dev_blind") && !isDir("/dev_blind")) enable_dev_blind(NO_MSG);
 }
 
 static int ssplit(const char* str, char* left, int lmaxlen, char* right, int rmaxlen)
@@ -321,9 +321,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(strcasecmp(filename, "OFF") == 0) {if(!rw_flash) continue;}
 
 							if(rw_flash)
-								{system_call_3(SC_FS_UMOUNT, (u64)(char*)"/dev_blind", 0, 1);}
+								disable_dev_blind();
 							else
-								enable_dev_blind(NULL);
+								enable_dev_blind(NO_MSG);
 						}
 #ifndef LITE_EDITION
  #ifdef PKG_HANDLER
@@ -662,7 +662,7 @@ pasv_again:
 									//if(buffer_size >= _64KB_)
 									if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
 									{
-										char *buffer2= (char*)sysmem;
+										char *buffer2 = (char*)sysmem;
 
 										u64 read_e = 0, pos; //, write_e
 
@@ -688,7 +688,7 @@ pasv_again:
 													break;
 											}
 											else
-												{rr=-2;break;}
+												{rr=-2; break;}
 										}
 										sys_memory_free(sysmem);
 									}
@@ -1072,7 +1072,7 @@ pasv_again:
 
 static void ftpd_thread(uint64_t arg)
 {
-	int list_s=FAILED;
+	int list_s = FAILED;
 relisten:
 	if(working) list_s = slisten(FTPPORT, 4);
 	else goto end;
@@ -1102,7 +1102,7 @@ relisten:
 			if((sys_net_errno==SYS_NET_EBADF) || (sys_net_errno==SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s=FAILED;
+				list_s = FAILED;
 				if(working) goto relisten;
 				else break;
 			}

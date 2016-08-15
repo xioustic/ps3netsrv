@@ -13,7 +13,7 @@ static int set_gamedata_status(u8 status, bool do_mount)
 
 #ifndef COBRA_ONLY
 	sprintf(gamei_path, "/%s", "/dev_hdd0/game");
-	if(do_mount) max_mapped=0;
+	if(do_mount) max_mapped = 0;
 #endif
 
 	if(status)
@@ -25,10 +25,10 @@ static int set_gamedata_status(u8 status, bool do_mount)
 		}
 		else
 		{
-			for(n=0; n<8; n++) {sprintf(gamei_path, "/dev_usb00%i/GAMEI", n); if(isDir(gamei_path)) break;}
+			for(n = 0; n < 8; n++) {sprintf(gamei_path, "/dev_usb00%i/GAMEI", n); if(isDir(gamei_path)) break;}
 			if(n>7)
 			{
-				for(n=0; n<8; n++) {sprintf(gamei_path, "/dev_usb00%i", n); if(isDir(gamei_path)) break;}
+				for(n = 0; n < 8; n++) {sprintf(gamei_path, "/dev_usb00%i", n); if(isDir(gamei_path)) break;}
 				if(n<8) {sprintf(gamei_path, "/dev_usb00%i/GAMEI", n); if(cellFsMkdir((char*)gamei_path, MODE)!=CELL_FS_SUCCEEDED) n=99;}
 			}
 		}

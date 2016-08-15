@@ -255,15 +255,15 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update);
 
 uint64_t getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 start)
 {
-	u16 c=0; u32 lba=0;
-	for(u16 n=start+0x1F; n<n1-n2; n++)
+	u16 c = 0; u32 lba = 0;
+	for(u16 n = start + 0x1F; n < (n1 - n2); n++)
 	{
-		c=0; while(s1[n+c]==s2[c] && c<n2) c++;
-		if(c==n2)
+		c = 0; while(s1[n + c] == s2[c] && c < n2) c++;
+		if(c == n2)
 		{
-			while(n>0x1D && s1[n--]!=0x01); n-=0x1C;
-			lba=(s1[n+0]&0xFF)+(s1[n+1]&0xFF)*0x100UL+(s1[n+2]&0xFF)*0x10000UL+(s1[n+3]&0xFF)*0x1000000UL;
-			start=n+0x1C+n2; return lba;
+			while(n > 0x1D && s1[n--]!=0x01); n-=0x1C;
+			lba = (s1[n+0] & 0xFF) + (s1[n+1] & 0xFF) * 0x100UL + (s1[n+2] & 0xFF) * 0x10000UL + (s1[n+3] & 0xFF) * 0x1000000UL;
+			start = n + 0x1C + n2; return lba;
 		}
 	}
 	return 0;
@@ -289,11 +289,11 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 		uint64_t chunk_size=_4KB_; char chunk[chunk_size], ps3_sys_version[8];
 		uint64_t bytes_read = 0, lba = 0, pos=0xA000ULL;
 
-		bool fix_sfo=true, fix_eboot=true, fix_ver=false;
+		bool fix_sfo = true, fix_eboot = true, fix_ver = false;
 
 		uint64_t size = buf.st_size;
-		if(maxbytes>0 && size>maxbytes) size=maxbytes;
-		if(size>pos) size-=pos; else size=0;
+		if(maxbytes > 0 && size > maxbytes) size = maxbytes;
+		if(size > pos) size -= pos; else size = 0;
 
 		while(size>0ULL)
 		{
@@ -308,7 +308,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 				if(lba)
 				{
-					lba*=0x800ULL; fix_sfo=false;
+					lba*=0x800ULL; fix_sfo = false;
 					cellFsLseek(fd, lba, CELL_FS_SEEK_SET, &bytes_read);
 					cellFsRead(fd, (void *)&chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
@@ -317,7 +317,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 					if(patch_update)
 					{
 						sprintf(update_path, "%s%s/USRDIR/EBOOT.BIN", HDD0_GAME_DIR, titleID); // has update on hdd0?
-						if(file_exists(update_path)) fix_ver=false;
+						if(file_exists(update_path)) fix_ver = false;
 					}
 
 					if(fix_ver)
@@ -339,7 +339,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 			u16 start, offset;
 
-			for(u8 t=(fix_eboot?0:1);t<5;t++)
+			for(u8 t = (fix_eboot ? 0 : 1); t < 5; t++)
 			{
 				cellFsLseek(fd, pos, CELL_FS_SEEK_SET, &bytes_read);
 				cellFsRead(fd, chunk, chunk_size, &bytes_read); if(!bytes_read) break;
@@ -359,7 +359,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 					if(lba)
 					{
-						if(t==0) fix_eboot=false;
+						if(t==0) fix_eboot = false;
 
 						lba*=0x800ULL;
 						cellFsLseek(fd, lba, CELL_FS_SEEK_SET, &bytes_read);

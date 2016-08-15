@@ -74,7 +74,7 @@ static void reset_usb_ports(char *_path)
 	sys_timer_sleep(3);
 
 	// send fake insert event for the other usb devices
-	for(u8 f0=0; f0<8; f0++)
+	for(u8 f0 = 0; f0 < 8; f0++)
 	{
 		if(f0!=indx) fake_insert_event((f0<6)?USB_MASS_STORAGE_1(f0):USB_MASS_STORAGE_2(f0), DEVICE_TYPE_USB);
 	}

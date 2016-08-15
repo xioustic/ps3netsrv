@@ -48,7 +48,7 @@ var s,m;
 window.addEventListener('contextmenu',function(e){
 
 	if(s)s.color='#ccc';
-	t=e.target,s=t.style,c=t.className,m=mnu.style;if(c=='gi'){p=t.parentNode.pathname}else{p=t.pathname}p=p.replace('/mount.ps3','');
+	t=e.target,s=t.style,c=t.className,m=mnu.style;if(c=='gi'){p=t.parentNode.pathname}else{p=t.pathname}if(typeof(p)!='string')return;p=p.replace('/mount.ps3','');
 	if(c=='w'||c=='d'||c=='gi'||t.parentNode.className=='gn'){
 		e.preventDefault();
 		s.color='#fff',b='block',n='none';
@@ -69,4 +69,4 @@ window.addEventListener('contextmenu',function(e){
 },false);
 
 // Clear menu
-window.onclick=function(e){if(m)m.display='none';}
+window.onclick=function(e){if(m)m.display='none';t=e.target;if(t.id.indexOf('im')==0||typeof(t.href)=='string')wmsg.style.display='block';}

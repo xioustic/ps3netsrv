@@ -398,7 +398,7 @@ static char *get_blank_iso_path(void)
 
 static void build_blank_iso(char *title_id)
 {
-	sys_addr_t sysmem=0;
+	sys_addr_t sysmem = NULL;
 	if(sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0) return;
 	uint8_t *buf = (uint8_t*)sysmem;
 
@@ -530,10 +530,11 @@ static void build_blank_iso(char *title_id)
 	buf[0xC83F] = buf[0xC841] = 2;
 	buf[0xC844] = buf[0xC847] = buf[0xC848] = buf[0xC849] = 1;
 
-	int f=0;
-	cellFsOpen((char*)"/dev_hdd0/vsh/task.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &f, NULL, 0);
-	cellFsWrite(f, buf, _128KB_, NULL);
-	cellFsClose(f);
+	int fd = 0;
+	cellFsOpen((char*)"/dev_hdd0/vsh/task.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, NULL, 0);
+	cellFsWrite(fd, buf, _128KB_, NULL);
+	cellFsClose(fd);
+
 	if(sysmem) sys_memory_free(sysmem);
 	return;
 }
@@ -1134,14 +1135,14 @@ int cobra_cd_read(uint32_t handle, void *buf, uint32_t sector, uint32_t count, i
 
 		DPRINTF("Reading sector %08X, try=%d\n", sector, i+1);
 
-		for (int j = 0; j < 10; j++)
+		for (int retry = 0; retry < 10; retry++)
 		{
 			int ret = sys_storage_send_device_command(handle, STORAGE_COMMAND_NATIVE, scsi_cmd, sizeof(scsi_cmd), read_buf, 2352);
 			if (ret == 0)
 			{
 				break;
 			}
-			else if (j == 9)
+			else if (retry == 9)
 			{
 				unsigned int disctype;
 
@@ -1456,13 +1457,10 @@ int cobra_create_mds(char *path, uint64_t size_in_sectors, DiscPhysInfo *layer0,
 */
 int cobra_map_game(char *path, char *title_id, int *special_mode)
 {
-	int sm = 0;
-	int ret;
-	unsigned int real_disctype;
 /*
 	if (!path)
 	{
-		ret = sys_map_path("/dev_bdvd", NULL);
+		int ret = sys_map_path("/dev_bdvd", NULL);
 		if (ret != 0)
 			return ret;
 
@@ -1473,20 +1471,17 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 	if (!title_id || strlen(title_id) != 9)
 		return EINVAL;
 */
-	sm = 0;
+	int sm = 0;
 
 	build_blank_iso(title_id);
 
-	ret = sys_map_path((char*)"/dev_bdvd", path);
+	int ret = sys_map_path((char*)"/dev_bdvd", path);
 	if (ret != 0) return ret;
 
-	if(special_mode)
-		sys_map_path((char*)"/app_home", path);
-	else
-		sys_map_path((char*)"/app_home", NULL);
-
 	sys_map_path((char*)"//dev_bdvd", path);
-	//sys_map_path("//app_home", path);
+	sys_map_path((char*)"/app_home", special_mode ? path : NULL);
+
+	unsigned int real_disctype;
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
@@ -1813,9 +1808,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != 0)
 		return EIO;
 
-	uint64_t pos, nread;
-
-	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) != 0)
+	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, NULL) != 0)
 	{
 		cellFsClose(fd);
 		return EIO;
@@ -1823,7 +1816,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	uint8_t sector[2048];
 
-	if (cellFsRead(fd, sector, sizeof(sector), &nread) != 0)
+	if (cellFsRead(fd, sector, sizeof(sector), NULL) != 0)
 	{
 		cellFsClose(fd);
 		return EIO;
@@ -1845,9 +1838,6 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	if (!root)
 	{
-		char *files[1];
-		int i;
-
 		cobra_get_disc_type(&real_disctype, &effective_disctype, &iso_disctype);
 
 		if (iso_disctype != DISC_TYPE_NONE)
@@ -1857,6 +1847,8 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		{
 			cobra_send_fake_disc_eject_event();
 		}
+
+		char *files[1];
 
 		files[0] = path;
 		ret = sys_storage_ext_mount_dvd_discfile(1, files);
@@ -1871,7 +1863,8 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		cobra_send_fake_disc_insert_event();
 
 		// Wait 0.5 seconds for automounter to mount iso
-		for (i = 0; i < 25; i++)
+		int retry;
+		for (retry = 0; retry < 25; retry++)
 		{
 			if (cellFsStat("/dev_bdvd", &stat) == CELL_FS_SUCCEEDED)
 			{
@@ -1881,7 +1874,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 			sys_timer_usleep(20000);
 		}
 
-		if (i == 25)
+		if (retry == 25)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();
@@ -1965,15 +1958,17 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 								break;
 							}
 						}
-
+/*
 						if (j == NUM_EXTRA_KEYS)
 						{
 							//DPRINTF("No tag found. Game will crash.\n");
 						}
+
 					}
 					else
 					{
 						//DPRINTF("Tag supported natively.\n");
+*/
 					}
 				}
 			}
@@ -2118,35 +2113,7 @@ int cobra_get_usb_device_name(char *mount_point, char *dev_name)
 
 	return ret;
 }
-*/
 
-int cobra_get_ps2_emu_type(void)
-{
-	int ret;
-	uint8_t hw_config[8], ret2;
-
-	ret = sys_get_hw_config(&ret2, hw_config);
-	if (ret != 0)
-	{
-		return ret;
-	}
-
-	if (hw_config[6]&1)
-	{
-		ret = PS2_EMU_HW;
-	}
-	else if (hw_config[0]&0x20)
-	{
-		ret = PS2_EMU_GX;
-	}
-	else
-	{
-		ret = PS2_EMU_SW;
-	}
-
-	return ret;
-}
-/*
 int cobra_get_version(uint16_t *cobra_version, uint16_t *ps3_version)
 {
 	uint32_t version1;
@@ -2211,24 +2178,7 @@ int cobra_get_version(uint16_t *cobra_version, uint16_t *ps3_version)
 
 	return 0;
 }
-*/
-int cobra_read_config(CobraConfig *cfg)
-{
-	if(!cfg) return EINVAL;
 
-	cfg->size = sizeof(CobraConfig);
-	return sys_read_cobra_config(cfg);
-}
-
-int cobra_write_config(CobraConfig *cfg)
-{
-	if(!cfg) return EINVAL;
-
-	cfg->size = sizeof(CobraConfig);
-	return sys_write_cobra_config(cfg);
-}
-
-/*
 int cobra_led_control(unsigned int led)
 {
 	return cobra_usb_command(CMD_LED_CONTROL, TYPE_HOST2DEV, led, NULL, 0);
@@ -2267,6 +2217,49 @@ int cobra_build_netiso_params(void *param_buf, char *server, uint16_t port, char
 	return 0;
 }
 */
+
+int cobra_get_ps2_emu_type(void)
+{
+	int ret;
+	uint8_t hw_config[8], ret2;
+
+	ret = sys_get_hw_config(&ret2, hw_config);
+	if (ret != 0)
+	{
+		return ret;
+	}
+
+	if (hw_config[6]&1)
+	{
+		ret = PS2_EMU_HW;
+	}
+	else if (hw_config[0]&0x20)
+	{
+		ret = PS2_EMU_GX;
+	}
+	else
+	{
+		ret = PS2_EMU_SW;
+	}
+
+	return ret;
+}
+
+int cobra_read_config(CobraConfig *cfg)
+{
+	if(!cfg) return EINVAL;
+
+	cfg->size = sizeof(CobraConfig);
+	return sys_read_cobra_config(cfg);
+}
+
+int cobra_write_config(CobraConfig *cfg)
+{
+	if(!cfg) return EINVAL;
+
+	cfg->size = sizeof(CobraConfig);
+	return sys_write_cobra_config(cfg);
+}
 
 int sys_get_version2(uint16_t *version)
 {

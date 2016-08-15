@@ -612,20 +612,20 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				else if(!extcmp(source, ".bmp", 4))
 				{
 					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/PICTURE");
+						sprintf(target, "%s/PICTURE", "/dev_usb000");
 					else
-						sprintf(target, "/dev_hdd0/PICTURE");
+						sprintf(target, "%s/PICTURE", "/dev_hdd0");
 
 					strcat(target, filename);
 				}
 				else if(strcasestr(source, ".JPG") || strcasestr(source, ".PNG"))
 				{
 					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/PICTURE");
+						sprintf(target, "%s/PICTURE", "/dev_usb000");
 					else if(strstr(source, "BL") || strstr(param, "BC") || strstr(source, "NP"))
 						sprintf(target, "/dev_hdd0/GAMES/covers");
 					else
-						sprintf(target, "/dev_hdd0/PICTURE");
+						sprintf(target, "%s/PICTURE", "/dev_hdd0");
 
 					strcat(target, filename);
 				}
@@ -648,9 +648,9 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				else if(strcasestr(source, ".mp3"))
 				{
 					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/MUSIC");
+						sprintf(target, "%s/MUSIC", "/dev_usb000");
 					else
-						sprintf(target, "/dev_hdd0/MUSIC");
+						sprintf(target, "%s/MUSIC", "/dev_hdd0");
 
 					strcat(target, filename);
 				}
@@ -674,7 +674,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				}
 				else if(!extcmp(source, ".rco", 4) || strstr(param, "/coldboot"))
 				{
-					enable_dev_blind(NULL);
+					enable_dev_blind(NO_MSG);
 					sprintf(target, "/dev_blind/vsh/resource");
 
 					if(!extcmp(param, ".raf", 4))
@@ -684,7 +684,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 				}
 				else if(!extcmp(source, ".qrc", 4))
 				{
-					enable_dev_blind(NULL);
+					enable_dev_blind(NO_MSG);
 					sprintf(target, "%s/qgl", "/dev_blind/vsh/resource");
 
 					if(strstr(param, "/lines"))
@@ -1884,10 +1884,10 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 		if(IS_ON_XMB)
 		{
-			while(View_Find("explore_plugin")==0) sys_timer_sleep(1);
+			while(View_Find("explore_plugin") == 0) sys_timer_sleep(1); // wait for explore_plugin
 
 			do_umount(false);
-			vshmain_AE35CF2D(_path, 0);
+			open_browser(_path, 0);
 			return true;
 		}
 
@@ -2470,7 +2470,7 @@ copy_ps2iso_to_hdd0:
 									u8 use_pregap=0;
 									u32 lp=0;
 
-									while(lp<msiz)// get_line ( templn, 512, buf1 ) != NULL )
+									while(lp < msiz)// get_line ( templn, 512, buf1 ) != NULL )
 									{
 										u8 line_found=0;
 										templn[0] = NULL;
@@ -2789,8 +2789,8 @@ patch:
 			uint64_t read_e = 0;
 			if(cellFsRead(fdd, (void *)&extgdfile, 12, &read_e) == CELL_FS_SUCCEEDED) extgdfile[read_e] = NULL;
 			cellFsClose(fdd);
-			if((extgd==0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1, false); else
-			if((extgd==1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0, false);
+			if((extgd == 0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1, false); else
+			if((extgd == 1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0, false);
 		}
 		else if(extgd) set_gamedata_status(0, false);
 	}
@@ -2841,22 +2841,22 @@ patch:
 
 	//-----------------------------------------------//
 	uint64_t map_data  = (MAP_BASE);
-	uint64_t map_paths = (MAP_BASE) + (max_mapped+1) * 0x20;
+	uint64_t map_paths = (MAP_BASE) + (max_mapped + 1) * 0x20;
 
 	for(u16 n=0; n<0x400; n+=8) pokeq(map_data + n, 0);
 
 	if(!max_mapped) {ret = false; goto exit_mount;}
 
-	for(u8 n=0; n<max_mapped; n++)
+	for(u8 n = 0; n < max_mapped; n++)
 	{
-		if(map_paths>0x80000000007FE800ULL) break;
+		if(map_paths > 0x80000000007FE800ULL) break;
 		pokeq(map_data + (n * 0x20) + 0x10, map_paths);
 		string_to_lv2(file_to_map[n].src, map_paths);
-		map_paths+= (strlen(file_to_map[n].src)+8)&0x7f8;
+		map_paths += (strlen(file_to_map[n].src)+8)&0x7f8;
 
 		pokeq(map_data + (n * 0x20) + 0x18, map_paths);
 		string_to_lv2(file_to_map[n].dst, map_paths);
-		map_paths+= (strlen(file_to_map[n].dst)+8)&0x7f8;
+		map_paths += (strlen(file_to_map[n].dst)+8)&0x7f8;
 
 		pokeq(map_data + (n * 0x20) + 0x08, strlen(file_to_map[n].dst));
 		pokeq(map_data + (n * 0x20) + 0x00, strlen(file_to_map[n].src));

@@ -52,7 +52,7 @@ static void show_msg(char* msg)
 	if(!vshtask_notify)
 		vshtask_notify = getNIDfunc("vshtask", 0xA02D46E7, 0);
 
-	if(strlen(msg) > 200) msg[200] = NULL;
+	if(strlen(msg) > 200) msg[200] = NULL; // truncate on-screen message
 
 	if(vshtask_notify)
 		vshtask_notify(0, msg);
@@ -92,7 +92,7 @@ static void enable_ingame_screenshot(void)
 static void launch_disc(char *category, char *seg_name)
 {
 	u8 n;
-	for(n=0; n<15; n++) {if(View_Find("explore_plugin")==0) sys_timer_sleep(2); else break;}
+	for(n = 0; n < 15; n++) {if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
 
 	if(!strcmp(seg_name, "seg_device")) waitfor((char*)"/dev_bdvd", 10); if(n) sys_timer_sleep(3);
 

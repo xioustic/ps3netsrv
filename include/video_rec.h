@@ -252,8 +252,8 @@ bool rec_start(char *param)
 
 		CellRtcDateTime t;
 		cellRtcGetCurrentClockLocalTime(&t);
-		sprintf((char*)&recOpt[0x6], "/dev_hdd0/VIDEO/%s_%04d.%02d.%02d_%02d_%02d_%02d.mp4",
-									 _game_TitleID, t.year, t.month, t.day, t.hour, t.minute, t.second);
+		sprintf((char*)&recOpt[0x6], "%s/%s_%04d.%02d.%02d_%02d_%02d_%02d.mp4",
+									 "/dev_hdd0/VIDEO", _game_TitleID, t.year, t.month, t.day, t.hour, t.minute, t.second);
 	}
 
 	reco_open(-1); // memory container

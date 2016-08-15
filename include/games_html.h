@@ -737,14 +737,14 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 				CellFsDirent entry;
 				u64 read_e;
-				u8 is_iso=0;
-				int fd2=0, flen;
+				u8 is_iso = 0;
+				int fd2 = 0, flen;
 				char tempID[12];
 				cellRtcGetCurrentTick(&pTick);
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-				sys_addr_t data2 = 0;
+				sys_addr_t data2 = NULL;
 				int v3_entries, v3_entry; v3_entries=v3_entry=0;
 				netiso_read_dir_result_data *data=NULL; char neth[8];
 				if(is_net)
@@ -1008,7 +1008,7 @@ next_html_entry:
 		else
 		{
 			sprintf(templn, // wait dialog div
-							"<div id=\"wmsg\" style=\"display:none\"><H1>. . .</H1></div>"
+							"<div id=\"wmsg\"><H1>. . .</H1></div>"
 							"<script>window.onclick=function(e){t=e.target;if(t.id.indexOf('im')==0||typeof(t.href)=='string')wmsg.style.display='block';}</script>"
 							// show games count + find icon
 							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';self.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"

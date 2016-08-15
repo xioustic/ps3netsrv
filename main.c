@@ -303,15 +303,15 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 ////////////
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
- static sys_ppu_thread_t thread_id_net	=-1;
+ static sys_ppu_thread_t thread_id_net	= -1;
  #endif
- static sys_ppu_thread_t thread_id_ntfs	=-1;
+ static sys_ppu_thread_t thread_id_ntfs	= -1;
 #endif
-static sys_ppu_thread_t thread_id_poll	=-1;
-static sys_ppu_thread_t thread_id_ftp	=-1;
-static sys_ppu_thread_t thread_id		=-1;
+static sys_ppu_thread_t thread_id_poll	= -1;
+static sys_ppu_thread_t thread_id_ftp	= -1;
+static sys_ppu_thread_t thread_id		= -1;
 #ifdef PS3NET_SERVER
-static sys_ppu_thread_t thread_id_netsvr =-1;
+static sys_ppu_thread_t thread_id_netsvr = -1;
 #endif
 
 #define MAX(a, b)	((a) >= (b) ? (a) : (b))
@@ -346,9 +346,10 @@ static u8 system_bgm=0;
 static bool show_info_popup = false;
 
 #ifdef USE_DEBUG
- static int debug_s=-1;
+ static int debug_s = -1;
  static char debug[256];
 #endif
+
 static volatile u8 wm_unload_combo = 0;
 static volatile u8 working = 1;
 static u8 cobra_mode=0;
@@ -940,7 +941,7 @@ static void handleclient(u64 conn_s_p)
  #ifdef USE_DEBUG
 	ssend(debug_s, "waiting...");
  #endif
-	if(loading_html > 10) loading_html=0;
+	if(loading_html > 10) loading_html = 0;
 	//while((init_running/* || loading_html>3*/) && working) sys_timer_usleep(10000);
 
 	sys_net_sockinfo_t conn_info_main;
@@ -1046,48 +1047,36 @@ static void handleclient(u64 conn_s_p)
 			ssplit(header, cmd, 15, header, (HTML_RECV_SIZE-1));
 			ssplit(header, param, (HTML_RECV_SIZE-1), cmd, 15);
 
+			char *param_original = header; // used in /download.ps3
+
  #ifdef WM_REQUEST
 			if(wm_request) { for(size_t n = strlen(param); n > 0; n--) {if(param[n] == 9) param[n]=' ';} } wm_request = 0;
  #endif
 
-			bool allow_retry_response=true, small_alloc = true, mobile_mode = false;
+			bool allow_retry_response = true, small_alloc = true, mobile_mode = false;
 
  #ifdef USE_DEBUG
 	ssend(debug_s, param);
 	ssend(debug_s, "\r\n");
  #endif
-			//url decode (unescape)
-			if(strstr(param, "%"))
-			{
-				strcpy(header, param);
-
-				u16 pos=0, len=strlen(param);
-				for(u16 i = 0; i < len; i++, pos++)
-				{
-					if(header[i]=='+')
-						param[pos]=' ';
-					else if(header[i]!='%')
-						param[pos]=header[i];
-					else
-					{
-						i++;
-						if(header[i]>='0' && header[i]<='9') param[pos]=(header[i]-0x30)*0x10; else
-						if(header[i]>='A' && header[i]<='F') param[pos]=(header[i]-0x37)*0x10; else
-						if(header[i]>='a' && header[i]<='f') param[pos]=(header[i]-0x57)*0x10;
-
-						i++;
-						if(header[i]>='0' && header[i]<='9') param[pos]+=header[i]-0x30; else
-						if(header[i]>='A' && header[i]<='F') param[pos]+=header[i]-0x37; else
-						if(header[i]>='a' && header[i]<='f') param[pos]+=header[i]-0x57;
-					}
-				}
-				param[pos] = NULL;
-			}
-
-			if(islike(param, "/setup.ps3")) goto html_response;
 
  #ifdef VIRTUAL_PAD
-			if(islike(param, "/pad.ps3") || islike(param, "/combo.ps3") || islike(param, "/play.ps3"))
+			bool is_pad = islike(param, "/pad.ps3");
+
+			if(!is_pad)
+			{
+				urldec(param, param_original);
+
+				if(islike(param, "/setup.ps3")) goto html_response;
+			}
+ #else
+			urldec(param, param_original);
+
+			if(islike(param, "/setup.ps3")) goto html_response;
+ #endif
+
+ #ifdef VIRTUAL_PAD
+			if(is_pad || islike(param, "/combo.ps3") || islike(param, "/play.ps3"))
 			{
 				u8 is_combo = (param[2] == 'a') ? 0 : (param[1] == 'c') ? 2 : 1; // 0 = /pad.ps3   1 = /play.ps3   2 = /combo.ps3
 
@@ -1096,9 +1085,9 @@ static void handleclient(u64 conn_s_p)
 				if(is_combo != 1) {if(!webman_config->nopad) parse_pad_command(buttons, is_combo);}
 				else
 				{   // default: play.ps3?col=game&seg=seg_device
-					char *pos, col[16] = {NULL}, seg[80] = {NULL};
-					pos=strstr(param, "col="); if(pos) get_value(col, pos + 4, 16); // game / video / friend / psn / network / music / photo / tv
-					pos=strstr(param, "seg="); if(pos) get_value(seg, pos + 4, 80);
+					char *pos, col[16] = {NULL}, seg[80] = {NULL}, *param2 = buttons;
+					pos = strstr(param2, "col="); if(pos) get_value(col, pos + 4, 16); // game / video / friend / psn / network / music / photo / tv
+					pos = strstr(param2, "seg="); if(pos) get_value(seg, pos + 4, 80);
 					launch_disc(col, seg);
 				}
 
@@ -1146,9 +1135,9 @@ static void handleclient(u64 conn_s_p)
  #ifdef PKG_HANDLER
 			if(islike(param, "/download.ps3"))
 			{
-				char msg[MAX_LINE_LEN] = ""; // Debug msg
+				char msg[MAX_LINE_LEN] = "";
 
-				int ret = download_file(strstr(header, "%") ? header : param, msg);
+				int ret = download_file(strchr(param_original, '%') ? param_original : param, msg);
 
 				#ifdef WM_REQUEST
 				if(!wmget)
@@ -1164,7 +1153,7 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/install.ps3"))
 			{
-				char msg[MAX_LINE_LEN] = ""; // Debug msg
+				char msg[MAX_LINE_LEN] = "";
 
 				int ret = installPKG(param + 12, msg);
 
@@ -1287,14 +1276,14 @@ static void handleclient(u64 conn_s_p)
 				if(IS_ON_XMB)
 				{   // in-XMB
    #ifdef XMB_SCREENSHOT
-					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param+27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
+					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param + 27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
    #endif
 					{
-						if(strlen(param) < 13)     {do_umount(false); sprintf(header, "http://%s/", local_ip); vshmain_AE35CF2D(header, 0);} else
-						if(strstr(param, ".ps3/")) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param+12); vshmain_AE35CF2D(header, 0);} else
-						if(strstr(param, ".ps3$")) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->DoUnk6(url,0,0);}} else
-						if(strstr(param, ".ps3?")) {do_umount(false); vshmain_AE35CF2D((char*)url, 0);} else
-						vshmain_AE35CF2D(url, 1);  // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
+						if(param2[0] == NULL) sprintf(param2, "/");
+						if(param2[0] == '/' ) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param2); open_browser(header, 0);} else
+						if(param2[0] == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->DoUnk6(url,0,0);}} else
+						if(param2[0] == '?' ) {do_umount(false); open_browser((char*)url, 0);} else
+						open_browser(url, 1);  // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
 
 						show_msg(url);
 					}
@@ -1568,7 +1557,7 @@ static void handleclient(u64 conn_s_p)
  #ifdef LOAD_PRX
  quit:
  #endif
-				if((webman_config->fanc == 0) || strstr(param, "?0") || webman_config->ps2temp<33)
+				if(!webman_config->fanc || (webman_config->ps2temp < 33) || strstr(param, "?0"))
 					restore_fan(0); //restore syscon fan control mode
 				else
 					restore_fan(1); //set ps2 fan control mode
@@ -1660,14 +1649,14 @@ static void handleclient(u64 conn_s_p)
 			if(islike(param, "/games.ps3"))
 			{
  mobile_response:
-				mobile_mode = true;
+				mobile_mode = true; char *param2 = param + 10;
 
 				if(file_exists(MOBILE_HTML) == false)
-					{sprintf(param, "/index.ps3%s", param+10); mobile_mode = false;}
+					{sprintf(param, "/index.ps3%s", param2); mobile_mode = false;}
 				else if(strstr(param, "?g="))
 					sprintf(param, MOBILE_HTML);
 				else if(strstr(param, "?"))
-					{sprintf(param, "/index.ps3%s", param+10);}
+					{sprintf(param, "/index.ps3%s", param2);}
 				else if(file_exists(GAMELIST_JS) == false)
 					sprintf(param, "/index.ps3?mobile");
 				else
@@ -1883,7 +1872,7 @@ static void handleclient(u64 conn_s_p)
 			{
 				if((is_binary != 2) && islike(param, "/setup.ps3?"))
 				{
-					setup_parse_settings(param);
+					setup_parse_settings(param + 11);
 				}
 
 				bool mount_ps3 = !is_popup && islike(param, "/mount_ps3"), forced_mount = false;
@@ -1911,14 +1900,14 @@ static void handleclient(u64 conn_s_p)
 						sprintf(templn, " [<a href=\"/cpursx.ps3\" style=\"text-decoration:none;\">"
 										// prevents flickering but cause error 80710336 in ps3 browser (silk mode)
 										//"<span id=\"lbl_cpursx\">%s</span></a>]<iframe src=\"/cpursx_ps3\" style=\"display:none;\"></iframe>"
-										"<span id=\"ifrm_err\" style=\"display:none\">%s&nbsp;</span>%s</a>]"
-										"<script>function no_error(ifrm){try{var doc=ifrm.contentDocument||ifrm.contentWindow.document;}catch(e){ifrm_err.style.display='inline-block';ifrm.style.display='none';}}</script>"
+										"<span id=\"err\" style=\"display:none\">%s&nbsp;</span>%s</a>]"
+										"<script>function no_error(o){try{var doc=o.contentDocument||o.contentWindow.document;}catch(e){err.style.display='inline-block';o.style.display='none';}}</script>"
 										//
 										"<hr width=\"100%%\">"
-										"<div id=\"rxml\" style=\"display:none\"><H1>%s XML ...</H1></div>"
-										"<div id=\"rhtm\" style=\"display:none\"><H1>%s HTML ...</H1></div>"
+										"<div id=\"rxml\"><H1>%s XML ...</H1></div>"
+										"<div id=\"rhtm\"><H1>%s HTML ...</H1></div>"
  #ifdef COPY_PS3
-										"<div id=\"rcpy\" style=\"display:none\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
+										"<div id=\"rcpy\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
 										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
 										"<form action=\"\">", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(buffer, templn);
  #else
@@ -2158,8 +2147,8 @@ static void handleclient(u64 conn_s_p)
 					{
 						char *pos; unsigned int slot=7; bool prx_found;
 
-						if(param[12] == '/') sprintf(templn, "%s", param+12); else
-						if(param[14] == '/') sprintf(templn, "%s", param+14); else
+						if(param[12] == '/') sprintf(templn, "%s", param + 12); else
+						if(param[14] == '/') sprintf(templn, "%s", param + 14); else
 						{
 							sprintf(templn, "%s/%s", "/dev_hdd0/plugins", "webftp_server.sprx");
 							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0/plugins", "webftp_server_ps3mapi.sprx");
@@ -2209,7 +2198,7 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/videorec.ps3"))
 					{
-						toggle_video_rec(param+13);
+						toggle_video_rec(param + 13);
 						strcat(buffer,	"<a class=\"f\" href=\"/dev_hdd0\">/dev_hdd0/</a><a href=\"/dev_hdd0/VIDEO\">VIDEO</a>:<p>"
 										"Video recording: <a href=\"/videorec.ps3\">");
 						strcat(buffer, recording?STR_ENABLED:STR_DISABLED);
@@ -2534,7 +2523,7 @@ static void wwwd_thread(uint64_t arg)
 
 	{from_reboot = file_exists(WMNOSCAN);}
 
-	if(webman_config->blind) enable_dev_blind(NULL);
+	if(webman_config->blind) enable_dev_blind(NO_MSG);
 
 #ifdef COBRA_ONLY
 	{sys_map_path((char*)"/app_home", NULL);}
@@ -2567,16 +2556,16 @@ static void wwwd_thread(uint64_t arg)
 	sys_timer_sleep(5);
 
 #ifdef USE_DEBUG
-	u8 d_retries=0;
+	u8 d_retries = 0;
 again_debug:
 	debug_s = connect_to_server((char*)"192.168.100.209", 38009);
-	if(debug_s<0) {d_retries++; sys_timer_sleep(2); if(d_retries<10) goto again_debug;}
-	if(debug_s>=0) ssend(debug_s, "Connected...\r\n");
+	if(debug_s <  0) {d_retries++; sys_timer_sleep(2); if(d_retries < 10) goto again_debug;}
+	if(debug_s >= 0) ssend(debug_s, "Connected...\r\n");
 	sprintf(debug, "FC=%i T0=%i T1=%i\r\n", webman_config->fanc, webman_config->temp0, webman_config->temp1);
 	ssend(debug_s, debug);
 #endif
 
-	max_temp=0;
+	max_temp  = 0;
 
 	if(webman_config->fanc)
 	{
@@ -2617,7 +2606,7 @@ relisten:
 		while(working)
 		{
 			sys_timer_usleep(10000);
-			while(loading_html>2 && working)
+			while(working && (loading_html > 2))
 			{
 				#ifdef USE_DEBUG
 				sprintf(debug, "THREADS: %i\r\n", loading_html);
@@ -2628,7 +2617,7 @@ relisten:
 			}
 			int conn_s;
 			if(!working) goto end;
-			else
+
 			if((conn_s = accept(list_s, NULL, NULL)) > 0)
 			{
 				loading_html++;
@@ -2659,7 +2648,7 @@ end:
 
 int wwwd_start(uint64_t arg)
 {
-	cellRtcGetCurrentTick(&rTick); gTick=rTick;
+	cellRtcGetCurrentTick(&rTick); gTick = rTick;
 
 	sys_ppu_thread_create(&thread_id, wwwd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_SVR);
 #ifndef CCAPI

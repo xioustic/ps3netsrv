@@ -66,7 +66,7 @@ static void spoof_idps_psid(void)
 
 	if(webman_config->sidps)
 	{
-		uint64_t j, newIDPS[2] = {0, 0};
+		uint64_t addr, newIDPS[2] = {0, 0};
 
 		newIDPS[0] = convertH(webman_config->vIDPS1);
 		newIDPS[1] = convertH(webman_config->vIDPS2);
@@ -76,12 +76,12 @@ static void spoof_idps_psid(void)
 			if(c_firmware<=4.53f)
 			{
 				{system_call_1(SC_GET_IDPS, (uint64_t) IDPS);}
-				for(j = 0x8000000000300000ULL; j < 0x8000000000600000ULL; j+=4)
+				for(addr = 0x8000000000300000ULL; addr < 0x8000000000600000ULL; addr+=4)
 				{
-					if((peekq(j) == IDPS[0]) && (peekq(j+8) == IDPS[1]))
+					if((peekq(addr) == IDPS[0]) && (peekq(addr + 8) == IDPS[1]))
 					{
-						pokeq(j, newIDPS[0]); j+=8;
-						pokeq(j, newIDPS[1]); j+=8;
+						pokeq(addr, newIDPS[0]); addr+=8;
+						pokeq(addr, newIDPS[1]); addr+=8;
 					}
 				}
 			}
@@ -99,7 +99,7 @@ static void spoof_idps_psid(void)
 }
 #endif
 
-static void get_eid0_idps()
+static void get_eid0_idps(void)
 {
 	uint64_t buffer[0x40], start_sector;
 	uint32_t read;

@@ -21,7 +21,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t size_mb)
 	int fp;
 	uint64_t sw;
 	uint32_t mem_size = (_128KB_), i;
-	sys_addr_t sys_mem = 0;
+	sys_addr_t sys_mem = NULL;
 
 	if(start < 0x0000028080000000ULL) start |= 0x8000000000000000ULL;
 
@@ -75,18 +75,18 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 
 static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 {
-	uint64_t address, addr, fvalue, value=0, upper_memory=LV2_UPPER_MEMORY, found_address=0;
+	uint64_t address, addr, byte_addr, fvalue, value=0, upper_memory=LV2_UPPER_MEMORY, found_address=0, step = 1;
 	u8 byte=0, p=0, lv1=0;
 	bool bits8=false, bits16=false, bits32=false, found=false;
 	u8 flen=0;
 	char *v;
 
-	v=strstr(param+10,"&");
-	if(v) v=NULL;
+	v = strstr(param + 10, "&");
+	if(v) v = NULL;
 
 	address = convertH(param+10);
 
-	v=strstr(param+10, "=");
+	v = strstr(param+10, "=");
 	if(v)
 	{
 		flen=strlen(v+1);
@@ -106,11 +106,18 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	upper_memory=(lv1?LV1_UPPER_MEMORY:LV2_UPPER_MEMORY)-8;
 	if(lv1) { system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_DISABLE_COBRA); }
 
-	if(!islike(param, "/find.lv") && strstr(param,"#")) upper_memory = 0x80000000FFFFFFF8ULL;
-
-	if(v!=NULL && islike(param, "/find.lv") && (address<upper_memory))
+	if(strstr(param,"#"))
 	{
-		uint64_t j;
+		if(islike(param, "/find.lv"))
+			step = 4, address &= 0x80000000FFFFFFFCULL; // find using aligned memory address (4X faster) e.g. /find.lv2?3000=3940ffff#
+		else
+			upper_memory = 0x80000000FFFFFFF8ULL; // override the default upper memory limit (peek & poke only). /peek.lv2?3000#
+	}
+
+	if((v == NULL) || (address > upper_memory)) { /* ignore find/poke if value is not provided or invalid address */ }
+	else
+	if(islike(param, "/find.lv"))
+	{
 		fvalue = convertH(v+1);
 
 		if(bits8)  fvalue=(fvalue<<56);
@@ -118,26 +125,26 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		if(bits32) fvalue=(fvalue<<32);
 
 		if(lv1)
-			for(j = address; j < upper_memory; j++)
+			for(addr = address; addr < upper_memory; addr += step)
 			{
-				value = peek_lv1(j);
+				value = peek_lv1(addr);
 
 				if(bits32) value&=0xffffffff00000000ULL; else
 				if(bits16) value&=0xffff000000000000ULL; else
 				if(bits8 ) value&=0xff00000000000000ULL;
 
-				if(value==fvalue) {found=true; break;}
+				if(value == fvalue) {found = true; break;}
 			}
 		else
-			for(j = address; j < upper_memory; j++)
+			for(addr = address; addr < upper_memory; addr += step)
 			{
-				value = peekq(j);
+				value = peekq(addr);
 
 				if(bits32) value&=0xffffffff00000000ULL; else
 				if(bits16) value&=0xffff000000000000ULL; else
 				if(bits8 ) value&=0xff00000000000000ULL;
 
-				if(value==fvalue) {found=true; break;}
+				if(value == fvalue) {found = true; break;}
 			}
 
 		if(!found)
@@ -146,12 +153,12 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		}
 		else
 		{
-			found_address=address=j;
-			sprintf(templn, "Offset: 0x%X<br><br>", (u32)address); strcat(buffer, templn);
+			found_address = address = addr;
+			sprintf(templn, "Offset: 0x%08X<br><br>", (u32)address); strcat(buffer, templn);
 		}
 	}
 	else
-	if(v!=NULL && islike(param, "/poke.lv2") && (address<upper_memory))
+	if(islike(param, "/poke.lv2"))
 	{
 		value  = convertH(v+1);
 		fvalue = peekq(address);
@@ -161,10 +168,10 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		if(bits8)  value = ((uint64_t)(value<<56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
 
 		pokeq(address, value);
-		found_address=address; found=true;
+		found_address = address; found = true;
 	}
 	else
-	if(v!=NULL && islike(param, "/poke.lv1") && (address<upper_memory))
+	if(islike(param, "/poke.lv1"))
 	{
 		value = convertH(v+1);
 		fvalue = peek_lv1(address);
@@ -174,50 +181,55 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		if(bits8)  value = ((uint64_t)(value<<56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
 
 		poke_lv1(address, value);
-		found_address=address; found=true;
+		found_address = address; found = true;
 	}
 
-	if(address+0x200>(upper_memory+8)) address=0;
+	////////////////////////////////
+	// show memory address in hex //
+	////////////////////////////////
 
-	flen=(bits8)?1:(bits16)?2:(bits32)?4:8;
-	address&=0xFFFFFFFFFFFFFFF0ULL;
-	addr=address;
+	if(address + 0x200 > (upper_memory + 8)) address = 0;
+
+	flen = (bits8) ? 1 : (bits16) ? 2 : (bits32) ? 4 : 8;
+	address &= 0xFFFFFFFFFFFFFFF0ULL;
+	addr = address;
 
 	if(lv1) { system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_DISABLE_COBRA); }
 
-	for(u16 i=0; i<0x200; i++)
+	for(u16 i = 0; i < 0x200; i++)
 	{
 		if(!p)
 		{
-			sprintf(templn, "%X  ", (int)((address & 0xFFFFFFFFULL) +i));
-			for(u8 c=10-strlen(templn);c>0;c--) strcat(buffer, "0");
+			sprintf(templn, "%08X  ", (int)((address & 0xFFFFFFFFULL) + i));
 			strcat(buffer, templn);
 		}
 
-		byte=(u8)((lv1?peek_lv1(address+i):peekq(address+i))>>56);
+		byte_addr = address + i;
+		byte = (u8)((lv1 ? peek_lv1(byte_addr) : peekq(byte_addr)) >> 56);
 
-		if(found && address+i>=found_address && address+i<found_address+flen) strcat(buffer, "<font color=yellow><b>");
-		sprintf(templn, byte<16?"0%X ":"%X ", byte); strcat(buffer, templn);
-		if(found && address+i>=found_address && address+i<found_address+flen) strcat(buffer, "</b></font>");
+		if(found && byte_addr >= found_address && byte_addr < (found_address + flen)) strcat(buffer, "<font color=yellow><b>");
+		sprintf(templn, "%02X ", byte); strcat(buffer, templn);
+		if(found && byte_addr >= found_address && byte_addr < (found_address + flen)) strcat(buffer, "</b></font>");
 
 		if(p==0x7) strcat(buffer, " ");
 
 		if(p==0xF)
 		{
 			strcat(buffer, " ");
-			for(u8 c=0;c<0x10;c++, addr++)
+			for(u8 c = 0; c < 0x10; c++, addr++)
 			{
-				byte=(u8)((lv1?peek_lv1(addr):peekq(addr))>>56);
+				byte = (u8)((lv1 ? peek_lv1(addr) : peekq(addr)) >> 56);
 				if(byte<32 || byte>=127) byte='.';
 
-				if(found && addr>=found_address && addr<found_address+flen) strcat(buffer, "<font color=yellow><b>");
+				if(found && addr >= found_address && addr < (found_address + flen)) strcat(buffer, "<font color=yellow><b>");
 				if(byte==0x3C)
 					strcat(buffer, "&lt;");
 				else if(byte==0x3E)
 					strcat(buffer, "&gt;");
 				else
 					{sprintf(templn,"%c", byte); strcat(buffer, templn);}
-				if(found && addr>=found_address && addr<found_address+flen) strcat(buffer, "</b></font>");
+
+				if(found && addr >= found_address && addr < (found_address + flen)) strcat(buffer, "</b></font>");
 			}
 			strcat(buffer, "<br>");
 		}
@@ -226,6 +238,8 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	}
 
 	if(lv1) { system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_ENABLE_COBRA); }
+
+	// footer
 
 	strcat(buffer, "<hr>Dump: [<a href=\"/dump.ps3?mem\">Full Memory</a>] [<a href=\"/dump.ps3?lv1\">LV1</a>] [<a href=\"/dump.ps3?lv2\">LV2</a>]");
 	sprintf(templn, " [<a href=\"/dump.ps3?%llx\">Dump 0x%llx</a>]", lv1?address:address + LV2_OFFSET_ON_LV1, lv1?address:address + LV2_OFFSET_ON_LV1); strcat(buffer, templn);

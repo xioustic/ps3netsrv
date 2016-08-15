@@ -1446,7 +1446,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 										u64 offset = convertH(param1);
 										u32 size = val(param2);
 										int rr = -4;
-										sys_addr_t sysmem = 0;
+										sys_addr_t sysmem = NULL;
 										if(sys_memory_allocate(BUFFER_SIZE_PS3MAPI, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
 										{
 											char *buffer2 = (char*)sysmem;
@@ -1503,7 +1503,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 									u32 attached_pid = val(param1);
 									u64 offset = convertH(param2);
 									int rr = -1;
-									sys_addr_t sysmem = 0;
+									sys_addr_t sysmem = NULL;
 									if(sys_memory_allocate(BUFFER_SIZE_PS3MAPI, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
 									{
 										char *buffer2 = (char*)sysmem;

@@ -4,6 +4,8 @@
 #define SC_STORAGE_CLOSE 				(601)
 #define SC_STORAGE_INSERT_EJECT			(616)
 
+#define NO_MSG							NULL
+
 int file_copy(char *file1, char *file2, uint64_t maxbytes);
 
 static bool copy_in_progress = false;
@@ -378,14 +380,30 @@ static void enable_dev_blind(char *msg)
 	sys_timer_sleep(2);
 }
 
+static void disable_dev_blind(void)
+{
+	system_call_3(SC_FS_UMOUNT, (u64)(char*)"/dev_blind", 0, 1);
+}
+
 static void unlink_file(const char *drive, const char *path, const char *file, char *buffer)
 {
 	sprintf(buffer, "%s/%s%s", drive, path, file); cellFsUnlink(buffer);
 }
 
 #if defined(WM_CUSTOM_COMBO) || defined(WM_REQUEST)
-static bool do_custom_combo(const char *combo_file)
+static bool do_custom_combo(const char *filename)
 {
+ #if defined(WM_CUSTOM_COMBO)
+	char combo_file[MAX_PATH_LEN];
+
+	if(filename[0] == '/')
+		sprintf(combo_file, "%s", filename);
+	else
+		sprintf(combo_file, "%s%s", WM_CUSTOM_COMBO, filename); // use default path
+ #else
+	const char *combo_file = filename;
+ #endif
+
 	if(file_exists(combo_file))
 	{
 		file_copy((char*)combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); return true;
@@ -396,7 +414,7 @@ static bool do_custom_combo(const char *combo_file)
 
 static void delete_history(bool delete_folders)
 {
-	int fd; char path[128];
+	int fd; char path[64];
 
 	if(cellFsOpendir("/dev_hdd0/home", &fd) == CELL_FS_SUCCEEDED)
 	{

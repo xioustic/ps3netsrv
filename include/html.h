@@ -48,6 +48,7 @@
 #define SCRIPT_SRC_FMT			"<script src=\"%s\"></script>"
 #define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){self.location=\"%s\"},3000);</script>"
 
+#define open_browser			vshmain_AE35CF2D
 
 int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
@@ -63,27 +64,57 @@ static char h2a(char hex)
 	return c;
 }
 
+static void urldec(char *url, char *original)
+{
+	if(strchr(url, '%'))
+	{
+		strcpy(original, url); // return original url
+
+		u16 pos = 0;
+		for(u16 i = 0; url[i] >= ' '; i++, pos++)
+		{
+			if(url[i]=='+')
+				url[pos]=' ';
+			else if(url[i]!='%')
+				url[pos]=url[i];
+			else
+			{
+				i++;
+				if(url[i]>='0' && url[i]<='9') url[pos]=(url[i]-0x30)*0x10; else
+				if(url[i]>='A' && url[i]<='F') url[pos]=(url[i]-0x37)*0x10; else
+				if(url[i]>='a' && url[i]<='f') url[pos]=(url[i]-0x57)*0x10;
+
+				i++;
+				if(url[i]>='0' && url[i]<='9') url[pos]+=url[i]-0x30; else
+				if(url[i]>='A' && url[i]<='F') url[pos]+=url[i]-0x37; else
+				if(url[i]>='a' && url[i]<='f') url[pos]+=url[i]-0x57;
+			}
+		}
+		url[pos] = NULL;
+	}
+}
+
 static bool urlenc(char *dst, char *src)
 {
-	size_t j = 0, n = strlen(src), pos = 0;
+	size_t i, j = 0, n = strlen(src), pos = 0;
 
-	if(src[0] == 'h' && src[1] == 't' && src[2] == 't' && src[3] == 'p' && (src[4] == ':' || src[5] == ':') && (n > 7)) pos = MAX((*(const unsigned char*)strchr(src + 7, '/') - *(const unsigned char*)src), 0);
+	if(src[0] == 'h' && src[1] == 't' && src[2] == 't' && src[3] == 'p' && (src[4] == ':' || src[5] == ':') && (n > 7)) { for(i = 7; i < n; i++) if(src[i] == '/') {pos = i; break;} }
 
-	for(size_t i = 0; i < n; i++, j++)
+	for(i = 0; i < n; i++, j++)
 	{
-			 if(src[i]==' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
-		else if(src[i]==':' && (i >= pos)) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
+			 if(src[i]==':' && (i >= pos)) {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
 		else if(src[i] & 0x80)
 		{
 			dst[j++] = '%';
 			dst[j++] = h2a((unsigned char)src[i]>>4);
 			dst[j] = h2a(src[i] & 0xf);
 		}
-		else if(src[i]=='"') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '2';}
-		else if(src[i]=='%') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '5';}
-		else if(src[i]=='&') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '6';}
-		else if(src[i]=='+') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = 'B';}
-		else if(src[i]=='?') {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'F';}
+		else if(src[i]==' ' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || src[i]=='?')
+		{
+			dst[j++] = '%';
+			dst[j++] = '0' + (u8)(src[i] / 0x10);
+			dst[j]   = '0' + (src[i] % 0x10);
+		}
 		else if(gmobile_mode && src[i]==0x27) {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '7';}
 		else dst[j] = src[i];
 	}

@@ -610,14 +610,14 @@ static bool update_mygames_xml(u64 conn_s_p)
 			{
 				CellFsDirent entry;
 				u64 read_e;
-				u8 is_iso=0;
-				int fd2=0;
+				u8 is_iso = 0;
+				int fd2 = 0;
 				char tempID[12];
 				cellRtcGetCurrentTick(&pTick);
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-				sys_addr_t data2 = 0;
+				sys_addr_t data2 = NULL;
 				int v3_entries, v3_entry; v3_entries=v3_entry=0;
 				netiso_read_dir_result_data *data=NULL; char neth[8];
 				if(is_net)
@@ -1112,12 +1112,13 @@ continue_reading_folder_xml:
 	if(cellFsOpen(xml, CELL_FS_O_RDONLY, &fdxml, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		u64 read_e = 0;
-		u32 xmlsize=BUFFER_SIZE_ALL;
+		u32 xmlsize = BUFFER_SIZE_ALL;
 		cellFsRead(fdxml, (void *)myxml_ps3, xmlsize, &read_e);
 		cellFsClose(fdxml);
-		for(u32 n=0;n<read_e;n++) if(myxml_ps3[n]=='&') myxml_ps3[n]='^';
 
-		strcpy(xml+37, ".droid\0"); // .xml -> .droid
+		for(u32 n = 0; n < read_e; n++) if(myxml_ps3[n]=='&') myxml_ps3[n]='^';
+
+		strcpy(xml + 37, ".droid\0"); // .xml -> .droid
 		savefile(xml, myxml_ps3, read_e);
 	}
 
@@ -1148,7 +1149,7 @@ static void update_xml_thread(u64 conn_s_p)
 	init_running = 1;
 
 	if(IS_ON_XMB)
-		while(View_Find("explore_plugin") == 0) sys_timer_usleep(100000); // wait for explore_plugin
+		while(View_Find("explore_plugin") == 0) sys_timer_sleep(1); // wait for explore_plugin
 
 	if(update_mygames_xml(conn_s_p)) mount_autoboot();
 
