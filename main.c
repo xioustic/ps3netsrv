@@ -730,8 +730,8 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 						"a,a.f:link,a:visited{color:#D0D0D0;}");
 
 		if(!is_cpursx)
-		strcat(buffer,	"a.d:link{color:#D0D0D0;background-position:0px 2px;background-image:url('data:image/gif;base64,R0lGODlhEAAMAIMAAOenIumzLbmOWOuxN++9Me+1Pe+9QvDAUtWxaffKXvPOcfTWc/fWe/fWhPfckgAAACH5BAMAAA8ALAAAAAAQAAwAAARQMI1Agzk4n5Sa+84CVNUwHAz4KWzLMo3SzDStOkrHMO8O2zmXsAXD5DjIJEdxyRie0KfzYChYr1jpYVAweb/cwrMbAJjP54AXwRa433A2IgIAOw == ');padding:0 0 0 20px;background-repeat:no-repeat;margin-left:auto;margin-right:auto;}"
-						"a.w:link{color:#D0D0D0;background-image:url('data:image/gif;base64,R0lGODlhDgAQAIMAAAAAAOfn5+/v7/f39////////////////////////////////////////////wAAACH5BAMAAA8ALAAAAAAOABAAAAQx8D0xqh0iSHl70FxnfaDohWYloOk6papEwa5g37gt5/zO475fJvgDCW8gknIpWToDEQA7');padding:0 0 0 20px;background-repeat:no-repeat;margin-left:auto;margin-right:auto;}");
+		strcat(buffer,	"a.d:link{color:#D0D0D0;background:0px 2px url('data:image/gif;base64,R0lGODlhEAAMAIMAAOenIumzLbmOWOuxN++9Me+1Pe+9QvDAUtWxaffKXvPOcfTWc/fWe/fWhPfckgAAACH5BAMAAA8ALAAAAAAQAAwAAARQMI1Agzk4n5Sa+84CVNUwHAz4KWzLMo3SzDStOkrHMO8O2zmXsAXD5DjIJEdxyRie0KfzYChYr1jpYVAweb/cwrMbAJjP54AXwRa433A2IgIAOw==') no-repeat;padding:0 0 0 20px;}"
+						"a.w:link{color:#D0D0D0;background:url('data:image/gif;base64,R0lGODlhDgAQAIMAAAAAAOfn5+/v7/f39////////////////////////////////////////////wAAACH5BAMAAA8ALAAAAAAOABAAAAQx8D0xqh0iSHl70FxnfaDohWYloOk6papEwa5g37gt5/zO475fJvgDCW8gknIpWToDEQA7') no-repeat;padding:0 0 0 20px;}");
 
 		strcat(buffer,	"a:active,a:active:hover,a:visited:hover,a:link:hover{color:#FFFFFF;}"
 						".list{display:inline;}"
@@ -1125,7 +1125,7 @@ static void handleclient(u64 conn_s_p)
 				}
  #endif
 				sprintf(header, HTML_RESPONSE_FMT,
-								CODE_HTTP_OK, "/cpursx_ps3", 390 + strlen(buffer), HTML_HEADER, buffer, HTML_BODY_END);
+								CODE_HTTP_OK, "/cpursx_ps3", 285 + strlen(buffer), HTML_HEADER, buffer, HTML_BODY_END);
 
 				ssend(conn_s, header);
 
@@ -1790,7 +1790,7 @@ static void handleclient(u64 conn_s_p)
 			}
 			//--
 
-			if(is_binary == 1) //file
+			if(is_binary == 1) // binary file
 			{
 				sprintf(templn, "Content-Length: %llu\r\n\r\n", (unsigned long long)c_len); strcat(header, templn);
 				ssend(conn_s, header);
@@ -1820,9 +1820,9 @@ static void handleclient(u64 conn_s_p)
 						//sys_timer_usleep(500);
 						if(cellFsRead(fd, (void *)buffer, buffer_size, &read_e) == CELL_FS_SUCCEEDED)
 						{
-							if(read_e>0)
+							if(read_e > 0)
 							{
-								if(send(conn_s, buffer, (size_t)read_e, 0)<0) break;
+								if(send(conn_s, buffer, (size_t)read_e, 0) < 0) break;
 							}
 							else
 								break;
@@ -2453,7 +2453,7 @@ exit_handleclient:
 
 	sclose(&conn_s);
 	if(sysmem) sys_memory_free(sysmem);
-	loading_html--;
+	if(loading_html) loading_html--;
 	sys_ppu_thread_exit(0);
 }
 
@@ -2603,9 +2603,12 @@ relisten:
 		ssend(debug_s, " OK!\r\n");
 		#endif
 
+		u8 timeout = 0;
+
 		while(working)
 		{
-			sys_timer_usleep(10000);
+			sys_timer_usleep(10000); timeout = 0;
+
 			while(working && (loading_html > 2))
 			{
 				#ifdef USE_DEBUG
@@ -2614,7 +2617,9 @@ relisten:
 				#endif
 
 				sys_timer_usleep(300000);
+				if(++timeout > 100) loading_html = 0; // continue after 30 seconds
 			}
+
 			int conn_s;
 			if(!working) goto end;
 

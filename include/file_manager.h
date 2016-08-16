@@ -1,6 +1,6 @@
 #define SC_FS_DISK_FREE		840
 
-#define ICON_STYLE			" style=\"position:fixed;top:118px;right:10px;max-height:176px;z-index:-1\" onerror=\"this.style.display='none';\""
+#define ICON_STYLE			" style=\"position:fixed;top:118px;right:10px;max-height:176px;z-index:-1;display:none\" onerror=\"this.style.display='none';\""
 
 u32 _LINELEN = LINELEN;
 u32 _MAX_PATH_LEN = MAX_PATH_LEN;
@@ -74,9 +74,9 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 								devsize_mb = (unsigned long long)(devSize>>20);
 
 			// show graphic of device size & free space
-			sprintf(fsize,  "<div class='bf' style='height:18px;text-align:left;'><div class='bu' style='height:18px;width:%i%%'></div><div style='position:relative;top:-18px;text-align:right'>"
+			sprintf(fsize,  "<div class='bf' style='height:18px;text-align:left;overflow:hidden;'><div class='bu' style='height:18px;width:%i%%'></div><div style='position:relative;top:-%ipx;text-align:right'>"
 							"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
-							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
+							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), is_ps3_http ? 20 : 18, templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
 		}
 		else
 #ifdef PS2_DISC
@@ -268,26 +268,24 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 		BUFFER_SIZE_HTML -= _2KB_;
 
-		u8 jb_games = (!extcmp(param, "/GAMES", 6) || !extcmp(param, "/GAMEZ", 6));
-		u8 show_icon0 = jb_games || ((strlen(param) >= 14) && (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/")));
+		u8 jb_games = (strstr(param, "/GAMES") || strstr(param, "/GAMEZ"));
+		u8 show_icon0 = jb_games || (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/"));
 
 		sprintf(templn, "<img id=\"icon\"%s>"
 						"<script>"
 						// show icon of item pointed with mouse
-						"function s(o,d){icon.style.display='block';icon.src=o.href.replace('/delete.ps3','').replace('/cut.ps3','').replace('/cpy.ps3','')+((d)?'%s/ICON0.PNG':'');}"
+						"function s(o,d){u=o.href;p=u.indexOf('.ps3');if(p>0)u=u.substring(p+4);if(d){p=u.indexOf('/PS3_');if(p<0)p=u.indexOf('/USRDIR');if(p>0)u=u.substring(0,p);u+='%s/ICON0.PNG';}icon.src=u;icon.style.display='block';}"
 						"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : "")); strcat(buffer, templn);
-
-		strcat(buffer, "<table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
 
 		// breadcrumb trail //
 		add_breadcrumb_trail(buffer, param);
 
 		if((param[7] == 'v' || param[7] == 'm') && IS_ON_XMB && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF") || isDir("/dev_bdvd/BDMV") || isDir("/dev_bdvd/VIDEO_TS") || isDir("/dev_bdvd/AVCHD")))
-			strcat(buffer, ":</td><td width=90><a href=\"/play.ps3\">&lt;Play>&nbsp;</a>");
+			strcat(buffer, ": <a href=\"/play.ps3\">&lt;Play>&nbsp;</a><br>");
 		else
-			strcat(buffer, ":</td><td width=90>&nbsp;");
+			strcat(buffer, ":<br>");
 
-		strcat(buffer, "</td><td></td></tr>");
+		strcat(buffer, "<table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
 
 		tlen = 0;
 
@@ -297,22 +295,22 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		{
 			int ns = FAILED, abort_connection = 0;
 
-			if(param[4]  >=  '0' && param[4] <= '4') ns = connect_to_remote_server((param[4]  & 0xFF) - '0');
+			if(param[4] >= '0' && param[4] <= '4') ns = connect_to_remote_server((param[4]  & 0xFF) - '0');
 
-			if(ns  >=  0)
+			if(ns >= 0)
 			{
 				strcat(param, "/");
-				if(open_remote_dir(ns, param+5, &abort_connection)  >=  0)
+				if(open_remote_dir(ns, param+5, &abort_connection) >= 0)
 				{
 					strcpy(templn, param); if(templn[strlen(templn)-1] == '/') templn[strlen(templn)-1] = NULL;
 					if(strrchr(templn, '/')) templn[strrchr(templn, '/')-templn] = NULL; if(strlen(templn)<6 && strlen(param)<8) {templn[0]='/'; templn[1] = NULL;}
 
 					urlenc(swap, templn);
 					sprintf(line_entry[idx].path, "!00000<tr>"
-									 	 		  "<td><a class=\"f\" href=\"%s\">..</a></td>"
-	 	 	 									  "<td> " HTML_URL " &nbsp; </td>"
-				 	 	 						  "<td>11-Nov-2006 11:11</td>"
-							 	 	 			  "</tr>", swap, swap, HTML_DIR);
+												  "<td><a class=\"f\" href=\"%s\">..</a></td>"
+												  "<td> " HTML_URL " &nbsp; </td>"
+												  "<td>11-Nov-2006 11:11</td>"
+												  "</tr>", swap, swap, HTML_DIR);
 
 					flen = strlen(line_entry[idx].path);
 					if(flen >= _MAX_LINE_LEN) return false; //ignore lines too long
@@ -385,7 +383,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 										if(send(conn_s, buffer, bytes_read, 0) < 0) break;
 									}
 									boff+=bytes_read;
-									if((uint32_t)bytes_read < _64KB_ || boff  >=  file_size) break;
+									if((uint32_t)bytes_read < _64KB_ || boff >= file_size) break;
 								}
 								open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
 								shutdown(ns, SHUT_RDWR); socketclose(ns);
@@ -504,7 +502,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			if(!is_ps3_http)
 			{
 				bool show_icon = false;
-				if(is_net && (strstr(param, "/GAMES/") || strstr(param, "/GAMEZ/")))
+				if(is_net && jb_games)
 				{
 					char *p = strchr(param + 12, '/'); if(p) p[0] = NULL; sprintf(templn, "%s/PS3_GAME/ICON0.PNG", param); show_icon = true;
 				}
@@ -536,10 +534,10 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					sprintf(templn, "%s", wm_icons[5]); show_icon = true;
 				}
 
-				for(u16 m = idx; m < 7; m++) strcat(buffer, "<BR>");
+				for(u16 m = idx; m < 8; m++) strcat(buffer, "<BR>");
 
 				if(show_icon || show_icon0)
-					{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\"</script>", swap); strcat(buffer, templn);}
+					{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\";icon.style.display='block';</script>", swap); strcat(buffer, templn);}
 			}
 			///////////
 

@@ -36,7 +36,8 @@
 //#define WEB_CHAT			1	// /chat.ps3
 //#define WM_CUSTOM_COMBO	"/dev_hdd0/tmp/wm_combo/wm_custom_"		// advanced custom combos
 //#define NET3NET4			1	// add support for /net3 and /net4
-//#define PKG_HANDLER			1	// /download.ps3?url=<url>, /download.ps3?to=<path>&url=<url>, /install.ps3<pkg-path> (thanks to bguerville & mysis)
+//#define PKG_HANDLER		1	// /download.ps3?url=<url>, /download.ps3?to=<path>&url=<url>, /install.ps3<pkg-path> (thanks to bguerville & mysis)
+//#define LAUNCHPAD			1	// create /dev_hdd0/tmp/wm_lauchpad.xml
 
 //// TEST FEATURES ////
 //#define PS2_DISC		1	// uncomment to support /mount.ps2 (mount ps2 game folder as /dev_ps2disc) requires a physical PS2 disc to swap discs (thanks to WuEpE)

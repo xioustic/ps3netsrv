@@ -38,6 +38,7 @@
 #define NET3NET4			1	// add support for /net3 and /net4
 #define PS3NET_SERVER		1	// ps3 net server
 #define PKG_HANDLER			1	// /download.ps3?url=<url>, /download.ps3?to=<path>&url=<url>, /install.ps3<pkg-path> (thanks to bguerville & mysis)
+#define LAUNCHPAD			1	// create /dev_hdd0/tmp/wm_lauchpad.xml
 
 //// TEST FEATURES ////
 //#define PS2_DISC		1	// uncomment to support /mount.ps2 (mount ps2 game folder as /dev_ps2disc) requires a physical PS2 disc to swap discs (thanks to WuEpE)
@@ -45,5 +46,4 @@
 #define SYS_BGM			1	// system background music (may freeze the system when enabled)
 //#define USE_DEBUG		1	// debug using telnet
 //#define RAWISO_PSX_MULTI	// support for multi PSX from Iris Manager (it's incomplete - only rawseciso.h code is complete) (thanks to Estwald)
-#define LAUNCHPAD		1	// create /dev_hdd0/tmp/wm_lauchpad.xml
 

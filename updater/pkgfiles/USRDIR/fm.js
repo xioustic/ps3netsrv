@@ -55,9 +55,10 @@ window.addEventListener('contextmenu',function(e){
 		m.display=b;
 		m.left=(e.clientX+12)+'px';
 		y=e.clientY;w=window.innerHeight;m.top=(((y+220)<w)?(y+12):(w-220))+'px';
-		m0.href='/install.ps3'+p;m0.style.display=(p.indexOf('.pkg')>0)?b:n;
-		m1.href='/mount.ps3'+p;m1.style.display=(p.toLowerCase().indexOf('.iso')>0||c=='d'||p.indexOf('/GAME')>0)?b:n;
-		m2.href=p;m2.text=(c=='w'||(p.toLowerCase().indexOf('.iso')>0))?'Download':'Open';
+		y=(p.toLowerCase().indexOf('.pkg')>0);w=(p.toLowerCase().indexOf('.iso')>0);
+		m0.href='/install.ps3'+p;m0.style.display=y?b:n;
+		m1.href='/mount.ps3'+p;m1.style.display=!y&&(w||c=='d'||p.indexOf('/GAME')>0||p.indexOf('ISO/')>0)?b:n;
+		m2.href=p;m2.text=(w||c=='w')?'Download':'Open';
 		m3.href='/delete.ps3'+p;
 		m4.href='/cut.ps3'+p;
 		m5.href='/cpy.ps3'+p;

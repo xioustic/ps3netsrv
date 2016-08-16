@@ -593,15 +593,14 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		t_line_entries *line_entry = (t_line_entries *)sysmem_html;
 		u16 max_entries = (BUFFER_MAXSIZE / MAX_LINE_LEN); tlen = 0;
 
-#ifndef ENGLISH_ONLY
-		char onerror_prefix[24]=" onerror=\"this.src='", onerror_suffix[30]="';\"";  // wm_icons[default_icon]
-		if(!use_custom_icon_path) onerror_prefix[0] = onerror_suffix[0] = NULL;
-#else
-		#define onerror_prefix ""
-		#define onerror_suffix ""
-#endif
 		check_cover_folders(templn);
 
+#ifndef ENGLISH_ONLY
+		char onerror_prefix[24]=" onerror=\"this.src='", onerror_suffix[8]="';\"";  // wm_icons[default_icon]
+		if(!use_custom_icon_path) onerror_prefix[0] = onerror_suffix[0] = NULL;
+#else
+		char onerror_prefix[8]="", onerror_suffix[8]="";
+#endif
 		char icon[MAX_PATH_LEN], enc_dir_name[1024], subpath[MAX_PATH_LEN];
 
 		// filter html content
@@ -623,9 +622,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #endif
 		if(b0==0 && b1==0 && strstr(param, "?")!=NULL && strstr(param, "?html")==NULL && strstr(param, "mobile")==NULL) strcpy(filter_name, strstr(param, "?")+1);
 
-		int ns=-2; u8 uprofile=profile, default_icon=0;
+		int ns = -2; u8 uprofile = profile, default_icon = 0;
 
-		for(u8 f0=filter0; f0<16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
+		for(u8 f0 = filter0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
 		{
 			if(!webman_config->usb0 && (f0==1)) continue;
 			if(!webman_config->usb1 && (f0==2)) continue;
@@ -640,8 +639,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if(!webman_config->dev_ms && (f0==14)) continue;
 			if(!webman_config->dev_cf && (f0==15)) continue;
 
-			if( f0==NTFS && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-							 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
+			if( (f0 == NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+								 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
 
 			if(( f0<7 || f0>NTFS) && file_exists(drives[f0])==false) continue;
 //
@@ -650,8 +649,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
  #endif
 #endif
-			ns=-2; uprofile=profile; default_icon=0;
-			for(u8 f1=filter1; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
+			ns = -2; uprofile = profile; default_icon = 0;
+			for(u8 f1 = filter1; f1 < 11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 			{
 #ifndef COBRA_ONLY
 				if(IS_ISO_FOLDER && !(IS_PS2_FOLDER)) continue; // 0="GAMES", 1="GAMEZ", 5="PS2ISO", 10="video"

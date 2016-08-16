@@ -480,9 +480,9 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	check_cover_folders(tempstr);
 
-	int ns=-2; u8 uprofile=profile;
+	int ns = -2; u8 uprofile = profile;
 
-	for(u8 f0=0; f0<16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
+	for(u8 f0 = 0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
 	{
 		if(!webman_config->usb0 && (f0==1)) continue;
 		if(!webman_config->usb1 && (f0==2)) continue;
@@ -497,10 +497,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 		if(!webman_config->dev_ms && (f0==14)) continue;
 		if(!webman_config->dev_cf && (f0==15)) continue;
 
-		if( f0==NTFS && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-						 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
+		if( (f0 == NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+							 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
 
-		if(conn_s_p==START_DAEMON)
+		if(conn_s_p == START_DAEMON)
 		{
 			if(webman_config->bootd && (f0==1))
 			{
@@ -528,8 +528,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 		if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
  #endif
 #endif
-		ns=-2; uprofile=profile;
-		for(u8 f1=0; f1<11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
+		ns = -2; uprofile = profile;
+		for(u8 f1 = 0; f1 < 11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 		{
 #ifndef COBRA_ONLY
 			if(IS_ISO_FOLDER && !(IS_PS2_FOLDER)) continue; // 0="GAMES", 1="GAMEZ", 5="PS2ISO", 10="video"
