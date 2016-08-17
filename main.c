@@ -1125,7 +1125,7 @@ static void handleclient(u64 conn_s_p)
 				}
  #endif
 				sprintf(header, HTML_RESPONSE_FMT,
-								CODE_HTTP_OK, "/cpursx_ps3", 285 + strlen(buffer), HTML_HEADER, buffer, HTML_BODY_END);
+								CODE_HTTP_OK, "/cpursx_ps3", HTML_HEADER_SIZE + strlen(buffer), HTML_HEADER, buffer, HTML_BODY_END);
 
 				ssend(conn_s, header);
 

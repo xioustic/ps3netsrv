@@ -32,8 +32,9 @@
 								"<meta http-equiv=\"Cache-Control\" content=\"no-cache\">" \
 								"<meta name=\"viewport\" content=\"width=device-width,initial-scale=0.6,maximum-scale=1.0\">"  /* size: 264 */
 
+#define HTML_HEADER_SIZE		285 /* strlen( HTML_HEADER + HTML_BODY_END ) = 264 + 21 */
 
-#define HTTP_RESPONSE_TITLE_LEN	94 /* strlen(HTML_RESPONSE_TITLE + HTML_BODY) */
+#define HTTP_RESPONSE_TITLE_LEN	94 /* strlen(HTML_RESPONSE_TITLE + HTML_BODY) = 30 + 64 */
 
 #define HTML_RESPONSE_TITLE		"webMAN MOD " WM_VERSION "<hr><h2>" /* size: 30 */
 

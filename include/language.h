@@ -1,5 +1,5 @@
 #ifndef ENGLISH_ONLY
-static bool language(const char *file_str, char *default_str);
+static bool language(const char *key_name, char *default_str);
 static void update_language(void);
 uint32_t get_xreg_value(char *key, u32 default_value);
 uint32_t get_system_language(uint8_t *lang);
@@ -179,91 +179,91 @@ static char STR_HOME[8] = "Home";
 #else
 static char lang_code[3]			= "";
 
-static char STR_TRADBY[150]			= "<br>";
+static char STR_TRADBY[120]			= "<br>";
 
-static char STR_FILES[30]			= "Files";
-static char STR_GAMES[30]			= "Games";
-static char STR_SETUP[30]			= "Setup";
-static char STR_HOME[30]			= "Home";
-static char STR_EJECT[50]			= "Eject";
-static char STR_INSERT[50]			= "Insert";
-static char STR_UNMOUNT[50]			= "Unmount";
-static char STR_COPY[50]			= "Copy Folder";
-static char STR_REFRESH[50]			= "Refresh";
-static char STR_SHUTDOWN[50]		= "Shutdown";
-static char STR_RESTART[50]			= "Restart";
+static char STR_FILES[24]			= "Files";
+static char STR_GAMES[24]			= "Games";
+static char STR_SETUP[24]			= "Setup";
+static char STR_HOME[16]			= "Home";
+static char STR_EJECT[40]			= "Eject";
+static char STR_INSERT[40]			= "Insert";
+static char STR_UNMOUNT[40]			= "Unmount";
+static char STR_COPY[40]			= "Copy Folder";
+static char STR_REFRESH[24]			= "Refresh";
+static char STR_SHUTDOWN[32]		= "Shutdown";
+static char STR_RESTART[32]			= "Restart";
 
-static char STR_BYTE[10]			= "b";
-static char STR_KILOBYTE[10]		= "KB";
-static char STR_MEGABYTE[10]		= "MB";
-static char STR_GIGABYTE[10]		= "GB";
+static char STR_BYTE[8]				= "b";
+static char STR_KILOBYTE[8]			= "KB";
+static char STR_MEGABYTE[8]			= "MB";
+static char STR_GIGABYTE[8]			= "GB";
 
-static char STR_COPYING[30]			= "Copying";
-static char STR_CPYDEST[30]			= "Destination";
-static char STR_CPYFINISH[30]		= "Copy Finished!";
-static char STR_CPYABORT[50]		= "Copy aborted!";
-static char STR_DELETE[50]			= "Delete";
+static char STR_COPYING[24]			= "Copying";
+static char STR_CPYDEST[24]			= "Destination";
+static char STR_CPYFINISH[48]		= "Copy Finished!";
+static char STR_CPYABORT[48]		= "Copy aborted!";
+static char STR_DELETE[24]			= "Delete";
 
-static char STR_SCAN1[100]			= "Scan these devices";
-static char STR_SCAN2[100]			= "Scan for content";
-static char STR_PSPL[100]			= "Show PSP Launcher";
-static char STR_PS2L[100]			= "Show PS2 Classic Launcher";
-static char STR_RXVID[100]			= "Show Video sub-folder";
-static char STR_VIDLG[30]			= "Video";
-static char STR_LPG[100]			= "Load last-played game on startup";
-static char STR_AUTOB[150]			= "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup";
-static char STR_DELAYAB[200]		= "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)";
-static char STR_DEVBL[150]			= "Enable /dev_blind (writable /dev_flash) on startup";
-static char STR_CONTSCAN[150]		= "Disable content scan on startup";
-static char STR_USBPOLL[100]		= "Disable USB polling";
-static char STR_FTPSVC[100]			= "Disable FTP service";
-static char STR_FIXGAME[100]		= "Disable auto-fix game";
-static char STR_COMBOS[100]			= "Disable all PAD shortcuts";
-static char STR_MMCOVERS[100]		= "Disable multiMAN covers";
-static char STR_ACCESS[100]			= "Disable remote access to FTP/WWW services";
-static char STR_NOSETUP[150]		= "Disable webMAN Setup entry in \"webMAN Games\"";
-static char STR_NOSPOOF[100]		= "Disable firmware version spoofing";
-static char STR_NOGRP[100]			= "Disable grouping of content in \"webMAN Games\"";
-static char STR_NOWMDN[200]			= "Disable startup notification of WebMAN on the XMB";
+static char STR_SCAN1[48]			= "Scan these devices";
+static char STR_SCAN2[48]			= "Scan for content";
+static char STR_PSPL[40]			= "Show PSP Launcher";
+static char STR_PS2L[48]			= "Show PS2 Classic Launcher";
+static char STR_RXVID[64]			= "Show Video sub-folder";
+static char STR_VIDLG[24]			= "Video";
+static char STR_LPG[128]			= "Load last-played game on startup";
+static char STR_AUTOB[96]			= "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup";
+static char STR_DELAYAB[168]		= "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)";
+static char STR_DEVBL[112]			= "Enable /dev_blind (writable /dev_flash) on startup";
+static char STR_CONTSCAN[120]		= "Disable content scan on startup";
+static char STR_USBPOLL[88]			= "Disable USB polling";
+static char STR_FTPSVC[64]			= "Disable FTP service";
+static char STR_FIXGAME[56]			= "Disable auto-fix game";
+static char STR_COMBOS[88]			= "Disable all PAD shortcuts";
+static char STR_MMCOVERS[72]		= "Disable multiMAN covers";
+static char STR_ACCESS[88]			= "Disable remote access to FTP/WWW services";
+static char STR_NOSETUP[120]		= "Disable webMAN Setup entry in \"webMAN Games\"";
+static char STR_NOSPOOF[96]			= "Disable firmware version spoofing";
+static char STR_NOGRP[104]			= "Disable grouping of content in \"webMAN Games\"";
+static char STR_NOWMDN[112]			= "Disable startup notification of WebMAN on the XMB";
 #ifdef NOSINGSTAR
-static char STR_NOSINGSTAR[100]		= "Remove SingStar icon";
+static char STR_NOSINGSTAR[48]		= "Remove SingStar icon";
 #endif
-static char STR_RESET_USB[100]		= "Disable Reset USB Bus";
-static char STR_AUTO_PLAY[100]		= "Auto-Play";
-static char STR_TITLEID[200]		= "Include the ID as part of the title of the game";
-static char STR_FANCTRL[120]		= "Enable dynamic fan control";
-static char STR_NOWARN[120]			= "Disable temperature warnings";
-static char STR_AUTOAT[100]			= "Auto at";
-static char STR_LOWEST[30]			= "Lowest";
-static char STR_FANSPEED[80]		= "fan speed";
-static char STR_MANUAL[30]			= "Manual";
-static char STR_PS2EMU[100]			= "PS2 Emulator";
-static char STR_LANGAMES[100]		= "Scan for LAN games/videos";
-static char STR_ANYUSB[100]			= "Wait for any USB device to be ready";
-static char STR_ADDUSB[150]			= "Wait additionally for each selected USB device to be ready";
-static char STR_SPOOFID[150]		= "Change idps and psid in lv2 memory at system startup";
-static char STR_DELCFWSYS[200]		= "Disable CFW syscalls and delete history files at system startup";
-static char STR_MEMUSAGE[100]		= "Plugin memory usage";
-static char STR_PLANG[100]			= "Plugin language";
-static char STR_PROFILE[30]			= "Profile";
-static char STR_DEFAULT[30]			= "Default";
-static char STR_COMBOS2[100]		= "XMB/In-Game PAD SHORTCUTS";
-static char STR_FAILSAFE[100]		= "FAIL SAFE";
-static char STR_SHOWTEMP[100]		= "SHOW TEMP";
-static char STR_SHOWIDPS[100]		= "SHOW IDPS";
-static char STR_PREVGAME[100]		= "PREV GAME";
-static char STR_NEXTGAME[100]		= "NEXT GAME";
-static char STR_SHUTDOWN2[100]		= "SHUTDOWN ";
-static char STR_RESTART2[100]		= "RESTART&nbsp; ";
+static char STR_RESET_USB[48]		= "Disable Reset USB Bus";
+static char STR_AUTO_PLAY[24]		= "Auto-Play";
+static char STR_TITLEID[128]		= "Include the ID as part of the title of the game";
+static char STR_FANCTRL[96]			= "Enable dynamic fan control";
+static char STR_NOWARN[96]			= "Disable temperature warnings";
+static char STR_AUTOAT[32]			= "Auto at";
+static char STR_LOWEST[24]			= "Lowest";
+static char STR_FANSPEED[48]		= "fan speed";
+static char STR_MANUAL[32]			= "Manual";
+static char STR_PS2EMU[32]			= "PS2 Emulator";
+static char STR_LANGAMES[96]		= "Scan for LAN games/videos";
+static char STR_ANYUSB[88]			= "Wait for any USB device to be ready";
+static char STR_ADDUSB[136]			= "Wait additionally for each selected USB device to be ready";
+static char STR_SPOOFID[112]		= "Change idps and psid in lv2 memory at system startup";
+static char STR_DELCFWSYS[144]		= "Disable CFW syscalls and delete history files at system startup";
+static char STR_MEMUSAGE[80]		= "Plugin memory usage";
+static char STR_PLANG[40]			= "Plugin language";
+static char STR_PROFILE[16]			= "Profile";
+static char STR_DEFAULT[32]			= "Default";
+static char STR_COMBOS2[80]			= "XMB/In-Game PAD SHORTCUTS";
+static char STR_FAILSAFE[40]		= "FAIL SAFE";
+static char STR_SHOWTEMP[56]		= "SHOW TEMP";
+static char STR_SHOWIDPS[24]		= "SHOW IDPS";
+static char STR_PREVGAME[64]		= "PREV GAME";
+static char STR_NEXTGAME[56]		= "NEXT GAME";
+static char STR_SHUTDOWN2[32]		= "SHUTDOWN ";
+static char STR_RESTART2[32]		= "RESTART&nbsp; ";
 #ifdef REMOVE_SYSCALLS
-static char STR_DELCFWSYS2[100] 	= "DEL CFW SYSCALLS";
+static char STR_DELCFWSYS2[48] 		= "DEL CFW SYSCALLS";
 #endif
-static char STR_UNLOADWM[100]		= "UNLOAD WM";
-static char STR_FANCTRL2[100]		= "CTRL FAN";
-static char STR_FANCTRL4[100]		= "CTRL DYN FAN";
-static char STR_FANCTRL5[100]		= "CTRL MIN FAN";
-static char STR_UPDN[20]			= "&#8593;/&#8595;"; //↑/↓
-static char STR_LFRG[20]			= "&#8592;/&#8594;"; //←/→
+static char STR_UNLOADWM[64]		= "UNLOAD WM";
+static char STR_FANCTRL2[48]		= "CTRL FAN";
+static char STR_FANCTRL4[72]		= "CTRL DYN FAN";
+static char STR_FANCTRL5[88]		= "CTRL MIN FAN";
+static char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
+static char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
 #ifdef COBRA_ONLY
 static char STR_DISCOBRA[100]		= "COBRA TOGGLE";
 #endif
@@ -272,75 +272,75 @@ static char STR_RBGMODE[100]		= "RBG MODE TOGGLE";
 static char STR_RBGNORM[100]		= "NORM MODE TOGGLE";
 static char STR_RBGMENU[100] 		= "MENU TOGGLE";
 #endif
-static char STR_SAVE[30]			= "Save";
-static char STR_SETTINGSUPD[250]	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.";
-static char STR_ERROR[30]			= "Error!";
+static char STR_SAVE[24]			= "Save";
+static char STR_SETTINGSUPD[192]	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.";
+static char STR_ERROR[16]			= "Error!";
 
-static char STR_MYGAMES[50]			= "webMAN Games";
-static char STR_LOADGAMES[80]		= "Load games with webMAN";
-static char STR_FIXING[50]			= "Fixing";
+static char STR_MYGAMES[32]			= "webMAN Games";
+static char STR_LOADGAMES[72]		= "Load games with webMAN";
+static char STR_FIXING[32]			= "Fixing";
 
-static char STR_WMSETUP[50]			= "webMAN Setup";
-static char STR_WMSETUP2[50]		= "Setup webMAN options";
+static char STR_WMSETUP[40]			= "webMAN Setup";
+static char STR_WMSETUP2[56]		= "Setup webMAN options";
 
-static char STR_EJECTDISC[50]		= "Eject Disc";
-static char STR_UNMOUNTGAME[100]	= "Unmount current game";
+static char STR_EJECTDISC[32]		= "Eject Disc";
+static char STR_UNMOUNTGAME[56]		= "Unmount current game";
 
-static char STR_WMSTART[50]			= "webMAN loaded!";
-static char STR_WMUNL[80]			= "webMAN unloaded!";
-static char STR_CFWSYSALRD[130]		= "CFW Syscalls already disabled";
-static char STR_CFWSYSRIP[130]		= "Removal History files & CFW Syscalls in progress...";
-static char STR_RMVCFWSYS[130]		= "History files & CFW Syscalls deleted OK!";
-static char STR_RMVCFWSYSF[130]		= "Failed to remove CFW Syscalls";
+static char STR_WMSTART[32]			= "webMAN loaded!";
+static char STR_WMUNL[72]			= "webMAN unloaded!";
+static char STR_CFWSYSALRD[72]		= "CFW Syscalls already disabled";
+static char STR_CFWSYSRIP[128]		= "Removal History files & CFW Syscalls in progress...";
+static char STR_RMVCFWSYS[136]		= "History files & CFW Syscalls deleted OK!";
+static char STR_RMVCFWSYSF[80]		= "Failed to remove CFW Syscalls";
 
-static char STR_RMVWMCFG[130]		= "webMAN config reset in progress...";
-static char STR_RMVWMCFGOK[130]		= "Done! Restart within 3 seconds";
+static char STR_RMVWMCFG[96]		= "webMAN config reset in progress...";
+static char STR_RMVWMCFGOK[112]		= "Done! Restart within 3 seconds";
 
-static char STR_PS3FORMAT[50]		= "PS3 format games";
-static char STR_PS2FORMAT[50]		= "PS2 format games";
-static char STR_PS1FORMAT[50]		= "PSOne format games";
-static char STR_PSPFORMAT[50]		= "PSP\xE2\x84\xA2 format games";
+static char STR_PS3FORMAT[40]		= "PS3 format games";
+static char STR_PS2FORMAT[48]		= "PS2 format games";
+static char STR_PS1FORMAT[48]		= "PSOne format games";
+static char STR_PSPFORMAT[48]		= "PSP\xE2\x84\xA2 format games";
 
-static char STR_VIDFORMAT[50]		= "Blu-ray\xE2\x84\xA2 and DVD";
-static char STR_VIDEO[50]			= "Video content";
+static char STR_VIDFORMAT[56]		= "Blu-ray\xE2\x84\xA2 and DVD";
+static char STR_VIDEO[40]			= "Video content";
 
-static char STR_LAUNCHPSP[100]		= "Launch PSP ISO mounted through webMAN or mmCM";
-static char STR_LAUNCHPS2[100]		= "Launch PS2 Classic";
+static char STR_LAUNCHPSP[144]		= "Launch PSP ISO mounted through webMAN or mmCM";
+static char STR_LAUNCHPS2[48]		= "Launch PS2 Classic";
 
-static char STR_GAMEUM[50]			= "Game unmounted.";
+static char STR_GAMEUM[64]			= "Game unmounted.";
 
-static char STR_EJECTED[50]			= "Disc ejected.";
-static char STR_LOADED[50]			= "Disc inserted.";
+static char STR_EJECTED[40]			= "Disc ejected.";
+static char STR_LOADED[40]			= "Disc inserted.";
 
-static char STR_GAMETOM[50]			= "Game to mount";
-static char STR_GAMELOADED[250]		= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
-static char STR_PSPLOADED[230]		= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr>";
-static char STR_PS2LOADED[230]		= "Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr>";
-static char STR_LOADED2[50]			= "loaded   ";
+static char STR_GAMETOM[48]			= "Game to mount";
+static char STR_GAMELOADED[288]		= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
+static char STR_PSPLOADED[232]		= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr>";
+static char STR_PS2LOADED[240]		= "Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr>";
+static char STR_LOADED2[48]			= "loaded   ";
 
-static char STR_MOVIETOM[50]		= "Movie to mount";
-static char STR_MOVIELOADED[250]	= "Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie.";
+static char STR_MOVIETOM[48]		= "Movie to mount";
+static char STR_MOVIELOADED[272]	= "Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie.";
 
-static char STR_XMLRF[200]			= "Game list refreshed (<a href=\"" MY_GAMES_XML "\">mygames.xml</a>).<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system now.";
+static char STR_XMLRF[280]			= "Game list refreshed (<a href=\"" MY_GAMES_XML "\">mygames.xml</a>).<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system now.";
 
-static char STR_STORAGE[50]			= "System storage";
-static char STR_MEMORY[50]			= "Memory available";
-static char STR_MBFREE[50]			= "MB free";
-static char STR_KBFREE[50]			= "KB free";
+static char STR_STORAGE[40]			= "System storage";
+static char STR_MEMORY[48]			= "Memory available";
+static char STR_MBFREE[24]			= "MB free";
+static char STR_KBFREE[24]			= "KB free";
 
-static char STR_FANCTRL3[50]		= "Fan control:";
-static char STR_ENABLED[50]			= "Enabled";
-static char STR_DISABLED[50]		= "Disabled";
+static char STR_FANCTRL3[48]		= "Fan control:";
+static char STR_ENABLED[24]			= "Enabled";
+static char STR_DISABLED[24]		= "Disabled";
 
-static char STR_FANCH0[50]			= "Fan setting changed:";
-static char STR_FANCH1[50]			= "MAX TEMP: ";
-static char STR_FANCH2[50]			= "FAN SPEED: ";
-static char STR_FANCH3[50]			= "MIN FAN SPEED: ";
+static char STR_FANCH0[64]			= "Fan setting changed:";
+static char STR_FANCH1[48]			= "MAX TEMP: ";
+static char STR_FANCH2[48]			= "FAN SPEED: ";
+static char STR_FANCH3[72]			= "MIN FAN SPEED: ";
 
-static char STR_OVERHEAT[100]		= "System overheat warning!";
-static char STR_OVERHEAT2[100]		= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
+static char STR_OVERHEAT[80]		= "System overheat warning!";
+static char STR_OVERHEAT2[120]		= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
 
-static char STR_NOTFOUND[50]		= "Not found!";
+static char STR_NOTFOUND[40]		= "Not found!";
 
 static char COVERS_PATH[100]		= "";
 #endif
@@ -483,79 +483,86 @@ uint32_t get_system_language(uint8_t *lang)
 	return val_lang;
 }
 
-static bool language(const char *file_str, char *default_str)
+static bool language(const char *key_name, char *default_str)
 {
-	uint64_t siz = 0;
-	uint8_t i;
-	int f=0;
+	uint64_t bytes_read = 0;
+	uint8_t i, key_len = strlen(key_name);
+	int fd = 0;
 	char temp[1];
 
-	bool do_retry=true;
+	bool do_retry = true;
 
-	if(fh) f = fh; //file is already open
+	if(fh) fd = fh; //file is already open
 	else
 	{
-		if(webman_config->lang>22 && webman_config->lang!=99) return false;
+		if(webman_config->lang > 22 && (webman_config->lang != 99)) return false;
 
 		const char lang_codes[24][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "ZH", "DK", "CZ", "SK", "XX"};
 		char lang_path[34];
 
-		i=webman_config->lang; if(i>23) i=23;
+		i = webman_config->lang; if(i > 23) i = 23;
 
 		sprintf(lang_code, "_%s", lang_codes[i]);
 		sprintf(lang_path, "%s/LANG%s.TXT", "/dev_hdd0/tmp/wm_lang", lang_code);
 
-		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &f, NULL, 0) != CELL_FS_SUCCEEDED) return false;
+		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &fd, NULL, 0) != CELL_FS_SUCCEEDED) return false;
 
-		fh = f;
+		fh = fd;
 
  retry:
-		cellFsLseek(f, lang_pos, CELL_FS_SEEK_SET, &siz);
+		cellFsLseek(fd, lang_pos, CELL_FS_SEEK_SET, &bytes_read);
 	}
 
 	do {
-		cellFsRead(f, (void *)&temp, 0x01, &siz);
+		cellFsRead(fd, (void *)&temp, 1, &bytes_read);
 		lang_pos++;
-		for(i=0; i < strlen(file_str); i++)
+
+		for(i = 0; i < key_len; )
 		{
-			if(temp[0] != file_str[i]) break;
-			else if(i==strlen(file_str)-1)
+			if(temp[0] != key_name[i]) break; i++;
+
+			if(i == key_len)
 			{
-				while(siz && temp[0] != '[')
-				{
-					cellFsRead(f, (void *)&temp, 0x01, &siz);
+				do {
+
+					if(temp[0] == '[') break;
+
+					cellFsRead(fd, (void *)&temp, 1, &bytes_read);
 					lang_pos++;
-				}
-				int str_len = 0;
-				while(siz)
+
+				} while(bytes_read);
+
+				size_t str_len = 0;
+
+				while(bytes_read)
 				{
-					cellFsRead(f, (void *)&temp, 0x01, &siz);
-					lang_pos++;
-					if(temp[0] == ']')
-					{
-						default_str[str_len] = NULL;
-						return true;
-					}
+					cellFsRead(fd, (void *)&temp, 1, &bytes_read);
+
+					if(temp[0] == ']' || !bytes_read) break;
+
 					default_str[str_len] = temp[0];
 					str_len++;
 				}
-			}
-			else
-			{
-				cellFsRead(f, (void *)&temp, 0x01, &siz);
-				lang_pos++;
-			}
-		}
-	} while(siz != 0);
 
-	if(do_retry) {do_retry=false; lang_pos=0; goto retry;}
+				default_str[str_len] = NULL;
+				lang_pos += str_len;
+				return true;
+			}
+
+			cellFsRead(fd, (void *)&temp, 1, &bytes_read);
+			lang_pos++;
+		}
+
+	} while(bytes_read != 0);
+
+	if(do_retry) {do_retry = false; lang_pos = 0; goto retry;}
 
 	return true;
 }
 
 static void update_language(void)
 {
-	lang_pos=fh=0;
+	lang_pos = fh = 0;
 
 	if(language("STR_TRADBY", STR_TRADBY))
 	{
@@ -727,6 +734,6 @@ static void update_language(void)
 #endif
 	}
 
-	if(fh) {cellFsClose(fh); lang_pos=fh=0;}
+	if(fh) {cellFsClose(fh); lang_pos = fh = 0;}
 }
 #endif //#ifndef ENGLISH_ONLY
