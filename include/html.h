@@ -47,7 +47,8 @@
 #define HTML_RED_SEPARATOR		"<hr color=\"#FF0000\"/>"
 
 #define SCRIPT_SRC_FMT			"<script src=\"%s\"></script>"
-#define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){self.location=\"%s\"},3000);</script>"
+#define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){self.location=\"%s\"},%i);</script>"
+#define HTML_REDIRECT_WAIT		3000
 
 #define open_browser			vshmain_AE35CF2D
 
@@ -130,30 +131,31 @@ static bool urlenc(char *dst, char *src)
 
 static void htmlenc(char *dst, char *src, u8 cpy2src)
 {
-	size_t j=0;
-	size_t n=strlen(src); char tmp[8]; memset(dst, 4*n, 0); u8 t, c;
-	for(size_t i=0; i<n; i++)
+	size_t j = 0;
+	size_t n = strlen(src); char tmp[8]; u8 t, c;
+	for(size_t i = 0; i < n; i++)
 	{
 		if(src[i] & 0x80)
 		{
 			dst[j++] = '&';
 			dst[j++] = '#';
-			sprintf(tmp, "%i;", (int)(unsigned char)src[i]); t=strlen(tmp); c=0;
+			sprintf(tmp, "%i;", (int)(unsigned char)src[i]); t = strlen(tmp); c = 0;
 			while(t--) {dst[j++] = tmp[c++];}
 		}
 		else dst[j++] = src[i];
 	}
-	dst[j] = '\0';
 
-	if(cpy2src) strncpy(src, dst, MAX_LINE_LEN);
+	dst[MIN(j, MAX_LINE_LEN)] = '\0';
+
+	if(cpy2src) strcpy(src, dst);
 }
 
 static void utf8enc(char *dst, char *src, u8 cpy2src)
 {
-	size_t j=0, n=strlen(src); u16 c;
-	for(size_t i=0; i<n; i++)
+	size_t j = 0, n = strlen(src); u16 c;
+	for(size_t i = 0; i < n; i++)
 	{
-		c=(src[i]&0xFF);
+		c = (src[i] & 0xFF);
 
 		if(!(c & 0xff80)) dst[j++]=c;
 		else //if(!(c & 0xf800))
@@ -170,9 +172,10 @@ static void utf8enc(char *dst, char *src, u8 cpy2src)
 		}
 */
 	}
-	dst[j] = '\0';
 
-	if(cpy2src) strncpy(src, dst, MAX_LINE_LEN);
+	dst[MIN(j, MAX_LINE_LEN)] = '\0';
+
+	if(cpy2src) strcpy(src, dst);
 }
 /*
 static void utf8dec(char *dst, char *src, u8 cpy2src)

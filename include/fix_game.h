@@ -427,6 +427,8 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 			// -- get TitleID from PARAM.SFO
 			char filename[MAX_PATH_LEN]; int fs;
 
+			char *p = strstr(game_path, "/PS3_GAME"); if(!p) p = strstr(game_path, "/USRDIR"); if(p) p[0] = NULL;
+
 			if(islike(game_path, "/net") || strstr(game_path, ".ntfs["))
 				{get_name(filename, strrchr(game_path, '/')+1, 1); strcat(filename, ".SFO\0");}
 			else
@@ -503,8 +505,9 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 		}
 
-		fix_in_progress=false;
-		if(webman_config->fixgame==FIX_GAME_FORCED) {webman_config->fixgame=FIX_GAME_QUICK; save_settings();}
+		fix_in_progress = false;
+
+		if(webman_config->fixgame == FIX_GAME_FORCED) {webman_config->fixgame=FIX_GAME_QUICK; save_settings();}
 	}
 }
 

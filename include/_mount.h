@@ -408,8 +408,9 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 		if(islike(param, "/copy.ps3")) {plen = IS_COPY; pos = strstr(param, "&to="); if(pos) {strcpy(target, pos + 4); pos[0] = NULL;}}
 #endif
 		char enc_dir_name[1024], *source = param + plen;
-		bool mounted=false; max_mapped=0;
-		is_binary=1;
+		bool mounted = false; max_mapped = 0;
+
+		is_binary = 1;
 
 		// mount url
 		urlenc(templn, source);
@@ -776,23 +777,33 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 								 _path, enc_dir_name, is_error ? STR_ERROR : "", STR_CPYDEST); strcat(buffer, tempstr);
 
 				// show target path
-				add_breadcrumb_trail(buffer, target);
+				add_breadcrumb_trail(buffer, target); tempstr[0] = NULL;
 
-				if(strstr(target, "/webftp_server")) {sprintf(tempstr, "<HR>%s", STR_SETTINGSUPD); strcat(buffer, tempstr);} else
-				if(cp_mode) {char *p = strrchr(enc_dir_name, '/'); p[0] = NULL; sprintf(tempstr, HTML_REDIRECT_TO_URL, enc_dir_name); strcat(buffer, tempstr);}
+				if(strstr(target, "/webftp_server")) {sprintf(tempstr, "<HR>%s", STR_SETTINGSUPD);} else
+				if(cp_mode) {char *p = strrchr(_path, '/'); p[0] = NULL; sprintf(tempstr, HTML_REDIRECT_TO_URL, _path, HTML_REDIRECT_WAIT);}
 
 				if(is_error) {show_msg((char*)STR_CPYABORT); cp_mode = 0; return;}
 			}
 			else
 #endif // #ifdef COPY_PS3
-			if(!extcmp(param, ".BIN.ENC", 8))
-				{strcat(buffer, STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i><hr>%s", enc_dir_name, wm_icons[7], 300, mounted?STR_PS2LOADED:STR_ERROR);}
-			else if((strstr(param, "/PSPISO") || strstr(param, "/ISO/")) && !extcasecmp(param, ".iso", 4))
-				{strcat(buffer, STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i><hr>%s", enc_dir_name, wm_icons[8], strcasestr(enc_dir_name,".png")?200:300, mounted?STR_PSPLOADED:STR_ERROR);}
-			else if(strstr(param, "/BDISO") || strstr(param, "/DVDISO") || !extcmp(param, ".ntfs[BDISO]", 12) || !extcmp(param, ".ntfs[DVDISO]", 13))
-				{strcat(buffer, STR_MOVIETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a><hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[strstr(param,"BDISO")?5:9], mounted?STR_MOVIELOADED:STR_ERROR);}
-			else
-				{strcat(buffer, STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source); sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a><hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[5], mounted?STR_GAMELOADED:STR_ERROR);}
+
+			{
+				bool is_movie = strstr(param, "/BDISO") || strstr(param, "/DVDISO") || !extcmp(param, ".ntfs[BDISO]", 12) || !extcmp(param, ".ntfs[DVDISO]", 13);
+				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
+
+				if(is_movie)
+					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
+									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[strstr(param,"BDISO") ? 5 : 9], mounted ? STR_MOVIELOADED : STR_ERROR);
+				else if(!extcmp(param, ".BIN.ENC", 8))
+					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
+									 "<hr>%s", enc_dir_name, wm_icons[7], 300, mounted ? STR_PS2LOADED : STR_ERROR);
+				else if((strstr(param, "/PSPISO") || strstr(param, "/ISO/")) && !extcasecmp(param, ".iso", 4))
+					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
+									 "<hr>%s", enc_dir_name, wm_icons[8], strcasestr(enc_dir_name,".png") ? 200 : 300, mounted ? STR_PSPLOADED : STR_ERROR);
+				else
+					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
+									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[5], mounted ? STR_GAMELOADED : STR_ERROR);
+			}
 
 			strcat(buffer, tempstr);
 
@@ -801,11 +812,11 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 			{
 				CellFsDirent entry; uint64_t read_e; int fd2; u16 pcount=0; u32 tlen=strlen(buffer)+8;
 
-				sprintf(target, "%s", source); u8 is_iso=0;
+				sprintf(target, "%s", source); u8 is_iso = 0;
 				if(strstr(target, "Sing"))
 				{
-					if(strstr(target, "/PS3ISO")) {strcpy(strstr(target, "/PS3ISO"), "/PS2DISC\0"); is_iso=1;}
-					if(strstr(target, ".ntfs[PS3ISO]")) {strcpy(target, "/dev_hdd0/PS2DISC\0"); is_iso=1;}
+					if(strstr(target, "/PS3ISO")) {strcpy(strstr(target, "/PS3ISO"), "/PS2DISC\0"); is_iso = 1;}
+					if(strstr(target, ".ntfs[PS3ISO]")) {strcpy(target, "/dev_hdd0/PS2DISC\0"); is_iso = 1;}
 				}
 
 				// check for [PS2] extracted folders
@@ -815,7 +826,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 					{
 						if((entry.d_name[0] == '.')) continue;
 
-						if(is_iso || strstr(entry.d_name, "[PS2")!=NULL)
+						if(is_iso || strstr(entry.d_name, "[PS2") != NULL)
 						{
 							if(pcount == 0) strcat(buffer, "<br><HR>");
 							urlenc(enc_dir_name, entry.d_name);

@@ -668,7 +668,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		else if(code == CODE_INSTALL_PKG)
 			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", "Installing "); add_breadcrumb_trail(templn, (char*)msg + 11);}
 		else if(code == CODE_DOWNLOAD_FILE)
-			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); p[4] = NULL; p = strstr((char*)msg, "To: "); add_breadcrumb_trail(templn, p + 4);}
+			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); strcpy(p, "<p>To: \0"); p = strstr((char*)msg, "To: "); add_breadcrumb_trail(templn, p + 4);}
 #endif
 		else
 			sprintf(templn, "%s", msg);
@@ -704,7 +704,11 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 
 	if(mount_ps3) {strcat(buffer, HTML_BODY); return;}
 
-	strcat(buffer,	"<head><title>webMAN MOD</title>");
+	strcat(buffer,	"<head><title>webMAN MOD</title>"
+					"<style>"
+					"a{color:#ccc;text-decoration:none;}"
+					"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
+					"</style>"); // fallback style if external css fails
 
 #ifndef EMBED_JS
 	if(param[1] == 0)
@@ -715,7 +719,6 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 	}
 	if(css_exists)
 	{
-		sprintf(templn, "<style>a{%s}</style>", "color:#ccc;text-decoration:none;"); strcat(buffer, templn); // fallback style if external css fails
 		sprintf(templn, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(buffer, templn);
 	}
 	else
@@ -724,7 +727,7 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 		strcat(buffer,	"<style type=\"text/css\"><!--\r\n"
 
 						"a.s:active{color:#F0F0F0;}"
-						"a:link{color:#909090;text-decoration:none;}"
+						"a:link{color:#909090;}"
 
 						"a.f:active{color:#F8F8F8;}"
 						"a,a.f:link,a:visited{color:#D0D0D0;}");
@@ -741,7 +744,6 @@ static void prepare_html(char *buffer, char *templn, char *param, u8 is_ps3_http
 #endif
 						"input:focus{border:2px solid #0099FF;}"
 						".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
-						"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
 						"body{background-color:#101010}body,a.s,td,th{color:#F0F0F0;white-space:nowrap");
 
 		//if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
@@ -2072,7 +2074,7 @@ static void handleclient(u64 conn_s_p)
 						urlenc(templn, game_path);
 						sprintf(tempstr, "Fixed: " HTML_URL, templn, game_path); strcat(buffer, tempstr);
 
-						sprintf(tempstr, HTML_REDIRECT_TO_URL, templn); strcat(buffer, tempstr);
+						sprintf(tempstr, HTML_REDIRECT_TO_URL, templn, HTML_REDIRECT_WAIT); strcat(buffer, tempstr);
 					}
 					else
   #endif
@@ -2254,6 +2256,8 @@ static void handleclient(u64 conn_s_p)
 						if(is_reset || strstr(param, "?wmconfig")) {cellFsUnlink(WMCONFIG); reset_settings(); sprintf(param, "/delete_ps3%s", WMCONFIG);}
 						if(is_reset || strstr(param, "?wmtmp")) sprintf(param, "/delete_ps3%s", WMTMP);
 
+						bool is_dir = isDir(param2);
+
 						if(islike(param2 , "?history"))
 						{
 							delete_history(true);
@@ -2303,9 +2307,9 @@ static void handleclient(u64 conn_s_p)
 							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr); htmlenc(templn, tempstr, 0);
 							sprintf(tempstr, "%s : " HTML_URL "%s<br>", STR_DELETE, param, templn, name);
 						}
-						strcat(buffer, tempstr);
 
-						sprintf(tempstr, HTML_REDIRECT_TO_URL, param); strcat(buffer, tempstr);
+						strcat(buffer, tempstr);
+						sprintf(tempstr, HTML_REDIRECT_TO_URL, param, is_dir ? HTML_REDIRECT_WAIT : 0); strcat(buffer, tempstr);
 					}
  #endif
 

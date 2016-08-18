@@ -203,13 +203,14 @@ static int installPKG(const char *pkgpath, char *msg)
 		return ret;
 	}
 
-	sprintf(msg, "ERROR: %s", STR_ERROR, pkgpath);
-
 	size_t pkg_path_len = strlen(pkgpath);
 
 	if (pkg_path_len < MAX_PKGPATH_LEN)
 	{
-		snprintf(pkg_path, MAX_PKGPATH_LEN, "%s", pkgpath);
+		if(islike(pkgpath, "/net"))
+			cache_file_to_hdd((char*)pkgpath, pkg_path, "/packages", msg);
+		else
+			snprintf(pkg_path, MAX_PKGPATH_LEN, "%s", pkgpath);
 
 		if( file_exists(pkg_path) )
 		{
@@ -234,6 +235,7 @@ static int installPKG(const char *pkgpath, char *msg)
 		}
 	}
 
+	if(ret) sprintf(msg, "ERROR: %s", STR_ERROR, pkgpath);
 	return ret;
 }
 

@@ -96,7 +96,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 #endif
 			char path[MAX_PATH_LEN], version[8] = "01.00", *app_ver = version;
 
-			sprintf(templn, "<hr><H2><a href=\"https://a0.ww.np.dl.playstation.net/tpl/np/%s/%s-ver.xml\" target=\"_blank\">%s</a>", _game_TitleID, _game_TitleID, _game_TitleID); strcat(buffer, templn);
+			sprintf(templn, "<hr><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); strcat(buffer, templn);
 
 			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
 			if(file_exists(path)==false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
