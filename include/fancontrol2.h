@@ -69,38 +69,38 @@ static void poll_thread(uint64_t poll)
 		if(max_temp)
 		{
 			t1=t2=0;
-			get_temperature(0, &t1); t1>>=24; // CPU: 3E030000 -> 3E.03캜 -> 62.(03/256)캜
+			get_temperature(0, &t1); // CPU: 3E030000 -> 3E.03째C -> 62.(03/256)째C
 			sys_timer_usleep(300000);
 
-			get_temperature(1, &t2); t2>>=24; // RSX: 3E030000 -> 3E.03캜 -> 62.(03/256)캜
+			get_temperature(1, &t2); // RSX: 3E030000 -> 3E.03째C -> 62.(03/256)째C
 			sys_timer_usleep(200000);
 
 			if(!max_temp || fan_ps2_mode) continue; // if fan mode was changed to manual by another thread while doing usleep
 
-			if(t2>t1) t1=t2;
+			if(t2 > t1) t1 = t2;
 
-			if(!lasttemp) lasttemp=t1;
+			if(!lasttemp) lasttemp = t1;
 
-			delta=(lasttemp-t1);
+			delta = (lasttemp - t1);
 
-			lasttemp=t1;
+			lasttemp = t1;
 
-			if(t1>=max_temp || t1>84)
+			if((t1 >= max_temp) || (t1 >= MAX_TEMPERATURE))
 			{
-				if(delta< 0) fan_speed+=2;
-				if(delta==0 && t1!=(max_temp-1)) fan_speed++;
-				if(delta==0 && t1>=(max_temp+1)) fan_speed+=(2+(t1-max_temp));
-				if(delta> 0)
+				if(delta  < 0) fan_speed += 2;
+				if(delta == 0 && t1 != (max_temp-1)) fan_speed++;
+				if(delta == 0 && t1 >= (max_temp+1)) fan_speed+=(2 + (t1 - max_temp));
+				if(delta  > 0)
 				{
 					smoothstep++;
-					if(smoothstep>1)
+					if(smoothstep > 1)
 					{
 						fan_speed--;
 						smoothstep=0;
 					}
 				}
-				if(t1>84)	 fan_speed+=step_up;
-				if(delta< 0 && (t1-max_temp)>=2) fan_speed+=step_up;
+				if(t1 >= MAX_TEMPERATURE)	 fan_speed+=step_up;
+				if(delta< 0 && (t1 - max_temp)>=2) fan_speed+=step_up;
 			}
 			else
 			{
@@ -123,8 +123,8 @@ static void poll_thread(uint64_t poll)
 					//if(smoothstep)
 					{
 						fan_speed--;
-						if(t1<=(max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // 66%
-						if(t1<=(max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // 50%
+						if(t1 <= (max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // 66%
+						if(t1 <= (max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // 50%
 						smoothstep=0;
 					}
 				}
@@ -133,8 +133,8 @@ static void poll_thread(uint64_t poll)
 			if(t1>76 && old_fan<0x43) fan_speed++; // <26%
 			if(t1>=MAX_FANSPEED && fan_speed<0xB0) {old_fan=0; fan_speed=0xB0;} // <69%
 
-			if(fan_speed<((webman_config->minfan*255)/100)) fan_speed=(webman_config->minfan*255)/100;
-			if(fan_speed>MAX_FANSPEED) fan_speed=MAX_FANSPEED;
+			if(fan_speed < ((webman_config->minfan*255)/100)) fan_speed = (webman_config->minfan*255)/100;
+			if(fan_speed > MAX_FANSPEED) fan_speed = MAX_FANSPEED;
 
 			//sprintf(debug, "OFAN: %x | CFAN: %x | TEMP: %i | STALL: %i\r\n", old_fan, fan_speed, t1, stall);	ssend(data_s, mytxt);
 			//if(abs(old_fan-fan_speed)>=0x0F || stall>35 || (abs(old_fan-fan_speed) /*&& webman_config->aggr*/))
@@ -142,45 +142,45 @@ static void poll_thread(uint64_t poll)
 			{
 				//if(t1>76 && fan_speed<0x50) fan_speed=0x50;
 				//if(t1>77 && fan_speed<0x58) fan_speed=0x58;
-				if(t1>78 && fan_speed<0x50) fan_speed+=2; // <31%
+				if(t1>78 && fan_speed<0x50) fan_speed += 2; // <31%
 				if(old_fan!=fan_speed)
 				{
-				old_fan=fan_speed;
-				fan_control(fan_speed, 1);
-				//sprintf(debug, "OFAN: %x | CFAN: %x | TEMP: %i | SPEED APPLIED!\r\n", old_fan, fan_speed, t1); ssend(data_s, mytxt);
-				stall=0;
+					old_fan = fan_speed;
+					fan_control(fan_speed, 1);
+					//sprintf(debug, "OFAN: %x | CFAN: %x | TEMP: %i | SPEED APPLIED!\r\n", old_fan, fan_speed, t1); ssend(data_s, mytxt);
+					stall=0;
 				}
 			}
 			else
-				if( old_fan>fan_speed && (old_fan-fan_speed)>8 && t1<(max_temp-3) )
+				if( (old_fan > fan_speed) && ((old_fan - fan_speed) > 8) && (t1 < (max_temp-3)) )
 					stall++;
 		}
 
 		#include "combos.h"
 
-		// Overheat control (over 83캜)
+		// Overheat control (over 83째C)
 		to++;
-		if(to==20)
+		if(to == 20)
 		{
-			get_temperature(0, &t1); t1>>=24;
-			get_temperature(1, &t2); t2>>=24;
+			get_temperature(0, &t1); // CPU
+			get_temperature(1, &t2); // RSX
 
 			if(t1>(MAX_TEMPERATURE-2) || t2>(MAX_TEMPERATURE-2))
 			{
 				if(!webman_config->warn)
 				{
-					sprintf((char*) msg, "%s\n CPU: %i캜   RSX: %i캜", STR_OVERHEAT, t1, t2);
+					sprintf((char*) msg, "%s\n CPU: %i째C   RSX: %i째C", STR_OVERHEAT, t1, t2);
 					show_msg((char*) msg);
 					sys_timer_sleep(2);
 				}
-				if(t1>MAX_TEMPERATURE || t2>MAX_TEMPERATURE)
+				if((t1 > MAX_TEMPERATURE) || (t2 > MAX_TEMPERATURE))
 				{
-					if(!max_temp) max_temp=(MAX_TEMPERATURE-3);
-					if(fan_speed<0xB0) fan_speed=0xB0; // 69%
+					if(!max_temp) max_temp = (MAX_TEMPERATURE - 3);
+					if(fan_speed < 0xB0) fan_speed = 0xB0; // 69%
 					else
-						if(fan_speed<MAX_FANSPEED) fan_speed+=8;
+						if(fan_speed < MAX_FANSPEED) fan_speed += 8;
 
-					old_fan=fan_speed;
+					old_fan = fan_speed;
 					fan_control(fan_speed, 0);
 					if(!webman_config->warn) show_msg((char*)STR_OVERHEAT2);
 				}

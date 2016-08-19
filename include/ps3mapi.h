@@ -1276,8 +1276,6 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 						u32 rsx_temp = 0;
 						get_temperature(0, &cpu_temp);
 						get_temperature(1, &rsx_temp);
-						cpu_temp = cpu_temp >> 24;
-						rsx_temp = rsx_temp >> 24;
 						sprintf(buffer, "200 %i|%i\r\n", cpu_temp, rsx_temp);
 						ssend(conn_s_ps3mapi, buffer);
 					}

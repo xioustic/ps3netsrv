@@ -136,7 +136,7 @@ static void saveBMP(char *path, bool notify_bmp)
 	// write bmp header
 	cellFsWrite(fd, (void *)bmp_header, sizeof(bmp_header), 0);
 
-	uint32_t i, k, idx, ww=w/2;
+	uint32_t i, k, idx, ww = w/2;
 
 	// dump...
 	for(i = h; i > 0; i--)

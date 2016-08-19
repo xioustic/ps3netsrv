@@ -504,7 +504,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 		{
 			if(webman_config->bootd && (f0==1))
 			{
-				waitfor((char*)"/dev_usb", webman_config->bootd); // wait for any usb
+				waitfor("/dev_usb", webman_config->bootd); // wait for any usb
 			}
 
 			if(webman_config->boots && (f0>=1 && f0<=6)) // usb000->007
@@ -516,7 +516,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 					(webman_config->usb6 && (f0==5)) ||
 					(webman_config->usb7 && (f0==6)) )
 				{
-					waitfor((char*)drives[f0], webman_config->boots);
+					waitfor(drives[f0], webman_config->boots);
 				}
 			}
 		}

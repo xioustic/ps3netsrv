@@ -481,7 +481,7 @@ static CellRtcTick rTick, gTick;
 
 static void enable_fan_control(u8 enable, char *msg);
 static void set_buffer_sizes(int footprint);
-static void waitfor(char *path, uint8_t timeout);
+static void waitfor(const char *path, uint8_t timeout);
 static void show_msg(char* msg);
 
 #ifdef COBRA_ONLY

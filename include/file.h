@@ -359,7 +359,7 @@ static int del(const char *path, bool recursive)
 }
 #endif
 
-static void waitfor(char *path, uint8_t timeout)
+static void waitfor(const char *path, uint8_t timeout)
 {
 	struct CellFsStat s;
 	for(uint8_t n = 0; n < (timeout*2); n++)

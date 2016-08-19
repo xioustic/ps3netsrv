@@ -261,8 +261,8 @@ show_popup:
 								CellRtcTick pTick; u32 dd, hh, mm, ss; char tmp[256];
 
 								cellRtcGetCurrentTick(&pTick);
-								get_temperature(0, &t1);
-								get_temperature(1, &t2);
+								get_temperature(0, &t1); // CPU
+								get_temperature(1, &t2); // RSX
 
 								uint32_t blockSize;
 								uint64_t freeSize;
@@ -307,7 +307,7 @@ show_popup:
 													"%s: %id %02d:%02d:%02d%s\n"
 													"Firmware : %i.%02i %s\n"
 													"IP: %s  %s%s",
-													t1>>24, t2>>24, (int)(((int)speed*100)/255),
+													t1, t2, (int)(((int)speed*100)/255),
 													bb?"Play":"Startup", dd, hh, mm, ss, smax,
 													(int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, cfw_info, ip, net_type, syscalls_removed ? "  [noSC]" : "");
 

@@ -94,7 +94,7 @@ static void launch_disc(char *category, char *seg_name)
 	u8 n;
 	for(n = 0; n < 15; n++) {if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
 
-	if(!strcmp(seg_name, "seg_device")) waitfor((char*)"/dev_bdvd", 10); if(n) sys_timer_sleep(3);
+	if(!strcmp(seg_name, "seg_device")) waitfor("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
 
 	int view = View_Find("explore_plugin");
 
@@ -102,11 +102,11 @@ static void launch_disc(char *category, char *seg_name)
 	{
 		char explore_command[128]; // info: http://www.psdevwiki.com/ps3/explore_plugin
 
-		// default segment
-		if(!seg_name[0]) sprintf(seg_name, "seg_device");
-
 		// default category
 		if(!category[0]) sprintf(category, "game");
+
+		// default segment
+		if(!seg_name[0]) sprintf(seg_name, "seg_device");
 
 		if(strcmp(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{

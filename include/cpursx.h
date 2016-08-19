@@ -49,17 +49,17 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-	u32 t1=0, t2=0, t1f, t2f;
-	get_temperature(0, &t1); t1>>=24; // 3E030000 -> 3E.03°C -> 62.(03/256)°C
-	get_temperature(1, &t2); t2>>=24;
+	u32 t1 = 0, t2 = 0, t1f, t2f;
+	get_temperature(0, &t1); // CPU // 3E030000 -> 3E.03°C -> 62.(03/256)°C
+	get_temperature(1, &t2); // RSX
 
-	t1f=(1.8f*(float)t1+32.f);
-	t2f=(1.8f*(float)t2+32.f);
+	t1f = (1.8f*(float)t1+32.f);
+	t2f = (1.8f*(float)t2+32.f);
 
 	_meminfo meminfo;
 	{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
 
-	if((webman_config->fanc == 0) && (get_fan_policy_offset>0))
+	if((webman_config->fanc == 0) && (get_fan_policy_offset > 0))
 	{
 		u8 st, mode, unknown;
 		backup[2]=peekq(get_fan_policy_offset);
@@ -73,17 +73,13 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	get_eid0_idps();
 	get_idps_psid();
 
-	uint32_t blockSize;
-	uint64_t freeSize;
-	cellFsGetFreeSize((char*)"/dev_hdd0", &blockSize, &freeSize);
-
 	sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); strcat(buffer, templn);
 
 	if(IS_INGAME)
 	{
 		get_game_info();
 
-		if(strlen(_game_TitleID)==9)
+		if(strlen(_game_TitleID) == 9)
 		{
 #ifdef GET_KLICENSEE
 			strcat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
@@ -172,7 +168,23 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	else
 		sprintf(max_temp1, " <small>[FAN: %i%% %s]</small>", webman_config->manu, STR_MANUAL);
 
-	sprintf( templn, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
+	uint32_t blockSize = 0;
+	uint64_t freeSize = 0;
+
+	templn[0] = NULL;
+
+	for(u8 d = 1; d < 7; d++)
+	{
+		if(isDir(drives[d]))
+		{
+			cellFsGetFreeSize(drives[d], &blockSize, &freeSize);
+			sprintf(param, "<br>USB%c: %'d %s", drives[d][10], (int)((blockSize*freeSize)>>20), STR_MBFREE); strcat(templn, param);
+		}
+	}
+
+	cellFsGetFreeSize((char*)"/dev_hdd0", &blockSize, &freeSize);
+
+	sprintf( param, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
 											"CPU: %i°C%s<br>"
 											"RSX: %i°C</a><hr>"
 											"<a class=\"s\" href=\"/cpursx.ps3?dn\">"
@@ -180,13 +192,13 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 											"RSX: %i°F</a><hr>"
 											"<a class=\"s\" href=\"/games.ps3\">"
 											"MEM: %'d KB<br>"
-											"HDD: %'d %s</a><hr>"
+											"HDD: %'d %s%s</a><hr>"
 											"<a class=\"s\" href=\"/cpursx.ps3?mode\">"
 											"FAN SPEED: %i%% (0x%X)</a><br>",
 					t1, max_temp1, t2,
 					t1f, max_temp2, t2f,
-					(meminfo.avail>>10), (int)((blockSize*freeSize)>>20), STR_MBFREE,
-					(int)((int)fan_speed*100)/255, fan_speed); strcat(buffer, templn);
+					(meminfo.avail>>10), (int)((blockSize*freeSize)>>20), STR_MBFREE, templn,
+					(int)((int)fan_speed*100)/255, fan_speed); strcat(buffer, param);
 
 	if( !max_temp && !is_ps3_http)
 		sprintf( templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"self.location='/cpursx.ps3?fan='+this.value\"><hr>", webman_config->manu, DEFAULT_MIN_FANSPEED);
@@ -203,21 +215,21 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	////// play time //////
 	if(gTick.tick>rTick.tick)
 	{
-		ss = (u32)((pTick.tick-gTick.tick)/1000000);
+		ss = (u32)((pTick.tick - gTick.tick)/1000000);
 		dd = (u32)(ss / 86400); ss = ss % 86400; hh = (u32)(ss / 3600); ss = ss % 3600; mm = (u32)(ss / 60); ss = ss % 60;
 		if(dd<100) {sprintf( templn, "<label title=\"Play\">&#9737;</label> %id %02d:%02d:%02d<br>", dd, hh, mm, ss); strcat(buffer, templn);}
 	}
 	///////////////////////
 
 	//// startup time /////
-	ss = (u32)((pTick.tick-rTick.tick)/1000000);
+	ss = (u32)((pTick.tick - rTick.tick)/1000000);
 	dd = (u32)(ss / 86400); ss = ss % 86400; hh = (u32)(ss / 3600); ss = ss % 3600; mm = (u32)(ss / 60); ss = ss % 60;
 	sprintf( templn, "<label title=\"Startup\">&#8986;</label> %id %02d:%02d:%02d", dd, hh, mm, ss); strcat(buffer, templn);
 	///////////////////////
 
-	if(file_exists("/dev_bdvd") && file_exists(WMTMP "/last_game.txt"))
+	if(isDir("/dev_bdvd") && file_exists(WMTMP "/last_game.txt"))
 	{
-		int fd=0;
+		int fd = 0;
 
 		if(cellFsOpen(WMTMP "/last_game.txt", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
@@ -274,9 +286,9 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 static void get_cpursx(char *cpursx)
 {
-	u32 t1=0, t2=0;
-	get_temperature(0, &t1); t1>>=24; // 3E030000 -> 3E.03°C -> 62.(03/256)°C
-	get_temperature(1, &t2); t2>>=24;
+	u32 t1 = 0, t2 = 0;
+	get_temperature(0, &t1); // CPU // 3E030000 -> 3E.03°C -> 62.(03/256)°C
+	get_temperature(1, &t2); // RSX
 
 	sprintf(cpursx, "CPU: %i°C | RSX: %i°C", t1, t2);
 }

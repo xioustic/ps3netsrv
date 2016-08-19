@@ -1023,13 +1023,13 @@ static void mount_autoboot(void)
 	// wait few seconds until path becomes ready
 	if((strlen(path) > 8) || (cobra_mode && islike(path, "/net")))
 	{
-		waitfor((char*)path, 2 * (webman_config->boots + webman_config->bootd));
+		waitfor(path, 2 * (webman_config->boots + webman_config->bootd));
 		do_mount = ((cobra_mode && islike(path, "/net")) || islike(path, "http") || file_exists(path));
 	}
 
 	if(do_mount)
 	{   // add some delay
-		if(webman_config->delay)      {sys_timer_sleep(10); waitfor((char*)path, 2*(webman_config->boots+webman_config->bootd));}
+		if(webman_config->delay)      {sys_timer_sleep(10); waitfor(path, 2*(webman_config->boots+webman_config->bootd));}
 		else if(islike(path, "/net"))  sys_timer_sleep(10);
 #ifndef COBRA_ONLY
 		if(strstr(path, ".ntfs[") == NULL)
@@ -2554,7 +2554,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					sys_timer_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
-					waitfor((char*)"/dev_bdvd", 3);
+					waitfor("/dev_bdvd", 3);
 
 					// re-mount with media type
 					if(isDir("/dev_bdvd/PS3_GAME")) mount_unk = EMU_PS3; else
@@ -2898,7 +2898,7 @@ exit_mount:
 	// wait few seconds until the game is mounted
 	if(ret && extcmp(_path, ".BIN.ENC", 8))
 	{
-		waitfor((char*)"/dev_bdvd", (islike(_path, "/dev_hdd0") ? 6 : islike(_path, "/net") ? 20 : 15));
+		waitfor("/dev_bdvd", (islike(_path, "/dev_hdd0") ? 6 : islike(_path, "/net") ? 20 : 15));
 		if(!isDir("/dev_bdvd")) ret = false;
 	}
 

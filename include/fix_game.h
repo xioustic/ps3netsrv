@@ -435,7 +435,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 				sprintf(filename, "%s/PARAM.SFO", game_path);
 
 			if(file_exists(filename)==false) sprintf(filename, "%s/PS3_GAME/PARAM.SFO", game_path);
-			if(file_exists(filename)==false) {waitfor((char*)"/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
+			if(file_exists(filename)==false) {waitfor("/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
 
 			if(cellFsOpen(filename,	CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
