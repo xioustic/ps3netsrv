@@ -559,12 +559,12 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	if(mobile_mode) {cellFsUnlink((char*)GAMELIST_JS); buf_len = 0;}
 	else
 	{
-		if(strstr(param, "/index.ps3?")) cellFsUnlink((char*)WMTMP "/games.html");
+		if(islike(param, "/index.ps3?")) cellFsUnlink(WMTMP "/games.html");
 
-		if(cellFsStat((char*)WMTMP "/games.html", &buf) == CELL_FS_SUCCEEDED && buf.st_size > 10)
+		if(cellFsStat(WMTMP "/games.html", &buf) == CELL_FS_SUCCEEDED && buf.st_size > 10)
 		{
 			int fdu;
-			if(cellFsOpen((char*)WMTMP "/games.html", CELL_FS_O_RDONLY, &fdu, NULL, 0) == CELL_FS_SUCCEEDED)
+			if(cellFsOpen(WMTMP "/games.html", CELL_FS_O_RDONLY, &fdu, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
 				cellFsRead(fdu, (char*)(buffer + buf_len), buf.st_size, NULL);
 				cellFsClose(fdu);
@@ -927,7 +927,7 @@ next_html_entry:
 							if(mobile_mode)
 							{
 								if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
-								for(size_t c=0; templn[c]!=0; c++) {if(templn[c]=='"' || templn[c]<0x20) templn[c]=0x20;} // replace invalid chars
+								for(size_t c = 0; templn[c] > 0; c++) {if((templn[c] == '"') || (templn[c] < ' ')) templn[c] = ' ';} // replace invalid chars
 
 								int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320; h=176;} else if(strstr(icon, "icon_wm_")) {w=280; h=280;}
 
@@ -1048,11 +1048,11 @@ next_html_entry:
 		if(mobile_mode)
 		{
 			strcat(buffer, "];");
-			savefile((char*)GAMELIST_JS, (char*)(buffer), strlen(buffer));
+			savefile(GAMELIST_JS, (char*)(buffer), strlen(buffer));
 		}
 		else
 		{
-			savefile((char*)WMTMP "/games.html", (char*)(buffer + buf_len), (strlen(buffer) - buf_len));
+			savefile(WMTMP "/games.html", (char*)(buffer + buf_len), (strlen(buffer) - buf_len));
 		}
 	}
 	return true;

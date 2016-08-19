@@ -209,7 +209,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define JQUERY_LIB_JS			HTML_BASE_PATH "/jquery.min.js"
 #define JQUERY_UI_LIB_JS		HTML_BASE_PATH "/jquery-ui.min.js"
 
-#define DELETE_CACHED_GAMES		{cellFsUnlink((char*)WMTMP "/games.html"); cellFsUnlink((char*)GAMELIST_JS);}
+#define DELETE_CACHED_GAMES		{cellFsUnlink(WMTMP "/games.html"); cellFsUnlink(GAMELIST_JS);}
 
 ////////////
 
@@ -336,7 +336,7 @@ static u8 loading_games = 0;
 static u8 init_running = 0;
 
 #ifdef SYS_BGM
-static u8 system_bgm=0;
+static u8 system_bgm = 0;
 #endif
 
 #define NTFS 		 	(12)
@@ -352,8 +352,13 @@ static bool show_info_popup = false;
 
 static volatile u8 wm_unload_combo = 0;
 static volatile u8 working = 1;
-static u8 cobra_mode=0;
 static u8 max_mapped=0;
+
+#ifdef COBRA_ONLY
+	static const u8 cobra_mode = 1;
+#else
+	static const u8 cobra_mode = 0;
+#endif
 
 static bool syscalls_removed = false;
 
@@ -511,12 +516,12 @@ static bool css_exists = false;
 static bool common_js_exists = false;
 #endif
 
-static char html_base_path[MAX_PATH_LEN]="";
+static char html_base_path[MAX_PATH_LEN] = "";
 
-static char smonth[12][4]={"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+static char smonth[12][4]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-static char drives[16][12]={"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/net2", "/net3", "/net4", "/ext", "/dev_sd", "/dev_ms", "/dev_cf"};
-static char paths [11][12]={"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
+static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/net2", "/net3", "/net4", "/ext", "/dev_sd", "/dev_ms", "/dev_cf"};
+static char paths [11][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
 
 #ifdef COPY_PS3
 static char cp_path[MAX_PATH_LEN]; // cut/copy/paste buffer
@@ -2490,21 +2495,9 @@ exit_handleclient:
 
 static void wwwd_thread(uint64_t arg)
 {
-
-//	sys_timer_sleep(8);
-//	u32 mode=0;
-//	if(in_cobra(&mode) == 0) cobra_mode=1;
-
 	backup[0] = NULL;
 
 	detect_firmware();
-
-#ifdef COBRA_ONLY
-	//cobra_lib_init();
-	cobra_mode=1;
-#else
-	cobra_mode=0;
-#endif
 
 #ifdef PS3MAPI
  #ifdef REMOVE_SYSCALLS

@@ -662,7 +662,7 @@ static int read_remote_dir(int s, sys_addr_t *data /*netiso_read_dir_result_data
 	return (res.dir_size);
 }
 
-static int copy_net_file(char *local_file, char *remote_file, int ns, uint64_t maxbytes)
+static int copy_net_file(const char *local_file, char *remote_file, int ns, uint64_t maxbytes)
 {
 	copy_aborted = false;
 

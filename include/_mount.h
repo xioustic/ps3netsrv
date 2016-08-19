@@ -30,7 +30,7 @@ typedef struct
 
 #define IS_COPY		9
 
-#define TEMP_NET_PSXISO  (char*)WMTMP "/~netpsx.iso"
+#define TEMP_NET_PSXISO  WMTMP "/~netpsx.iso"
 #define PLAYSTATION      "PLAYSTATION "
 
 static void detect_firmware(void)
@@ -919,7 +919,7 @@ static void do_umount_iso(void)
 
 static void do_umount(bool clean)
 {
-	if(clean) cellFsUnlink((char*)WMTMP "/last_game.txt");
+	if(clean) cellFsUnlink(WMTMP "/last_game.txt");
 
 	if(fan_ps2_mode) reset_fan_mode();
 
@@ -938,7 +938,7 @@ static void do_umount(bool clean)
 		cobra_unset_psp_umd();
 
 		{sys_map_path((char*)"/dev_bdvd", NULL);}
-		{sys_map_path((char*)"/app_home", !isDir("/dev_hdd0/packages")?NULL:(char*)"/dev_hdd0/packages");}
+		{sys_map_path((char*)"/app_home", isDir("/dev_hdd0/packages") ? (char*)"/dev_hdd0/packages" : NULL);}
 
 		{sys_map_path((char*)"//dev_bdvd", NULL);}
 		//{sys_map_path((char*)"//app_home", NULL);}
@@ -1938,7 +1938,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		int fd = 0;
 		_lastgames lastgames; memset(&lastgames, 0, sizeof(_lastgames)); lastgames.last = 0xFF;
 
-		if(cellFsOpen((char*)WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+		if(cellFsOpen(WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			cellFsRead(fd, (void *)&lastgames, sizeof(_lastgames), NULL);
 			cellFsClose(fd);
@@ -1982,7 +1982,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			}
 		}
 
-		savefile((char*)WMTMP "/last_games.bin", (char *)&lastgames, sizeof(_lastgames));
+		savefile(WMTMP "/last_games.bin", (char *)&lastgames, sizeof(_lastgames));
 	}
 
 	// last mounted game

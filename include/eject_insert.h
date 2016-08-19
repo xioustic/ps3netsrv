@@ -51,24 +51,18 @@ static int fake_eject_event(uint64_t devicetype)
 
 static void reset_usb_ports(char *_path)
 {
-	u8  usb6, usb7;
-	u64 ums6, ums7;
+	u8 usb6 = (u8)val(drives[5] + 8);
+	u8 usb7 = (u8)val(drives[6] + 8);
 
-	usb6=(drives[5][10]-'0') + (10*(drives[5][9]-'0')) + (100*(drives[5][8]-'0')); ums6 = (usb6<6)?USB_MASS_STORAGE_1(usb6):USB_MASS_STORAGE_2(usb6);
-	usb7=(drives[6][10]-'0') + (10*(drives[6][9]-'0')) + (100*(drives[6][8]-'0')); ums7 = (usb7<6)?USB_MASS_STORAGE_1(usb7):USB_MASS_STORAGE_2(usb7);
+	// eject all usb devices
+	for(u8 f0 = 0; f0 < 8; f0++) fake_eject_event((f0<6)?USB_MASS_STORAGE_1(f0):USB_MASS_STORAGE_2(f0));
 
-	// send fake eject event
-	for(u8 f0=0; f0<8; f0++) fake_eject_event((f0<6)?USB_MASS_STORAGE_1(f0):USB_MASS_STORAGE_2(f0));
+	if(usb6 >= 8) fake_eject_event(USB_MASS_STORAGE_2(usb6));
+	if(usb7 >= 8) fake_eject_event(USB_MASS_STORAGE_2(usb7));
 
-	fake_eject_event(ums6);
-	fake_eject_event(ums7);
+	sys_timer_sleep(1); u8 indx = (u8)val(_path + 8);
 
-	sys_timer_sleep(1); u8 indx=0;
-
-	if(islike(_path, "/dev_usb0")) indx=(_path[10]-'0') + (10*(_path[9]-'0'));  else
-	if(islike(_path, "/dev_usb1")) indx=(_path[10]-'0') + (10*(_path[9]-'0')) + 100;
-
-	// send fake insert event for the current usb device
+	// make the current usb device the first
 	fake_insert_event((indx<6)?USB_MASS_STORAGE_1(indx):USB_MASS_STORAGE_2(indx), DEVICE_TYPE_USB);
 
 	sys_timer_sleep(3);
@@ -79,8 +73,8 @@ static void reset_usb_ports(char *_path)
 		if(f0!=indx) fake_insert_event((f0<6)?USB_MASS_STORAGE_1(f0):USB_MASS_STORAGE_2(f0), DEVICE_TYPE_USB);
 	}
 
-	if(indx!=usb6) fake_insert_event(ums6, DEVICE_TYPE_USB);
-	if(indx!=usb7) fake_insert_event(ums7, DEVICE_TYPE_USB);
+	if((usb6 >= 8) && (indx!=usb6)) fake_insert_event(USB_MASS_STORAGE_2(usb6), DEVICE_TYPE_USB);
+	if((usb7 >= 8) && (indx!=usb7)) fake_insert_event(USB_MASS_STORAGE_2(usb7), DEVICE_TYPE_USB);
 }
 
 /*

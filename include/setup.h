@@ -140,7 +140,7 @@ static void setup_parse_settings(char *param)
 	if( strstr(param, "pl=1" ))  webman_config->poll = 1;
 	if( strstr(param, "ft=1" ))  webman_config->ftpd = 1;
 	if( strstr(param, "np=1" ))  webman_config->nopad = 1;
-	if( strstr(param, "nc=1" )) {webman_config->nocov = 1; if(strstr(param, "ic=2")) webman_config->nocov=2;}
+	if( strstr(param, "nc=1" )) {webman_config->nocov = 1; if(strstr(param, "ic=2")) webman_config->nocov=2;} // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons)
 
 	if( strstr(param, "nd=1" )) webman_config->netd = 1;
 	webman_config->netp=get_valuen16(param, "netp=");

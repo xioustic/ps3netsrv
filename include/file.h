@@ -12,16 +12,6 @@ static bool copy_in_progress = false;
 
 static u32 copied_count = 0;
 
-static int isDir(const char* path);
-
-#ifndef LITE_EDITION
-static int del(const char *path, bool recursive);
-#endif
-
-#ifdef COPY_PS3
-static void  import_edats(char *path1, char *path2);
-#endif
-
 #define COPY_WHOLE_FILE		0
 /*
 static void add_log(const char *fmt, int value1, int value2)
@@ -445,7 +435,7 @@ static void delete_history(bool delete_folders)
 }
 
 #ifdef COPY_PS3
-static void import_edats(char *path1, char *path2)
+static void import_edats(const char *path1, const char *path2)
 {
 	int fd; bool from_usb;
 	u64 read;
@@ -455,7 +445,7 @@ static void import_edats(char *path1, char *path2)
 	char source[MAX_PATH_LEN];
 	char target[MAX_PATH_LEN];
 
-	cellFsMkdir((char*)path2, DMODE);
+	cellFsMkdir(path2, DMODE);
 	if(cellFsStat(path2, &buf) != CELL_FS_SUCCEEDED) return;
 
 	copy_aborted = false;
