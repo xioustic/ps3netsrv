@@ -8,9 +8,6 @@
 
 #include "../vsh/xmb_plugin.h"
 #include "../vsh/game_ext_plugin.h"
-
-#include "../vsh/webbrowser_plugin.h"
-#include "../vsh/webrender_plugin.h"
 #include "../vsh/download_plugin.h"
 #include "../vsh/stdc.h"
 
@@ -50,6 +47,20 @@ static void unloadSysPluginCallback(void)
 {
 	//Add potential callback process
 	//show_msg((char *)"plugin shutdown via xmb call launched");
+}
+
+static void unload_web_plugins(void)
+{
+	if (View_Find("webrender_plugin"))
+	{
+		UnloadPluginById(0x1C, (void *)unloadSysPluginCallback);
+		sys_timer_usleep(5);
+	}
+	if (View_Find("webbrowser_plugin"))
+	{
+		UnloadPluginById(0x1B, (void *)unloadSysPluginCallback);
+		sys_timer_usleep(5);
+	}
 }
 
 static void downloadPKG_thread(void)
@@ -169,16 +180,7 @@ static int download_file(char *param, char *msg)
 
 		if(conv_num_dpath > 0)
 		{
-			if (View_Find("webrender_plugin"))
-			{
-				ret = UnloadPluginById(0x1C,(void *)unloadSysPluginCallback);
-				sys_timer_usleep(5);
-			}
-			if (View_Find("webbrowser_plugin"))
-			{
-				ret = UnloadPluginById(0x1B,(void *)unloadSysPluginCallback);
-				sys_timer_usleep(5);
-			}
+			unload_web_plugins();
 
 			sprintf(msg_durl, "%s%s", "Downloading ", pdurl);
 
@@ -216,16 +218,7 @@ static int installPKG(const char *pkgpath, char *msg)
 		{
 			if(!extcasecmp(pkg_path, ".pkg", 4)) //check if file has a .pkg extension or not and treat accordingly
 			{
-				if (View_Find("webrender_plugin"))
-				{
-					ret = UnloadPluginById(0x1C, (void *)unloadSysPluginCallback);
-					sys_timer_usleep(5);
-				}
-				if (View_Find("webbrowser_plugin"))
-				{
-					ret = UnloadPluginById(0x1B, (void *)unloadSysPluginCallback);
-					sys_timer_usleep(5);
-				}
+				unload_web_plugins();
 
 				sprintf(msg, "%s%s", "Installing ", pkg_path);
 

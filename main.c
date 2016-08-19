@@ -363,6 +363,13 @@ static u8 dex_mode=0;
 static u64 SYSCALL_TABLE = 0;
 static u64 LV2_OFFSET_ON_LV1; // value is set on detect_firmware -> 0x1000000 on 4.46, 0x8000000 on 4.76/4.78
 
+enum
+{
+	WEB_COMMAND = 0,
+	BINARY_FILE = 1,
+	FOLDER_LISTING = 2
+};
+
 ////////////////////////////////
 typedef struct
 {
@@ -668,7 +675,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		else if(code == CODE_INSTALL_PKG)
 			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", "Installing "); add_breadcrumb_trail(templn, (char*)msg + 11);}
 		else if(code == CODE_DOWNLOAD_FILE)
-			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); strcpy(p, "<p>To: \0"); p = strstr((char*)msg, "To: "); add_breadcrumb_trail(templn, p + 4);}
+			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); if(p) strcpy(p, "<p>To: \0"); p = strstr((char*)msg, "To: "); if(p) add_breadcrumb_trail(templn, p + 4);}
 #endif
 		else
 			sprintf(templn, "%s", msg);
@@ -996,7 +1003,7 @@ static void handleclient(u64 conn_s_p)
 		goto exit_handleclient;
 	}
 
-	u8 is_binary = 0, served = 0;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
+	u8 served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	u64 c_len = 0;
 
 	u8 is_ps3_http = 0;
@@ -1358,7 +1365,6 @@ static void handleclient(u64 conn_s_p)
 							(klic_polling_status>0 && klic_polling>0) ? "klic.ps3?off" :
 							((klic_polling_status | klic_polling) == 0) ? "klic.ps3?auto" : "dev_hdd0/klic.log", prev); strcat(buffer, header);
 
-				is_binary = 0;
 				http_response(conn_s, header, param, CODE_HTTP_OK, buffer);
 
 				if(kl[0]>0 && klic_polling>0)
@@ -1406,14 +1412,14 @@ static void handleclient(u64 conn_s_p)
 			#ifdef WEB_CHAT
 			if(islike(param, "/chat.ps3"))
 			{
-				is_popup = 1; is_binary = 0;
+				is_popup = 1;
 				goto html_response;
 			}
 			#endif
 			if(islike(param, "/popup.ps3"))
 			{
 				if(param[10] == 0) show_info_popup = true; else is_popup = 1;
-				is_binary = 0;
+
 				goto html_response;
 			}
 			if(islike(param, "/remap.ps3") || islike(param, "/unmap.ps3"))
@@ -1464,18 +1470,17 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/dev_blind"))
 			{
-				is_binary = 2;
+				is_binary = FOLDER_LISTING;
 				goto html_response;
 			}
 			if(islike(param, "/edit.ps3"))
 			{
-				is_popup = 1; is_binary = 0;
+				is_popup = 1;
 				goto html_response;
 			}
    #ifdef COPY_PS3
 			if(islike(param, "/rmdir.ps3"))
 			{
-				is_binary = 2;
 				if(param[10] == '/')
 				{
 					sprintf(param, "%s", param + 10); cellFsRmdir(param);
@@ -1483,11 +1488,12 @@ static void handleclient(u64 conn_s_p)
 				}
 				else
 					{delete_history(true); sprintf(param, "/dev_hdd0");}
+
+				is_binary = FOLDER_LISTING, small_alloc = false;
 				goto html_response;
 			}
 			if(islike(param, "/mkdir.ps3"))
 			{
-				is_binary = 2;
 				if(param[10] == '/')
 				{
 					sprintf(param, "%s", param + 10); cellFsMkdir(param, DMODE);
@@ -1512,6 +1518,7 @@ static void handleclient(u64 conn_s_p)
 					//cellFsMkdir("/dev_hdd0/PS2ISO" AUTOPLAY_TAG, DMODE);
 				}
 
+				is_binary = FOLDER_LISTING, small_alloc = false;
 				goto html_response;
 			}
 			else
@@ -1536,8 +1543,9 @@ static void handleclient(u64 conn_s_p)
 				sprintf(cp_path, "%s", param + 8);
 				sprintf(param, "%s", cp_path);
 				char *p = strrchr(param, '/'); p[0] = NULL;
-				is_binary = 2; small_alloc = false;
 				if(file_exists(cp_path) == false) cp_mode = 0;
+
+				is_binary = FOLDER_LISTING, small_alloc = false;
 				goto html_response;
 			}
 			else
@@ -1547,6 +1555,8 @@ static void handleclient(u64 conn_s_p)
 				sprintf(source, "/copy.ps3%s", cp_path);
 				sprintf(target, "%s", param + 10);
 				sprintf(param, "%s", source); strcat(target, strrchr(param, '/'));
+
+				is_binary = FOLDER_LISTING, small_alloc = false;
 				goto html_response;
 			}
    #endif // #ifdef COPY_PS3
@@ -1643,7 +1653,8 @@ static void handleclient(u64 conn_s_p)
 				// fix game folder
 				char *game_path = param + 12, titleID[10];
 				fix_game(game_path, titleID, FIX_GAME_FORCED);
-				is_popup = 1; is_binary = 0;
+
+				is_popup = 1;
 				goto html_response;
 			}
  #endif
@@ -1658,7 +1669,7 @@ static void handleclient(u64 conn_s_p)
 				else if(strstr(param, "?g="))
 					sprintf(param, MOBILE_HTML);
 				else if(strstr(param, "?"))
-					{sprintf(param, "/index.ps3%s", param2);}
+					sprintf(param, "/index.ps3%s", param2);
 				else if(file_exists(GAMELIST_JS) == false)
 					sprintf(param, "/index.ps3?mobile");
 				else
@@ -1704,8 +1715,8 @@ static void handleclient(u64 conn_s_p)
  #endif
 
 							islike(param, "/refresh.ps3")
-			))
-				is_binary = 0;
+			)) ;
+
 			else if(islike(param, "/cpursx.ps3")  ||
 					islike(param, "/index.ps3")   ||
 					islike(param, "/mount_ps3/")  ||
@@ -1735,34 +1746,33 @@ static void handleclient(u64 conn_s_p)
  #endif
 
 					islike(param, "/eject.ps3")   ||
-					islike(param, "/insert.ps3"))
-				is_binary = 0;
+					islike(param, "/insert.ps3")) ;
 
 			else if(param[1] == 'n' && param[2] == 'e' && param[3] == 't' && (param[4]>='0' && param[4]<='4')) //net0/net1/net2/net3/net4
 			{
-				is_binary = 2; small_alloc = false;
+				is_binary = FOLDER_LISTING, small_alloc = false;
 			}
 			else
 			{
 				struct CellFsStat buf;
-				is_binary=(cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
+				is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 
 				if(!is_binary)
 				{
 					if(islike(param, "/favicon.ico")) {sprintf(param, "%s", wm_icons[5]);} else
 					{strcpy(header, param); sprintf(param, "%s/%s", html_base_path, header);} // use html path (if path is omitted)
-					is_binary=(cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
+
+					is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 				}
 
 				if(is_binary)
 				{
-					c_len=buf.st_size;
-					if((buf.st_mode & S_IFDIR) != 0) {is_binary = 2; small_alloc = false;} // folder listing
+					c_len = buf.st_size;
+					if((buf.st_mode & S_IFDIR) != 0) {is_binary = FOLDER_LISTING, small_alloc = false;} // folder listing
 				}
 				else
 				{
 					c_len = 0;
-					is_binary = 0;
 					http_response(conn_s, header, param, is_busy ? CODE_SERVER_BUSY : CODE_BAD_REQUEST, is_busy ? (char*)"503 Server is Busy":(char*)"400 Bad Request");
 
 					goto exit_handleclient;
@@ -1792,7 +1802,7 @@ static void handleclient(u64 conn_s_p)
 			}
 			//--
 
-			if(is_binary == 1) // binary file
+			if(is_binary == BINARY_FILE) // binary file
 			{
 				sprintf(templn, "Content-Length: %llu\r\n\r\n", (unsigned long long)c_len); strcat(header, templn);
 				ssend(conn_s, header);
@@ -1842,7 +1852,7 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/cpursx.ps3") || show_info_popup)
 			{
-				if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
+				if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != 0)
 				{
 					goto exit_handleclient;
 				}
@@ -1862,7 +1872,7 @@ static void handleclient(u64 conn_s_p)
 					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
 				}
 
-				if(!sysmem && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
+				if(!sysmem && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != 0)
 				{
 					goto exit_handleclient;
 				}
@@ -1872,7 +1882,7 @@ static void handleclient(u64 conn_s_p)
 
 			//else	// text page
 			{
-				if((is_binary != 2) && islike(param, "/setup.ps3?"))
+				if((is_binary != FOLDER_LISTING) && islike(param, "/setup.ps3?"))
 				{
 					setup_parse_settings(param + 11);
 				}
@@ -1986,8 +1996,9 @@ static void handleclient(u64 conn_s_p)
 
 					// game list resizer
 					if(!is_ps3_http && islike(param, "/index.ps3"))
-						sprintf( templn, "<script>function rz(z){var i,el=document.getElementsByClassName('gc');for(i=0;i<el.length;++i){el[i].style.zoom=z/100;}}</script>"
-										 "&nbsp;<input type=\"range\" value=\"100\" min=\"20\" max=\"200\" style=\"width:80px;position:relative;top:7px;\" ondblclick=\"this.value=100;rz(100);\" onchange=\"rz(this.value);\">"
+						sprintf( templn, "<script>function rz(z){document.cookie=z;var i,el=document.getElementsByClassName('gc');for(i=0;i<el.length;++i)el[i].style.zoom=z/100;}</script>"
+										 "&nbsp;<input id=\"sz\" type=\"range\" value=\"100\" min=\"20\" max=\"200\" style=\"width:80px;position:relative;top:7px;\" ondblclick=\"this.value=100;rz(100);\" onchange=\"rz(this.value);\">"
+										 "<script>var d=document,z=d.cookie;css=d.styleSheets[0];css.insertRule('.gc{zoom:'+z+'%%}',css.cssRules.length);d.getElementById('sz').value=z;</script>"
 										 "</form><hr>");
 					else
 						sprintf( templn, "</form><hr>");
@@ -2090,7 +2101,7 @@ static void handleclient(u64 conn_s_p)
 
 				////////////////////////////////////
 
-				if(is_binary == 2) // folder listing
+				if(is_binary == FOLDER_LISTING) // folder listing
 				{
 					if(folder_listing(buffer, BUFFER_SIZE_HTML, templn, param, conn_s, tempstr, header, is_ps3_http) == false)
 					{
@@ -2152,7 +2163,7 @@ static void handleclient(u64 conn_s_p)
 						if(param[12] == '/') sprintf(templn, "%s", param + 12); else
 						if(param[14] == '/') sprintf(templn, "%s", param + 14); else
 						{
-							sprintf(templn, "%s/%s", "/dev_hdd0/plugins", "webftp_server.sprx");
+															 sprintf(templn, "%s/%s", "/dev_hdd0/plugins", "webftp_server.sprx");
 							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0/plugins", "webftp_server_ps3mapi.sprx");
 							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0", "webftp_server.sprx");
 							if(file_exists(templn) == false) sprintf(templn, "%s/%s", "/dev_hdd0", "webftp_server_ps3mapi.sprx");
@@ -2175,7 +2186,7 @@ static void handleclient(u64 conn_s_p)
 							if(pos)
 							{
 								get_value(param, pos + 5, 2);
-								slot=RANGE((unsigned int)val(param), 1, 6);
+								slot = RANGE((unsigned int)val(param), 1, 6);
 							}
 						}
 
@@ -2422,7 +2433,7 @@ static void handleclient(u64 conn_s_p)
 				}
 
 send_response:
-				if(mobile_mode && allow_retry_response) {allow_retry_response=false; goto mobile_response;}
+				if(mobile_mode && allow_retry_response) {allow_retry_response = false; goto mobile_response;}
 
 				if(mount_ps3)
 					strcat(buffer, "<script>window.close(this);</script>"); //auto-close

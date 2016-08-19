@@ -134,7 +134,7 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "vrc=1")) webman_config->combo2|=VIDRECORD;
 #endif
 
-	if( strstr(param, "wmdn=1")) webman_config->wmdn = 1;
+	if( strstr(param, "wn=1")) webman_config->wmdn = 1;
 	if( strstr(param, "tid=1"))  webman_config->tid  = 1;
 	if(!strstr(param, "sfo=1"))  webman_config->use_filename = 1;
 	if( strstr(param, "pl=1" ))  webman_config->poll = 1;
@@ -169,7 +169,7 @@ static void setup_parse_settings(char *param)
 	if(pos) get_value(webman_config->ftp_password, pos + 4, 20);
 
 	webman_config->refr=0;
-	if(strstr(param, "refr=1")) webman_config->refr = 1;
+	if(strstr(param, "rf=1")) webman_config->refr = 1;
 
 #ifdef LAUNCHPAD
 	if(strstr(param, "lx=1")) webman_config->launchpad_xml = 1;
@@ -395,14 +395,14 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("ab", "1", STR_AUTOB  , _BR_, (webman_config->autob), buffer);
 	add_check_box("dy", "1", STR_DELAYAB, _BR_, (webman_config->delay), buffer);
 
-	add_check_box("bl", "1"   ,  STR_DEVBL,    _BR_, (webman_config->blind), buffer);
-	add_check_box("wn", "wmdn",  STR_NOWMDN,   _BR_, (webman_config->wmdn) , buffer);
+	add_check_box("bl", "1", STR_DEVBL,   _BR_, (webman_config->blind), buffer);
+	add_check_box("wn", "1", STR_NOWMDN,  _BR_, (webman_config->wmdn) , buffer);
 
 #ifdef LAUNCHPAD
-	add_check_box("rf", "refr",  STR_CONTSCAN, " & ", (webman_config->refr), buffer);
-	add_check_box("lx", "1",  "LaunchPad.xml", _BR_, (webman_config->launchpad_xml), buffer);
+	add_check_box("rf", "1", STR_CONTSCAN, " & ", (webman_config->refr), buffer);
+	add_check_box("lx", "1", "LaunchPad.xml", _BR_, (webman_config->launchpad_xml), buffer);
 #else
-	add_check_box("rf", "refr",  STR_CONTSCAN, _BR_, (webman_config->refr), buffer);
+	add_check_box("rf", "1",  STR_CONTSCAN, _BR_, (webman_config->refr), buffer);
 #endif
 
 	add_check_box("pl", "1", STR_USBPOLL,  _BR_, (webman_config->poll) , buffer);

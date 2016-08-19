@@ -236,7 +236,7 @@ static void prepare_header(char *header, char *param, u8 is_binary)
 
 	strcpy(header, "HTTP/1.1 200 OK\r\nContent-Type: \0");
 
-	if(is_binary==1)
+	if(is_binary == BINARY_FILE)
 	{
 		int flen = strlen(param); char *ext = param + MAX(flen - 4, 0), *ext5 = param + MAX(flen - 5, 0);
 

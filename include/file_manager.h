@@ -30,9 +30,10 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 
 	// get title & title ID from PARAM.SFO
 	if( !is_dir && !strcmp(ext, ".SFO") )
-	{	//get title & app version from PARAM.SFO
+	{
 		char *titleid = ename, *buff = fsize; strcpy(tempstr, templn);
 
+		//get title & app version from PARAM.SFO
 		getTitleID(tempstr, buff, GET_VERSION);
 		getTitleID(tempstr, titleid, GET_TITLE_AND_ID); if(buff[0]) {strcat(tempstr, " v"); strcat(tempstr, buff);}
 		sprintf(buff, "%s%s", HDD0_GAME_DIR, titleid); bool has_updates_dir = file_exists(buff);
@@ -237,7 +238,7 @@ static void add_breadcrumb_trail(char *buffer, char *param)
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
 #endif
 #ifdef PKG_HANDLER
-						!extcmp(param, ".pkg", 4) ? "/install.ps3" :
+						!extcmp(param + tlen, ".pkg", 4) ? "/install.ps3" :
 #endif
 						islike(param, "/dev_hdd0/GAMES/covers") ? "" :
 						(strcasestr(ISO_EXTENSIONS, param + tlen) || strstr(param, "/GAME") || !extcmp(param + MAX(tlen - 4, 0), ".BIN.ENC", 8) || isDir(param)) ? "/mount.ps3" :
