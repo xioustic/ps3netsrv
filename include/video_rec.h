@@ -7,11 +7,6 @@
 
 #define REC_PLUGIN "rec_plugin"
 
-void show_rec_format(char *msg);
-bool rec_start(char *param);
-void toggle_video_rec(char *param);
-void set_setting_to_change(char *msg, char *text);
-
 /* video format ( in CellRecParam )
  *
  *   SMALL  = 320x240 (4:3) or 368x208 (16:9)
@@ -95,7 +90,7 @@ bool recording = false;
 uint32_t *recOpt = NULL;              // recording utility vsh options struct
 int32_t (*reco_open)(int32_t) = NULL; // base pointer
 
-void set_setting_to_change(char *msg, char *text)
+static void set_setting_to_change(char *msg, const char *text)
 {
 	sprintf(msg, "%s", text);
 	if(rec_setting_to_change == 0) strcat(msg, "Recording Options"); else
@@ -106,7 +101,7 @@ void set_setting_to_change(char *msg, char *text)
 	if(rec_setting_to_change == 5) strcat(msg, "Audio Bitrate");
 }
 
-void show_rec_format(char *msg)
+static void show_rec_format(const char *msg)
 {
 	char text[200]; uint32_t flags;
 	sprintf(text, "%s\nVideo: ", msg);
@@ -152,7 +147,7 @@ void show_rec_format(char *msg)
 	show_msg(text);
 }
 
-bool rec_start(char *param)
+static bool rec_start(const char *param)
 {
 	char *pos; uint8_t n;
 
@@ -170,9 +165,9 @@ bool rec_start(char *param)
 		{
 			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_5000K_30FPS;										// .mp4 (720p)
 
-			if(strcasestr(param, "240"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_SMALL_768K_30FPS;		// .mp4 (240p / 208p)
-			if(strcasestr(param, "272"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_MIDDLE_768K_30FPS;		// .mp4 (272p)
-			if(strcasestr(param, "368"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_LARGE_2048K_30FPS;		// .mp4 (368p)
+			if(strstr(param, "240"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_SMALL_768K_30FPS;		// .mp4 (240p / 208p)
+			if(strstr(param, "272"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_MIDDLE_768K_30FPS;		// .mp4 (272p)
+			if(strstr(param, "368"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_LARGE_2048K_30FPS;		// .mp4 (368p)
 		}
 
 		if(strcasestr(param, "jpeg")) {rec_video_format = CELL_REC_PARAM_VIDEO_FMT_YOUTUBE_MJPEG; rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_YOUTUBE_MJPEG;}	// mjpeg
@@ -187,9 +182,9 @@ bool rec_start(char *param)
 		{
 			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_11000K_30FPS;									// hd (11000k)
 
-			if(strcasestr(param, "768"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_MIDDLE_768K_30FPS;		// hd 768k  (272p)
-			if(strcasestr(param, "1536"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_LARGE_1536K_30FPS;		// hd 1536k (368p)
-			if(strcasestr(param, "2048"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_2048K_30FPS;		// hd 2048k (720p)
+			if(strstr(param, "768"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_MIDDLE_768K_30FPS;		// hd 768k  (272p)
+			if(strstr(param, "1536"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_LARGE_1536K_30FPS;		// hd 1536k (368p)
+			if(strstr(param, "2048"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_2048K_30FPS;		// hd 2048k (720p)
 		}
 		else
 		{
@@ -217,15 +212,15 @@ bool rec_start(char *param)
 	if(strcasestr(param, "aac"))
 	{
 		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_96K;								// aac_96k
-		if(strcasestr(param, "64"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;	// aac_64k
-		if(strcasestr(param, "128")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_128K;	// aac_128k
+		if(strstr(param, "64"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;	// aac_64k
+		if(strstr(param, "128")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_128K;	// aac_128k
 	}
 	else
 	if(strcasestr(param, "pcm"))
 	{
 		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_768K;									// pcm_768k
-		if(strcasestr(param, "384"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_384K;		// pcm_384k
-		if(strcasestr(param, "1536")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_1536K;	// pcm_1536k
+		if(strstr(param, "384"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_384K;		// pcm_384k
+		if(strstr(param, "1536")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_1536K;	// pcm_1536k
 	}
 
 	// validate audio format (use default if invalid)
@@ -294,7 +289,7 @@ bool rec_start(char *param)
 	}
 }
 
-void toggle_video_rec(char *param)
+static void toggle_video_rec(const char *param)
 {
 	if(IS_INGAME)    // if game_plugin is loaded -> there is a game/app running and we can recording...
 	{

@@ -10,13 +10,13 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 	int fd, size = 0;
 
 	// truncate msg log
-	if(cellFsStat((char*)WMCHATFILE, &buf)!=CELL_FS_SUCCEEDED || buf.st_size>0x8000UL || buf.st_size==0)
+	if(cellFsStat(WMCHATFILE, &buf)!=CELL_FS_SUCCEEDED || buf.st_size>0x8000UL || buf.st_size==0)
 	{
 		memset(tempstr, 0, _4KB_);
 
 		if(buf.st_size>0x8000UL)
 		{
-			if(cellFsOpen((char*)WMCHATFILE, CELL_FS_O_RDONLY, &fd, NULL, 0)==CELL_FS_SUCCEEDED)
+			if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDONLY, &fd, NULL, 0)==CELL_FS_SUCCEEDED)
 			{
 				cellFsLseek(fd, (buf.st_size-4080), CELL_FS_SEEK_SET, NULL);
 				cellFsRead(fd, (void *)&tempstr, 4080, NULL);
@@ -24,9 +24,9 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 			}
 		}
 
-		cellFsUnlink((char*)WMCHATFILE);
+		cellFsUnlink(WMCHATFILE);
 
-		if(cellFsOpen((char*)WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
+		if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 		{
 			strcpy(templn,	"<meta http-equiv=\"refresh\" content=\"10\">"
 							"<body bgcolor=\"#101010\" text=\"#c0c0c0\">"
@@ -50,7 +50,7 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 
 		sprintf(templn, "<font color=\"red%s\"><b>%s</b></font><br>%s<br><!---->", user, user, msg);
 
-		if(cellFsOpen((char*)WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
+		if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 		{
 		    size = strlen(templn);
 		    cellFsWrite(fd, templn, size, NULL);

@@ -1,11 +1,7 @@
-static int connect_to_server(char *server, uint16_t port);
-static int slisten(int port, int backlog);
-static void sclose(int *socket_e);
-
 #define ssend(socket, str) send(socket, str, strlen(str), 0)
 #define getPort(p1x, p2x) ((p1x * 256) + p2x)
 
-static int connect_to_server(char *server, uint16_t port)
+static int connect_to_server(const char *server, uint16_t port)
 {
 	struct sockaddr_in sin;
 	unsigned int temp;

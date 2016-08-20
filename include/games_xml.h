@@ -21,13 +21,13 @@ static void refresh_xml(char *msg)
 	webman_config->profile=profile; save_settings();
 
 	sprintf(msg, "%s XML%s: %s", STR_REFRESH, SUFIX2(profile), STR_SCAN2);
-	show_msg((char*) msg);
+	show_msg(msg);
 	init_running = 1;
 	sys_ppu_thread_t id3;
 	sys_ppu_thread_create(&id3, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 	while(init_running && working) sys_timer_usleep(300000);
 	sprintf(msg, "%s XML%s: OK", STR_REFRESH, SUFIX2(profile));
-	show_msg((char*) msg);
+	show_msg(msg);
 }
 
 #ifdef LAUNCHPAD
@@ -207,7 +207,7 @@ static void make_fb_xml(char *myxml, char *templn)
 					QUERY_XMB("mgames", "xmb://localhost%s#seg_mygames")
 					"%s</XMBML>", XML_HEADER, templn, STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
 
-	savefile((char*)FB_XML, (char*)myxml, strlen(myxml));
+	savefile(FB_XML, (char*)myxml, strlen(myxml));
 }
 
 static u32 get_buffer_size(int footprint)
@@ -313,7 +313,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	{
 		if((webman_config->refr==1) || from_reboot)
 		{
-			cellFsUnlink((char*)WMNOSCAN);
+			cellFsUnlink(WMNOSCAN);
 
 			if(file_exists(xml))
 			{
@@ -383,8 +383,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 	myxml		= (char*)sysmem+(BUFFER_SIZE)-4300;
 	myxml_items = (char*)sysmem3;
 
-	cellFsMkdir((char*)"/dev_hdd0/xmlhost", MODE);
-	cellFsMkdir((char*)"/dev_hdd0/xmlhost/game_plugin", MODE);
+	cellFsMkdir("/dev_hdd0/xmlhost", MODE);
+	cellFsMkdir("/dev_hdd0/xmlhost/game_plugin", MODE);
 
 	u32 key=0, max_xmb_items = ((u32)(BUFFER_SIZE_ALL / AVG_ITEM_SIZE));
 

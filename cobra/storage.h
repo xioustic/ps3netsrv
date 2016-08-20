@@ -281,13 +281,13 @@ static uint64_t get_device(char *name)
 	return 0;
 }
 
-static int sys_map_path(char *oldpath, char *newpath)
+static int sys_map_path(const char *oldpath, const char *newpath)
 {
 #if 0
 	system_call_2(35, (uint64_t)(uint32_t)oldpath, (uint64_t)(uint32_t)newpath);
 #else
-	char *paths[1]={NULL}; char *new_paths[1]={NULL};
-	paths[0]=oldpath;new_paths[0]=newpath;
+	char *paths[1] = {NULL}; char *new_paths[1] = {NULL};
+	paths[0] = (char*)oldpath; new_paths[0] = (char*)newpath;
 	system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_MAP_PATHS, (uint64_t)(uint32_t)paths, (uint64_t)(uint32_t)new_paths, 1);
 #endif
 	return (int)p1;

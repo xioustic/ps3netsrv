@@ -21,14 +21,14 @@ static bool mount_ps2disc(char *path)
  #ifdef COBRA_ONLY
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-	sys_map_path((char*)"/dev_ps2disc", path);
+	sys_map_path("/dev_ps2disc", path);
 
 	{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
  #else
 
 	max_mapped = 0;
-	add_to_map((char*)"/dev_ps2disc", path);
-	add_to_map((char*)"//dev_ps2disc", path);
+	add_to_map("/dev_ps2disc", path);
+	add_to_map("//dev_ps2disc", path);
 
 	u64 map_data  = (MAP_BASE);
 	u64 map_paths = (MAP_BASE) + (max_mapped+1) * 0x20;

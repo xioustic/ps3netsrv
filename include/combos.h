@@ -122,7 +122,7 @@
 							(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)) // SELECT+L3+L2+R2
 							)
 						{
-							cellFsUnlink((char*)"/dev_hdd0/boot_plugins.txt");
+							cellFsUnlink("/dev_hdd0/boot_plugins.txt");
 							goto reboot; // vsh reboot
 						}
 						else
@@ -156,8 +156,8 @@
 								enable_classic_ps2_mode();
 							}
 
-							sprintf((char*) msg, (char*)"PS2 Classic %s", classic_ps2_enabled ? STR_DISABLED : STR_ENABLED);
-							show_msg((char*) msg);
+							sprintf(msg, "PS2 Classic %s", classic_ps2_enabled ? STR_DISABLED : STR_ENABLED);
+							show_msg(msg);
 							sys_timer_sleep(3);
 						}
 						else
@@ -178,7 +178,7 @@
 							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_R1) profile=3; else
 							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L1) profile=4; else profile=0;
 
-							refresh_xml((char*)msg);
+							refresh_xml(msg);
 						}
 						else
 						if( (!(webman_config->combo & SHOW_TEMP) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & (CELL_PAD_CTRL_R3 | CELL_PAD_CTRL_START)))) // SELECT+START show temperatures / hdd space
@@ -189,7 +189,7 @@
 								if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
 								{
 									rec_setting_to_change++; if(rec_setting_to_change>5) rec_setting_to_change = 0; 	// SELECT+R3+L2  Select video rec setting
-									set_setting_to_change(msg, (char*)"Change : ");
+									set_setting_to_change(msg, "Change : ");
 
 									strcat(msg, "\n\nCurrent recording format:");
 									show_rec_format(msg);
@@ -197,7 +197,7 @@
 								else
 								if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2)
 								{
-									set_setting_to_change(msg, (char*)"Changed : ");									// SELECT+R3+R2  Change value of video rec setting
+									set_setting_to_change(msg, "Changed : ");									// SELECT+R3+R2  Change value of video rec setting
 
 									strcat(msg, "\n\nCurrent recording format:");
 									if(rec_setting_to_change == 0)
@@ -248,8 +248,8 @@ show_persistent_popup:
 								else
 								if(fix_in_progress)
 								{
-									sprintf((char*) msg, "%s %s", STR_FIXING, current_file);
-									show_msg((char*) msg);
+									sprintf(msg, "%s %s", STR_FIXING, current_file);
+									show_msg(msg);
 									sys_timer_sleep(2);
 									if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_L2) ) break;
 								}
@@ -266,7 +266,7 @@ show_popup:
 
 								uint32_t blockSize;
 								uint64_t freeSize;
-								cellFsGetFreeSize((char*)"/dev_hdd0", &blockSize, &freeSize);
+								cellFsGetFreeSize("/dev_hdd0", &blockSize, &freeSize);
 
 								u8 speed = fan_speed;
 								if(fan_ps2_mode) speed=(int)(255.f*(float)(webman_config->ps2temp+1)/100.f); else
@@ -303,18 +303,18 @@ show_popup:
 
 								char smax[32]; if(fan_ps2_mode) sprintf(smax, "   PS2 Mode"); else if(max_temp) sprintf(smax, "   MAX: %i°C", max_temp); else if(webman_config->fanc==0) sprintf(smax, "   SYSCON"); else memset(smax, 0, 16);
 
-								sprintf((char*)tmp, "CPU: %i°C  RSX: %i°C  FAN: %i%%   \n"
-													"%s: %id %02d:%02d:%02d%s\n"
-													"Firmware : %i.%02i %s\n"
-													"IP: %s  %s%s",
-													t1, t2, (int)(((int)speed*100)/255),
-													bb?"Play":"Startup", dd, hh, mm, ss, smax,
-													(int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, cfw_info, ip, net_type, syscalls_removed ? "  [noSC]" : "");
+								sprintf(tmp, "CPU: %i°C  RSX: %i°C  FAN: %i%%   \n"
+											 "%s: %id %02d:%02d:%02d%s\n"
+											 "Firmware : %i.%02i %s\n"
+											 "IP: %s  %s%s",
+											 t1, t2, (int)(((int)speed*100)/255),
+											 bb?"Play":"Startup", dd, hh, mm, ss, smax,
+											 (int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, cfw_info, ip, net_type, syscalls_removed ? "  [noSC]" : "");
 
-								sprintf((char*)msg, "%s\n%s: %'i %s\n"
-													"%s: %'i %s\n", tmp,
-													STR_STORAGE, (int)((blockSize*freeSize)>>20), STR_MBFREE,
-													STR_MEMORY, meminfo.avail>>10, STR_KBFREE);
+								sprintf(msg, "%s\n%s: %'i %s\n"
+											 "%s: %'i %s\n", tmp,
+											 STR_STORAGE, (int)((blockSize*freeSize)>>20), STR_MBFREE,
+											 STR_MEMORY, meminfo.avail>>10, STR_KBFREE);
 
 								if(R2 && (gTick.tick>rTick.tick))
 								{
@@ -322,12 +322,12 @@ show_popup:
 									ss = (u32)((pTick.tick-gTick.tick)/1000000);
 									dd = (u32)(ss / 86400); ss = ss % 86400; hh = (u32)(ss / 3600); ss = ss % 3600; mm = (u32)(ss / 60); ss = ss % 60;
 
-									if(dd<100) {char gname[200]; get_game_info(); sprintf(gname, "%s %s\n\n", _game_TitleID, _game_Title); sprintf((char*) msg, "%sPlay: %id %02d:%02d:%02d\n%s", gname, dd, hh, mm, ss, tmp); }
+									if(dd<100) {char gname[200]; get_game_info(); sprintf(gname, "%s %s\n\n", _game_TitleID, _game_Title); sprintf(msg, "%sPlay: %id %02d:%02d:%02d\n%s", gname, dd, hh, mm, ss, tmp); }
 								}
 
 								{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
-								show_msg((char*) msg);
+								show_msg(msg);
 								sys_timer_sleep(2);
 							}
 						}
@@ -346,7 +346,7 @@ show_popup:
 									if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) max_temp+=5; else max_temp+=1;
 									if(max_temp>85) max_temp=85;
 									webman_config->temp1=max_temp;
-									sprintf((char*) msg, "%s\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
+									sprintf(msg, "%s\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
 								}
 								else
 								{
@@ -355,10 +355,10 @@ show_popup:
 									webman_config->temp0= (u8)(((float)(webman_config->manu+1) * 255.f)/100.f);
 									webman_config->temp0=RANGE(webman_config->temp0, 0x33, MAX_FANSPEED);
 									fan_control(webman_config->temp0, 0);
-									sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
+									sprintf(msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
 								}
 								save_settings();
-								show_msg((char*) msg);
+								show_msg(msg);
 								sys_timer_sleep(2);
 							}
 						}
@@ -376,7 +376,7 @@ show_popup:
 								{
 									if(max_temp>30) {if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) max_temp-=5; else max_temp-=1;}
 									webman_config->temp1=max_temp;
-									sprintf((char*) msg, "%s\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
+									sprintf(msg, "%s\n%s %i°C", STR_FANCH0, STR_FANCH1, max_temp);
 								}
 								else
 								{
@@ -385,10 +385,10 @@ show_popup:
 									if(webman_config->temp0<0x33) webman_config->temp0=0x33;
 									if(webman_config->temp0>MAX_FANSPEED) webman_config->temp0=MAX_FANSPEED;
 									fan_control(webman_config->temp0, 0);
-									sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
+									sprintf(msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH2, webman_config->manu);
 								}
 								save_settings();
-								show_msg((char*) msg);
+								show_msg(msg);
 								sys_timer_sleep(2);
 							}
 						}
@@ -403,10 +403,10 @@ show_popup:
 								if(webman_config->fanc==0) enable_fan_control(3, msg);
 
 								if(webman_config->minfan-5>=MIN_FANSPEED) webman_config->minfan-=5;
-								sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
+								sprintf(msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
 
 								save_settings();
-								show_msg((char*) msg);
+								show_msg(msg);
 								sys_timer_sleep(2);
 							}
 						}
@@ -421,10 +421,10 @@ show_popup:
 								if(webman_config->fanc==0) enable_fan_control(3, msg);
 
 								if(webman_config->minfan+5<100) webman_config->minfan+=5;
-								sprintf((char*) msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
+								sprintf(msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
 
 								save_settings();
-								show_msg((char*) msg);
+								show_msg(msg);
 								sys_timer_sleep(2);
 							}
 						}
@@ -676,7 +676,7 @@ reboot:
 					// vsh reboot
 					working = 0;
 					{ DELETE_TURNOFF }
-					savefile((char*)WMNOSCAN, NULL, 0);
+					savefile(WMNOSCAN, NULL, 0);
 
 					vshmain_87BB0001(2); // VSH reboot
 

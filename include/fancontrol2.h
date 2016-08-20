@@ -13,9 +13,9 @@ static void poll_thread(uint64_t poll)
 		{
 			int fd;
 			bool toupd0, toupd1;
-			cellFsOpen((char*)"/dev_hdd0/vsh/task/00000001/d0.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
+			cellFsOpen("/dev_hdd0/vsh/task/00000001/d0.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
 			cellFsRead(fd, (void *)&d0, 157, NULL); cellFsClose(fd);
-			cellFsOpen((char*)"/dev_hdd0/vsh/task/00000001/d1.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
+			cellFsOpen("/dev_hdd0/vsh/task/00000001/d1.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
 			cellFsRead(fd, (void *)&d1, 157, NULL); cellFsClose(fd);
 			toupd0=0;
 			toupd1=0;
@@ -46,16 +46,16 @@ static void poll_thread(uint64_t poll)
 	}
 	*/
 
-	u8 to=0;
-	u8 sec=0;
-	u32 t1=0, t2=0;
-	u8 lasttemp=0;
-	u8 stall=0;
-	const u8 step=3;
-	const u8 step_up=5;
+	u8 to = 0;
+	u8 sec = 0;
+	u32 t1 = 0, t2 = 0;
+	u8 lasttemp = 0;
+	u8 stall = 0;
+	const u8 step = 3;
+	const u8 step_up = 5;
 	//u8 step_down=2;
-	u8 smoothstep=0;
-	int delta=0;
+	u8 smoothstep = 0;
+	int delta = 0;
 	char msg[256];
 
 	u8 show_persistent_popup = 0; // combos.h
@@ -169,8 +169,8 @@ static void poll_thread(uint64_t poll)
 			{
 				if(!webman_config->warn)
 				{
-					sprintf((char*) msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
-					show_msg((char*) msg);
+					sprintf(msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
+					show_msg(msg);
 					sys_timer_sleep(2);
 				}
 				if((t1 > MAX_TEMPERATURE) || (t2 > MAX_TEMPERATURE))
@@ -203,7 +203,7 @@ static void poll_thread(uint64_t poll)
 				{
 					sys_storage_read(usb_handle, 0, to, 1, tmp, &r, 0);
 					sys_storage_close(usb_handle);
-					//sprintf(tmp, "/dev_usb00%i: Read %i sectors @ %i offset", f0, r, to); show_msg((char*)tmp);
+					//sprintf(tmp, "/dev_usb00%i: Read %i sectors @ %i offset", f0, r, to); show_msg(tmp);
 				}
 			}
 			sec=0;

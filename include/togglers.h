@@ -19,7 +19,7 @@ static void swap_file(const char *path, const char *curfile, const char *rento, 
 #ifdef REX_ONLY
 static bool toggle_rebug_mode(void)
 {
-	enable_dev_blind((char*)"REBUG Mode Switcher activated!");
+	enable_dev_blind("REBUG Mode Switcher activated!");
 
 	if(file_exists(VSH_MODULE_PATH "vsh.self.swp"))
 	{
@@ -61,7 +61,7 @@ static bool toggle_rebug_mode(void)
 
 static bool toggle_normal_mode(void)
 {
-	enable_dev_blind((char*)"Normal Mode Switcher activated!");
+	enable_dev_blind("Normal Mode Switcher activated!");
 
 	if((file_exists(VSH_MODULE_PATH "vsh.self.nrm"))
 	&& (file_exists(VSH_MODULE_PATH "vsh.self.cexsp")))
@@ -102,7 +102,7 @@ static bool toggle_normal_mode(void)
 
 static void toggle_debug_menu(void)
 {
-	enable_dev_blind((char*)"Debug Menu Switcher activated!");
+	enable_dev_blind("Debug Menu Switcher activated!");
 
 	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.dex"))
 	{
@@ -127,7 +127,7 @@ static void toggle_debug_menu(void)
 #ifdef COBRA_ONLY
 static bool toggle_cobra(void)
 {
-	enable_dev_blind((char*)"COBRA Toggle activated!");
+	enable_dev_blind("COBRA Toggle activated!");
  #ifdef REX_ONLY
 	if( (file_exists(REBUG_COBRA_PATH "stage2.cex")) /* &&
 		(file_exists(REBUG_COBRA_PATH "stage2.dex")) */)
@@ -197,7 +197,7 @@ static bool toggle_cobra(void)
 
 static void toggle_ps2emu(void)
 {
-	enable_dev_blind((char*)"Swapping ps2emu activated!");
+	enable_dev_blind("Swapping ps2emu activated!");
  #ifdef REX_ONLY
 	if(file_exists(REBUG_TOOLBOX "ps2_netemu.self"))
 	{
@@ -206,15 +206,15 @@ static void toggle_ps2emu(void)
 
 		// ---- Backup PS2Emus to Rebug Toolbox folder ----
 		if( file_exists(REBUG_TOOLBOX "ps2_netemu.self.cobra") == false )
-			  file_copy( (char*)PS2_EMU_PATH  "ps2_netemu.self",
+			  file_copy((char*)PS2_EMU_PATH  "ps2_netemu.self",
 						(char*)REBUG_TOOLBOX "ps2_netemu.self.cobra", COPY_WHOLE_FILE);
 
 		if( file_exists(REBUG_TOOLBOX "ps2_gxemu.self.cobra") == false )
-			  file_copy( (char*)PS2_EMU_PATH  "ps2_gxemu.self",
+			  file_copy((char*)PS2_EMU_PATH  "ps2_gxemu.self",
 						(char*)REBUG_TOOLBOX "ps2_gxemu.self.cobra", COPY_WHOLE_FILE);
 
 		if( file_exists(REBUG_TOOLBOX "ps2_emu.self.cobra") == false )
-			  file_copy( (char*)PS2_EMU_PATH  "ps2_emu.self",
+			  file_copy((char*)PS2_EMU_PATH  "ps2_emu.self",
 						(char*)REBUG_TOOLBOX "ps2_emu.self.cobra", COPY_WHOLE_FILE);
 
 		// ---- Swap ps2_netemu.self ----

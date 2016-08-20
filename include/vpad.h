@@ -70,16 +70,16 @@ static void parse_pad_command(char *param, u8 is_combo)
 	data.len = CELL_PAD_MAX_CODES;
 
 	// set default controller values
-	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]	= // 0x0080;
-	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]	= // 0x0080;
+	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]  = // 0x0080;
+	data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]  = // 0x0080;
 
 	data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = // 0x0080;
-	data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] =		0x0080;
+	data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] =    0x0080;
 
 	data.button[CELL_PAD_BTN_OFFSET_SENSOR_X] = // 0x0200;
 	data.button[CELL_PAD_BTN_OFFSET_SENSOR_Y] = // 0x0200;
 	data.button[CELL_PAD_BTN_OFFSET_SENSOR_Z] = // 0x0200;
-	data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] =		0x0200;
+	data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] =    0x0200;
 
 	if(strcasestr(param, "off")) unregister_ldd_controller(); else
 	{
@@ -143,16 +143,16 @@ static void parse_pad_command(char *param, u8 is_combo)
 			memset(&data, 0, sizeof(CellPadData));
 			data.len = CELL_PAD_MAX_CODES;
 
-			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]	= // 0x0080;
-			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]	= // 0x0080;
+			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_X]  = // 0x0080;
+			data.button[CELL_PAD_BTN_OFFSET_ANALOG_LEFT_Y]  = // 0x0080;
 
 			data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_X] = // 0x0080;
-			data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] =		0x0080;
+			data.button[CELL_PAD_BTN_OFFSET_ANALOG_RIGHT_Y] =    0x0080;
 
 			data.button[CELL_PAD_BTN_OFFSET_SENSOR_X] = // 0x0200;
 			data.button[CELL_PAD_BTN_OFFSET_SENSOR_Y] = // 0x0200;
 			data.button[CELL_PAD_BTN_OFFSET_SENSOR_Z] = // 0x0200;
-			data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] =		0x0200;
+			data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] =    0x0200;
 
 			// send pad data to virtual pad
 			cellPadLddDataInsert(vpad_handle, &data);

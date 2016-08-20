@@ -756,9 +756,9 @@ static void setup_form(char *buffer, char *templn)
 
 	if(
  #ifdef WM_CUSTOM_COMBO
-		(cellFsOpen((char*)WM_CUSTOM_COMBO "r2_square", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED) ||
+		(cellFsOpen(WM_CUSTOM_COMBO "r2_square", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED) ||
  #endif
-		(cellFsOpen((char*)"/dev_hdd0/tmp/wm_custom_combo", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+		(cellFsOpen("/dev_hdd0/tmp/wm_custom_combo", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	)
 	{
 		cellFsRead(fd, (void *)command, 255, NULL);
@@ -918,15 +918,14 @@ static void reset_settings()
 #endif
 
 	// set default language
-	struct CellFsStat buf;
-	int fdwm = 0; cellFsStat(WMCONFIG, &buf);
+	int fdwm = 0;
 
 	// read current settings
 	for(u8 retry = 0; retry < 10; retry++)
 	{
 		if(cellFsOpen(WMCONFIG, CELL_FS_O_RDONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
-			cellFsRead(fdwm, (void *)wmconfig, MIN(buf.st_size, sizeof(WebmanCfg)), NULL);
+			cellFsRead(fdwm, (void *)wmconfig, sizeof(WebmanCfg), NULL);
 			cellFsClose(fdwm);
 			break;
 		}
@@ -935,14 +934,14 @@ static void reset_settings()
 	}
 
 #ifndef COBRA_ONLY
-	webman_config->spp=0; //disable removal of syscalls on nonCobra
+	webman_config->spp = 0; //disable removal of syscalls on nonCobra
 #endif
 
 	// set default autoboot path
 	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
-	if(webman_config->warn>1) webman_config->warn = 0;
-	webman_config->minfan=RANGE(webman_config->minfan, MIN_FANSPEED, 99);
+	if(webman_config->warn > 1) webman_config->warn = 0;
+	webman_config->minfan = RANGE(webman_config->minfan, MIN_FANSPEED, 99);
 
 	// settings
 	save_settings();

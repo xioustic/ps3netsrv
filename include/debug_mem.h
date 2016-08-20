@@ -29,7 +29,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t size_mb)
 	{
 		uint8_t *mem_buf	= (uint8_t*)sys_mem;
 
-		if(cellFsOpen((char*)file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fp, NULL, 0) == CELL_FS_SUCCEEDED)
+		if(cellFsOpen(file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fp, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			for(i = 0; i < size_mb * 8UL; i++)
 			{

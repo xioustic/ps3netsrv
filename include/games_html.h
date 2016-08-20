@@ -556,7 +556,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 	// use cached page
 	loading_games = 1;
-	if(mobile_mode) {cellFsUnlink((char*)GAMELIST_JS); buf_len = 0;}
+	if(mobile_mode) {cellFsUnlink(GAMELIST_JS); buf_len = 0;}
 	else
 	{
 		if(islike(param, "/index.ps3?")) cellFsUnlink(WMTMP "/games.html");

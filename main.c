@@ -150,9 +150,9 @@ SYS_MODULE_STOP(wwwd_stop);
 
 #ifdef WM_REQUEST
  #ifdef WEB_CHAT
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff"); cellFsUnlink((char*)WMREQUEST_FILE); cellFsUnlink((char*)WMCHATFILE);}
+  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff"); cellFsUnlink(WMREQUEST_FILE); cellFsUnlink(WMCHATFILE);}
  #else
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff"); cellFsUnlink((char*)WMREQUEST_FILE);}
+  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff"); cellFsUnlink(WMREQUEST_FILE);}
  #endif
 #else
  #ifdef WM_CUSTOM_COMBO
@@ -160,9 +160,9 @@ SYS_MODULE_STOP(wwwd_stop);
  #endif
 
  #ifdef WEB_CHAT
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff"); cellFsUnlink((char*)WMCHATFILE);}
+  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff"); cellFsUnlink(WMCHATFILE);}
  #else
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");}
+  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff");}
  #endif
 #endif
 
@@ -599,7 +599,7 @@ static bool file_exists(const char* path);
 static void do_umount_iso(void);
 #else
 static void string_to_lv2(char* path, u64 addr);
-static void add_to_map(char *path1, char *path2);
+static void add_to_map(const char *path1, const char *path2);
 #endif
 
 static bool from_reboot = false;
@@ -962,7 +962,7 @@ static void handleclient(u64 conn_s_p)
 
  #ifdef WM_REQUEST
 	struct CellFsStat buf;
-	u8 wm_request = (cellFsStat((char*)WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
+	u8 wm_request = (cellFsStat(WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
 
 	#ifdef PKG_HANDLER
 	wmget = (wm_request > 0);
@@ -1039,13 +1039,13 @@ static void handleclient(u64 conn_s_p)
  #ifdef WM_REQUEST
 		if(wm_request)
 		{
-			if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && cellFsOpen((char*)WMREQUEST_FILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+			if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && cellFsOpen(WMREQUEST_FILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
 				cellFsRead(fd, (void *)header, buf.st_size, NULL);
 				cellFsClose(fd); for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n]=9;
 				if(islike(header, "/play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
 			}
-			cellFsUnlink((char*)WMREQUEST_FILE);
+			cellFsUnlink(WMREQUEST_FILE);
 		}
  #endif
 
@@ -1281,8 +1281,8 @@ static void handleclient(u64 conn_s_p)
 					else
 						enable_classic_ps2_mode();
 
-					sprintf((char*) header, (char*)"PS2 Classic %s", classic_ps2_enabled ? STR_DISABLED : STR_ENABLED);
-					show_msg((char*) header);
+					sprintf(header, "PS2 Classic %s", classic_ps2_enabled ? STR_DISABLED : STR_ENABLED);
+					show_msg(header);
 					sys_timer_sleep(3);
 				}
 				else
@@ -1314,9 +1314,9 @@ static void handleclient(u64 conn_s_p)
  #if defined(FIX_GAME) || defined(COPY_PS3)
 			if(strstr(param, ".ps3$abort"))
 			{
-				if(copy_in_progress) {copy_aborted=true; show_msg((char*)STR_CPYABORT);}   // /copy.ps3$abort
+				if(copy_in_progress) {copy_aborted = true; show_msg((char*)STR_CPYABORT);}   // /copy.ps3$abort
 				else
-				if(fix_in_progress)  {fix_aborted=true;  show_msg((char*)"Fix aborted!");} // /fixgame.ps3$abort
+				if(fix_in_progress)  {fix_aborted = true;  show_msg((char*)"Fix aborted!");} // /fixgame.ps3$abort
 
 				sprintf(param, "/");
 			}
@@ -1605,7 +1605,7 @@ static void handleclient(u64 conn_s_p)
 			if(islike(param, "/rebuild.ps3"))
 			{
 				cmd[0] = cmd[1] = 0; cmd[2] = 0x03; cmd[3] = 0xE9; // 00 00 03 E9
-				savefile((char*)"/dev_hdd0/mms/db.err", cmd, 4);
+				savefile("/dev_hdd0/mms/db.err", cmd, 4);
 				goto restart;
 			}
 			if(islike(param, "/recovery.ps3"))
@@ -1625,7 +1625,7 @@ static void handleclient(u64 conn_s_p)
 				working = 0;
 
 				{ DELETE_TURNOFF } { BEEP2 }
-				if(strstr(param,"?0") == NULL) savefile((char*)WMNOSCAN, NULL, 0);
+				if(strstr(param,"?0") == NULL) savefile(WMNOSCAN, NULL, 0);
 
 				vshmain_87BB0001(2); // VSH reboot
 
@@ -2085,7 +2085,7 @@ static void handleclient(u64 conn_s_p)
 					{
 						char *game_path = param + 12;
 						sprintf(templn, "Fixed: %s", game_path);
-						show_msg((char*)templn);
+						show_msg(templn);
 
 						urlenc(templn, game_path);
 						sprintf(tempstr, "Fixed: " HTML_URL, templn, game_path); strcat(buffer, tempstr);
@@ -2259,7 +2259,7 @@ static void handleclient(u64 conn_s_p)
 
 						sprintf(templn, "System BGM: %s", (system_bgm)?STR_ENABLED:STR_DISABLED);
 						strcat(buffer, templn);
-						show_msg((char*)templn);
+						show_msg(templn);
 					}
  #endif
 
@@ -2283,7 +2283,7 @@ static void handleclient(u64 conn_s_p)
 						else if(islike(param2 , "?uninstall"))
 						{
 							struct CellFsStat buf;
-							if(cellFsStat("/dev_hdd0/boot_plugins.txt", &buf) == CELL_FS_SUCCEEDED && buf.st_size < 40) cellFsUnlink((char*)"/dev_hdd0/boot_plugins.txt");
+							if(cellFsStat("/dev_hdd0/boot_plugins.txt", &buf) == CELL_FS_SUCCEEDED && buf.st_size < 40) cellFsUnlink("/dev_hdd0/boot_plugins.txt");
 
 							// delete files
 							unlink_file("/dev_hdd0", "webftp_server.sprx", "", tempstr);
@@ -2526,7 +2526,7 @@ static void wwwd_thread(uint64_t arg)
 #endif
 
 #ifdef WM_REQUEST
-	cellFsUnlink((char*)WMREQUEST_FILE);
+	cellFsUnlink(WMREQUEST_FILE);
 #endif
 
 	{from_reboot = file_exists(WMNOSCAN);}
@@ -2534,8 +2534,8 @@ static void wwwd_thread(uint64_t arg)
 	if(webman_config->blind) enable_dev_blind(NO_MSG);
 
 #ifdef COBRA_ONLY
-	{sys_map_path((char*)"/app_home", NULL);}
-	{sys_map_path((char*)"/dev_bdvd/PS3_UPDATE", (char*)SYSMAP_PS3_UPDATE);} //redirect firmware update to empty folder
+	{sys_map_path("/app_home", NULL);}
+	{sys_map_path("/dev_bdvd/PS3_UPDATE", SYSMAP_PS3_UPDATE);} //redirect firmware update to empty folder
 #endif
 
 	set_buffer_sizes(webman_config->foot);
@@ -2566,7 +2566,7 @@ static void wwwd_thread(uint64_t arg)
 #ifdef USE_DEBUG
 	u8 d_retries = 0;
 again_debug:
-	debug_s = connect_to_server((char*)"192.168.100.209", 38009);
+	debug_s = connect_to_server("192.168.100.209", 38009);
 	if(debug_s <  0) {d_retries++; sys_timer_sleep(2); if(d_retries < 10) goto again_debug;}
 	if(debug_s >= 0) ssend(debug_s, "Connected...\r\n");
 	sprintf(debug, "FC=%i T0=%i T1=%i\r\n", webman_config->fanc, webman_config->temp0, webman_config->temp1);

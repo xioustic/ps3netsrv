@@ -284,7 +284,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 	cellFsChmod(iso_file, MODE); //fix file read-write permission
 
-	if(cellFsOpen((char*)iso_file, CELL_FS_O_RDWR, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+	if(cellFsOpen(iso_file, CELL_FS_O_RDWR, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		uint64_t chunk_size=_4KB_; char chunk[chunk_size], ps3_sys_version[8];
 		uint64_t bytes_read = 0, lba = 0, pos=0xA000ULL;
@@ -295,7 +295,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 		if(maxbytes > 0 && size > maxbytes) size = maxbytes;
 		if(size > pos) size -= pos; else size = 0;
 
-		while(size>0ULL)
+		while(size > 0ULL)
 		{
 			if(fix_aborted) break;
 
@@ -304,7 +304,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 				cellFsLseek(fd, pos, CELL_FS_SEEK_SET, &bytes_read);
 				cellFsRead(fd, chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
-				lba=getlba(chunk, chunk_size, "PARAM.SFO;1", 11, 0);
+				lba = getlba(chunk, chunk_size, "PARAM.SFO;1", 11, 0);
 
 				if(lba)
 				{

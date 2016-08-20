@@ -531,7 +531,7 @@ static void build_blank_iso(char *title_id)
 	buf[0xC844] = buf[0xC847] = buf[0xC848] = buf[0xC849] = 1;
 
 	int fd = 0;
-	cellFsOpen((char*)"/dev_hdd0/vsh/task.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, NULL, 0);
+	cellFsOpen("/dev_hdd0/vsh/task.dat", CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd, NULL, 0);
 	cellFsWrite(fd, buf, _128KB_, NULL);
 	cellFsClose(fd);
 
@@ -1478,8 +1478,8 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 	int ret = sys_map_path((char*)"/dev_bdvd", path);
 	if (ret != 0) return ret;
 
-	sys_map_path((char*)"//dev_bdvd", path);
-	sys_map_path((char*)"/app_home", special_mode ? path : NULL);
+	sys_map_path("//dev_bdvd", path);
+	sys_map_path("/app_home", special_mode ? path : NULL);
 
 	unsigned int real_disctype;
 

@@ -305,7 +305,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							working = 0;
 							{ DELETE_TURNOFF } { BEEP2 }
-							if(strcasecmp(cmd, "REBOOT")) savefile((char*)WMNOSCAN, NULL, 0);
+							if(strcasecmp(cmd, "REBOOT")) savefile(WMNOSCAN, NULL, 0);
 							{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 							sys_ppu_thread_exit(0);
 						}
@@ -366,7 +366,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							if(filename[0] == '/')
 							{
-								sys_map_path((char*)filename, (strcmp(cwd, "/") ? (char*)cwd : NULL) ); // unmap if cwd is the root
+								sys_map_path(filename, (strcmp(cwd, "/") ? cwd : NULL) ); // unmap if cwd is the root
 							}
 							else
 							{
@@ -456,7 +456,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(param[0] == '/')
 						{
 							sprintf(buffer, "GET %s", param);
-							savefile((char*)WMREQUEST_FILE, buffer, strlen(buffer));
+							savefile(WMREQUEST_FILE, buffer, strlen(buffer));
 							ssend(conn_s_ftp, FTP_OK_200); // The requested action has been successfully completed.
 						}
  #endif
@@ -746,7 +746,7 @@ pasv_again:
 
 						absPath(filename, param, cwd);
 
-						if(cellFsMkdir((char*)filename, MODE) == CELL_FS_SUCCEEDED)
+						if(cellFsMkdir(filename, MODE) == CELL_FS_SUCCEEDED)
 						{
 							sprintf(buffer, "257 \"%s\" OK\r\n", param);
 							ssend(conn_s_ftp, buffer);

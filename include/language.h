@@ -1,10 +1,3 @@
-#ifndef ENGLISH_ONLY
-static bool language(const char *key_name, char *default_str);
-static void update_language(void);
-uint32_t get_xreg_value(char *key, u32 default_value);
-uint32_t get_system_language(uint8_t *lang);
-#endif
-
 int lang_pos, fh;
 
 #ifdef ENGLISH_ONLY
@@ -347,7 +340,7 @@ static char COVERS_PATH[100]		= "";
 
 #ifndef ENGLISH_ONLY
 
-uint32_t get_xreg_value(char *key, u32 default_value)
+static uint32_t get_xreg_value(const char *key, u32 default_value)
 {
 	int reg = -1;
 	u32 reg_value = default_value;
@@ -414,9 +407,9 @@ uint32_t get_xreg_value(char *key, u32 default_value)
 	return reg_value;
 }
 
-uint32_t get_system_language(uint8_t *lang)
+static uint32_t get_system_language(uint8_t *lang)
 {
-	u32 val_lang = get_xreg_value((char*)"/setting/system/language", 1);
+	u32 val_lang = get_xreg_value("/setting/system/language", 1);
 
 	switch(val_lang)
 	{

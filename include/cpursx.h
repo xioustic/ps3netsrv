@@ -182,9 +182,9 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		}
 	}
 
-	cellFsGetFreeSize((char*)"/dev_hdd0", &blockSize, &freeSize);
+	cellFsGetFreeSize("/dev_hdd0", &blockSize, &freeSize);
 
-	sprintf( param, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
+	sprintf(param, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
 											"CPU: %i°C%s<br>"
 											"RSX: %i°C</a><hr>"
 											"<a class=\"s\" href=\"/cpursx.ps3?dn\">"

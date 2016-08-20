@@ -6,7 +6,7 @@
 
 #define NO_MSG							NULL
 
-int file_copy(char *file1, char *file2, uint64_t maxbytes);
+int file_copy(const char *file1, char *file2, uint64_t maxbytes);
 
 static bool copy_in_progress = false;
 
@@ -95,7 +95,7 @@ static int concat(char *file1, char *file2)
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-	if(cellFsOpen((char*)file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
+	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		uint64_t size = buf.st_size;
 
@@ -141,7 +141,7 @@ static int concat(char *file1, char *file2)
 	return ret;
 }
 */
-int file_copy(char *file1, char *file2, uint64_t maxbytes)
+int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 {
 	struct CellFsStat buf;
 	int fd1, fd2;
@@ -161,7 +161,7 @@ int file_copy(char *file1, char *file2, uint64_t maxbytes)
 		if(islike(file1, "/net"))
 		{
 			int ns = connect_to_remote_server((file1[4] & 0xFF) - '0');
-			copy_net_file(file2, file1 + 5, ns, maxbytes);
+			copy_net_file(file2, (char*)file1 + 5, ns, maxbytes);
 			if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
 
 			if(file_exists(file2)) return 0;
@@ -179,14 +179,14 @@ int file_copy(char *file1, char *file2, uint64_t maxbytes)
 
 	uint32_t blockSize;
 	uint64_t freeSize;
-	cellFsGetFreeSize((char*)"/dev_hdd0", &blockSize, &freeSize);
+	cellFsGetFreeSize("/dev_hdd0", &blockSize, &freeSize);
 
 	if(buf.st_size > ((u64)blockSize*freeSize)) return FAILED;
 
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-	if(cellFsOpen((char*)file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
+	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
@@ -269,7 +269,7 @@ static int folder_copy(char *path1, char *path2)
 	copy_aborted = false;
 
 	cellFsChmod(path1, DMODE);
-	cellFsMkdir((char*)path2, DMODE);
+	cellFsMkdir(path2, DMODE);
 
 	int fd;
 
@@ -359,14 +359,14 @@ static void waitfor(const char *path, uint8_t timeout)
 	}
 }
 
-static void enable_dev_blind(char *msg)
+static void enable_dev_blind(const char *msg)
 {
 	if(!isDir("/dev_blind"))
 		{system_call_8(SC_FS_MOUNT, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
 
 	if(!msg) return;
 
-	show_msg((char*) msg);
+	show_msg((char*)msg);
 	sys_timer_sleep(2);
 }
 
@@ -396,7 +396,7 @@ static bool do_custom_combo(const char *filename)
 
 	if(file_exists(combo_file))
 	{
-		file_copy((char*)combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); return true;
+		file_copy(combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); return true;
 	}
 	return false;
 }

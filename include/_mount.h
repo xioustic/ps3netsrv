@@ -289,7 +289,7 @@ static void detect_firmware(void)
 }
 
 #ifndef COBRA_ONLY
-static void add_to_map(char *path1, char *path2)
+static void add_to_map(const char *path1, const char *path2)
 {
 	if(max_mapped == 0) pokeq(MAP_BASE + 0x00, 0x0000000000000000ULL);
 
@@ -336,7 +336,7 @@ static void cache_icon0_and_param_sfo(char *templn)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(file_copy((char*)"/dev_bdvd/PS3_GAME/PARAM.SFO", templn, _4KB_) == CELL_FS_SUCCEEDED) break;
+			if(file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", templn, _4KB_) == CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
@@ -347,7 +347,7 @@ static void cache_icon0_and_param_sfo(char *templn)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(file_copy((char*)"/dev_bdvd/PS3_GAME/ICON0.PNG", templn, COPY_WHOLE_FILE) == CELL_FS_SUCCEEDED) break;
+			if(file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", templn, COPY_WHOLE_FILE) == CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
@@ -592,7 +592,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 
 								working = 0;
 								{ DELETE_TURNOFF }
-								savefile((char*)WMNOSCAN, NULL, 0);
+								savefile(WMNOSCAN, NULL, 0);
 								{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} /*load LPAR id 1*/
 								sys_ppu_thread_exit(0);
 							}
@@ -850,7 +850,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 			{
 				// show msg begin
 				sprintf(templn, "%s %s\n%s %s", STR_COPYING, source, STR_CPYDEST, target);
-				show_msg((char*)templn);
+				show_msg(templn);
 				copy_in_progress = true; copied_count = 0;
 
 				// make target dir tree
@@ -937,11 +937,13 @@ static void do_umount(bool clean)
 		cobra_unload_vsh_plugin(0); // unload rawseciso / netiso plugins
 		cobra_unset_psp_umd();
 
-		{sys_map_path((char*)"/dev_bdvd", NULL);}
-		{sys_map_path((char*)"/app_home", isDir("/dev_hdd0/packages") ? (char*)"/dev_hdd0/packages" : NULL);}
+		{sys_map_path("/dev_bdvd", NULL);}
+		{sys_map_path("/app_home", isDir("/dev_hdd0/packages") ? (char*)"/dev_hdd0/packages" : NULL);}
 
-		{sys_map_path((char*)"//dev_bdvd", NULL);}
-		//{sys_map_path((char*)"//app_home", NULL);}
+		{sys_map_path("//dev_bdvd", NULL);}
+		//{sys_map_path("//app_home", NULL);}
+
+		{sys_map_path("/dev_bdvd/PS3/UPDATE", NULL);}
 
 		{
 			sys_ppu_thread_t t;
@@ -2023,7 +2025,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				cellFsChmod(_path, MODE);
 
 				int fdw;
-				if(cellFsOpen((char*)_path, CELL_FS_O_RDONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
+				if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
 					sys_addr_t addr = 0;
 					if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == 0)
@@ -2083,7 +2085,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
 				// create "wm_noscan" to avoid re-scan of XML returning to XMB from PS2
-				savefile((char*)WMNOSCAN, NULL, 0);
+				savefile(WMNOSCAN, NULL, 0);
 
 				sprintf(temp, "\"%s\" %s", strrchr(_path, '/') + 1, STR_LOADED2);
 			}
@@ -2349,7 +2351,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			else
  #endif //#ifndef LITE_EDITION
 			{
-				cellFsUnlink((char*)WMNOSCAN); // remove wm_noscan if PS2ISO was already mounted
+				cellFsUnlink(WMNOSCAN); // remove wm_noscan if PS2ISO was already mounted
 
 				if(strstr(_path, "/PS3ISO") || mount_unk == EMU_PS3)
 				{
@@ -2385,7 +2387,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					mount_unk = EMU_PSP;
 
-					cellFsUnlink((char*)"/dev_hdd0/game/PSPC66820/PIC1.PNG");
+					cellFsUnlink("/dev_hdd0/game/PSPC66820/PIC1.PNG");
 					cobra_unset_psp_umd();
 
 					if(file_exists(iso_list[0]))
@@ -2426,7 +2428,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
 						// create "wm_noscan" to avoid re-scan of XML returning to XMB from PS2
-						savefile((char*)WMNOSCAN, NULL, 0);
+						savefile(WMNOSCAN, NULL, 0);
 					}
 					else
 						ret = false;
@@ -2573,13 +2575,12 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		}
 		else
 		{
-			int special_mode=0;
+			int special_mode = 0;
 
  #ifdef EXTRA_FEAT
 			CellPadData pad_data = pad_read();
 
-			if(pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_SELECT)) special_mode=true; //mount also app_home / eject disc
-			sys_timer_usleep(10000);
+			if(pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_SELECT)) special_mode = true; //mount also app_home / eject disc
 
 			if(special_mode) eject_insert(1, 0);
  #endif //#ifdef EXTRA_FEAT
@@ -2764,22 +2765,22 @@ patch:
 	{
 		if(do_eject)
 		{
-			add_to_map((char*)"/dev_bdvd", path);
-			add_to_map((char*)"//dev_bdvd", path);
+			add_to_map("/dev_bdvd", path);
+			add_to_map("//dev_bdvd", path);
 
 			char path2[strlen(_path)+24];
 
 			sprintf(path2, "%s/PS3_GAME", _path);
-			add_to_map((char*)"/app_home/PS3_GAME", path2);
+			add_to_map("/app_home/PS3_GAME", path2);
 
 			sprintf(path2, "%s/PS3_GAME/USRDIR", _path);
-			add_to_map((char*)"/app_home/USRDIR", path2);
+			add_to_map("/app_home/USRDIR", path2);
 
 			sprintf(path2, "%s/PS3_GAME/USRDIR/", _path);
-			add_to_map((char*)"/app_home/", path2);
+			add_to_map("/app_home/", path2);
 		}
 
-		add_to_map((char*)"/app_home", path);
+		add_to_map("/app_home", path);
 	}
 
  #ifdef EXT_GDATA
@@ -2839,14 +2840,14 @@ patch:
 		sprintf(expplg, "%s/none", app_sys);
 
 	if(do_eject && file_exists(expplg))
-		add_to_map( (char*)"/dev_flash/vsh/module/explore_plugin.sprx", expplg);
+		add_to_map("/dev_flash/vsh/module/explore_plugin.sprx", expplg);
 
 
 	//---------------
 	// New libfs.sprx
 	//---------------
 	if((do_eject>0) && (c_firmware >= 4.20f) && file_exists(NEW_LIBFS_PATH))
-		add_to_map((char*) ORG_LIBFS_PATH, (char*)NEW_LIBFS_PATH);
+		add_to_map(ORG_LIBFS_PATH, NEW_LIBFS_PATH);
 
 	//-----------------------------------------------//
 	uint64_t map_data  = (MAP_BASE);
@@ -2936,13 +2937,17 @@ exit_mount:
 	if((extgd == 0) && isDir("/dev_bdvd/GAMEI")) set_gamedata_status(2, true); // auto-enable external gameDATA (if GAMEI exists on /bdvd)
  #endif
 	{
-		if(ret && (strstr(_path, ".PUP.ntfs[BD") || file_exists("/dev_bdvd/PS3UPDAT.PUP")))
-			sys_map_path((char*)"/dev_bdvd/PS3/UPDATE", (char*)"/dev_bdvd"); //redirect root of bdvd to /dev_bdvd/PS3/UPDATE
+		if(ret && file_exists("/dev_bdvd/PS3UPDAT.PUP"))
+		{
+			sys_map_path("/dev_bdvd/PS3/UPDATE", (char*)"/dev_bdvd"); //redirect root of bdvd to /dev_bdvd/PS3/UPDATE (allows update from mounted /net folder or fake BDFILE)
+		}
 
 		if(ret && (islike(_path, "/net") && isDir("/dev_bdvd/PKG")))
-			sys_map_path((char*)"/app_home", (char*)"/dev_bdvd/PKG"); //redirect net_host/PKG to app_home
+		{
+			sys_map_path("/app_home", (char*)"/dev_bdvd/PKG"); //redirect net_host/PKG to app_home
+		}
 
-		{sys_map_path((char*)"/dev_bdvd/PS3_UPDATE", (char*)SYSMAP_PS3_UPDATE);} //redirect firmware update to empty folder
+		{sys_map_path("/dev_bdvd/PS3_UPDATE", (char*)SYSMAP_PS3_UPDATE);} //redirect firmware update to empty folder
 
 		is_mounting = false;
 

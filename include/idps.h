@@ -123,14 +123,14 @@ static void show_idps(char *msg)
 	get_idps_psid();
 
 	#define SEP "\n                  "
-	sprintf((char*) msg, "IDPS EID0 : %016llX%s"
-									 "%016llX\n"
-						 "IDPS LV2  : %016llX%s"
-									 "%016llX\n"
-						 "PSID LV2 : %016llX%s"
-									"%016llX", eid0_idps[0], SEP, eid0_idps[1], IDPS[0], SEP, IDPS[1], PSID[0], SEP, PSID[1]);
+	sprintf(msg, "IDPS EID0 : %016llX%s"
+							 "%016llX\n"
+				 "IDPS LV2  : %016llX%s"
+							 "%016llX\n"
+				 "PSID LV2 : %016llX%s"
+							"%016llX", eid0_idps[0], SEP, eid0_idps[1], IDPS[0], SEP, IDPS[1], PSID[0], SEP, PSID[1]);
 	#undef SEP
 
-	show_msg((char*) msg);
+	show_msg(msg);
 	sys_timer_sleep(2);
 }

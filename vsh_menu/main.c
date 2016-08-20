@@ -225,21 +225,21 @@ static void get_temperature(uint32_t _dev, uint32_t *_temp)
 ////////////////////////////////////////////////////////////////////////
 static void soft_reboot(void)
 {
-  cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
+  cellFsUnlink("/dev_hdd0/tmp/turnoff");
   {system_call_3(379, 0x8201, NULL, 0);}
     sys_ppu_thread_exit(0);
 }
 
 static void hard_reboot(void)
 {
-  cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
+  cellFsUnlink("/dev_hdd0/tmp/turnoff");
   {system_call_3(379, 0x1200, NULL, 0);}
     sys_ppu_thread_exit(0);
 }
 
 static void shutdown_system(void)
 {
-  cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
+  cellFsUnlink("/dev_hdd0/tmp/turnoff");
   {system_call_4(379, 0x1100, 0, 0, 0);}
     sys_ppu_thread_exit(0);
 }
@@ -266,7 +266,7 @@ static int connect_to_webman(void)
 	return s;
 }
 
-static void send_wm_request(char *cmd)
+static void send_wm_request(const char *cmd)
 {
 	// send command
 	int conn_s = -1;
@@ -512,7 +512,7 @@ static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload)
 		{
 			if(strstr(tmp_filename, "webftp_server"))
 			{
-				if(unload) {if(wm_unload) continue; send_wm_request((char *)"GET /quit.ps3"); return 0;}
+				if(unload) {if(wm_unload) continue; send_wm_request("GET /quit.ps3"); return 0;}
 				return wm_unload ? 0 : slot;
 			}
 			else
@@ -868,7 +868,7 @@ static void do_main_menu_action(void)
   {
     case 0:
       buzzer(1);
-      send_wm_request((char*)"GET /mount_ps3/unmount");
+      send_wm_request("GET /mount_ps3/unmount");
 
       //if(entry_mode[line]) wait_for_request(); else
       sys_timer_sleep(1);
@@ -884,13 +884,13 @@ static void do_main_menu_action(void)
       }
       return;
     case 1:
-      if(entry_mode[line]==0) {send_wm_request((char*)"GET /mount_ps3/net0");}
-      if(entry_mode[line]==1) {send_wm_request((char*)"GET /mount_ps3/net1");}
-      if(entry_mode[line]==2) {send_wm_request((char*)"GET /mount_ps3/net2");}
-      if(entry_mode[line]==3) {send_wm_request((char*)"GET /mount_ps3/net3");}
-      if(entry_mode[line]==4) {send_wm_request((char*)"GET /mount_ps3/net4");}
-      if(entry_mode[line]==5) {send_wm_request((char*)"GET /unmap.ps3/dev_usb000");}
-      if(entry_mode[line]==6) {send_wm_request((char*)"GET /remap.ps3/dev_usb000&to=/dev_hdd0/packages");}
+      if(entry_mode[line]==0) {send_wm_request("GET /mount_ps3/net0");}
+      if(entry_mode[line]==1) {send_wm_request("GET /mount_ps3/net1");}
+      if(entry_mode[line]==2) {send_wm_request("GET /mount_ps3/net2");}
+      if(entry_mode[line]==3) {send_wm_request("GET /mount_ps3/net3");}
+      if(entry_mode[line]==4) {send_wm_request("GET /mount_ps3/net4");}
+      if(entry_mode[line]==5) {send_wm_request("GET /unmap.ps3/dev_usb000");}
+      if(entry_mode[line]==6) {send_wm_request("GET /remap.ps3/dev_usb000&to=/dev_hdd0/packages");}
 
       break;
     case 2:
@@ -900,8 +900,8 @@ static void do_main_menu_action(void)
         uint8_t wmconfig[sizeof(WebmanCfg)];
         WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
 
-        int fd=0;
-        if(cellFsOpen((char*)"/dev_hdd0/tmp/wmconfig.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+        int fd = 0;
+        if(cellFsOpen("/dev_hdd0/tmp/wmconfig.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
         {
 
            cellFsRead(fd, (void *)wmconfig, sizeof(WebmanCfg), 0);
@@ -911,30 +911,30 @@ static void do_main_menu_action(void)
         }
       }
 
-      if(entry_mode[line]==(fan_mode ? 1 : 0)) {send_wm_request((char*)"GET /cpursx.ps3?dn"); buzzer(1);}
-      if(entry_mode[line]==(fan_mode ? 0 : 1)) {send_wm_request((char*)"GET /cpursx.ps3?up"); buzzer(1);}
+      if(entry_mode[line]==(fan_mode ? 1 : 0)) {send_wm_request("GET /cpursx.ps3?dn"); buzzer(1);}
+      if(entry_mode[line]==(fan_mode ? 0 : 1)) {send_wm_request("GET /cpursx.ps3?up"); buzzer(1);}
 
-      if(entry_mode[line]==2) {send_wm_request((char*)"GET /cpursx.ps3?mode"); buzzer(3); entry_mode[line]=3; strcpy(entry_str[view][line], "2: System Info"); fan_mode = fan_mode ? 0 : 1;} else
-      if(entry_mode[line]==3) {send_wm_request((char*)"GET /popup.ps3"); return_to_xmb();}
+      if(entry_mode[line]==2) {send_wm_request("GET /cpursx.ps3?mode"); buzzer(3); entry_mode[line]=3; strcpy(entry_str[view][line], "2: System Info"); fan_mode = fan_mode ? 0 : 1;} else
+      if(entry_mode[line]==3) {send_wm_request("GET /popup.ps3"); return_to_xmb();}
 
       play_rco_sound("system_plugin", "snd_system_ok");
       return;
     case 3:
-      if(entry_mode[line]==1) send_wm_request((char*)"GET /refresh.ps3?1"); else
-      if(entry_mode[line]==2) send_wm_request((char*)"GET /refresh.ps3?2"); else
-      if(entry_mode[line]==3) send_wm_request((char*)"GET /refresh.ps3?3"); else
-      if(entry_mode[line]==4) send_wm_request((char*)"GET /refresh.ps3?4"); else
-      if(entry_mode[line]==5) send_wm_request((char*)"GET /refresh.ps3?0"); else
-                              send_wm_request((char*)"GET /refresh.ps3");
+      if(entry_mode[line]==1) send_wm_request("GET /refresh.ps3?1"); else
+      if(entry_mode[line]==2) send_wm_request("GET /refresh.ps3?2"); else
+      if(entry_mode[line]==3) send_wm_request("GET /refresh.ps3?3"); else
+      if(entry_mode[line]==4) send_wm_request("GET /refresh.ps3?4"); else
+      if(entry_mode[line]==5) send_wm_request("GET /refresh.ps3?0"); else
+                              send_wm_request("GET /refresh.ps3");
 
       entry_mode[line] = 0; sprintf(entry_str[view][line], "3: Refresh XML");
       break;
     case 4:
-      send_wm_request((char*)"GET /extgd.ps3");
+      send_wm_request("GET /extgd.ps3");
 
       break;
     case 5:
-      send_wm_request((char*)"GET /copy.ps3/dev_bdvd");
+      send_wm_request("GET /copy.ps3/dev_bdvd");
 
       break;
     case 6:
@@ -946,19 +946,19 @@ static void do_main_menu_action(void)
 
       return;
     case 7:
-      send_wm_request((char*)"GET /browser.ps3/");
+      send_wm_request("GET /browser.ps3/");
 
       break;
     case 8:
-      send_wm_request((char*)"GET /browser.ps3/setup.ps3");
+      send_wm_request("GET /browser.ps3/setup.ps3");
 
       break;
     case 9:
-      if(entry_mode[line]==1) send_wm_request((char*)"GET /browser.ps3$block_servers");    else
-      if(entry_mode[line]==2) send_wm_request((char*)"GET /browser.ps3$restore_servers");  else
-      if(entry_mode[line]==3) send_wm_request((char*)"GET /delete.ps3?history");           else
-      if(entry_mode[line]==4) send_wm_request((char*)"GET /syscall.ps3mapi?sce=1");        else
-                              send_wm_request((char*)"GET /browser.ps3$disable_syscalls");
+      if(entry_mode[line]==1) send_wm_request("GET /browser.ps3$block_servers");    else
+      if(entry_mode[line]==2) send_wm_request("GET /browser.ps3$restore_servers");  else
+      if(entry_mode[line]==3) send_wm_request("GET /delete.ps3?history");           else
+      if(entry_mode[line]==4) send_wm_request("GET /syscall.ps3mapi?sce=1");        else
+                              send_wm_request("GET /browser.ps3$disable_syscalls");
 
       break;
     case 0xA:
@@ -999,7 +999,7 @@ static void do_rebug_menu_action(void)
     case 0:
 
       if(cellFsStat("/dev_hdd0/plugins/wm_vsh_menu.sprx", &s) == CELL_FS_SUCCEEDED)
-          send_wm_request((char*)"GET /unloadprx.ps3/dev_hdd0/plugins/wm_vsh_menu.sprx");
+          send_wm_request("GET /unloadprx.ps3/dev_hdd0/plugins/wm_vsh_menu.sprx");
       else
           return;
 
@@ -1034,7 +1034,7 @@ static void do_rebug_menu_action(void)
 
       // save config
       int fd = 0;
-      if(cellFsOpen((char*)"/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+      if(cellFsOpen("/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
       {
          cellFsWrite(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), NULL);
          cellFsClose(fd);
@@ -1843,7 +1843,7 @@ static void vsh_menu_thread(uint64_t arg)
 
   // read config file
   int fd=0;
-  if(cellFsOpen((char*)"/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+  if(cellFsOpen("/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
   {
      cellFsRead(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), 0);
      cellFsClose(fd);
@@ -1998,7 +1998,7 @@ static void vsh_menu_thread(uint64_t arg)
 
           // save config
           int fd = 0;
-          if(cellFsOpen((char*)"/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+          if(cellFsOpen("/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
           {
              cellFsWrite(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), NULL);
              cellFsClose(fd);
