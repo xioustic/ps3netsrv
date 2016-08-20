@@ -178,7 +178,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		if(isDir(drives[d]))
 		{
 			cellFsGetFreeSize(drives[d], &blockSize, &freeSize);
-			sprintf(param, "<br>USB%c: %'d %s", drives[d][10], (int)((blockSize*freeSize)>>20), STR_MBFREE); strcat(templn, param);
+			sprintf(param, "<br><a href=\"%s\">USB%c: %'d %s</a>", drives[d], drives[d][10], (int)((blockSize*freeSize)>>20), STR_MBFREE); strcat(templn, param);
 		}
 	}
 
@@ -191,13 +191,13 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 											"CPU: %i°F%s<br>"
 											"RSX: %i°F</a><hr>"
 											"<a class=\"s\" href=\"/games.ps3\">"
-											"MEM: %'d KB<br>"
-											"HDD: %'d %s%s</a><hr>"
+											"MEM: %'d KB</a><br>"
+											"<a href=\"%s\">HDD: %'d %s</a>%s<hr>"
 											"<a class=\"s\" href=\"/cpursx.ps3?mode\">"
 											"FAN SPEED: %i%% (0x%X)</a><br>",
 					t1, max_temp1, t2,
 					t1f, max_temp2, t2f,
-					(meminfo.avail>>10), (int)((blockSize*freeSize)>>20), STR_MBFREE, templn,
+					(meminfo.avail>>10), drives[0], (int)((blockSize*freeSize)>>20), STR_MBFREE, templn,
 					(int)((int)fan_speed*100)/255, fan_speed); strcat(buffer, param);
 
 	if( !max_temp && !is_ps3_http)
@@ -229,7 +229,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	if(isDir("/dev_bdvd") && file_exists(WMTMP "/last_game.txt"))
 	{
-		int fd = 0;
+		int fd = 0; memset(param, 0, HTML_RECV_SIZE);
 
 		if(cellFsOpen(WMTMP "/last_game.txt", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
