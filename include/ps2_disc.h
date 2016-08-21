@@ -15,6 +15,7 @@ static void do_umount_ps2disc(bool mount)
 static bool mount_ps2disc(char *path)
 {
 	do_umount_ps2disc(true);
+	do_umount_iso();
 
 	if(!isDir(path)) return false;
 
