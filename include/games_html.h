@@ -459,7 +459,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
  #endif //#ifndef LITE_EDITION
 #endif //#ifdef COBRA_ONLY
 
-static void add_query_html(char *buffer, char *param, char *label)
+static void add_query_html(char *buffer, const char *param, const char *label)
 {
 	char templn[64];
 	sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); strcat(buffer, templn);
@@ -468,14 +468,14 @@ static void add_query_html(char *buffer, char *param, char *label)
 static void check_cover_folders(char *buffer)
 {
 #ifndef ENGLISH_ONLY
-												covers_exist[0]=isDir(COVERS_PATH);
+												covers_exist[0] = isDir(COVERS_PATH);
 #endif
-	sprintf(buffer, "%s/covers", MM_ROOT_STD) ; covers_exist[1]=isDir(buffer);
-	sprintf(buffer, "%s/covers", MM_ROOT_STL) ; covers_exist[2]=isDir(buffer);
-	sprintf(buffer, "%s/covers", MM_ROOT_SSTL); covers_exist[3]=isDir(buffer);
-												covers_exist[4]=isDir("/dev_hdd0/GAMES/covers");
-												covers_exist[5]=isDir("/dev_hdd0/GAMEZ/covers");
-												covers_exist[6]=isDir(WMTMP) && (webman_config->nocov!=2);
+	sprintf(buffer, "%s/covers", MM_ROOT_STD) ; covers_exist[1] = isDir(buffer);
+	sprintf(buffer, "%s/covers", MM_ROOT_STL) ; covers_exist[2] = isDir(buffer);
+	sprintf(buffer, "%s/covers", MM_ROOT_SSTL); covers_exist[3] = isDir(buffer);
+												covers_exist[4] = isDir("/dev_hdd0/GAMES/covers");
+												covers_exist[5] = isDir("/dev_hdd0/GAMEZ/covers");
+												covers_exist[6] = isDir(WMTMP) && (webman_config->nocov!=2);
 
 #ifndef ENGLISH_ONLY
 	if(!covers_exist[0]) {use_custom_icon_path = strstr(COVERS_PATH, "%s"); use_icon_region = strstr(COVERS_PATH, "%s/%s");} else {use_icon_region = use_custom_icon_path = false;}
@@ -504,27 +504,27 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	{
 		strcat(buffer, "<font style=\"font-size:18px\">");
 #ifdef COBRA_ONLY
-		if(!(webman_config->cmask & PS3)) { add_query_html(buffer, (char*)"ps3", (char*)"PS3");
-											add_query_html(buffer, (char*)"games", (char*)"GAMES");
-											add_query_html(buffer, (char*)"PS3ISO", (char*)"PS3ISO");}
+		if(!(webman_config->cmask & PS3)) { add_query_html(buffer, "ps3", "PS3");
+											add_query_html(buffer, "games", "GAMES");
+											add_query_html(buffer, "PS3ISO", "PS3ISO");}
 
-		if(!(webman_config->cmask & PS2))   add_query_html(buffer, (char*)"PS2ISO", (char*)"PS2ISO");
-		if(!(webman_config->cmask & PSP))   add_query_html(buffer, (char*)"PSPISO", (char*)"PSPISO");
-		if(!(webman_config->cmask & PS1))   add_query_html(buffer, (char*)"PSXISO", (char*)"PSXISO");
-		if(!(webman_config->cmask & BLU))   add_query_html(buffer, (char*)"BDISO" , (char*)"BDISO" );
-		if(!(webman_config->cmask & DVD))   add_query_html(buffer, (char*)"DVDISO", (char*)"DVDISO");
+		if(!(webman_config->cmask & PS2))   add_query_html(buffer, "PS2ISO", "PS2ISO");
+		if(!(webman_config->cmask & PSP))   add_query_html(buffer, "PSPISO", "PSPISO");
+		if(!(webman_config->cmask & PS1))   add_query_html(buffer, "PSXISO", "PSXISO");
+		if(!(webman_config->cmask & BLU))   add_query_html(buffer, "BDISO" , "BDISO" );
+		if(!(webman_config->cmask & DVD))   add_query_html(buffer, "DVDISO", "DVDISO");
  #ifndef LITE_EDITION
-		if(webman_config->netd0 || webman_config->netd1 || webman_config->netd2 || webman_config->netd3 || webman_config->netd4) add_query_html(buffer, (char*)"net", (char*)"NET");
+		if(webman_config->netd0 || webman_config->netd1 || webman_config->netd2 || webman_config->netd3 || webman_config->netd4) add_query_html(buffer, "net", "NET");
  #endif
-		add_query_html(buffer, (char*)"hdd", (char*)"HDD");
-		add_query_html(buffer, (char*)"usb", (char*)"USB");
-		add_query_html(buffer, (char*)"ntfs", (char*)"NTFS");
+		add_query_html(buffer, "hdd", "HDD");
+		add_query_html(buffer, "usb", "USB");
+		add_query_html(buffer, "ntfs", "NTFS");
 #else
-		if(!(webman_config->cmask & PS3)) add_query_html(buffer, (char*)"games", (char*)"GAMES");
-		if(!(webman_config->cmask & PS2)) add_query_html(buffer, (char*)"PS2ISO", (char*)"PS2ISO");
+		if(!(webman_config->cmask & PS3)) add_query_html(buffer, "games", "GAMES");
+		if(!(webman_config->cmask & PS2)) add_query_html(buffer, "PS2ISO", "PS2ISO");
 
-		add_query_html(buffer, (char*)"hdd", (char*)"HDD");
-		add_query_html(buffer, (char*)"usb", (char*)"USB");
+		add_query_html(buffer, "hdd", "HDD");
+		add_query_html(buffer, "usb", "USB");
 #endif //#ifdef COBRA_ONLY
 	}
 	else

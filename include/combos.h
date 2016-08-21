@@ -72,10 +72,11 @@
 				else
 #endif
 				{
-					data.len=0;
-					if(cellPadGetData(0, &data) != CELL_PAD_OK || data.len == 0)
-						if(cellPadGetData(1, &data) != CELL_PAD_OK || data.len == 0)
-							if(cellPadGetData(2, &data) != CELL_PAD_OK) {sys_timer_usleep(300000); continue;}
+					data.len = 0;
+					for(u8 p = 0; p < 8; p++)
+						if(cellPadGetData(p, &data) == CELL_PAD_OK && data.len > 0) break;
+
+					if(data.len == 0) {sys_timer_usleep(300000); continue;}
 				}
 
 				if(data.len > 0)

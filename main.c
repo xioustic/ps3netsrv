@@ -1621,15 +1621,8 @@ static void handleclient(u64 conn_s_p)
 			if(islike(param, "/restart.ps3"))
 			{
  restart:
-				http_response(conn_s, header, param, CODE_HTTP_OK, param);
-				working = 0;
-
-				{ DELETE_TURNOFF } { BEEP2 }
-				if(strstr(param,"?0") == NULL) savefile(WMNOSCAN, NULL, 0);
-
-				vshmain_87BB0001(2); // VSH reboot
-
-				goto exit_handleclient;
+				if(!strstr(param, "?")) strcat(param, "?v");
+				goto reboot;
 			}
 			if(islike(param, "/reboot.ps3"))
 			{

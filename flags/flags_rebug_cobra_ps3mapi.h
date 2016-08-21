@@ -2,10 +2,10 @@
 
 //// EDITIONS ////
 
-#define COBRA_ONLY	1	// comment out for ccapi/non-cobra release
+#define COBRA_ONLY		1	// comment out for ccapi/non-cobra release
 #define REX_ONLY		1	// shortcuts for REBUG REX CFWs / comment out for usual CFW
 
-#define PS3MAPI		1	// ps3 manager API & webGUI by _NzV_
+#define PS3MAPI			1	// ps3 manager API & webGUI by _NzV_
 //#define CCAPI			1	// uncomment for ccapi release
 //#define LITE_EDITION	1	// no ps3netsrv support, smaller memory footprint
 
@@ -31,18 +31,18 @@
 
 //// EXTRA FEATURES ////
 //#define XMB_SCREENSHOT	1	// screenshot XMB using L2 + R2 + SELECT + START (thanks to 3141card)
-//#define AUTO_EJECT_DISC	1	// eject disc holding SELECT on mount
 //#define SWAP_KERNEL		1	// load custom lv2_kernel.self patching LV1 and soft rebooting (use /copy.ps3)
-//#define WEB_CHAT			1	// /chat.ps3
 //#define WM_CUSTOM_COMBO	"/dev_hdd0/tmp/wm_combo/wm_custom_"		// advanced custom combos
 //#define NET3NET4			1	// add support for /net3 and /net4
+//#define PS3NET_SERVER		1	// ps3 net server
 //#define PKG_HANDLER		1	// /download.ps3?url=<url>, /download.ps3?to=<path>&url=<url>, /install.ps3<pkg-path> (thanks to bguerville & mysis)
 //#define LAUNCHPAD			1	// create /dev_hdd0/tmp/wm_lauchpad.xml
+//#define PS2_DISC			1	// uncomment to support /mount.ps2 (mount ps2 game folder as /dev_ps2disc) requires a physical PS2 disc to swap discs (thanks to WuEpE)
+//#define NOSINGSTAR		1	// remove SingStar icon from XMB
 
 //// TEST FEATURES ////
-//#define PS2_DISC		1	// uncomment to support /mount.ps2 (mount ps2 game folder as /dev_ps2disc) requires a physical PS2 disc to swap discs (thanks to WuEpE)
-//#define NOSINGSTAR	1	// remove SingStar icon from XMB
-//#define SYS_BGM		1	// system background music (may freeze the system when enabled)
-//#define USE_DEBUG		1	// debug using telnet
+//#define SYS_BGM			1	// system background music (may freeze the system when enabled)
+//#define USE_DEBUG			1	// debug using telnet
+//#define WEB_CHAT			1	// /chat.ps3
+//#define AUTO_EJECT_DISC	1	// eject disc holding SELECT on mount
 //#define RAWISO_PSX_MULTI	// support for multi PSX from Iris Manager (it's incomplete - only rawseciso.h code is complete) (thanks to Estwald)
-

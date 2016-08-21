@@ -167,11 +167,9 @@ static CellPadData pad_read(void)
 
 	for(u8 n = 0;n < 10; n++)
 	{
-		if(cellPadGetData(0, &pad_data) != CELL_PAD_OK || pad_data.len == 0)
-			if(cellPadGetData(1, &pad_data) != CELL_PAD_OK || pad_data.len == 0)
-					cellPadGetData(2, &pad_data);
+		for(u8 p = 0; p < 8; p++)
+			if(cellPadGetData(p, &pad_data) == CELL_PAD_OK && pad_data.len > 0) return pad_data;
 
-		if(pad_data.len > 0) break;
 		sys_timer_usleep(100000);
 	}
 

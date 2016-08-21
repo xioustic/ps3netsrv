@@ -59,9 +59,9 @@ char *strcasestr(const char *s1, const char *s2);
 static char h2a(char hex)
 {
 	char c = hex;
-	if(c>=0 && c<=9)
+	if(c >= 0 && c <= 9)
 		c += '0';
-	else if(c>=10 && c<=15)
+	else if(c >= 10 && c <= 15)
 		c += 55; //A-F
 	return c;
 }
@@ -236,9 +236,11 @@ static void prepare_header(char *header, char *param, u8 is_binary)
 
 	strcpy(header, "HTTP/1.1 200 OK\r\nContent-Type: \0");
 
+	int flen = strlen(param);
+
 	if(is_binary == BINARY_FILE)
 	{
-		int flen = strlen(param); char *ext = param + MAX(flen - 4, 0), *ext5 = param + MAX(flen - 5, 0);
+		char *ext = param + MAX(flen - 4, 0), *ext5 = param + MAX(flen - 5, 0);
 
 		if(!extcasecmp(ext, ".png", 4))
 			strcat(header, "image/png");
@@ -249,7 +251,7 @@ static void prepare_header(char *header, char *param, u8 is_binary)
 		if(!extcasecmp(ext, ".htm", 4) || !extcasecmp(ext5, ".html", 5) || !extcasecmp(ext5, ".shtm", 5))
 			{strcat(header, "text/html"); set_base_path = true;}
 		else
-		if(!extcasecmp(param, ".js", 3))
+		if(!extcasecmp(ext, ".js", 3))
 			strcat(header, "text/javascript");
 		else
 		if(!extcasecmp(ext, ".css", 4))
@@ -343,7 +345,7 @@ static void prepare_header(char *header, char *param, u8 is_binary)
 	else
 		{strcat(header, "text/html"); set_base_path = true;}
 
-	if(set_base_path && param[0]=='/') {strncpy(html_base_path, param, MAX_PATH_LEN); html_base_path[MAX_PATH_LEN] = NULL; html_base_path[strrchr(html_base_path, '/')-html_base_path] = NULL;}
+	if(set_base_path && param[0]=='/') {strncpy(html_base_path, param, flen); html_base_path[flen] = NULL; html_base_path[strrchr(html_base_path, '/')-html_base_path] = NULL;}
 
 	strcat(header, "\r\n");
 }
@@ -355,8 +357,8 @@ static bool islike(const char *param, const char *text)
 
 static int val(const char *c)
 {
-	int previous_result=0, result=0;
-	int multiplier=1;
+	int previous_result = 0, result = 0;
+	int multiplier = 1;
 
 	if(c && *c == '-')
 	{

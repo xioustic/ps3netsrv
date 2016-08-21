@@ -266,21 +266,20 @@ next_part:
 #ifdef COPY_PS3
 static int folder_copy(char *path1, char *path2)
 {
-	copy_aborted = false;
-
 	cellFsChmod(path1, DMODE);
 	cellFsMkdir(path2, DMODE);
 
 	int fd;
 
+	copy_aborted = false;
+
 	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
-		CellFsDirent dir;
+		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+
 		char source[MAX_PATH_LEN];
 		char target[MAX_PATH_LEN];
-		u64 read;
 
-		read = sizeof(CellFsDirent);
 		while(!cellFsReaddir(fd, &dir, &read))
 		{
 			if(!read || copy_aborted) break;
@@ -311,19 +310,20 @@ static int folder_copy(char *path1, char *path2)
 #ifndef LITE_EDITION
 static int del(const char *path, bool recursive)
 {
-	if(!isDir(path)) {return cellFsUnlink(path);}
+	if(!isDir(path)) return cellFsUnlink(path);
+
 	if(strlen(path) < 11 || islike(path, "/dev_bdvd") || islike(path, "/dev_flash") || islike(path, "/dev_blind")) return FAILED;
 
 	int fd;
-	u64 read;
-	CellFsDirent dir;
-	char entry[MAX_PATH_LEN];
 
 	copy_aborted = false;
 
 	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
-		read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+
+		char entry[MAX_PATH_LEN];
+
 		while(!cellFsReaddir(fd, &dir, &read))
 		{
 			if(!read || copy_aborted) break;
@@ -437,23 +437,23 @@ static void delete_history(bool delete_folders)
 #ifdef COPY_PS3
 static void import_edats(const char *path1, const char *path2)
 {
-	int fd; bool from_usb;
-	u64 read;
-	CellFsDirent dir;
-	struct CellFsStat buf;
-
-	char source[MAX_PATH_LEN];
-	char target[MAX_PATH_LEN];
-
 	cellFsMkdir(path2, DMODE);
+
+	struct CellFsStat buf;
 	if(cellFsStat(path2, &buf) != CELL_FS_SUCCEEDED) return;
+
+	int fd; bool from_usb;
 
 	copy_aborted = false;
 	from_usb = islike(path1, "/dev_usb");
 
 	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
-		read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+
+		char source[MAX_PATH_LEN];
+		char target[MAX_PATH_LEN];
+
 		while(!cellFsReaddir(fd, &dir, &read))
 		{
 			if(!read || copy_aborted) break;
@@ -464,6 +464,7 @@ static void import_edats(const char *path1, const char *path2)
 
 			if(cellFsStat(target, &buf) != CELL_FS_SUCCEEDED)
 				file_copy(source, target, COPY_WHOLE_FILE);
+
 			if(from_usb && cellFsStat(target, &buf) == CELL_FS_SUCCEEDED)
 				{sprintf(target, "%s.bak", source); cellFsRename(source, target);}
 		}

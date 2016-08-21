@@ -7,8 +7,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t size_mb);
 
 static void peek_chunk(uint64_t start, uint64_t size, uint8_t* buf) // read from lv1
 {
-	uint64_t i = 0, t = 0;
-	for(i = 0; i < size; i += 8)
+	for(uint64_t t, i = 0; i < size; i += 8)
 	{
 		t = peek_lv1(start + i); memcpy(buf + i, &t, 8);
 	}
@@ -27,7 +26,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t size_mb)
 
 	if(sys_memory_allocate(mem_size, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem)==0)
 	{
-		uint8_t *mem_buf	= (uint8_t*)sys_mem;
+		uint8_t *mem_buf = (uint8_t*)sys_mem;
 
 		if(cellFsOpen(file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fp, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
@@ -64,8 +63,8 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 			if(start>=LV1_UPPER_MEMORY-((uint64_t)(size*_1MB_))) start=LV1_UPPER_MEMORY-((uint64_t)(size*_1MB_));
 		}
 
-		char *pos=strstr(param, "&size=");
-		if(pos) size = convertH(pos+6);
+		char *pos = strstr(param, "&size=");
+		if(pos) size = convertH(pos + 6);
 
 		sprintf(dump_file, "/dev_hdd0/dump_%s.bin", param+10);
 		dump_mem(dump_file, start, size);
@@ -76,8 +75,8 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 {
 	uint64_t address, addr, byte_addr, fvalue, value=0, upper_memory=LV2_UPPER_MEMORY, found_address=0, step = 1;
-	u8 byte=0, p=0, lv1=0;
-	bool bits8=false, bits16=false, bits32=false, found=false;
+	u8 byte = 0, p = 0, lv1 = 0;
+	bool bits8 = false, bits16 = false, bits32 = false, found = false;
 	u8 flen=0;
 	char *v;
 
@@ -86,10 +85,10 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 
 	address = convertH(param+10);
 
-	v = strstr(param+10, "=");
+	v = strstr(param + 10, "=");
 	if(v)
 	{
-		flen=strlen(v+1);
+		flen = strlen(v+1);
 		for(p=1; p<=flen;p++) if(!memcmp(v+p," ",1)) byte++; //ignore spaces
 		flen-=byte; byte=p=0;
 	}

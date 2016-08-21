@@ -1,6 +1,4 @@
 #ifdef NOSINGSTAR
-static void no_singstar_icon(void);
-
 static void no_singstar_icon(void)
 {
 	int fd;
@@ -12,10 +10,10 @@ static void no_singstar_icon(void)
 		while(!cellFsReaddir(fd, &dir, &read))
 		{
 			if(!read) break;
-			if(dir.d_name[0]=='.') continue;
-			if(strlen(dir.d_name)==2)
+			if(dir.d_name[0] == '.') continue;
+			if(dir.d_name[2] == '\0' && dir.d_name[1] != '\0')
 			{
-				sprintf(xmlpath, "/dev_hdd0/tmp/explore/xil2/game/%s/c/db.xml", dir.d_name);
+				sprintf(xmlpath, "%s/%s/c/db.xml", "/dev_hdd0/tmp/explore/xil2/game", dir.d_name);
 				cellFsUnlink(xmlpath);
 			}
 		}

@@ -478,6 +478,7 @@ static int process_read_file_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t siz
 	return 0;
 }
 
+#ifdef RAWISO_PSX_MULTI
 int psx_indx = 0;
 
 uint32_t *psx_isos_desc;
@@ -580,6 +581,7 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 
 	return 0;
 }
+#endif
 
 static void my_memcpy(uint8_t *dst, uint8_t *src, int size)
 {
@@ -837,10 +839,9 @@ static void eject_thread(uint64_t arg)
 
 	while(eject_running)
 	{
-		int ret;
-
 		if(emu_mode == EMU_PSX_MULTI)
 		{
+			int ret;
 			ret = ejected_disc();
 
 			if(ret == 0)
@@ -894,7 +895,6 @@ static void eject_thread(uint64_t arg)
 				else {fake_insert_event(BDVD_DRIVE, real_disctype);}
 			}
 		}
-
 
 		sys_timer_usleep(70000);
 	}
@@ -1142,8 +1142,10 @@ static void rawseciso_thread(uint64_t arg)
 				{
 					if(is_cd2352 == 1)
 						ret = process_read_cd_2048_cmd_iso(buf, offset / CD_SECTOR_SIZE_2048, size / CD_SECTOR_SIZE_2048);
+#ifdef RAWISO_PSX_MULTI
 					else
 						ret = process_read_psx_cmd_iso(buf, offset / CD_SECTOR_SIZE_2048, size / CD_SECTOR_SIZE_2048, CD_SECTOR_SIZE_2048);
+#endif
 				}
 				else
 				{
@@ -1182,8 +1184,10 @@ static void rawseciso_thread(uint64_t arg)
 			{
 				if(is_cd2352 == 1)
 					ret = process_read_cd_2352_cmd_iso(buf, offset / CD_SECTOR_SIZE_2352, size / CD_SECTOR_SIZE_2352);
+#ifdef RAWISO_PSX_MULTI
 				else
 					ret = process_read_psx_cmd_iso(buf, offset / CD_SECTOR_SIZE_2352, size / CD_SECTOR_SIZE_2352, CD_SECTOR_SIZE_2352);
+#endif
 			}
 			break;
 		}

@@ -3,11 +3,11 @@ static void select_ps1emu(void)
 {
 	CellPadData pad_data = pad_read();
 
-	if(pad_data.len>0)
-    {
+	if(pad_data.len > 0)
+	{
 		if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) {webman_config->ps1emu = 1; save_settings();} else
 		if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2) {webman_config->ps1emu = 0; save_settings();}
-    }
+	}
 
 	char msg[100];
 
