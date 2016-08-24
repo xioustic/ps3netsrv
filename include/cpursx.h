@@ -73,7 +73,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	get_eid0_idps();
 	get_idps_psid();
 
-	sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); strcat(buffer, templn);
+	sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);
 
 	if(IS_INGAME)
 	{
@@ -82,42 +82,42 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		if(strlen(_game_TitleID) == 9)
 		{
 #ifdef GET_KLICENSEE
-			strcat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
+			buffer += concat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
 #endif
 #ifdef SYS_BGM
-			strcat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
+			buffer += concat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
 #endif
 #ifdef VIDEO_REC
-			strcat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
+			buffer += concat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
 #endif
 			char path[MAX_PATH_LEN], version[8] = "01.00", *app_ver = version;
 
-			sprintf(templn, "<hr><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); strcat(buffer, templn);
+			sprintf(templn, "<hr><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); buffer += concat(buffer, templn);
 
 			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
 			if(file_exists(path)==false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
 
 			getTitleID(path, app_ver, GET_VERSION); if(app_ver[0] == '0') app_ver[0]='v'; if(strstr(_game_Title, app_ver)) app_ver[0] = NULL;
 
-			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); strcat(buffer, templn);
+			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); buffer += concat(buffer, templn);
 
 			sprintf(path, "%s%s", HDD0_GAME_DIR, _game_TitleID);
 			if(file_exists(path)==false) sprintf(path, "/dev_bdvd/PS3_GAME");
 
-			sprintf(templn, "<a href=\"%s\"><img src=\"%s/ICON0.PNG\" border=0 %s></a>", path, path, "height=\"60\" style=\"position:absolute;top:65px;\""); strcat(buffer, templn);
+			sprintf(templn, "<a href=\"%s\"><img src=\"%s/ICON0.PNG\" border=0 %s></a>", path, path, "height=\"60\" style=\"position:absolute;top:65px;\""); buffer += concat(buffer, templn);
 
-			strcat(buffer, "</H2>");
+			buffer += concat(buffer, "</H2>");
 		}
 	}
 
 #ifdef COPY_PS3
 	if(copy_in_progress)
 	{
-		sprintf(templn, "<hr><font size=2><a href=\"/copy.ps3$abort\">&#9746 %s</a> %s (%i %s)</font>", STR_COPYING, current_file, copied_count, STR_FILES); strcat(buffer, templn);
+		sprintf(templn, "<hr><font size=2><a href=\"/copy.ps3$abort\">&#9746 %s</a> %s (%i %s)</font>", STR_COPYING, current_file, copied_count, STR_FILES); buffer += concat(buffer, templn);
 	}
 	else if(fix_in_progress)
 	{
-		sprintf(templn, "<hr><font size=2><a href=\"/fixgame.ps3$abort\">&#9746 %s</a> %s</font>", STR_FIXING, current_file); strcat(buffer, templn);
+		sprintf(templn, "<hr><font size=2><a href=\"/fixgame.ps3$abort\">&#9746 %s</a> %s</font>", STR_FIXING, current_file); buffer += concat(buffer, templn);
 	}
 #endif
 
@@ -198,14 +198,14 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 					t1, max_temp1, t2,
 					t1f, max_temp2, t2f,
 					(meminfo.avail>>10), drives[0], (int)((blockSize*freeSize)>>20), STR_MBFREE, templn,
-					(int)((int)fan_speed*100)/255, fan_speed); strcat(buffer, param);
+					(int)((int)fan_speed*100)/255, fan_speed); buffer += concat(buffer, param);
 
 	if( !max_temp && !is_ps3_http)
 		sprintf( templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"self.location='/cpursx.ps3?fan='+this.value\"><hr>", webman_config->manu, DEFAULT_MIN_FANSPEED);
 	else
 		sprintf( templn, "<hr>");
 
-	strcat(buffer, templn);
+	buffer += concat(buffer, templn);
 
 	CellRtcTick pTick; cellRtcGetCurrentTick(&pTick); u32 dd, hh, mm, ss;
 
@@ -217,14 +217,14 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	{
 		ss = (u32)((pTick.tick - gTick.tick)/1000000);
 		dd = (u32)(ss / 86400); ss = ss % 86400; hh = (u32)(ss / 3600); ss = ss % 3600; mm = (u32)(ss / 60); ss = ss % 60;
-		if(dd<100) {sprintf( templn, "<label title=\"Play\">&#9737;</label> %id %02d:%02d:%02d<br>", dd, hh, mm, ss); strcat(buffer, templn);}
+		if(dd<100) {sprintf( templn, "<label title=\"Play\">&#9737;</label> %id %02d:%02d:%02d<br>", dd, hh, mm, ss); buffer += concat(buffer, templn);}
 	}
 	///////////////////////
 
 	//// startup time /////
 	ss = (u32)((pTick.tick - rTick.tick)/1000000);
 	dd = (u32)(ss / 86400); ss = ss % 86400; hh = (u32)(ss / 3600); ss = ss % 3600; mm = (u32)(ss / 60); ss = ss % 60;
-	sprintf( templn, "<label title=\"Startup\">&#8986;</label> %id %02d:%02d:%02d", dd, hh, mm, ss); strcat(buffer, templn);
+	sprintf( templn, "<label title=\"Startup\">&#8986;</label> %id %02d:%02d:%02d", dd, hh, mm, ss); buffer += concat(buffer, templn);
 	///////////////////////
 
 	if(isDir("/dev_bdvd") && file_exists(WMTMP "/last_game.txt"))
@@ -236,7 +236,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 			cellFsRead(fd, (void *)param, MAX_PATH_LEN, NULL);
 			cellFsClose(fd);
 
-			if(strlen(param) > 10) {sprintf( templn, "<hr><font size=\"3\">" HTML_URL " -> ", IS_ON_XMB ? "/play.ps3" : "/dev_bdvd", "/dev_bdvd"); strcat(buffer, templn); add_breadcrumb_trail(buffer, param); strcat(buffer, "</font>");}
+			if(strlen(param) > 10) {sprintf( templn, "<hr><font size=\"3\">" HTML_URL " -> ", IS_ON_XMB ? "/play.ps3" : "/dev_bdvd", "/dev_bdvd"); buffer += concat(buffer, templn); add_breadcrumb_trail(buffer, param); buffer += concat(buffer, "</font>");}
 		}
 	}
 
@@ -262,18 +262,18 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 					PSID[0], PSID[1],
 					eid0_idps[0], eid0_idps[1],
 					IDPS[0], IDPS[1],
-					mac_address[13], mac_address[14], mac_address[15], mac_address[16], mac_address[17], mac_address[18], ip, net_type); strcat(buffer, templn);
+					mac_address[13], mac_address[14], mac_address[15], mac_address[16], mac_address[17], mac_address[18], ip, net_type); buffer += concat(buffer, templn);
 
 	/////////////////////////////
 #ifdef COPY_PS3
 	if(copy_in_progress)
 	{
-		sprintf( templn, "<hr>%s %s (%i %s)", STR_COPYING, current_file, copied_count, STR_FILES); strcat(buffer, templn);
+		sprintf( templn, "<hr>%s %s (%i %s)", STR_COPYING, current_file, copied_count, STR_FILES); buffer += concat(buffer, templn);
 	}
 	else
 	if(fix_in_progress)
 	{
-		strcat(buffer, "<hr>"); sprintf( templn, "%s %s", STR_FIXING, current_file); strcat(buffer, templn);
+		buffer += concat(buffer, "<hr>"); sprintf( templn, "%s %s", STR_FIXING, current_file); buffer += concat(buffer, templn);
 	}
 #endif
 	/////////////////////////////

@@ -476,12 +476,13 @@ static uint32_t get_system_language(uint8_t *lang)
 	return val_lang;
 }
 
+#define GET_NEXT_BYTE  {if(p < s) c = buffer[p++]; else {cellFsRead(fd, (void *)buffer, _2KB_, &bytes_read); p = 0, s = (int)bytes_read, c = buffer[p++];} lang_pos++;}
+
 static bool language(const char *key_name, char *default_str)
 {
-	uint64_t bytes_read = 0;
-	uint8_t i, key_len = strlen(key_name);
-	int fd = 0;
-	char temp[1];
+	char buffer[_2KB_]; uint64_t bytes_read = 0;
+	uint8_t c, i, key_len = strlen(key_name);
+	int fd = 0, p = 0, s = 0;
 
 	bool do_retry = true;
 
@@ -503,55 +504,49 @@ static bool language(const char *key_name, char *default_str)
 		fh = fd;
 
  retry:
-		cellFsLseek(fd, lang_pos, CELL_FS_SEEK_SET, &bytes_read);
+		cellFsLseek(fd, lang_pos, CELL_FS_SEEK_SET, &bytes_read); p = s = 0;
 	}
 
 	do {
-		cellFsRead(fd, (void *)&temp, 1, &bytes_read);
-		lang_pos++;
-
 		for(i = 0; i < key_len; )
 		{
-			if(temp[0] != key_name[i]) break; i++;
+			{ GET_NEXT_BYTE }
+
+			if(c != key_name[i]) break; i++;
 
 			if(i == key_len)
 			{
-				do {
+				while(bytes_read)
+				{
+					if(c == '[') break;
 
-					if(temp[0] == '[') break;
-
-					cellFsRead(fd, (void *)&temp, 1, &bytes_read);
-					lang_pos++;
-
-				} while(bytes_read);
+					{ GET_NEXT_BYTE }
+				};
 
 				size_t str_len = 0;
 
 				while(bytes_read)
 				{
-					cellFsRead(fd, (void *)&temp, 1, &bytes_read);
+					{ GET_NEXT_BYTE }
 
-					if(temp[0] == ']' || !bytes_read) break;
+					if(c == ']' || !bytes_read) break;
 
-					default_str[str_len] = temp[0];
-					str_len++;
+					default_str[str_len++] = c;
 				}
 
 				default_str[str_len] = NULL;
-				lang_pos += str_len;
 				return true;
 			}
-
-			cellFsRead(fd, (void *)&temp, 1, &bytes_read);
-			lang_pos++;
 		}
 
-	} while(bytes_read != 0);
+	} while(bytes_read);
 
 	if(do_retry) {do_retry = false; lang_pos = 0; goto retry;}
 
 	return true;
 }
+
+#undef GET_NEXT_BYTE
 
 static void update_language(void)
 {
@@ -606,8 +601,8 @@ static void update_language(void)
 #ifdef NOSINGSTAR
 		language("STR_NOSINGSTAR", STR_NOSINGSTAR);
 #endif
-		language("STR_RESET_USB", STR_RESET_USB);
 		language("STR_AUTO_PLAY", STR_AUTO_PLAY);
+		language("STR_RESET_USB", STR_RESET_USB);
 		language("STR_TITLEID", STR_TITLEID);
 		language("STR_FANCTRL", STR_FANCTRL);
 		language("STR_NOWARN", STR_NOWARN);

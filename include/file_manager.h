@@ -201,28 +201,28 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	if(flen >= _LINELEN) {flen=0; tempstr[0] = NULL;} //ignore file if it is still too long
 }
 
-static void add_breadcrumb_trail(char *buffer, char *param)
+static void add_breadcrumb_trail(char *pbuffer, char *param)
 {
 	int tlen = 0;
 
-	char swap[_MAX_PATH_LEN], templn[_MAX_PATH_LEN], url[_MAX_PATH_LEN], *slash;
+	char swap[_MAX_PATH_LEN], templn[_MAX_PATH_LEN], url[_MAX_PATH_LEN], *slash, *buffer = pbuffer;
 
 	strcpy(templn, param);
-	while((slash = strchr(templn+1, '/')))
+	while((slash = strchr(templn + 1, '/')))
 	{
 		slash[0] = NULL;
-		tlen+=strlen(templn)+1;
+		tlen+=strlen(templn) + 1;
 
 		strcpy(swap, param);
 		swap[tlen] = NULL;
 
-		strcat(buffer, "<a class=\"f\" href=\"");
+		buffer += concat(buffer, "<a class=\"f\" href=\"");
 		urlenc(url, swap);
-		strcat(buffer, url);
+		buffer += concat(buffer, url);
 
 		htmlenc(url, templn, 1);
 		sprintf(swap, "\">%s</a>/", templn);
-		strcat(buffer, swap);
+		buffer += concat(buffer, swap);
 
 		strcpy(templn, param+tlen);
 	}
@@ -290,7 +290,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		char ename[16];
 		char swap[_MAX_PATH_LEN];
 		u16 idx = 0, dirs = 0, flen; bool is_dir;
-		u32 tlen = strlen(buffer); buffer[tlen] = NULL;
+		u32 tlen = strlen(buffer);
 		char *sysmem_html = buffer + _6KB_;
 
 		typedef struct
@@ -299,7 +299,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		}
 		t_line_entries;
 		t_line_entries *line_entry = (t_line_entries *)sysmem_html;
-		u16 max_entries = ((BUFFER_SIZE_HTML - _6KB_) / _MAX_LINE_LEN)-1; tlen = 0;
+		u16 max_entries = ((BUFFER_SIZE_HTML - _12KB_) / _MAX_LINE_LEN) - 1; tlen = 0;
 
 		BUFFER_SIZE_HTML -= _2KB_;
 
@@ -516,18 +516,17 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					}
 		}
 
-
 		tlen = strlen(buffer);
 
 		for(u16 m = 0; m < idx; m++)
 		{
-			strcat(buffer + tlen, (line_entry[m].path)+6); tlen += strlen(buffer + tlen);
+			tlen += concat(buffer + tlen, (line_entry[m].path)+6);
 			if(tlen > BUFFER_SIZE_HTML) break;
 		}
 
 		buffer += tlen;
 
-		strcat(buffer, "</table>");
+		buffer += concat(buffer, "</table>");
 
 		if(strlen(param) > 4)
 		{
@@ -569,10 +568,10 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					sprintf(templn, "%s", wm_icons[5]); show_icon = true;
 				}
 
-				for(u16 m = idx; m < 8; m++) strcat(buffer, "<BR>");
+				for(u16 m = idx; m < 8; m++) buffer += concat(buffer, "<BR>");
 
 				if(show_icon || show_icon0)
-					{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\";icon.style.display='block';</script>", swap); strcat(buffer, templn);}
+					{urlenc(swap, templn); sprintf(templn, "<script>icon.src=\"%s\";icon.style.display='block';</script>", swap); buffer += concat(buffer, templn);}
 			}
 			///////////
 
@@ -588,12 +587,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 							"function ku(e){e=e||window.event;if(e.keyCode==113){var a=document.querySelectorAll('a:hover')[0].pathname;rn(a);}}"
 
 						 	"</script>",
-							"Install PKG", "Mount", "Open", "Delete", "New Folder", "New Folder", "Cut", "Copy", "Paste", "Rename", "Copy To"); strcat(buffer, tempstr);
+							"Install PKG", "Mount", "Open", "Delete", "New Folder", "New Folder", "Cut", "Copy", "Paste", "Rename", "Copy To"); buffer += concat(buffer, tempstr);
 #else
 			// add fm.js script
 			if(file_exists(FM_SCRIPT_JS))
 			{
-				sprintf(templn, SCRIPT_SRC_FMT, FM_SCRIPT_JS); strcat(buffer, templn);
+				sprintf(templn, SCRIPT_SRC_FMT, FM_SCRIPT_JS); buffer += concat(buffer, templn);
 			}
 #endif
 
@@ -629,7 +628,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 								param, param, (int)((blockSize*freeSize)>>20), STR_MBFREE);
 			}
 
-			strcat(buffer, templn);
+			buffer += concat(buffer, templn);
 
 			// summary
 			sprintf(templn, "</b> &nbsp; <font color=\"#707070\">%'i Dir(s) %'d %s %'d %s</font>%s",

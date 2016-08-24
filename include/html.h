@@ -32,7 +32,7 @@
 								"<meta http-equiv=\"Cache-Control\" content=\"no-cache\">" \
 								"<meta name=\"viewport\" content=\"width=device-width,initial-scale=0.6,maximum-scale=1.0\">"  /* size: 264 */
 
-#define HTML_HEADER_SIZE		285 /* strlen( HTML_HEADER + HTML_BODY_END ) = 264 + 21 */
+#define HTML_HEADER_SIZE		264
 
 #define HTTP_RESPONSE_TITLE_LEN	94 /* strlen(HTML_RESPONSE_TITLE + HTML_BODY) = 30 + 64 */
 
@@ -42,6 +42,8 @@
 								"<font face=\"Courier New\">" /* size: 64 */
 
 #define HTML_BODY_END			"</font></body></html>" /* size: 21 */
+
+#define HTML_BODY_END_SIZE		21
 
 #define HTML_BLU_SEPARATOR		"<hr color=\"#0099FF\"/>"
 #define HTML_RED_SEPARATOR		"<hr color=\"#FF0000\"/>"
@@ -55,6 +57,17 @@
 int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
 char *strcasestr(const char *s1, const char *s2);
+
+static int concat(char *dest, const char *src)
+{
+	int size = 0;
+
+	while (*dest) dest++;
+
+	while ((*dest++ = *src++)) size++;
+
+	return size;
+}
 
 static char h2a(char hex)
 {
@@ -201,7 +214,7 @@ static void add_radio_button(const char *name, const char *value, const char *id
 {
 	char templn[MAX_LINE_LEN];
 	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\"%s/> %s%s</label>", name, value, id, checked ? ITEM_CHECKED : "", label, (!sufix) ? "<br>" : sufix);
-	strcat(buffer, templn);
+	buffer += concat(buffer, templn);
 }
 
 static void add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
@@ -220,21 +233,21 @@ static void add_check_box(const char *name, const char *value, const char *label
 		strcat(clabel, p);
 	}
 	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
-	strcat(buffer, templn);
+	buffer += concat(buffer, templn);
 }
 
 static void add_option_item(const char *value, const char *label, bool selected, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
 	sprintf(templn, "<option value=\"%s\"%s/>%s</option>", value, selected?ITEM_SELECTED:"", label);
-	strcat(buffer, templn);
+	buffer += concat(buffer, templn);
 }
 
-static void prepare_header(char *header, char *param, u8 is_binary)
+static void prepare_header(char *buffer, char *param, u8 is_binary)
 {
 	bool set_base_path = false;
 
-	strcpy(header, "HTTP/1.1 200 OK\r\nContent-Type: \0");
+	strcpy(buffer, "HTTP/1.1 200 OK\r\nContent-Type: \0"); char *header = buffer + 31;
 
 	int flen = strlen(param);
 

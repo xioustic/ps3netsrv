@@ -447,12 +447,12 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		sprintf(data[v3_entry].name, "%s", tempstr + strlen(param) + 1);
 	}
 
+	if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
+
 	urlenc(enc_dir_name, data[v3_entry].name);
 	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection);
 
 	if(webman_config->nocov<2 && (icon[0]==0 || webman_config->nocov)) {get_name(tempstr, data[v3_entry].name, 1); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
-
-	if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {strcat(templn, " ["); strcat(templn, tempID); strcat(templn, "]");}
 
 	return 0;
 }
@@ -462,7 +462,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 static void add_query_html(char *buffer, const char *param, const char *label)
 {
 	char templn[64];
-	sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); strcat(buffer, templn);
+	sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); buffer += concat(buffer, templn);
 }
 
 static void check_cover_folders(char *buffer)
@@ -494,6 +494,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 {
 	u64 c_len = 0;
 	CellRtcTick pTick;
+	u32 buf_len = strlen(buffer);
 
 	struct CellFsStat buf;
 	int fd;
@@ -502,39 +503,40 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 	if(!mobile_mode && strstr(param, "/index.ps3"))
 	{
-		strcat(buffer, "<font style=\"font-size:18px\">");
+		char *pbuffer = buffer + buf_len + concat(buffer, "<font style=\"font-size:18px\">");
+
 #ifdef COBRA_ONLY
-		if(!(webman_config->cmask & PS3)) { add_query_html(buffer, "ps3", "PS3");
-											add_query_html(buffer, "games", "GAMES");
-											add_query_html(buffer, "PS3ISO", "PS3ISO");}
+		if(!(webman_config->cmask & PS3)) { add_query_html(pbuffer, "ps3", "PS3");
+											add_query_html(pbuffer, "games", "GAMES");
+											add_query_html(pbuffer, "PS3ISO", "PS3ISO");}
 
-		if(!(webman_config->cmask & PS2))   add_query_html(buffer, "PS2ISO", "PS2ISO");
-		if(!(webman_config->cmask & PSP))   add_query_html(buffer, "PSPISO", "PSPISO");
-		if(!(webman_config->cmask & PS1))   add_query_html(buffer, "PSXISO", "PSXISO");
-		if(!(webman_config->cmask & BLU))   add_query_html(buffer, "BDISO" , "BDISO" );
-		if(!(webman_config->cmask & DVD))   add_query_html(buffer, "DVDISO", "DVDISO");
+		if(!(webman_config->cmask & PS2))   add_query_html(pbuffer, "PS2ISO", "PS2ISO");
+		if(!(webman_config->cmask & PSP))   add_query_html(pbuffer, "PSPISO", "PSPISO");
+		if(!(webman_config->cmask & PS1))   add_query_html(pbuffer, "PSXISO", "PSXISO");
+		if(!(webman_config->cmask & BLU))   add_query_html(pbuffer, "BDISO" , "BDISO" );
+		if(!(webman_config->cmask & DVD))   add_query_html(pbuffer, "DVDISO", "DVDISO");
  #ifndef LITE_EDITION
-		if(webman_config->netd0 || webman_config->netd1 || webman_config->netd2 || webman_config->netd3 || webman_config->netd4) add_query_html(buffer, "net", "NET");
+		if(webman_config->netd0 || webman_config->netd1 || webman_config->netd2 || webman_config->netd3 || webman_config->netd4) add_query_html(pbuffer, "net", "NET");
  #endif
-		add_query_html(buffer, "hdd", "HDD");
-		add_query_html(buffer, "usb", "USB");
-		add_query_html(buffer, "ntfs", "NTFS");
+		add_query_html(pbuffer, "hdd", "HDD");
+		add_query_html(pbuffer, "usb", "USB");
+		add_query_html(pbuffer, "ntfs", "NTFS");
 #else
-		if(!(webman_config->cmask & PS3)) add_query_html(buffer, "games", "GAMES");
-		if(!(webman_config->cmask & PS2)) add_query_html(buffer, "PS2ISO", "PS2ISO");
+		if(!(webman_config->cmask & PS3)) add_query_html(pbuffer, "games", "GAMES");
+		if(!(webman_config->cmask & PS2)) add_query_html(pbuffer, "PS2ISO", "PS2ISO");
 
-		add_query_html(buffer, "hdd", "HDD");
-		add_query_html(buffer, "usb", "USB");
+		add_query_html(pbuffer, "hdd", "HDD");
+		add_query_html(pbuffer, "usb", "USB");
 #endif //#ifdef COBRA_ONLY
+
+		buf_len += strlen(buffer + buf_len);
 	}
 	else
-		strcat(buffer, " <br>");
+		buf_len += concat(buffer, " <br>");
 
 	c_len = 0; while(loading_games && working && (c_len < 500)) {sys_timer_usleep(200000); c_len++;}
 
 	if(c_len >= 500 || !working) {strcat(buffer, "503 Server is busy"); return false;}
-
-	u32 buf_len = strlen(buffer);
 
 /*
 	CellRtcTick pTick, pTick2;
@@ -581,9 +583,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		u16 idx = 0;
 		u32 tlen = buf_len; buffer[tlen] = NULL;
-		char *sysmem_html=buffer+_8KB_;
+		char *sysmem_html = buffer + _8KB_;
 
-		u32 BUFFER_MAXSIZE = (BUFFER_SIZE_ALL-(12*KB));
+		u32 BUFFER_MAXSIZE = (BUFFER_SIZE_ALL - _12KB_);
 
 		typedef struct
 		{
@@ -914,7 +916,7 @@ next_html_entry:
 
 							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection);
 
-							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {strcat(templn, " ["); strcat(templn, tempID); strcat(templn, "]");}
+							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.d_name);
 
@@ -929,7 +931,7 @@ next_html_entry:
 								if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
 								for(size_t c = 0; templn[c] > 0; c++) {if((templn[c] == '"') || (templn[c] < ' ')) templn[c] = ' ';} // replace invalid chars
 
-								int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320; h=176;} else if(strstr(icon, "icon_wm_")) {w=280; h=280;}
+								int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320, h=176;} else if(strstr(icon, "icon_wm_")) {w=280, h=280;}
 
 								sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s/%s\"},",
 										icon, w, h, templn, param, enc_dir_name);
@@ -944,7 +946,7 @@ next_html_entry:
 									flen-=4; if(flen<32) break;
 									templn[flen] = NULL;
 								}
-								while(strlen(templn)>MAX_LINE_LEN);
+								while(strlen(tempstr + HTML_KEY_LEN)>MAX_LINE_LEN);
 							}
 
 							flen = strlen(tempstr);
@@ -1035,12 +1037,12 @@ next_html_entry:
 		tlen = buf_len;
 		for(u16 m = 0; m < idx; m++)
 		{
-			strcat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN); tlen += strlen(buffer + tlen);
+			tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
 			if(tlen > (BUFFER_MAXSIZE)) break;
 		}
 
 #ifndef LITE_EDITION
-		if(sortable) strcat(buffer + tlen, "</div>");
+		if(sortable) tlen += concat(buffer + tlen, "</div>");
 #endif
 
 		loading_games = 0;
@@ -1048,11 +1050,11 @@ next_html_entry:
 		if(mobile_mode)
 		{
 			strcat(buffer, "];");
-			savefile(GAMELIST_JS, (char*)(buffer), strlen(buffer));
+			savefile(GAMELIST_JS, buffer, strlen(buffer));
 		}
 		else
 		{
-			savefile(WMTMP "/games.html", (char*)(buffer + buf_len), (strlen(buffer) - buf_len));
+			savefile(WMTMP "/games.html", (buffer + buf_len), tlen - buf_len);
 		}
 	}
 	return true;

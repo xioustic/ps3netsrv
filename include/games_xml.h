@@ -151,35 +151,33 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 		}
 	}
 
-	u16 xlen = strlen(tempstr);
-
 	#define ITEMS_BUFFER(a)  (64 * (item_count[a] + 8))
 
 	if( !(webman_config->nogrp) )
 	{
 		if((IS_PS2_FOLDER) && xml_len[2] < (BUFFER_SIZE_PS2 - ITEMS_BUFFER(2)))
-		{strcat(myxml_ps2+xml_len[2], tempstr); skey[0]=PS2; ++item_count[2]; xml_len[2]+=xlen;}
+		{xml_len[2] += concat(myxml_ps2+xml_len[2], tempstr); skey[0]=PS2; ++item_count[2];}
 #ifdef COBRA_ONLY
 		else
 		if((IS_PSP_FOLDER) && xml_len[4] < (BUFFER_SIZE_PSP - ITEMS_BUFFER(4)))
-		{strcat(myxml_psp+xml_len[4], tempstr); skey[0]=PSP; ++item_count[4]; xml_len[4]+=xlen;}
+		{xml_len[4] += concat(myxml_psp+xml_len[4], tempstr); skey[0]=PSP; ++item_count[4];}
 		else
 		if(((IS_PSX_FOLDER) || ((f0==NTFS) && !extcmp(entry_name, ".ntfs[PSXISO]", 13))) && xml_len[1] < (BUFFER_SIZE_PSX - ITEMS_BUFFER(1)))
-		{strcat(myxml_psx+xml_len[1], tempstr); skey[0]=PS1; ++item_count[1]; xml_len[1]+=xlen;}
+		{xml_len[1] += concat(myxml_psx+xml_len[1], tempstr); skey[0]=PS1; ++item_count[1];}
 		else
 		if(((IS_BLU_FOLDER) || (IS_DVD_FOLDER) || ((f0==NTFS) && (!extcmp(entry_name, ".ntfs[DVDISO]", 13) || !extcmp(entry_name, ".ntfs[BDISO]", 12) || !extcmp(entry_name, ".ntfs[BDFILE]", 13)))) && xml_len[0] < (BUFFER_SIZE_DVD - ITEMS_BUFFER(0)))
-		{strcat(myxml_dvd+xml_len[0], tempstr); skey[0]=BLU; ++item_count[0]; xml_len[0]+=xlen;}
+		{xml_len[0] += concat(myxml_dvd+xml_len[0], tempstr); skey[0]=BLU; ++item_count[0];}
 #endif
 		else
 		if((IS_PS3_TYPE) && xml_len[3] < (BUFFER_SIZE  - ITEMS_BUFFER(3) - _4KB_))
-		{strcat(myxml_ps3+xml_len[3], tempstr); skey[0]=PS3_; ++item_count[3]; xml_len[3]+=xlen;}
+		{xml_len[3] += concat(myxml_ps3+xml_len[3], tempstr); skey[0]=PS3_; ++item_count[3];}
 		else
 			return (false);
 	}
 	else
 	{
 		if(xml_len[3] < (BUFFER_SIZE  - ITEMS_BUFFER(3) - _4KB_))
-			{strcat(myxml_ps3+xml_len[3], tempstr); ++item_count[3]; xml_len[3] += xlen;}
+			{xml_len[3] += concat(myxml_ps3+xml_len[3], tempstr); ++item_count[3];}
 		else
 			return (false);
 	}
@@ -393,9 +391,9 @@ static bool update_mygames_xml(u64 conn_s_p)
 	make_fb_xml(myxml, templn);
 
 	// --- build group headers ---
-	char *tempstr, *folder_name, *url; tempstr=myxml; memset(tempstr, 0, _4KB_); folder_name=myxml+(3*KB); url=myxml+_2KB_;
+	char *tempstr, *folder_name, *url; tempstr = myxml; memset(tempstr, 0, _4KB_); folder_name = myxml + (3*KB), url = myxml + _2KB_;
 
-	u16 item_count[5], xlen; u32 xml_len[5];
+	u16 item_count[5]; u32 xml_len[5];
 	for(u8 i = 0; i < 5; i++) item_count[i] = xml_len[i] = 0;
 
 	cellFsUnlink(xml);
@@ -777,7 +775,7 @@ next_xml_entry:
 
 							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection);
 
-							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {strcat(templn, " ["); strcat(templn, tempID); strcat(templn, "]");}
+							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.d_name);
 
@@ -922,53 +920,57 @@ continue_reading_folder_xml:
 	if(webman_config->nogrp) xml_len[3]=strlen(myxml_items);
 	else
 	{
-		xml_len[0]=strlen(myxml_dvd);
-		xml_len[1]=strlen(myxml_psx);
-		xml_len[2]=strlen(myxml_ps2);
-		xml_len[3]=strlen(myxml_ps3);
-		xml_len[4]=strlen(myxml_psp);
+		xml_len[0] = strlen(myxml_dvd);
+		xml_len[1] = strlen(myxml_psx);
+		xml_len[2] = strlen(myxml_ps2);
+		xml_len[3] = strlen(myxml_ps3);
+		xml_len[4] = strlen(myxml_psp);
 	}
 
-	for(u16 a=0; a<key; a++)
+	if( webman_config->nogrp )
 	{
-		sprintf(templn, ADD_XMB_ITEM("%s"), skey[(a)]+7, skey[(a)]+7); xlen = strlen(templn);
-		if( !(webman_config->nogrp))
+		for(u16 a = 0; a < key; a++)
 		{
-#ifdef COBRA_ONLY
-			if(skey[(a)][0]==PSP && xml_len[4]<(BUFFER_SIZE_PSP-128))
-				{strcat(myxml_psp + xml_len[4], templn); xml_len[4] += xlen;}
-			else
-			if(skey[(a)][0]==PS1 && xml_len[1]<(BUFFER_SIZE_PSX-128))
-				{strcat(myxml_psx + xml_len[1], templn); xml_len[1] += xlen;}
-			else
-			if(skey[(a)][0]==BLU && xml_len[0]<(BUFFER_SIZE_DVD-1200))
-				{strcat(myxml_dvd + xml_len[0], templn); xml_len[0] += xlen;}
-			else
-#endif
-			if(skey[(a)][0]==PS2 && xml_len[2]<(BUFFER_SIZE_PS2-128))
-				{strcat(myxml_ps2 + xml_len[2], templn); xml_len[2] += xlen;}
-			else
-			if(skey[(a)][0]==PS3_&& xml_len[3]<(BUFFER_SIZE-5000))
-				{strcat(myxml_ps3 + xml_len[3], templn); xml_len[3] += xlen;}
-
+			if(xml_len[3] < (BUFFER_SIZE - 1000))
+				xml_len[3] += concat(myxml_items + xml_len[3], templn);
 		}
-		else
-			if(xml_len[3]<(BUFFER_SIZE-1000))
-				{strcat(myxml_items + xml_len[3], templn); xml_len[3] += xlen;}
+	}
+	else
+	{
+		for(u16 a = 0; a < key; a++)
+		{
+			sprintf(templn, ADD_XMB_ITEM("%s"), skey[(a)] + XML_KEY_LEN, skey[(a)] + XML_KEY_LEN);
+			if(skey[(a)][0] == PS3_&& xml_len[3] < (BUFFER_SIZE - 5000))
+				xml_len[3] += concat(myxml_ps3 + xml_len[3], templn);
+			else
+			if(skey[(a)][0] == PS2 && xml_len[2] < (BUFFER_SIZE_PS2 - 128))
+				xml_len[2] += concat(myxml_ps2 + xml_len[2], templn);
+#ifdef COBRA_ONLY
+			else
+			if(skey[(a)][0] == PS1 && xml_len[1] < (BUFFER_SIZE_PSX - 128))
+				xml_len[1] += concat(myxml_psx + xml_len[1], templn);
+			else
+			if(skey[(a)][0] == PSP && xml_len[4] < (BUFFER_SIZE_PSP - 128))
+				xml_len[4] += concat(myxml_psp + xml_len[4], templn);
+			else
+			if(skey[(a)][0] == BLU && xml_len[0] < (BUFFER_SIZE_DVD - 1200))
+				xml_len[0] += concat(myxml_dvd + xml_len[0], templn);
+#endif
+		}
 	}
 
 	// --- close xml items
 
 	if( !(webman_config->nogrp))
 	{
-		if(!(webman_config->cmask & PS3)) strcat(myxml_ps3, "</Items></View>");
-		if(!(webman_config->cmask & PS2)) strcat(myxml_ps2, "</Items></View>");
+		if(!(webman_config->cmask & PS3)) strcat(myxml_ps3 + xml_len[3], "</Items></View>");
+		if(!(webman_config->cmask & PS2)) strcat(myxml_ps2 + xml_len[2], "</Items></View>");
 #ifdef COBRA_ONLY
-		if(!(webman_config->cmask & PS1)) strcat(myxml_psx, "</Items></View>");
-		if(!(webman_config->cmask & PSP)) strcat(myxml_psp, "</Items></View>");
+		if(!(webman_config->cmask & PS1)) strcat(myxml_psx + xml_len[1], "</Items></View>");
+		if(!(webman_config->cmask & PSP)) strcat(myxml_psp + xml_len[4], "</Items></View>");
 		if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU))
 		{
-			strcat(myxml_dvd, "</Items></View>");
+			strcat(myxml_dvd + xml_len[0], "</Items></View>");
 			if(webman_config->rxvid)
 			{
 				strcat(myxml_dvd,	"<View id=\"seg_wm_bdvd\">"

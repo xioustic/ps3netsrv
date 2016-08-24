@@ -82,24 +82,24 @@ STR_LFRG			[←/→]
 STR_SAVE			[Save]
 STR_SETTINGSUPD		[Settings updated.<br><br>Click <a href="/restart.ps3">here</a> to restart your PLAYSTATION®3 system.]
 STR_ERROR			[Error!]
-                	
+
 STR_MYGAMES			[webMAN Games]
 STR_LOADGAMES		[Load games with webMAN]
 STR_FIXING		[Fixing]
 
 STR_WMSETUP			[webMAN Setup]
 STR_WMSETUP2		[Setup webMAN options]
-                	
+
 STR_EJECTDISC		[Eject Disc]
 STR_UNMOUNTGAME		[Unmount current game]
-                	
+
 STR_WMSTART			[webMAN loaded!]
 STR_WMUNL			[webMAN unloaded!]
 STR_CFWSYSALRD		[CFW Syscalls already disabled]
 STR_CFWSYSRIP		[Removal History files & CFW Syscalls in progress...]
 STR_RMVCFWSYS		[History files & CFW Syscalls deleted OK!]
 STR_RMVCFWSYSF		[Failed to remove CFW Syscalls]
-                	
+
 STR_RMVWMCFG		[webMAN config reset in progress...]
 STR_RMVWMCFGOK		[Done! Restart within 3 seconds]
 
@@ -118,18 +118,18 @@ STR_GAMEUM			[Game unmounted.]
 
 STR_EJECTED			[Disc ejected.]
 STR_LOADED			[Disc inserted.]
-                	
+
 STR_GAMETOM			[Game to mount]
 STR_GAMELOADED		[Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.</a><hr/>Click <a href="/mount.ps3/unmount">here</a> to unmount the game.]
 STR_PSPLOADED		[Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr/>]
 STR_PS2LOADED		[Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr/>]
 STR_LOADED2			[loaded   ]
-                	
+
 STR_MOVIETOM		[Movie to mount]
 STR_MOVIELOADED		[Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.</a><hr/>Click <a href="/mount.ps3/unmount">here</a> to unmount the movie.]
-                	
+
 STR_XMLRF			[Game list refreshed (<a href="/dev_hdd0/xmlhost/game_plugin/mygames.xml">mygames.xml</a>).<br>Click <a href="/restart.ps3">here</a> to restart your PLAYSTATION®3 system now.]
-                	
+
 STR_STORAGE			[System storage]
 STR_MEMORY			[Memory]
 STR_MBFREE			[MB free]
@@ -138,7 +138,7 @@ STR_KBFREE			[KB free]
 STR_FANCTRL3		[Fan control:]
 STR_ENABLED			[Enabled]
 STR_DISABLED		[Disabled]
-                	
+
 STR_FANCH0			[Fan setting changed:]
 STR_FANCH1			[MAX TEMP: ]
 STR_FANCH2			[FAN SPEED: ]

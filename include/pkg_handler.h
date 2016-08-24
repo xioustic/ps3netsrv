@@ -70,7 +70,6 @@ static void downloadPKG_thread(void)
 	{
 		download_interface = (download_plugin_interface *)plugin_GetInterface(View_Find("download_plugin"),1);
 	}
-
 	download_interface->DoUnk5(0, pkg_durl, pkg_dpath);
 }
 
@@ -147,18 +146,14 @@ static int download_file(char *param, char *msg)
 	else if(islike(param + 13, "?url="))
 	{
 		pdurl_len = strlen(param) - 18;
-		if((pdurl_len>0) && (pdurl_len<MAX_URL_LEN))
+		if((pdurl_len > 0) && (pdurl_len < MAX_URL_LEN))
 		{
 			pdpath_len = strlen(DEFAULT_PKG_PATH);
 			strncpy(pdpath, DEFAULT_PKG_PATH, pdpath_len);
 			strncpy(pdurl, param + 18, pdurl_len);
 			conv_num_durl = mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 		}
-		else
-			goto end_download_process;
 	}
-	else
-		goto end_download_process;
 
 	if(conv_num_durl > 0)
 	{
