@@ -558,6 +558,9 @@ static char local_ip[16] = "127.0.0.1";
 //uint64_t search64(uint64_t val);
 //uint64_t find_syscall_table();
 
+static bool file_exists(const char* path);
+static int isDir(const char* path);
+
 #include "include/peek_poke.h"
 #include "include/led.h"
 #include "include/socket.h"
@@ -594,7 +597,6 @@ static void mount_autoboot(void);
 static bool mount_with_mm(const char *_path, u8 do_eject);
 static void get_name(char *name, char *filename, u8 cache);
 static void add_breadcrumb_trail(char *buffer, char *param);
-static bool file_exists(const char* path);
 
 #ifdef COBRA_ONLY
 static void do_umount_iso(void);
@@ -1569,7 +1571,7 @@ static void handleclient(u64 conn_s_p)
 				sprintf(target, "%s", param + 10);
 				sprintf(param, "%s", source); strcat(target, strrchr(param, '/'));
 
-				is_binary = FOLDER_LISTING, small_alloc = false;
+				is_binary = WEB_COMMAND, small_alloc = false;
 				goto html_response;
 			}
    #endif // #ifdef COPY_PS3
@@ -1716,7 +1718,7 @@ static void handleclient(u64 conn_s_p)
  #endif
 
  #ifdef COPY_PS3
-							islike(param, "/copy.ps3/") ||
+							islike(param, "/copy.ps3") ||
  #endif
 
 							islike(param, "/refresh.ps3")
@@ -2018,7 +2020,7 @@ static void handleclient(u64 conn_s_p)
 					{
 						sprintf(templn, "%s%s %s", "<div id=\"cps\"><font size=2>", STR_FIXING, current_file);
 					}
-					if(copy_in_progress | fix_in_progress)
+					if((copy_in_progress || fix_in_progress) && file_exists(current_file))
 					{
 						strcat(templn, "</font><p></div><script>setTimeout(function(){cps.style.display='none'},15000);</script>"); pbuffer += concat(pbuffer, templn);
 					}
@@ -2407,7 +2409,7 @@ static void handleclient(u64 conn_s_p)
 					if(mount_ps3 || forced_mount || islike(param, "/mount.ps3") || islike(param, "/copy.ps3"))
  #endif
 					{
-						game_mount(pbuffer, templn, param, tempstr, is_binary, mount_ps3, forced_mount);
+						game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount);
 					}
 
 					else

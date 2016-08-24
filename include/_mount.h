@@ -380,7 +380,7 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
  #endif
 #endif
 
-static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u8 is_binary, bool mount_ps3, bool forced_mount)
+static void game_mount(char *buffer, char *templn, char *param, char *tempstr, bool mount_ps3, bool forced_mount)
 {
 	//unmount game
 	if(strstr(param, "ps3/unmount"))
@@ -410,7 +410,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, u
 		char enc_dir_name[1024], *source = param + plen;
 		bool mounted = false; max_mapped = 0;
 
-		is_binary = 1;
+		/* if(file_exists(source) == false) {sprintf(templn, "%s/%s", html_base_path, source + 1); if(file_exists(templn)) sprintf(source, "%s", templn);} */
 
 		// mount url
 		urlenc(templn, source);

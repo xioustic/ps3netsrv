@@ -9,7 +9,9 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 #define _2MB_	0x200000ULL
 #define _48GB_	0xC00000000ULL
 
-static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http)
+#define FILE_MGR_KEY_LEN	6
+
+static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
 {
 	unsigned long long sbytes = sz; bool is_root = false;
 
@@ -89,7 +91,7 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 #endif
 #ifdef COPY_PS3
 		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || !strcmp(name, "savedata") || !strcmp(name, "exdata") || !strcmp(name, "home") ))
-			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", templn, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", HTML_DIR);
+			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", islike(templn, param) ? templn + plen : templn, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", HTML_DIR);
 #endif
 		else
 		if(strlen(templn) <= 11 && islike(templn, "/dev_"))
@@ -115,6 +117,9 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	}
 
 	else if(fsize[0]) ;
+
+	else if(skip_cmd)
+		sprintf(fsize, "%'llu %s", sz, sf);
 
 #ifdef COBRA_ONLY
 	else if( ((flen > 4) && strcasestr(ISO_EXTENSIONS, ext)!=NULL && !islike(templn, HDD0_GAME_DIR)) || (!is_net && ( strstr(name + MAX(flen - 13, 0), ".ntfs[") || !extcmp(name + MAX(flen - 8, 0), ".BIN.ENC", 8) )) )
@@ -142,7 +147,7 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 			|| !memcmp(name, "lv2_kernel", 10)
  #endif
 			)
-			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
+				sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", islike(templn, param) ? templn + plen : templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
 	else if( !extcmp(name, ".bak", 4) )
 			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
 #endif //#ifdef COPY_PS3
@@ -158,12 +163,14 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	else
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 
-	snprintf(ename, 6, "%s     ", name);
+	snprintf(ename, FILE_MGR_KEY_LEN, "%s     ", name);
 
-	sprintf(tempstr, "%c%c%c%c%c%c<tr>"
-					 "<td><a %s href=\"%s\"%s>%s</a></td>",
+	if((plen > 1) && memcmp(templn, param, plen) == 0) sprintf(templn, "%s", templn + plen + 1);
+
+	sprintf(tempstr, "%c%c%c%c%c%c"
+					 "%c\" href=\"%s\"%s>%s</a></td>",
 					is_dir ? '0' : '1', ename[0], ename[1], ename[2], ename[3], ename[4],
-					is_dir ? "class=\"d\"" : "class=\"w\"", templn,
+					is_dir ? 'd' : 'w', templn,
 					show_img ? " onmouseover=\"s(this,0);\"" : (is_dir && show_icon0) ? " onmouseover=\"s(this,1);\"" : "", name);
 
 	flen = strlen(tempstr);
@@ -172,10 +179,10 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 	{
 		if(is_dir) sprintf(fsize, HTML_DIR); else sprintf(fsize, "%llu %s", sz, sf);
 
-		sprintf(tempstr, "%c%c%c%c%c%c<tr>"
-						 "<td><a %s href=\"%s\">%s</a></td>",
+		sprintf(tempstr, "%c%c%c%c%c%c"
+						 "%c\" href=\"%s\">%s</a></td>",
 		is_dir ? '0' : '1', ename[0], ename[1], ename[2], ename[3], ename[4],
-		is_dir ? "class=\"d\"" : "class=\"w\"", templn, name);
+		is_dir ? 'd' : 'w', templn, name);
 
 		flen = strlen(tempstr);
 
@@ -183,15 +190,15 @@ static void add_list_entry(char *tempstr, bool is_dir, char *ename, char *templn
 		{
 			if(is_dir) sprintf(fsize, HTML_DIR); else sprintf(fsize, "%llu %s", sz, sf);
 
-			sprintf(tempstr, "%c%c%c%c%c%c<tr>"
-							 "<td>%s</td>",
+			sprintf(tempstr, "%c%c%c%c%c%c"
+							 "%c\">%s</a></td>",
 			is_dir ? '0' : '1', ename[0], ename[1], ename[2], ename[3], ename[4],
-			name);
+			is_dir ? 'd' : 'w', name);
 		}
 	}
 
 	sprintf(templn, "<td> %s%s</td>"
-					"<td>%02i-%s-%04i %02i:%02i</td></tr>",
+					"<td>%02i-%s-%04i %02i:%02i",
 					fsize, is_root ? "" : " &nbsp; ",
 					rDate.day, smonth[rDate.month-1], rDate.year, rDate.hour, rDate.minute);
 
@@ -264,7 +271,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 	absPath(templn, param, "/"); // auto mount /dev_blind
 
-	u8 is_net = (param[1] == 'n');
+	u8 is_net = (param[1] == 'n'), skip_cmd = 0;
 
 #if defined(FIX_GAME) || defined(COPY_PS3)
 	if(copy_aborted) strcat(buffer, STR_CPYABORT);    //  /copy.ps3$abort
@@ -278,7 +285,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	_MAX_PATH_LEN = MAX_PATH_LEN;
 	_MAX_LINE_LEN = MAX_LINE_LEN;
 
-	if(strstr(param, "/exdata")) _LINELEN = _MAX_LINE_LEN = _MAX_PATH_LEN = 320;
+	int plen = strlen(param);
+
+	if(!extcmp(param + MAX(plen - 7, 0), "/exdata", 7)) {_LINELEN = _MAX_LINE_LEN = _MAX_PATH_LEN = 200; skip_cmd = 1;}
 
 	if(is_net || cellFsOpendir(param, &fd) == CELL_FS_SUCCEEDED)
 	{
@@ -290,7 +299,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		char ename[16];
 		char swap[_MAX_PATH_LEN];
 		u16 idx = 0, dirs = 0, flen; bool is_dir;
-		u32 tlen = strlen(buffer);
+		u32 tlen = 0;
 		char *sysmem_html = buffer + _6KB_;
 
 		typedef struct
@@ -299,7 +308,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		}
 		t_line_entries;
 		t_line_entries *line_entry = (t_line_entries *)sysmem_html;
-		u16 max_entries = ((BUFFER_SIZE_HTML - _12KB_) / _MAX_LINE_LEN) - 1; tlen = 0;
+		u16 max_entries = ((BUFFER_SIZE_HTML - _12KB_) / _MAX_LINE_LEN) - 1;
 
 		BUFFER_SIZE_HTML -= _2KB_;
 
@@ -320,9 +329,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		else
 			strcat(buffer, ":<br>");
 
+#ifdef COPY_PS3
+		if(cp_mode) {sprintf(tempstr, "<font size=2><a href=\"/paste.ps3%s\">&#128203;</a> ", is_net ? "/dev_hdd0/packages" : param); add_breadcrumb_trail(tempstr, cp_path); strcat(buffer, tempstr); strcat(buffer, "</font><p>"); }
+#endif
 		strcat(buffer, "<table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
 
-		tlen = 0;
+		tlen = strlen(buffer);
 
  #ifdef COBRA_ONLY
   #ifndef LITE_EDITION
@@ -335,17 +347,17 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			if(ns >= 0)
 			{
 				strcat(param, "/");
-				if(open_remote_dir(ns, param+5, &abort_connection) >= 0)
+				if(open_remote_dir(ns, param + 5, &abort_connection) >= 0)
 				{
-					strcpy(templn, param); if(templn[strlen(templn)-1] == '/') templn[strlen(templn)-1] = NULL;
-					if(strrchr(templn, '/')) templn[strrchr(templn, '/')-templn] = NULL; if(strlen(templn)<6 && strlen(param)<8) {templn[0]='/'; templn[1] = NULL;}
+					strcpy(templn, param); while(templn[plen] == '/') templn[plen--] = NULL;
+					char *p = strrchr(templn, '/'); if(p) templn[p-templn] = NULL; if(strlen(templn) < 6 && strlen(param) < 8) {templn[0]='/'; templn[1] = NULL;}
 
 					urlenc(swap, templn);
-					sprintf(line_entry[idx].path, "!00000<tr>"
-												  "<td><a class=\"f\" href=\"%s\">..</a></td>"
+					sprintf(line_entry[idx].path, "!00000"
+												  "f\" href=\"%s\">..</a></td>"
 												  "<td> " HTML_URL " &nbsp; </td>"
-												  "<td>11-Nov-2006 11:11</td>"
-												  "</tr>", swap, swap, HTML_DIR);
+												  "<td>11-Nov-2006 11:11"
+												, swap, swap, HTML_DIR);
 
 					flen = strlen(line_entry[idx].path);
 					if(flen >= _MAX_LINE_LEN) return false; //ignore lines too long
@@ -380,7 +392,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 							is_dir = dir_items[n].is_directory; if(is_dir) dirs++;
 
-							add_list_entry(tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http);
+							add_list_entry(param, plen, tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http, skip_cmd);
 
 							flen = strlen(tempstr);
 							if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
@@ -456,7 +468,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				is_dir = (buf.st_mode & S_IFDIR); if(is_dir) dirs++;
 
-				add_list_entry(tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http);
+				add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http, skip_cmd);
 
 				flen = strlen(tempstr);
 				if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
@@ -470,9 +482,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-		if(strlen(param)<4)
+		if(plen < 4)
 		{
-			for(u8 n=0; n<5; n++)
+			for(u8 n = 0; n < 5; n++)
 			if( (n == 0 && (webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0))
 			||	(n == 1 && (webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1))
 			||	(n == 2 && (webman_config->netd2 && webman_config->neth2[0] && webman_config->netp2))
@@ -482,10 +494,10 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #endif
 			  )
 			{
-				sprintf(line_entry[idx].path, "0net%i <tr>"
-											  "<td><a class=\"d\" href=\"/net%i\">net%i (%s:%i)</a></td>"
-											  "<td> <a href=\"/mount.ps3/net%i\">%s</a> &nbsp; </td><td>11-Nov-2006 11:11</td>"
-											  "</tr>",  n, n, n,	n == 1 ? webman_config->neth1 :
+				sprintf(line_entry[idx].path, "0net%i "
+											  "d\" href=\"/net%i\">net%i (%s:%i)</a></td>"
+											  "<td> <a href=\"/mount.ps3/net%i\">%s</a> &nbsp; </td><td>11-Nov-2006 11:11"
+											,  n, n, n,	n == 1 ? webman_config->neth1 :
 														n == 2 ? webman_config->neth2 :
 #ifdef NET3NET4
 														n == 3 ? webman_config->neth3 :
@@ -508,7 +520,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			u16 n, m;
 			for(n=0; n<(idx-1); n++)
 				for(m=(n+1); m<idx; m++)
-					if(strcasecmp(line_entry[n].path, line_entry[m].path)>0)
+					if(strncasecmp(line_entry[n].path, line_entry[m].path, FILE_MGR_KEY_LEN) > 0)
 					{
 						strcpy(swap, line_entry[n].path);
 						strcpy(line_entry[n].path, line_entry[m].path);
@@ -520,7 +532,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 		for(u16 m = 0; m < idx; m++)
 		{
-			tlen += concat(buffer + tlen, (line_entry[m].path)+6);
+			tlen += concat(buffer + tlen, "<tr><td><a class=\"");
+			tlen += concat(buffer + tlen, (line_entry[m].path) + FILE_MGR_KEY_LEN);
+			tlen += concat(buffer + tlen, "</td></tr>");
 			if(tlen > BUFFER_SIZE_HTML) break;
 		}
 
@@ -528,7 +542,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 		buffer += concat(buffer, "</table>");
 
-		if(strlen(param) > 4)
+		if(plen > 4)
 		{
 			///////////
 			unsigned int effective_disctype = 1;

@@ -358,7 +358,7 @@ static void prepare_header(char *buffer, char *param, u8 is_binary)
 	else
 		{strcat(header, "text/html"); set_base_path = true;}
 
-	if(set_base_path && param[0]=='/') {strncpy(html_base_path, param, flen); html_base_path[flen] = NULL; html_base_path[strrchr(html_base_path, '/')-html_base_path] = NULL;}
+	if(set_base_path && param[0]=='/' && (param[1] == 'n' || param[1] == 'd' || param[1] == 'a')) {strncpy(html_base_path, param, flen); if((param[1] != 'n') && !isDir(param)) flen = strrchr(html_base_path, '/') - html_base_path; html_base_path[flen] = NULL; }
 
 	strcat(header, "\r\n");
 }

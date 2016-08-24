@@ -387,7 +387,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								ssend(conn_s_ftp, FTP_OK_250);		// Requested file action okay, completed.
 								absPath(param, filename, cwd);
 
-								fix_in_progress=true; fix_aborted = false;
+								fix_in_progress = true, fix_aborted = false;
 
   #ifdef COBRA_ONLY
 								if(strcasestr(filename, ".iso"))
@@ -396,7 +396,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
   #endif //#ifdef COBRA_ONLY
 									fix_game(param, filename, FIX_GAME_FORCED);
 
-								fix_in_progress=false;
+								fix_in_progress = false;
 							}
 						}
  #endif //#ifdef FIX_GAME

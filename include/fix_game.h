@@ -415,7 +415,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 	if(file_exists(game_path) || islike(game_path, "/net") || strstr(game_path, ".ntfs["))
 	{
-		fix_in_progress=true; fix_aborted=false;
+		fix_in_progress = true, fix_aborted = false;
 
 #ifdef COBRA_ONLY
 		if(!extcasecmp(game_path, ".iso", 4) || !extcasecmp(game_path, ".iso.0", 6))
