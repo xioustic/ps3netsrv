@@ -62,7 +62,7 @@ char *strchr(const char *s, int c)
 
 char *strrchr(const char *s, int c)
 {
-	char *ret=NULL;
+	char *ret = NULL;
 	char cc=(char)c;
 
 	do
@@ -76,7 +76,7 @@ char *strrchr(const char *s, int c)
 
 char *strstr(const char *s1, const char *s2)
 {
-	size_t n = strlen(s2); if(n==0) return 0;
+	size_t n = strlen(s2); if(n == 0) return 0;
 	while(*s1)
 		if(!memcmp(s1++,s2,n))
 			return (char*)(s1-1);
@@ -85,38 +85,39 @@ char *strstr(const char *s1, const char *s2)
 
 int strncasecmp (__const char *s1, __const char *s2, size_t n)
 {
-  int c1, c2;
-  while(n--)
-  {
-	  c1 = *((unsigned char *)(s1++));
-	  c2 = *((unsigned char *)(s2++));
-	  if (c1 >= 'A' && c1 <= 'Z') c1 = c1 + ('a' - 'A');
-	  if (c2 >= 'A' && c2 <= 'Z') c2 = c2 + ('a' - 'A');
-	  if (c1 != c2)   return (c1 - c2);
-	  if (c1 == '\0') return 0;
-  }
-  return 0;
+	if(n == 0) return 0;
+	int c1, c2;
+	while(n--)
+	{
+		 c1 = *((unsigned char *)(s1++));
+		c2 = *((unsigned char *)(s2++));
+		if (c1 >= 'A' && c1 <= 'Z') c1 = c1 + ('a' - 'A');
+		if (c2 >= 'A' && c2 <= 'Z') c2 = c2 + ('a' - 'A');
+		if (c1 != c2)   return (c1 - c2);
+		if (c1 == '\0') return 0;
+	}
+	return 0;
 }
 
 int strcasecmp (__const char *s1, __const char *s2)
 {
-  int c1, c2, n;
-  n=strlen(s1);
-  while(n--)
-  {
-	  c1 = *((unsigned char *)(s1++));
-	  c2 = *((unsigned char *)(s2++));
-	  if (c1 >= 'A' && c1 <= 'Z') c1 = c1 + ('a' - 'A');
-	  if (c2 >= 'A' && c2 <= 'Z') c2 = c2 + ('a' - 'A');
-	  if (c1 != c2)   return (c1 - c2);
-	  if (c1 == '\0') return 0;
-  }
-  return 0;
+	int c1, c2, n = strlen(s1);
+	if(n == 0) return 0;
+	while(n--)
+	{
+		c1 = *((unsigned char *)(s1++));
+		c2 = *((unsigned char *)(s2++));
+		if (c1 >= 'A' && c1 <= 'Z') c1 = c1 + ('a' - 'A');
+		if (c2 >= 'A' && c2 <= 'Z') c2 = c2 + ('a' - 'A');
+		if (c1 != c2)   return (c1 - c2);
+		if (c1 == '\0') return 0;
+	}
+	return 0;
 }
 
 char *strcasestr(const char *s1, const char *s2)
 {
-	size_t n = strlen(s2);
+	size_t n = strlen(s2); if(n == 0) return 0;
 	while(*s1)
 		if(!strncasecmp(s1++,s2,n))
 			return (char*)(s1-1);
@@ -125,7 +126,7 @@ char *strcasestr(const char *s1, const char *s2)
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-	if(n==0) return 0;
+	if(n == 0) return 0;
 	while((n>0) && *s1 && (*s1==*s2))
 		s1++,s2++,n--;
 	return *(const unsigned char*)s1-*(const unsigned char*)s2;

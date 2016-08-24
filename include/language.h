@@ -1,5 +1,3 @@
-int lang_pos, fh;
-
 #ifdef ENGLISH_ONLY
 
 static char STR_HOME[8] = "Home";
@@ -88,15 +86,11 @@ static char STR_HOME[8] = "Home";
 #define STR_UPDN		"&#8593;/&#8595;" //↑/↓
 #define STR_LFRG		"&#8592;/&#8594;" //←/→
 
-#ifdef COBRA_ONLY
- #define STR_DISCOBRA	"COBRA TOGGLE"
-#endif
+#define STR_DISCOBRA	"COBRA TOGGLE"
 
-#ifdef REX_ONLY
- #define STR_RBGMODE	"RBG MODE TOGGLE"
- #define STR_RBGNORM	"NORM MODE TOGGLE"
- #define STR_RBGMENU 	"MENU TOGGLE"
-#endif
+#define STR_RBGMODE		"RBG MODE TOGGLE"
+#define STR_RBGNORM		"NORM MODE TOGGLE"
+#define STR_RBGMENU		"MENU TOGGLE"
 
 #define STR_SAVE		"Save"
 #define STR_SETTINGSUPD	"Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system."
@@ -170,6 +164,8 @@ static char STR_HOME[8] = "Home";
 #define STR_NOTFOUND	"Not found!"
 
 #else
+static int fh;
+
 static char lang_code[3]			= "";
 
 static char STR_TRADBY[120]			= "<br>";
@@ -257,14 +253,7 @@ static char STR_FANCTRL4[72]		= "CTRL DYN FAN";
 static char STR_FANCTRL5[88]		= "CTRL MIN FAN";
 static char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
 static char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
-#ifdef COBRA_ONLY
-static char STR_DISCOBRA[100]		= "COBRA TOGGLE";
-#endif
-#ifdef REX_ONLY
-static char STR_RBGMODE[100]		= "RBG MODE TOGGLE";
-static char STR_RBGNORM[100]		= "NORM MODE TOGGLE";
-static char STR_RBGMENU[100] 		= "MENU TOGGLE";
-#endif
+
 static char STR_SAVE[24]			= "Save";
 static char STR_SETTINGSUPD[192]	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.";
 static char STR_ERROR[16]			= "Error!";
@@ -336,6 +325,16 @@ static char STR_OVERHEAT2[120]		= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
 static char STR_NOTFOUND[40]		= "Not found!";
 
 static char COVERS_PATH[100]		= "";
+
+#ifdef COBRA_ONLY
+static char STR_DISCOBRA[20]		= "COBRA TOGGLE";
+#endif
+#ifdef REX_ONLY
+static char STR_RBGMODE[20]			= "RBG MODE TOGGLE";
+static char STR_RBGNORM[20]			= "NORM MODE TOGGLE";
+static char STR_RBGMENU[20] 		= "MENU TOGGLE";
+#endif
+
 #endif
 
 #ifndef ENGLISH_ONLY
@@ -476,18 +475,19 @@ static uint32_t get_system_language(uint8_t *lang)
 	return val_lang;
 }
 
-#define GET_NEXT_BYTE  {if(p < s) c = buffer[p++]; else {cellFsRead(fd, (void *)buffer, _2KB_, &bytes_read); p = 0, s = (int)bytes_read, c = buffer[p++];} lang_pos++;}
+#define CHUNK_SIZE 512
+#define GET_NEXT_BYTE  {if(p < CHUNK_SIZE) c = buffer[p++]; else {cellFsRead(fd, buffer, CHUNK_SIZE, &bytes_read); c = buffer[0], p = 1;} lang_pos++;}
 
 static bool language(const char *key_name, char *default_str)
 {
-	char buffer[_2KB_]; uint64_t bytes_read = 0;
 	uint8_t c, i, key_len = strlen(key_name);
-	int fd = 0, p = 0, s = 0;
+	uint64_t bytes_read = 0;
+	char *buffer = html_base_path;
+	static size_t p = 0, lang_pos = 0, size = 0;
 
 	bool do_retry = true;
 
-	if(fh) fd = fh; //file is already open
-	else
+	if(fh == 0)
 	{
 		if(webman_config->lang > 22 && (webman_config->lang != 99)) return false;
 
@@ -499,13 +499,19 @@ static bool language(const char *key_name, char *default_str)
 		sprintf(lang_code, "_%s", lang_codes[i]);
 		sprintf(lang_path, "%s/LANG%s.TXT", "/dev_hdd0/tmp/wm_lang", lang_code);
 
-		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &fd, NULL, 0) != CELL_FS_SUCCEEDED) return false;
+		struct CellFsStat buf;
 
-		fh = fd;
+		if(cellFsStat(lang_path, &buf) != CELL_FS_SUCCEEDED) return false; size = (size_t)buf.st_size;
+
+		if(cellFsOpen(lang_path, CELL_FS_O_RDONLY, &fh, NULL, 0) != CELL_FS_SUCCEEDED) return false;
+
+		lang_pos = 0;
 
  retry:
-		cellFsLseek(fd, lang_pos, CELL_FS_SEEK_SET, &bytes_read); p = s = 0;
+		cellFsLseek(fh, lang_pos, CELL_FS_SEEK_SET, NULL); p = 0;
 	}
+
+	int fd = fh;
 
 	do {
 		for(i = 0; i < key_len; )
@@ -516,7 +522,7 @@ static bool language(const char *key_name, char *default_str)
 
 			if(i == key_len)
 			{
-				while(bytes_read)
+				while(lang_pos < size)
 				{
 					if(c == '[') break;
 
@@ -525,11 +531,11 @@ static bool language(const char *key_name, char *default_str)
 
 				size_t str_len = 0;
 
-				while(bytes_read)
+				while(lang_pos < size)
 				{
 					{ GET_NEXT_BYTE }
 
-					if(c == ']' || !bytes_read) break;
+					if(c == ']' || lang_pos >= size) break;
 
 					default_str[str_len++] = c;
 				}
@@ -539,18 +545,19 @@ static bool language(const char *key_name, char *default_str)
 			}
 		}
 
-	} while(bytes_read);
+	} while(lang_pos < size);
 
 	if(do_retry) {do_retry = false; lang_pos = 0; goto retry;}
 
 	return true;
 }
 
+#undef CHUNK_SIZE
 #undef GET_NEXT_BYTE
 
 static void update_language(void)
 {
-	lang_pos = fh = 0;
+	fh = 0;
 
 	if(language("STR_TRADBY", STR_TRADBY))
 	{
@@ -711,7 +718,7 @@ static void update_language(void)
 		language("COVERS_PATH", COVERS_PATH);
 		language("IP_ADDRESS", local_ip);
 		language("SEARCH_URL", search_url);
-
+/*
 #ifdef COBRA_ONLY
 		language("STR_DISCOBRA", STR_DISCOBRA);
 #endif
@@ -720,8 +727,9 @@ static void update_language(void)
 		language("STR_RBGNORM", STR_RBGNORM);
 		language("STR_RBGMENU", STR_RBGMENU);
 #endif
+*/
 	}
 
-	if(fh) {cellFsClose(fh); lang_pos = fh = 0;}
+	if(fh) {cellFsClose(fh); fh = 0;}
 }
 #endif //#ifndef ENGLISH_ONLY

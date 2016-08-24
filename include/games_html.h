@@ -462,7 +462,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 static void add_query_html(char *buffer, const char *param, const char *label)
 {
 	char templn[64];
-	sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); buffer += concat(buffer, templn);
+	sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); strcat(buffer, templn);
 }
 
 static void check_cover_folders(char *buffer)

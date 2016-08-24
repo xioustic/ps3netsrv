@@ -715,7 +715,7 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 	if(is_cpursx)
 		buffer += concat(buffer, "<meta http-equiv=\"refresh\" content=\"6;URL=/cpursx.ps3\">");
 
-	if(mount_ps3) {strcat(buffer, HTML_BODY); return;}
+	if(mount_ps3) {strcat(buffer, HTML_BODY); return  buffer;}
 
 	buffer += concat(buffer,
 								"<head><title>webMAN MOD</title>"

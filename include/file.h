@@ -13,8 +13,9 @@ static bool copy_in_progress = false;
 static u32 copied_count = 0;
 
 #define COPY_WHOLE_FILE		0
+
 /*
-static void add_log(const char *fmt, int value1, int value2)
+static void add_log(const char *fmt, char *value1, int value2)
 {
 	char buffer[2048];
 
@@ -94,6 +95,8 @@ static int concat(char *file1, char *file2)
 
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+
+	if(cellFsStat(file1, &buf) != CELL_FS_SUCCEEDED) return ret;
 
 	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{

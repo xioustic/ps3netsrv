@@ -445,7 +445,7 @@ static void setup_form(char *buffer, char *templn)
 	add_option_item("2" , "No ICON0.PNG"	 , (webman_config->nocov>1), buffer);
 	buffer += concat(buffer, "</select><br>");
 
-	add_check_box("tid", "1", STR_TITLEID, " • ", (webman_config->tid),   buffer);
+	add_check_box("tid", "1", STR_TITLEID, " • ", (webman_config->tid),  buffer);
 	add_check_box("sfo", "1", "PARAM.SFO",  _BR_,!(webman_config->use_filename), buffer);
 
 	//game mounting
@@ -458,9 +458,9 @@ static void setup_form(char *buffer, char *templn)
 	if(c_firmware>=4.20f && c_firmware<=4.78f)
 	{
 		add_check_box("nf", "3", STR_FIXGAME,  " : <select name=\"fm\">", (webman_config->fixgame==FIX_GAME_DISABLED), buffer);
-		add_option_item("0", "Auto"  , (webman_config->fixgame==FIX_GAME_AUTO) , buffer);
-		add_option_item("1", "Quick" , (webman_config->fixgame==FIX_GAME_QUICK) , buffer);
-		add_option_item("2", "Forced", (webman_config->fixgame==FIX_GAME_FORCED) , buffer);
+		add_option_item("0", "Auto"  , (webman_config->fixgame==FIX_GAME_AUTO), buffer);
+		add_option_item("1", "Quick" , (webman_config->fixgame==FIX_GAME_QUICK), buffer);
+		add_option_item("2", "Forced", (webman_config->fixgame==FIX_GAME_FORCED), buffer);
 		buffer += concat(buffer, "</select><br>");
 	}
 #endif

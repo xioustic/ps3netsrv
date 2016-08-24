@@ -58,11 +58,11 @@ int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
 char *strcasestr(const char *s1, const char *s2);
 
-static int concat(char *dest, const char *src)
+static size_t concat(char *dest, const char *src)
 {
-	int size = 0;
-
 	while (*dest) dest++;
+
+	size_t size = 0;
 
 	while ((*dest++ = *src++)) size++;
 
@@ -214,7 +214,7 @@ static void add_radio_button(const char *name, const char *value, const char *id
 {
 	char templn[MAX_LINE_LEN];
 	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\"%s/> %s%s</label>", name, value, id, checked ? ITEM_CHECKED : "", label, (!sufix) ? "<br>" : sufix);
-	buffer += concat(buffer, templn);
+	strcat(buffer, templn);
 }
 
 static void add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
@@ -233,14 +233,14 @@ static void add_check_box(const char *name, const char *value, const char *label
 		strcat(clabel, p);
 	}
 	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
-	buffer += concat(buffer, templn);
+	strcat(buffer, templn);
 }
 
 static void add_option_item(const char *value, const char *label, bool selected, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
 	sprintf(templn, "<option value=\"%s\"%s/>%s</option>", value, selected?ITEM_SELECTED:"", label);
-	buffer += concat(buffer, templn);
+	strcat(buffer, templn);
 }
 
 static void prepare_header(char *buffer, char *param, u8 is_binary)
