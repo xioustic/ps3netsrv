@@ -7,9 +7,9 @@ We would like to integrate all existing features available on the PS3 Scene like
 
 ## Current functionality
 ### General
-- Support on custom firmware with cobra feature enabled (ver 4.46-4.78 CEX & DEX)
-- Support on classic custom firmware with PRXLoader (ver 3.41-4.78 CEX & DEX) *https://github.com/NzV/PRX_Loader*
-- Support on classic custom firmware with Mamba PRXLoader (ver 3.41-4.78 CEX & DEX) *https://github.com/NzV/MAMBA_PRX_Loader*
+- Support on custom firmware with cobra feature enabled (ver 4.46-4.80 CEX & DEX)
+- Support on classic custom firmware with PRXLoader (ver 3.41-4.80 CEX & DEX) *https://github.com/NzV/PRX_Loader*
+- Support on classic custom firmware with Mamba PRXLoader (ver 3.41-4.80 CEX & DEX) *https://github.com/NzV/MAMBA_PRX_Loader*
 - All PS3 Models with downgrade compatibility is supported, see *http://www.psdevwiki.com/ps3/SKU_Models*
 
 ### webMAN vanilla features
@@ -46,7 +46,7 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Copy operations use shadow copy on hdd0 for faster copy
 - Scan for games on the stealth folder "/video"
 - Support last_game.txt / autoboot on nonCobra edition
-- "Offline" mode (blocks some PSN/tracking servers). Game updates still workGame updates still works in this mode. (v1.33.03)
+- "Offline" mode (blocks some PSN/tracking servers). Game updates still work in this mode. (v1.33.03)
 - XMBM+ integration when grouping of XMB content is disabled (v1.33.03)
 - Extended Content Profile Grouping (v1.33.07)
 - PS3 Manager API Support (PS3MAPI)
