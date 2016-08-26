@@ -1,7 +1,7 @@
 #ifndef LITE_EDITION
 #ifdef COBRA_ONLY
 
-typedef struct
+typedef struct _netiso_args
 {
 	char server[0x40];
 	char path[0x420];
@@ -13,57 +13,15 @@ typedef struct
 } __attribute__((packed)) netiso_args;
 
 static int g_socket = -1;
-static sys_event_queue_t command_queue = -1;
+static sys_event_queue_t command_queue_net = -1;
 
 #define MAX_RETRIES    3
 
+#define TEMP_NET_PSXISO  WMTMP "/~netpsx.iso"
+#define PLAYSTATION      "PLAYSTATION "
+
 static u8 netiso_loaded = 0;
 static int netiso_svrid = -1;
-
-static int remote_stat(int s, const char *path, int *is_directory, int64_t *file_size, uint64_t *mtime, uint64_t *ctime, uint64_t *atime, int *abort_connection)
-{
-	netiso_stat_cmd cmd;
-	netiso_stat_result res;
-	int len;
-
-	*abort_connection = 1;
-
-	len = strlen(path);
-	memset(&cmd, 0, sizeof(cmd));
-	cmd.opcode = (NETISO_CMD_STAT_FILE);
-	cmd.fp_len = (len);
-
-	if(send(s, &cmd, sizeof(cmd), 0) != sizeof(cmd))
-	{
-		//DPRINTF("send failed (remote_stat) (errno=%d)!\n", get_network_error());
-		return FAILED;
-	}
-
-	if(send(s, path, len, 0) != len)
-	{
-		//DPRINTF("send failed (remote_stat) (errno=%d)!\n", get_network_error());
-		return FAILED;
-	}
-
-	if(recv(s, &res, sizeof(res), MSG_WAITALL) != sizeof(res))
-	{
-		//DPRINTF("recv failed (remote_stat) (errno=%d)!\n", get_network_error());
-		return FAILED;
-	}
-
-	*abort_connection = 0;
-
-	*file_size = (res.file_size);
-	if(*file_size == -1)
-		return FAILED;
-
-	*is_directory = res.is_directory;
-	*mtime = (res.mtime);
-	*ctime = (res.ctime);
-	*atime = (res.atime);
-
-	return 0;
-}
 
 static int read_remote_file(int s, void *buf, uint64_t offset, uint32_t size, int *abort_connection)
 {
@@ -105,11 +63,23 @@ static int read_remote_file(int s, void *buf, uint64_t offset, uint32_t size, in
 	return bytes_read;
 }
 
+static u32 detect_cd_sector_size(int fd)
+{
+	char buffer[0x10]; buffer[0xD] = NULL; u64 pos;
+
+	cellFsLseek(fd, 0x8020, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2048; else {
+	cellFsLseek(fd, 0x9220, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2336; else {
+	cellFsLseek(fd, 0x9320, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2352; else {
+	cellFsLseek(fd, 0x9920, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2448; }}}
+
+	return 2352;
+}
+
 static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 {
 	netiso_open_cmd cmd;
 	netiso_open_result res;
-	int len;
+	int len, emu_mode = *abort_connection;
 
 	*abort_connection = 1;
 
@@ -141,6 +111,34 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 	{
 		//DPRINTF("Remote file %s doesn't exist!\n", path);
 		return FAILED;
+	}
+
+	// detect CD sector size
+	if((emu_mode == EMU_PSX) && (res.file_size >= _64KB_) && (res.file_size <= 0x35000000UL))
+	{
+		sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
+		{
+			char *chunk = (char*)sysmem;
+
+			int bytes_read, fd = 0;
+
+			bytes_read = read_remote_file(s, (char*)chunk, 0, chunk_size, abort_connection);
+			if(bytes_read)
+			{
+				savefile(TEMP_NET_PSXISO, chunk, bytes_read);
+
+				if(cellFsOpen(TEMP_NET_PSXISO, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+				{
+					CD_SECTOR_SIZE_2352 = detect_cd_sector_size(fd);
+					cellFsClose(fd);
+				}
+
+				cellFsUnlink(TEMP_NET_PSXISO);
+			}
+
+			sys_memory_free(sysmem);
+		}
 	}
 
 	*abort_connection = 0;
@@ -213,8 +211,8 @@ static int process_read_iso_cmd(uint8_t *buf, uint64_t offset, uint32_t size)
 			return 0;
 		}
 
-		memset(buf+(discsize-offset), 0, read_end-discsize);
-		size = discsize-offset;
+		memset(buf + (discsize - offset), 0, read_end - discsize);
+		size = discsize - offset;
 	}
 
 	return read_remote_file_critical(offset, buf, size);
@@ -251,7 +249,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 
 			if(copy_ptr)
 			{
-				memcpy(buf+(copy_offset * CD_SECTOR_SIZE_2352), copy_ptr, copy_size * CD_SECTOR_SIZE_2352);
+				memcpy(buf + (copy_offset * CD_SECTOR_SIZE_2352), copy_ptr, copy_size * CD_SECTOR_SIZE_2352);
 
 				if(remaining == copy_size)
 				{
@@ -299,6 +297,51 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 	return 0;
 }
 
+static int remote_stat(int s, const char *path, int *is_directory, int64_t *file_size, uint64_t *mtime, uint64_t *ctime, uint64_t *atime, int *abort_connection)
+{
+	netiso_stat_cmd cmd;
+	netiso_stat_result res;
+	int len;
+
+	*abort_connection = 1;
+
+	len = strlen(path);
+	memset(&cmd, 0, sizeof(cmd));
+	cmd.opcode = (NETISO_CMD_STAT_FILE);
+	cmd.fp_len = (len);
+
+	if(send(s, &cmd, sizeof(cmd), 0) != sizeof(cmd))
+	{
+		//DPRINTF("send failed (remote_stat) (errno=%d)!\n", get_network_error());
+		return FAILED;
+	}
+
+	if(send(s, path, len, 0) != len)
+	{
+		//DPRINTF("send failed (remote_stat) (errno=%d)!\n", get_network_error());
+		return FAILED;
+	}
+
+	if(recv(s, &res, sizeof(res), MSG_WAITALL) != sizeof(res))
+	{
+		//DPRINTF("recv failed (remote_stat) (errno=%d)!\n", get_network_error());
+		return FAILED;
+	}
+
+	*abort_connection = 0;
+
+	*file_size = (res.file_size);
+	if(*file_size == -1)
+		return FAILED;
+
+	*is_directory = res.is_directory;
+	*mtime = (res.mtime);
+	*ctime = (res.ctime);
+	*atime = (res.atime);
+
+	return 0;
+}
+
 static void netiso_thread(uint64_t arg)
 {
 	netiso_args *args;
@@ -306,12 +349,13 @@ static void netiso_thread(uint64_t arg)
 	sys_event_queue_attribute_t queue_attr;
 	unsigned int real_disctype;
 	int64_t ret64;
-	int ret;
 	ScsiTrackDescriptor *tracks;
 	int emu_mode, num_tracks;
 	unsigned int cd_sector_size_param = 0;
 
 	args = (netiso_args *)(uint32_t)arg;
+
+	emu_mode = args->emu_mode & 0xF;
 
 	//DPRINTF("Hello VSH\n");
 
@@ -327,6 +371,8 @@ static void netiso_thread(uint64_t arg)
 		sys_memory_free((sys_addr_t)args);
 		sys_ppu_thread_exit(0);
 	}
+
+	int ret = emu_mode;
 
 	ret64 = open_remote_file(g_socket, args->path, &ret);
 	if(ret64 < 0)
@@ -346,7 +392,7 @@ static void netiso_thread(uint64_t arg)
 	}
 
 	sys_event_queue_attribute_initialize(queue_attr);
-	ret = sys_event_queue_create(&command_queue, &queue_attr, 0, 1);
+	ret = sys_event_queue_create(&command_queue_net, &queue_attr, 0, 1);
 	if(ret != 0)
 	{
 		//DPRINTF("sys_event_queue_create failed: %x\n", ret);
@@ -354,11 +400,11 @@ static void netiso_thread(uint64_t arg)
 		sys_ppu_thread_exit(ret);
 	}
 
-	emu_mode = args->emu_mode & 0xF;
 	if(emu_mode == EMU_PSX)
 	{
 		num_tracks = args->num_tracks;
 		tracks = &args->tracks[0];
+
 		is_cd2352 = 1;
 
 		if(CD_SECTOR_SIZE_2352 != 2352) cd_sector_size_param = CD_SECTOR_SIZE_2352<<4;
@@ -386,7 +432,7 @@ static void netiso_thread(uint64_t arg)
 		}
 	}
 
-	ret = sys_storage_ext_mount_discfile_proxy(result_port, command_queue, emu_mode, discsize, _256KB_, (num_tracks | cd_sector_size_param), tracks);
+	ret = sys_storage_ext_mount_discfile_proxy(result_port, command_queue_net, emu_mode, discsize, _256KB_, (num_tracks | cd_sector_size_param), tracks);
 	//DPRINTF("mount = %x\n", ret);
 
 	fake_insert_event(BDVD_DRIVE, real_disctype);
@@ -403,12 +449,14 @@ static void netiso_thread(uint64_t arg)
 	{
 		sys_event_t event;
 
-		ret = sys_event_queue_receive(command_queue, &event, 0);
+		ret = sys_event_queue_receive(command_queue_net, &event, 0);
 		if(ret != 0)
 		{
 			//DPRINTF("sys_event_queue_receive failed: %x\n", ret);
 			break;
 		}
+
+		if(!netiso_loaded) break;
 
 		void *buf = (void *)(uint32_t)(event.data3>>32ULL);
 		uint64_t offset = event.data2;
@@ -436,12 +484,22 @@ static void netiso_thread(uint64_t arg)
 			break;
 		}
 
-		ret = sys_event_port_send(result_port, ret, 0, 0);
-		if(ret != 0)
+		while(netiso_loaded)
 		{
-			//DPRINTF("sys_event_port_send failed: %x\n", ret);
+			ret = sys_event_port_send(result_port, ret, 0, 0);
+			if(ret == 0) break;
+
+			if(ret == (int) 0x8001000A)
+			{   // EBUSY
+				sys_timer_usleep(100000);
+				continue;
+			}
+
 			break;
 		}
+
+		//DPRINTF("sys_event_port_send failed: %x\n", ret);
+		if(ret != 0) break;
 	}
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
@@ -481,7 +539,7 @@ static void netiso_thread(uint64_t arg)
 static void netiso_stop_thread(uint64_t arg)
 {
 	uint64_t exit_code;
-	netiso_loaded = 1;
+	netiso_loaded = 0;
 	netiso_svrid = -1;
 
 	if(g_socket >= 0)
@@ -491,11 +549,11 @@ static void netiso_stop_thread(uint64_t arg)
 		g_socket = -1;
 	}
 
-	if(command_queue != (sys_event_queue_t)-1)
+	if(command_queue_net != (sys_event_queue_t)-1)
 	{
-		if(sys_event_queue_destroy(command_queue, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
+		if(sys_event_queue_destroy(command_queue_net, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
 		{
-			//DPRINTF("Failed in destroying command_queue\n");
+			//DPRINTF("Failed in destroying command_queue_net\n");
 		}
 	}
 
@@ -504,7 +562,6 @@ static void netiso_stop_thread(uint64_t arg)
 		sys_ppu_thread_join(thread_id_net, &exit_code);
 	}
 
-	netiso_loaded = 0;
 	sys_ppu_thread_exit(0);
 }
 
@@ -666,7 +723,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 {
 	copy_aborted = false;
 
-	if(ns<0) return FAILED;
+	if(ns < 0) return FAILED;
 
 	if(file_exists(local_file)) return 0; // local file already exists
 
@@ -680,15 +737,15 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
 
-	if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
+	if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
 	{
-		char *chunk=(char*)sysmem;
+		char *chunk = (char*)sysmem;
 
-		if(cellFsOpen(local_file, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdw, NULL, 0)==CELL_FS_SUCCEEDED)
+		if(cellFsOpen(local_file, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			open_remote_file(ns, remote_file, &abort_connection);
 
-			int bytes_read, boff=0;
+			int bytes_read, boff = 0;
 			while(boff < file_size)
 			{
 				if(copy_aborted) break;
@@ -696,6 +753,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 				bytes_read = read_remote_file(ns, (char*)chunk, boff, chunk_size, &abort_connection);
 				if(bytes_read)
 					cellFsWrite(fdw, (char*)chunk, bytes_read, NULL);
+
 				boff += bytes_read;
 				if((uint64_t)bytes_read < chunk_size || abort_connection) break;
 			}

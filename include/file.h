@@ -15,7 +15,7 @@ static u32 copied_count = 0;
 #define COPY_WHOLE_FILE		0
 
 /*
-static void add_log(const char *fmt, char *value1, int value2)
+static void add_log(const char *fmt, const char *value1, int value2)
 {
 	char buffer[2048];
 

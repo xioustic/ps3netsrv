@@ -106,7 +106,7 @@ typedef struct
 	// numbers sector array 8
 } __attribute__((packed)) psxseciso_args;
 
-volatile int eject_running = 1;
+volatile int eject_running = 0;
 
 uint32_t real_disctype;
 ScsiTrackDescriptor tracks[64];
@@ -125,8 +125,11 @@ static sys_device_info_t disc_info;
 
 static uint64_t usb_device = 0ULL;
 
+#ifdef RAWISO_PSX_MULTI
 static sys_ppu_thread_t thread_id_eject = -1;
-static int ntfs_running = 1;
+#endif
+
+static int ntfs_running = 0;
 
 static volatile int do_run = 0;
 
@@ -988,7 +991,7 @@ static void rawseciso_thread(uint64_t arg)
 
 		if(num_tracks > 0xFF)
 		{
-			CD_SECTOR_SIZE_2352 = (num_tracks & 0xffff00)>>4;
+			CD_SECTOR_SIZE_2352 = (num_tracks & 0xff00)>>4;
 		}
 
 		if(CD_SECTOR_SIZE_2352 != 2352 && CD_SECTOR_SIZE_2352 != 2048 && CD_SECTOR_SIZE_2352 != 2336 && CD_SECTOR_SIZE_2352 != 2448) CD_SECTOR_SIZE_2352 = 2352;
@@ -1203,16 +1206,14 @@ static void rawseciso_thread(uint64_t arg)
 				continue;
 			}
 
-			//DPRINTF("sys_event_port_send failed: %x\n", ret);
 			break;
 		}
 
+		//DPRINTF("sys_event_port_send failed: %x\n", ret);
 		if(ret != 0) break;
 	}
 
-	do_run = 0;
-
-	eject_running = 0;
+	do_run = eject_running = 0;
 
 	sys_memory_free((sys_addr_t)args);
 
@@ -1251,8 +1252,6 @@ static void rawseciso_stop_thread(uint64_t arg)
 {
 	uint64_t exit_code;
 
-	//DPRINTF("rawseciso_stop_thread\n");
-
 	ntfs_running = do_run = 0;
 
 	if(command_queue_ntfs != (sys_event_queue_t)-1)
@@ -1268,13 +1267,14 @@ static void rawseciso_stop_thread(uint64_t arg)
 		sys_ppu_thread_join(thread_id_ntfs, &exit_code);
 	}
 
+#ifdef RAWISO_PSX_MULTI
 	eject_running = 0;
 
 	if(thread_id_eject != (sys_ppu_thread_t)-1)
 	{
 		sys_ppu_thread_join(thread_id_eject, &exit_code);
 	}
+#endif
 
-	//DPRINTF("Exiting stop thread!\n");
 	sys_ppu_thread_exit(0);
 }

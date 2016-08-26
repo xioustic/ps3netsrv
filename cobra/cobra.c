@@ -559,10 +559,10 @@ static int copy_file(char *src, char *dst)
 				uint64_t nread, nwritten;
 
 				ret = cellFsRead(fd_s, buf, buf_size, &nread);
-				if (ret != 0 || nread == 0) break;
+				if (ret != CELL_FS_SUCCEEDED || nread == 0) break;
 
 				ret = cellFsWrite(fd_d, buf, nread, &nwritten);
-				if (ret != 0) break;
+				if (ret != CELL_FS_SUCCEEDED) break;
 
 				if (nwritten != nread)
 				{
@@ -1549,23 +1549,23 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 	uint64_t pos, nread;
 	int fd;
 
-	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != 0)
+	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != CELL_FS_SUCCEEDED)
 		return EIO;
 
-	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) != 0)
+	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) != CELL_FS_SUCCEEDED)
 	{
 		cellFsClose(fd);
 		return EIO;
 	}
 
-	if (cellFsRead(fd, sector, sizeof(sector), &nread) != 0)
+	if (cellFsRead(fd, sector, sizeof(sector), &nread) != CELL_FS_SUCCEEDED)
 	{
 		cellFsClose(fd);
 		return EIO;
 	}
 
 	cellFsClose(fd);
-	if (sector[0] != 1 || memcmp(sector+1, "CD001", 5) != 0)
+	if (sector[0] != 1 || memcmp(sector+1, "CD001", 5) != CELL_FS_SUCCEEDED)
 		return EIO;
 
 	memset(title_id, 0, sizeof(title_id));
@@ -1644,7 +1644,7 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		{
 			snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/SYSDIR/EBOOT.BIN", root);
 
-			if (cellFsOpen(umd_file, CELL_FS_O_RDONLY, &fd, NULL, 0) == 0)
+			if (cellFsOpen(umd_file, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
 				uint32_t header[0xD4/4];
 				uint64_t read;
@@ -1805,10 +1805,12 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	int fd;
 
-	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != 0)
+	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != CELL_FS_SUCCEEDED)
 		return EIO;
 
-	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, NULL) != 0)
+	uint64_t pos;
+
+	if (cellFsLseek(fd, 0x8000, CELL_FS_SEEK_SET, &pos) != CELL_FS_SUCCEEDED)
 	{
 		cellFsClose(fd);
 		return EIO;
@@ -1816,14 +1818,14 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	uint8_t sector[2048];
 
-	if (cellFsRead(fd, sector, sizeof(sector), NULL) != 0)
+	if (cellFsRead(fd, sector, sizeof(sector), NULL) != CELL_FS_SUCCEEDED)
 	{
 		cellFsClose(fd);
 		return EIO;
 	}
 
 	cellFsClose(fd);
-	if (sector[0] != 1 || memcmp(sector+1, "CD001", 5) != 0)
+	if (sector[0] != 1 || memcmp(sector+1, "CD001", 5) != CELL_FS_SUCCEEDED)
 		return EIO;
 
 	unsigned int real_disctype, effective_disctype, iso_disctype;
@@ -1922,7 +1924,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 			prometheus = 1;
 		}
 
-		if (cellFsOpen(umd_file, CELL_FS_O_RDONLY, &fd, NULL, 0) == 0)
+		if (cellFsOpen(umd_file, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			uint32_t header[0xD4/4];
 			uint64_t read;

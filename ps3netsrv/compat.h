@@ -60,7 +60,7 @@ typedef int socklen_t;
 #include <sys/errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netinet/tcp.h>	
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 #include <pthread.h>
 
@@ -77,7 +77,7 @@ typedef int file_t;
 #define closesocket close
 #define get_network_error() (errno)
 
-#endif 
+#endif
 
 int create_start_thread(thread_t *thread, void *(*start_routine)(void*), void *arg);
 int join_thread(thread_t thread);
@@ -95,5 +95,3 @@ int stat_file(const char *path, file_stat_t *fs);
 #endif
 
 #endif /* __COMPAT_H__ */
-
-

@@ -589,7 +589,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		typedef struct
 		{
-			char 	path[MAX_LINE_LEN];
+			char path[MAX_LINE_LEN];
 		}
 		t_line_entries;
 		t_line_entries *line_entry = (t_line_entries *)sysmem_html;
@@ -796,7 +796,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 									icon[0] ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
 						}
 						else
-							sprintf(tempstr + HTML_KEY_LEN, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
+							sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
 									neth, param, enc_dir_name, (u16)pTick.tick, idx,
 									icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
 									neth, param, enc_dir_name, templn);
@@ -940,7 +940,7 @@ next_html_entry:
 							{
 								do
 								{
-									sprintf(tempstr + HTML_KEY_LEN, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s</a></div></div>",
+									sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
 											param, "", enc_dir_name, (u16)pTick.tick, idx, icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
 
 									flen-=4; if(flen<32) break;
@@ -1010,7 +1010,6 @@ next_html_entry:
 		{
 			sprintf(templn, // wait dialog div
 							"<div id=\"wmsg\"><H1>. . .</H1></div>"
-							"<script>window.onclick=function(e){t=e.target;if(t.id.indexOf('im')==0||typeof(t.href)=='string')wmsg.style.display='block';}</script>"
 							// show games count + find icon
 							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';self.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
 							// separator
@@ -1037,7 +1036,9 @@ next_html_entry:
 		tlen = buf_len;
 		for(u16 m = 0; m < idx; m++)
 		{
+			tlen += concat(buffer + tlen, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3");
 			tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
+			tlen += concat(buffer + tlen, "</a></div></div>");
 			if(tlen > (BUFFER_MAXSIZE)) break;
 		}
 

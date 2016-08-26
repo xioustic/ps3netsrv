@@ -164,6 +164,7 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 
 	snprintf(ename, FILE_MGR_KEY_LEN, "%s     ", name);
+	if(flen > 4) {char c = name[flen - 1]; if(c >= '0' && c <= '9') ename[4] = c;}
 
 	if((plen > 1) && memcmp(templn, param, plen) == 0) sprintf(templn, "%s", templn + plen + 1);
 
@@ -248,7 +249,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 						!extcmp(param + tlen, ".pkg", 4) ? "/install.ps3" :
 #endif
 						islike(param, "/dev_hdd0/GAMES/covers") ? "" :
-						(strcasestr(ISO_EXTENSIONS, param + tlen) || strstr(param, "/GAME") || !extcmp(param + MAX(tlen - 4, 0), ".BIN.ENC", 8) || isDir(param)) ? "/mount.ps3" :
+						((strcasestr(ISO_EXTENSIONS, param + tlen) != NULL) || (strstr(param, "/GAME") != NULL) || islike(param, "/net") || !extcmp(param + MAX(tlen - 4, 0), ".BIN.ENC", 8) || isDir(param)) ? "/mount.ps3" :
 						"", url, label);
 	}
 	strcat(buffer, swap);
@@ -349,7 +350,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				strcat(param, "/");
 				if(open_remote_dir(ns, param + 5, &abort_connection) >= 0)
 				{
-					strcpy(templn, param); while(templn[plen] == '/') templn[plen--] = NULL;
+					strcpy(templn, param); while(templn[plen] == '/') templn[plen--] = NULL; plen++;
 					char *p = strrchr(templn, '/'); if(p) templn[p-templn] = NULL; if(strlen(templn) < 6 && strlen(param) < 8) {templn[0]='/'; templn[1] = NULL;}
 
 					urlenc(swap, templn);

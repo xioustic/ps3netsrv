@@ -19,9 +19,9 @@ int scandir(const char *dirname,
 int
 alphasort(const void *_a, const void *_b)
 {
-    struct dirent2 **a = (struct dirent2 **)_a;
-    struct dirent2 **b = (struct dirent2 **)_b;
-    return strcoll((*a)->d_name, (*b)->d_name);
+	struct dirent2 **a = (struct dirent2 **)_a;
+	struct dirent2 **b = (struct dirent2 **)_b;
+	return strcoll((*a)->d_name, (*b)->d_name);
 }
 
 
@@ -34,9 +34,9 @@ alphasort(const void *_a, const void *_b)
 int
 versionsort(const void *_a, const void *_b)
 {
-    struct dirent2 **a = (struct dirent2 **)_a;
-    struct dirent2 **b = (struct dirent2 **)_b;
-    return strverscmp((*a)->d_name, (*b)->d_name);
+	struct dirent2 **a = (struct dirent2 **)_a;
+	struct dirent2 **b = (struct dirent2 **)_b;
+	return strverscmp((*a)->d_name, (*b)->d_name);
 }
 
 /*
@@ -58,58 +58,59 @@ versionsort(const void *_a, const void *_b)
  */
 int
 scandir(const char *dirname,
-	struct dirent2 ***ret_namelist,
-	int (*select)(const struct dirent2 *),
-	int (*compar)(const struct dirent2 **, const struct dirent2 **))
+		struct dirent2 ***ret_namelist,
+		int (*select)(const struct dirent2 *),
+		int (*compar)(const struct dirent2 **, const struct dirent2 **))
 {
-    int i, len;
-    int used, allocated;
-    DIR2 *dir;
-    struct dirent2 *ent, *ent2;
-    struct dirent2 **namelist = NULL;
+	int i, len;
+	int used, allocated;
+	DIR2 *dir;
+	struct dirent2 *ent, *ent2;
+	struct dirent2 **namelist = NULL;
 
-    if ((dir = opendir2(dirname)) == NULL)
-	return -1;
+	if ((dir = opendir2(dirname)) == NULL) return -1;
 
-    used = 0;
-    allocated = 2;
-    namelist = malloc(allocated * sizeof(struct dirent2 *));
-    if (!namelist)
+	used = 0;
+	allocated = 2;
+	namelist = malloc(allocated * sizeof(struct dirent2 *));
+	if (!namelist)
 	goto error;
 
-    while ((ent = readdir2(dir)) != NULL)
-    {
-        if (select != NULL && !select(ent)) continue;
+	while ((ent = readdir2(dir)) != NULL)
+	{
+		if (select != NULL && !select(ent)) continue;
 
-        /* duplicate struct direct for this entry */
-        len = offsetof(struct dirent2, d_name) + strlen(ent->d_name) + 1;
-        if ((ent2 = malloc(len)) == NULL) return -1;
+		/* duplicate struct direct for this entry */
+		len = offsetof(struct dirent2, d_name) + strlen(ent->d_name) + 1;
+		if ((ent2 = malloc(len)) == NULL) return -1;
 
-        if (used >= allocated)
-        {
-            allocated *= 2;
-            namelist = realloc(namelist, allocated * sizeof(struct dirent2 *));
-            if (!namelist)
-            goto error;
-        }
-        memcpy(ent2, ent, len);
-        namelist[used++] = ent2;
-    }
-    closedir2(dir);
+		if (used >= allocated)
+		{
+			allocated *= 2;
+			namelist = realloc(namelist, allocated * sizeof(struct dirent2 *));
+			if (!namelist)
+			goto error;
+		}
+		memcpy(ent2, ent, len);
+		namelist[used++] = ent2;
+	}
+	closedir2(dir);
 
-    if (compar)
-        qsort(namelist, used, sizeof(struct dirent2 *),
-             (int (*)(const void *, const void *)) compar);
+	if (compar)
+		qsort(namelist, used, sizeof(struct dirent2 *),
+			 (int (*)(const void *, const void *)) compar);
 
-    *ret_namelist = namelist;
-    return used;
+	*ret_namelist = namelist;
+	return used;
 
 
 error:
-    if (namelist) {
-	for (i = 0; i < used; i++)
-	    free(namelist[i]);
-	free(namelist);
-    }
-    return -1;
+	if (namelist)
+	{
+		for (i = 0; i < used; i++)
+			free(namelist[i]);
+
+		free(namelist);
+	}
+	return -1;
 }

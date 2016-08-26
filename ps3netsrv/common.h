@@ -30,8 +30,8 @@ static inline uint64_t BE64(uint64_t x)
 static inline uint16_t LE16(uint16_t x)
 {
 	uint16_t ret;
-	ret  =  (x<<8)&0xFF00;
-	ret |= ((x>>8)&0xFF);
+	ret  =  (x<<8)&0xff00;
+	ret |= ((x>>8)&0xff);
 
 	return ret;
 }
@@ -50,7 +50,7 @@ static inline uint32_t LE32(uint32_t x)
 static inline uint64_t LE64(uint64_t x)
 {
 	uint64_t ret;
-	ret  =  (x << 56) & 0xff00000000000000ULL;
+	ret  = ((x << 56) & 0xff00000000000000ULL);
 	ret |= ((x << 40) & 0x00ff000000000000ULL);
 	ret |= ((x << 24) & 0x0000ff0000000000ULL);
 	ret |= ((x << 8)  & 0x000000ff00000000ULL);
@@ -67,8 +67,8 @@ static inline uint64_t LE64(uint64_t x)
 static inline uint16_t BE16(uint16_t x)
 {
 	uint16_t ret;
-	ret  =  (x<<8)&0xFF00;
-	ret |= ((x>>8)&0xFF);
+	ret  =  (x<<8)&0xff00;
+	ret |= ((x>>8)&0xff);
 
 	return ret;
 }
@@ -87,7 +87,7 @@ static inline uint32_t BE32(uint32_t x)
 static inline uint64_t BE64(uint64_t x)
 {
 	uint64_t ret;
-	ret  =  (x << 56) & 0xff00000000000000ULL;
+	ret  = ((x << 56) & 0xff00000000000000ULL);
 	ret |= ((x << 40) & 0x00ff000000000000ULL);
 	ret |= ((x << 24) & 0x0000ff0000000000ULL);
 	ret |= ((x << 8)  & 0x000000ff00000000ULL);

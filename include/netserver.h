@@ -108,7 +108,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 
 			/// detect sector size ///
 
-			if(result.file_size > _64KB_)
+			if((result.file_size > _64KB_) && (result.file_size <= 0x35000000UL))
 			{
 				clients[index].CD_SECTOR_SIZE_2352 = detect_cd_sector_size(fd);
 			}

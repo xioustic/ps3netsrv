@@ -46,6 +46,7 @@ enum EMU_TYPE
     EMU_BD,
     EMU_DVD,
     EMU_MAX,
+    EMU_PSP, // not a DiscEmu
 };
 
 #define EMU_PSX_MULTI (EMU_PSX + 16)

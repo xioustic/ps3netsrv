@@ -16,14 +16,14 @@ static void select_ps1emu(void)
 		sys_map_path("/dev_flash/ps1emu/ps1_netemu.self", "//dev_flash/ps1emu/ps1_emu.self");
 		sys_map_path("/dev_flash/ps1emu/ps1_emu.self"   , "//dev_flash/ps1emu/ps1_netemu.self");
 
-		sprintf(msg, "ps1_netemu.self %s", STR_ENABLED);
+		sprintf(msg, "%s %s", "ps1_netemu.self", STR_ENABLED);
 	}
 	else
 	{
 		sys_map_path("/dev_flash/ps1emu/ps1_netemu.self", "//dev_flash/ps1emu/ps1_netemu.self");
 		sys_map_path("/dev_flash/ps1emu/ps1_emu.self"   , "//dev_flash/ps1emu/ps1_emu.self");
 
-		sprintf(msg, "ps1_emu.self %s",    STR_ENABLED);
+		sprintf(msg, "%s %s", "ps1_emu.self", STR_ENABLED);
 	}
 
 	show_msg(msg);

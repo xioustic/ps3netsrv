@@ -102,7 +102,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.33 MOD"						// webMAN version
+#define WM_VERSION			"1.43.34 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -560,6 +560,7 @@ static char local_ip[16] = "127.0.0.1";
 
 static bool file_exists(const char* path);
 static int isDir(const char* path);
+static int savefile(const char *file, char *mem, u64 size);
 
 #include "include/peek_poke.h"
 #include "include/led.h"
@@ -1718,7 +1719,7 @@ static void handleclient(u64 conn_s_p)
  #endif
 
  #ifdef COPY_PS3
-							islike(param, "/copy.ps3") ||
+							islike(param, "/copy.ps3/") ||
  #endif
 
 							islike(param, "/refresh.ps3")
