@@ -1904,9 +1904,9 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		char *p = strstr(_path, "/PS3_"); if(p) p[0] = NULL;
 	}
 
-#ifndef LITE_EDITION
 	char netid = NULL;
 
+#ifndef LITE_EDITION
 	if(islike(_path, "/net"))
 	{
 		netid = _path[4];
@@ -2298,7 +2298,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 							sprintf(_netiso_args->path, "/***DVD***%s", netpath);
 					}
 
-					sys_ppu_thread_create(&thread_id_net, netiso_thread, (uint64_t)_netiso_args, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
+					sys_ppu_thread_create(&thread_id_net, netiso_thread, (uint64_t)sysmem, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
 
 					if(_netiso_args->emu_mode==EMU_PS3)
 					{
@@ -2492,21 +2492,21 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 									{
 										ScsiTrackDescriptor *scsi_tracks = (ScsiTrackDescriptor *)&tracks[0];
 
-										for (int i = 0; i < num_tracks; i++)
+										for (unsigned int i = 0; i < num_tracks; i++)
 										{
 											scsi_tracks[i].adr_control = (tracks[i].is_audio) ? 0x10 : 0x14;
 											scsi_tracks[i].track_number = i + 1;
 											scsi_tracks[i].track_start_addr = tracks[i].lba;
 										}
 									}
+
+									if(!num_tracks) num_tracks++;
+									cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
+									mount_iso = false;
 								}
 
 								sys_memory_free(sysmem);
 							}
-
-							if(!num_tracks) num_tracks++;
-							cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
-							mount_iso = false;
 						}
 					}
 

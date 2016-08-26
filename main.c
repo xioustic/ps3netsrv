@@ -598,6 +598,7 @@ static void mount_autoboot(void);
 static bool mount_with_mm(const char *_path, u8 do_eject);
 static void get_name(char *name, char *filename, u8 cache);
 static void add_breadcrumb_trail(char *buffer, char *param);
+static void get_cpursx(char *cpursx);
 
 #ifdef COBRA_ONLY
 static void do_umount_iso(void);

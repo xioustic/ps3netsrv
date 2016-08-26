@@ -54,8 +54,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	char cwd[MAX_PATH_LEN], tempcwd[MAX_PATH_LEN];	// Current Working Directory
 	int rest = 0;									// for resuming file transfers
 
-	char buffer[FTP_RECV_SIZE];
 	char cmd[16], param[MAX_PATH_LEN], filename[MAX_PATH_LEN], source[MAX_PATH_LEN]; // used as source parameter in RNFR and COPY commands
+	char buffer[FTP_RECV_SIZE], *cpursx = filename;
 	struct CellFsStat buf;
 	int fd;
 
@@ -572,16 +572,19 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							{
 								uint32_t blockSize;
 								uint64_t freeSize;
-								char tempstr[128], *slash = strchr(tempcwd+1, '/');
+								char *slash = strchr(tempcwd+1, '/');
 								if(slash) slash[0] = '\0';
 
 								cellFsGetFreeSize(tempcwd, &blockSize, &freeSize);
-								sprintf(tempstr, "226 [%s] [ %i %s ]\r\n", tempcwd, (int)((blockSize*freeSize)>>20), STR_MBFREE);
-								ssend(conn_s_ftp, tempstr);
+								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
+								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", tempcwd, (int)((blockSize*freeSize)>>20), STR_MBFREE, cpursx);
+								ssend(conn_s_ftp, buffer);
 							}
 							else
 							{
-								ssend(conn_s_ftp, FTP_OK_226);	// Closing data connection. Requested file action successful (for example, file transfer or file abort).
+								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
+								sprintf(buffer, "226 [/] [%s]\r\n", cpursx);
+								ssend(conn_s_ftp, buffer);
 							}
 						}
 						else
