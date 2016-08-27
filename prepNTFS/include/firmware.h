@@ -11,11 +11,11 @@ static inline uint64_t peekq(uint64_t addr) //lv2
 
 static void detect_firmware(void)
 {
-	const uint64_t CEX=0x4345580000000000ULL;
-	const uint64_t DEX=0x4445580000000000ULL;
-	const uint64_t DEH=0x4445480000000000ULL;
+	const uint64_t CEX = 0x4345580000000000ULL;
+	const uint64_t DEX = 0x4445580000000000ULL;
+	const uint64_t DEH = 0x4445480000000000ULL;
 
-	dex_mode=0;
+	dex_mode = 0;
 
 	if(peekq(0x80000000002ED808ULL)==CEX) {c_firmware=4.80f;}				else
 	if(peekq(0x80000000002ED818ULL)==CEX) {c_firmware=(peekq(0x80000000002FCB68ULL)==0x323031352F31322FULL)?4.78f:(peekq(0x80000000002FCB68ULL)==0x323031352F30382FULL)?4.76f:4.75f;} else

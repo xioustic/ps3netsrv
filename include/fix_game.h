@@ -99,12 +99,12 @@ static bool fix_param_sfo(unsigned char *mem, char *titleID, u8 opcode)
 		{
 			char version[8];
 			strncpy(version, (char *) &mem[pos], 7);
-			int fw_ver=10000*((version[1] & 0xFF)-'0') + 1000*((version[3] & 0xFF)-'0') + 100*((version[4] & 0xFF)-'0');
-			if((c_firmware>=4.20f && c_firmware<LATEST_CFW) && (fw_ver>(int)(c_firmware*10000.0f)))
+			int fw_ver = 10000 * ((version[1] & 0xFF) - '0') + 1000 * ((version[3] & 0xFF) - '0') + 100 * ((version[4] & 0xFF) - '0');
+			if((c_firmware >= 4.20f && c_firmware < LATEST_CFW) && (fw_ver > (int)(c_firmware * 10000.0f)))
 			{
-				if(opcode == SHOW_WARNING) {char text[64]; sprintf(text, "WARNING: Game requires firmware version %i.%i", (fw_ver/10000), (fw_ver-10000*(fw_ver/10000))/100); show_msg((char*)text); break;}
+				if(opcode == SHOW_WARNING) {char text[64]; sprintf(text, "WARNING: Game requires firmware version %i.%i", (fw_ver / 10000), (fw_ver - 10000*(fw_ver / 10000)) / 100); show_msg((char*)text); break;}
 
-				mem[pos+1]='4'; mem[pos+3]='2'; mem[pos+4]='0'; ret=true;
+				mem[pos + 1] = '4'; mem[pos + 3] = '2'; mem[pos + 4] = '0'; ret = true;
 			}
 			fcount++; if(fcount>=2) break;
 		}

@@ -1491,25 +1491,15 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 		sys_timer_usleep(20000);
 
 		char *files[1];
-		char blank_iso[128];
+		const char blank_iso[128] = "/dev_hdd0/vsh/task.dat";
 
-		sprintf(blank_iso, "/dev_hdd0/vsh/task.dat");
+		files[0] = (char*)blank_iso;
 
-		//if (blank_iso)
-		{
-			files[0] = (char*)blank_iso;
+		ret = sys_storage_ext_mount_ps3_discfile(1, files);
 
-			//sprintf(files[0], "/dev_hdd0/vsh/task.dat");
-			ret = sys_storage_ext_mount_ps3_discfile(1, files);
-			//free(blank_iso);
-
-			//if (ret == 0)
-			{
-				cobra_send_fake_disc_insert_event();
-				sm = 1;
-				sys_timer_usleep(20000);
-			}
-		}
+		cobra_send_fake_disc_insert_event();
+		sm = 1;
+		sys_timer_usleep(20000);
 	}
 
 	if (special_mode) *special_mode = sm;
@@ -1907,7 +1897,6 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/ICON0.PNG", root);
 
-	//if (copy_file(umd_file, icon_save_path) == 0)
 	if(file_copy(umd_file, icon_save_path, 0) == CELL_FS_SUCCEEDED)
 	{
 		int fd;

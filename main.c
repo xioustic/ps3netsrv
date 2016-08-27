@@ -363,8 +363,8 @@ static u8 max_mapped=0;
 
 static bool syscalls_removed = false;
 
-static float c_firmware=0.0f;
-static u8 dex_mode=0;
+static float c_firmware = 0.0f;
+static u8 dex_mode = 0;
 
 static u64 SYSCALL_TABLE = 0;
 static u64 LV2_OFFSET_ON_LV1; // value is set on detect_firmware -> 0x1000000 on 4.46, 0x8000000 on 4.76/4.78
@@ -461,7 +461,8 @@ typedef struct
 	uint8_t  netd;
 	uint16_t netp;
 	uint8_t  launchpad_xml;
-	char padding[99];
+	uint8_t  psp_emu;
+	char padding[98];
 } __attribute__((packed)) WebmanCfg;
 
 static u8 wmconfig[sizeof(WebmanCfg)];
@@ -489,10 +490,6 @@ static void enable_fan_control(u8 enable, char *msg);
 static void set_buffer_sizes(int footprint);
 static void waitfor(const char *path, uint8_t timeout);
 static void show_msg(char* msg);
-
-#ifdef COBRA_ONLY
-static void select_ps1emu(void);
-#endif
 
 #ifdef GET_KLICENSEE
 int npklic_struct_offset = 0; u8 klic_polling = 0;
@@ -552,6 +549,7 @@ static bool use_custom_icon_path = false, use_icon_region = false;
 #endif
 
 static bool covers_exist[7];
+static char fw_version[8] = "4.xx";
 static char local_ip[16] = "127.0.0.1";
 
 //uint64_t find_syscall();

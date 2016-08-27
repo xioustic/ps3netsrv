@@ -11,12 +11,6 @@
 
 #include <io/pad.h>
 
-#include "iso.h"
-#include "file.h"
-#include "firmware.h"
-#include "fix_game.h"
-#include "net.h"
-
 //----------------
 #define SUFIX(a)	((a==1)? "_1" :(a==2)? "_2" :(a==3)? "_3" :(a==4)? "_4" :(a==5)? " [auto]" :"")
 #define SUFIX2(a)	((a==1)?" (1)":(a==2)?" (2)":(a==3)?" (3)":(a==4)?" (4)":(a==5)? " [auto]" :"")
@@ -31,7 +25,14 @@ enum emu_modes
 	BDISO  = 1,
 	DVDISO = 2,
 	PSXISO = 3,
+	VIDEO  = 4,
+	MOVIES = 5,
+	BDFILE = 9,
 };
+
+#define PKGFILE 6 || m == 7 || m == 8
+
+#define FW_VERSION 4.80f
 
 typedef struct
 {
@@ -57,6 +58,11 @@ uint32_t sections[MAX_SECTIONS], sections_size[MAX_SECTIONS];
 ntfs_md *mounts;
 int mountCount;
 
+#include "iso.h"
+#include "file.h"
+#include "firmware.h"
+#include "fix_game.h"
+#include "net.h"
 #include "fake_iso.h"
 
 //----------------
@@ -67,7 +73,7 @@ int main(int argc, const char* argv[])
 
 	int i, parts;
 	unsigned int num_tracks;
-	u8 cue=0; int ext_len = 4;
+	u8 cue = 0; int ext_len = 4;
 
 	int emu_mode;
 	TrackDef tracks[100];
@@ -83,12 +89,13 @@ int main(int argc, const char* argv[])
 
 	sysLv2FsUnlink((char*)"/dev_hdd0/tmp/wmtmp/games.html");
 
-	int fd=-1;
+	int fd = -1;
 	u64 read = 0;
 	char path0[MAX_PATH_LEN], subpath[MAX_PATH_LEN];
 	char direntry[MAX_PATH_LEN];
 	char filename[MAX_PATH_LEN];
-	bool is_iso = false;
+	bool has_dirs, is_iso = false;
+	u16 flen;
 
 	bool mmCM_found = false; char mmCM_cache[64], mmCM_path[64], titleID[16];
 
@@ -117,11 +124,10 @@ int main(int argc, const char* argv[])
 
 	ioPadInit(7);
 
-	int n, r;
-	for(r = 0; r < 10; r++)
+	for(u8 r = 0; r < 10; r++)
 	{
 		ioPadGetInfo(&padinfo);
-		for(n = 0; n < 7; n++)
+		for(u8 n = 0; n < 7; n++)
 		{
 			if(padinfo.status[n])
 			{
@@ -146,7 +152,9 @@ int main(int argc, const char* argv[])
 				if(strstr(dir.d_name, ".ntfs[") || (strlen(dir.d_name)>4 && strstr(dir.d_name + strlen(dir.d_name) - 4, ".iso"))) {sprintf(path0, "%s/%s", path, dir.d_name); sysLv2FsUnlink(path0);}
 			sysLv2FsCloseDir(fd);
 		}
-    }
+	}
+
+	cobra_lib_init();
 
 	mountCount = ntfsMountAll(&mounts, NTFS_DEFAULT | NTFS_RECOVER /* | NTFS_READ_ONLY */ );
 	if (mountCount <= 0) goto exit;
@@ -159,7 +167,7 @@ int main(int argc, const char* argv[])
 			{
 				for(u8 m = 0; m < 10; m++) //0="PS3ISO", 1="BDISO", 2="DVDISO", 3="PSXISO", 4="VIDEO", 5="MOVIES", 6="PKG", 7="Packages", 8="packages", 9="BDFILE"
 				{
-					bool has_dirs; u16 flen; has_dirs = false;
+					has_dirs = false;
 
 					snprintf(path, sizeof(path), "%s:/%s%s", mounts[i].name, c_path[m], SUFIX(profile));
 
@@ -176,9 +184,9 @@ int main(int argc, const char* argv[])
 							//--- create .ntfs[BDFILES]
 							if(m >= 4)
 							{
-								if((m==4 || m==5) && !strcasestr(".mp4|.mkv|.avi|.wmv|.flv|.mpg|mpeg|.mov|m2ts|.vob|.asf|divx|xvid|.pam|.bik|bink|.vp6|.mth|.3gp|rmvb|.ogm|.ogv|.m2t|.mts|.tsv|.tsa|.tts|.vp3|.vp5|.vp8|.264|.m1v|.m2v|.m4b|.m4p|.m4r|.m4v|mp4v|.mpe|bdmv|.dvb|webm|.nsv", filename + flen - ext_len)) continue; else
-								if((m>=6 && m<=8) && !strstr(".pkg", filename + flen - ext_len)) continue;
-								if((m==9)         && (dir.d_name[0]=='.' || strstr(dir.d_name, ".")==NULL)) continue;
+								if((m == VIDEO || m == MOVIES) && !strcasestr(".mp4|.mkv|.avi|.wmv|.flv|.mpg|mpeg|.mov|m2ts|.vob|.asf|divx|xvid|.pam|.bik|bink|.vp6|.mth|.3gp|rmvb|.ogm|.ogv|.m2t|.mts|.tsv|.tsa|.tts|.vp3|.vp5|.vp8|.264|.m1v|.m2v|.m4b|.m4p|.m4r|.m4v|mp4v|.mpe|bdmv|.dvb|webm|.nsv", filename + flen - ext_len)) continue; else
+								if((m == PKGFILE) && !strstr(".pkg", filename + flen - ext_len)) continue;
+								if((m == BDFILE)         && (dir.d_name[0] == '.' || strstr(dir.d_name, ".") == NULL)) continue;
 
 								sprintf(filename, "/dev_hdd0/tmp/wmtmp/[%s] %s.iso", c_path[m], dir.d_name);
 								if(file_exists(filename)) continue;
@@ -230,7 +238,7 @@ next_ntfs_entry:
 							//--- cache ISO
 							if( is_iso )
 							{
-								filename[flen - ext_len]=0;
+								filename[flen - ext_len] = 0;
 								snprintf(path, sizeof(path), "%s:/%s%s/%s", mounts[i].name, c_path[m], SUFIX(profile), direntry);
 
 								//--- PS3ISO: fix game, cache SFO, ICON0 and PIC1 (if mmCM is installed)
@@ -241,7 +249,7 @@ next_ntfs_entry:
 									if(file_exists(wm_path)==false)
 										ExtractFileFromISO(path, "/PS3_GAME/PARAM.SFO;1", wm_path);
 
-									if(c_firmware < 4.80f && need_fix(wm_path))
+									if(c_firmware < FW_VERSION && need_fix(wm_path))
 									{
 										fix_iso(path, 0x100000UL);
 
@@ -435,16 +443,18 @@ next_ntfs_entry:
 	}
 
 exit:
+	cobra_lib_finalize();
+
 	//--- Unmount ntfs devices
 	for (u8 u = 0; u < mountCount; u++) ntfsUnmount(mounts[u].name, 1);
 
 	//--- Force refresh xml (webMAN)
-	int refresh_xml=-1;
-	refresh_xml=connect_to_webman();
-	if(refresh_xml>=0) ssend(refresh_xml, "GET /refresh.ps3 HTTP/1.0\r\n");
+	int refresh_xml = -1;
+	refresh_xml = connect_to_webman();
+	if(refresh_xml >= 0) ssend(refresh_xml, "GET /refresh.ps3 HTTP/1.0\r\n");
 
 	//--- Launch RELOAD.SELF
-	char self_path[1024] = "";
+	char *self_path = path; memset(self_path, 0, MAX_PATH_LEN);
 	if(argc > 0 && argv)
 	{
 		if(!strncmp(argv[0], "/dev_hdd0/game/", 15))

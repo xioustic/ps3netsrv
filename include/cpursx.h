@@ -251,13 +251,13 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	get_net_info(net_type, ip);
 
 	sprintf( templn, "<hr></font><h2><a class=\"s\" href=\"/setup.ps3\">"
-						"Firmware : %i.%02i %s<br>"
+						"Firmware : %s %s<br>"
 						"%s<br>"
 						"PSID LV2 : %016llX%016llX<hr>"
 						"IDPS EID0: %016llX%016llX<br>"
 						"IDPS LV2 : %016llX%016llX<br>"
 						"MAC Addr : %02X:%02X:%02X:%02X:%02X:%02X - %s %s</h2></a></b>",
-					(int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, cfw_info,
+					fw_version, cfw_info,
 					(syscalls_removed) ? STR_CFWSYSALRD : "",
 					PSID[0], PSID[1],
 					eid0_idps[0], eid0_idps[1],

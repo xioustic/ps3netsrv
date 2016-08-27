@@ -106,6 +106,8 @@ static void detect_firmware(void)
 
 	if(!SYSCALL_TABLE) {c_firmware = 0.00f; return;}
 
+	sprintf(fw_version, "%i.%02i", (int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10);
+
 	// get payload type & version
 	{system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_GET_MAMBA); is_mamba = ((int)p1 == 0x666);}
 	sys_get_version2(&cobra_version);
@@ -400,8 +402,14 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 	{
 		uint8_t autoplay = webman_config->autoplay;
 
-		char *purl = strstr(param + 1, "emu="); // e.g. ?emu=ps1_netemu.self
-		if(purl) {webman_config->ps1emu = strstr(purl, "net") ? 1 : 0; purl--; purl[0] = NULL;}
+		char *purl = strstr(param + 1, "emu="); // e.g. ?emu=ps1_netemu.self / ps1_netemu.self / EMU400 (lambda.db) / psp (/dev_flash/pspemu/psp_emulator.self)
+		if(purl)
+		{
+			if(strstr(purl, "psp")) webman_config->psp_emu = 1; else
+			if(strstr(purl, "400")) webman_config->psp_emu = 0; else
+									webman_config->ps1emu = strstr(purl, "net") ? 1 : 0;
+			purl--; purl[0] = NULL;
+		}
 
 		purl = strstr(param, "?random=");
 		if(purl) purl[0] = NULL;
@@ -2356,17 +2364,19 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(file_exists(iso_list[0]))
 					{
-						int result = cobra_set_psp_umd2(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/psp_icon.png", 2);
+						CellPadData pad_data = pad_read();
+						bool pspemu = webman_config->psp_emu;
+						if(pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R1)) {pspemu = !pspemu; sprintf(templn, "pspemu %s", pspemu ? fw_version : "4.0"); show_msg(templn);}
 
-						if(result==ENOTSUP || result==EABORT)
-						{
-							ret = false;
-						}
-						else if(!result)
+						int result = cobra_set_psp_umd2(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/psp_icon.png", pspemu ? EMU_AUTO : EMU_400);
+
+						if(!result)
 						{
 							cobra_send_fake_disc_insert_event();
 							ret = true;
 						}
+						else
+							ret = false;
 					}
 					else
 						ret = false;
@@ -2900,7 +2910,7 @@ exit_mount:
 	{
 		CellPadData pad_data = pad_read();
 		bool otag = (strcasestr(_path, "[online]")!=NULL);
-		bool r2 = (pad_data.len>0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2));
+		bool r2 = (pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2));
 		if((!r2 && otag) || (r2 && !otag)) disable_cfw_syscalls(webman_config->keep_ccapi);
 	}
 #endif

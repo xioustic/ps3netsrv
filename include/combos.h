@@ -144,7 +144,7 @@
 						if( !(webman_config->combo2 & PS2TOGGLE)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_TRIANGLE) // SELECT+L2+TRIANGLE
-							&& (c_firmware>=4.65f) )
+							&& (c_firmware >= 4.65f) )
 						{
 							bool classic_ps2_enabled = file_exists(PS2_CLASSIC_TOGGLER);
 
@@ -306,11 +306,11 @@ show_popup:
 
 								sprintf(tmp, "CPU: %i°C  RSX: %i°C  FAN: %i%%   \n"
 											 "%s: %id %02d:%02d:%02d%s\n"
-											 "Firmware : %i.%02i %s\n"
+											 "Firmware : %s %s\n"
 											 "IP: %s  %s%s",
 											 t1, t2, (int)(((int)speed*100)/255),
 											 bb?"Play":"Startup", dd, hh, mm, ss, smax,
-											 (int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10, cfw_info, ip, net_type, syscalls_removed ? "  [noSC]" : "");
+											 fw_version, cfw_info, ip, net_type, syscalls_removed ? "  [noSC]" : "");
 
 								sprintf(msg, "%s\n%s: %'i %s\n"
 											 "%s: %'i %s\n", tmp,
