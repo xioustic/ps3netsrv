@@ -334,7 +334,7 @@ static u8 profile = 0;
 
 static u8 loading_html = 0;
 static u8 loading_games = 0;
-static u8 init_running = 0;
+static u8 refreshing_xml = 0;
 
 #ifdef SYS_BGM
 static u8 system_bgm = 0;
@@ -839,8 +839,6 @@ static void handleclient(u64 conn_s_p)
 
 	if(conn_s_p == START_DAEMON || conn_s_p == REFRESH_CONTENT)
 	{
-		init_running = 1;
-
 		if(conn_s_p == START_DAEMON)
 		{
 			vshnet_setUpdateUrl("http://127.0.0.1/dev_hdd0/ps3-updatelist.txt"); // custom update file
@@ -960,17 +958,18 @@ static void handleclient(u64 conn_s_p)
  #endif
 		}
 
-		init_running = 0;
 		sys_ppu_thread_exit(0);
 	}
 
  #ifdef USE_DEBUG
 	ssend(debug_s, "waiting...");
  #endif
+
 	if(loading_html > 10) loading_html = 0;
-	//while((init_running/* || loading_html>3*/) && working) sys_timer_usleep(10000);
 
 	sys_net_sockinfo_t conn_info_main;
+
+	char cmd[16], header[HTML_RECV_SIZE];
 
  #ifdef WM_REQUEST
 	struct CellFsStat buf;
@@ -985,10 +984,12 @@ static void handleclient(u64 conn_s_p)
 	{
 		sys_net_get_sockinfo(conn_s, &conn_info_main, 1);
 
-		char ip_address[16];
+		char *ip_address = cmd;
 		sprintf(ip_address, "%s", inet_ntoa(conn_info_main.remote_adr));
 		if(webman_config->bind && ((conn_info_main.local_adr.s_addr!=conn_info_main.remote_adr.s_addr) && !islike(ip_address, webman_config->allow_ip)))
 		{
+			http_response(conn_s, header, param, CODE_BAD_REQUEST, STR_ERROR);
+
 			goto exit_handleclient;
 		}
 
@@ -997,14 +998,12 @@ static void handleclient(u64 conn_s_p)
 	}
 
 	_meminfo meminfo;
-	u8 retries=0;
-
-	char cmd[16], header[HTML_RECV_SIZE];
+	u8 retries = 0;
 
  again3:
 	{ system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo); }
 
-	if((meminfo.avail) < ( (_64KB_) + MIN_MEM)) //leave if less than min memory
+	if((meminfo.avail) < ( _64KB_ + MIN_MEM )) //leave if less than min memory
 	{
 		#ifdef USE_DEBUG
 		ssend(debug_s, "!!! NOT ENOUGH MEMORY!\r\n");
@@ -1016,7 +1015,6 @@ static void handleclient(u64 conn_s_p)
 
 		http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
 
-		init_running = 0;
 		goto exit_handleclient;
 	}
 
@@ -1824,6 +1822,7 @@ static void handleclient(u64 conn_s_p)
 				//if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
 				if(buffer_size < _64KB_)
 				{
+					http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
 					goto exit_handleclient;
 				}
 
@@ -1863,6 +1862,7 @@ static void handleclient(u64 conn_s_p)
 			{
 				if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != 0)
 				{
+					http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
 					goto exit_handleclient;
 				}
 
@@ -1881,8 +1881,11 @@ static void handleclient(u64 conn_s_p)
 					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
 				}
 
-				if(!sysmem && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != 0)
+				while((!sysmem) && (BUFFER_SIZE_HTML > 0) && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != 0) BUFFER_SIZE_HTML -= _64KB_;
+
+				if(!sysmem)
 				{
+					http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
 					goto exit_handleclient;
 				}
 			}
@@ -2125,9 +2128,8 @@ static void handleclient(u64 conn_s_p)
  #endif
 					is_busy=true;
 
-					if(islike(param, "/refresh.ps3") && init_running == 0)
+					if(islike(param, "/refresh.ps3") && refreshing_xml == 0)
 					{
-						init_running = 1;
 						refresh_xml(templn);
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
 					}
@@ -2544,8 +2546,6 @@ static void wwwd_thread(uint64_t arg)
 
 	set_buffer_sizes(webman_config->foot);
 
-	init_running = 1;
-
 	sys_ppu_thread_t id2;
 
 	if(!webman_config->ftpd)
@@ -2587,7 +2587,7 @@ again_debug:
 
 	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
 
-	// while(init_running && working) sys_timer_usleep(100000);
+	// while(refreshing_xml && working) sys_timer_usleep(100000);
 
 	led(GREEN, ON);
 
@@ -2678,7 +2678,7 @@ static void wwwd_stop_thread(uint64_t arg)
 {
 	working = 0;
 
-	while(init_running) sys_timer_usleep(500000); //Prevent unload too fast
+	while(refreshing_xml) sys_timer_usleep(500000); //Prevent unload too fast
 
 	restore_fan(1); //restore & set static fan speed for ps2
 

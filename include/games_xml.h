@@ -18,14 +18,17 @@
 
 static void refresh_xml(char *msg)
 {
-	webman_config->profile=profile; save_settings();
+	refreshing_xml = 1;
+	webman_config->profile = profile; save_settings();
 
 	sprintf(msg, "%s XML%s: %s", STR_REFRESH, SUFIX2(profile), STR_SCAN2);
 	show_msg(msg);
-	init_running = 1;
+
 	sys_ppu_thread_t id3;
 	sys_ppu_thread_create(&id3, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
-	while(init_running && working) sys_timer_usleep(300000);
+
+	while(refreshing_xml && working) sys_timer_usleep(300000);
+
 	sprintf(msg, "%s XML%s: OK", STR_REFRESH, SUFIX2(profile));
 	show_msg(msg);
 }
@@ -1148,13 +1151,13 @@ continue_reading_folder_xml:
 
 static void update_xml_thread(u64 conn_s_p)
 {
-	init_running = 1;
+	refreshing_xml = 1;
 
 	if(IS_ON_XMB)
 		while(View_Find("explore_plugin") == 0) sys_timer_sleep(1); // wait for explore_plugin
 
 	if(update_mygames_xml(conn_s_p)) mount_autoboot();
 
-	init_running = 0;
+	refreshing_xml = 0;
 	sys_ppu_thread_exit(0);
 }

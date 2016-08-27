@@ -1,9 +1,5 @@
 #define FTP_RECV_SIZE  1024
 
-static void handleclient_ftp(u64 conn_s_ftp_p);
-static void absPath(char* absPath_s, const char* path, const char* cwd);
-static int ssplit(const char* str, char* left, int lmaxlen, char* right, int rmaxlen);
-
 static void absPath(char* absPath_s, const char* path, const char* cwd)
 {
 	if(path[0] == '/') strcpy(absPath_s, path);
@@ -51,11 +47,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	int dataactive = 0;			// prevent the data connection from being closed at the end of the loop
 	u8 loggedin = 0;			// whether the user is logged in or not
 
-	char cwd[MAX_PATH_LEN], tempcwd[MAX_PATH_LEN];	// Current Working Directory
-	int rest = 0;									// for resuming file transfers
+	char cwd[MAX_PATH_LEN];	// Current Working Directory
+	int rest = 0;			// for resuming file transfers
 
 	char cmd[16], param[MAX_PATH_LEN], filename[MAX_PATH_LEN], source[MAX_PATH_LEN]; // used as source parameter in RNFR and COPY commands
-	char buffer[FTP_RECV_SIZE], *cpursx = filename;
+	char buffer[FTP_RECV_SIZE], *cpursx = filename, *tempcwd = filename, *d_path = param;
 	struct CellFsStat buf;
 	int fd;
 
@@ -128,13 +124,12 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 			{
 				if(strcasecmp(cmd, "CWD") == 0)
 				{
-
-					strcpy(tempcwd, cwd);
-
 					if(split == 1)
 					{
 						absPath(tempcwd, param, cwd);
 					}
+					else
+						strcpy(tempcwd, cwd);
 
 					if(isDir(tempcwd))
 					{
@@ -221,13 +216,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					{
 						char data[6][4];
 						int i = 0;
-						u8 k=0;
+						u8 k = 0, plen = strlen(param);
 
-						for(u8 j=0;j<=strlen(param);j++)
+						for(u8 j = 0; j <= plen; j++)
 						{
-							if(param[j]!=',' && param[j]!=0) { data[i][k]=param[j]; k++; }
-							else {data[i][k]=0; i++; k=0;}
-							if(i>=6) break;
+							if(param[j] != ',' && param[j] != 0) data[i][k++] = param[j];
+							else {data[i++][k] = 0, k = 0;}
+							if(i >= 6) break;
 						}
 
 						if(i == 6)
@@ -237,7 +232,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							data_s = connect_to_server(ipaddr, getPort(val(data[4]), val(data[5])));
 
-							if(data_s>=0)
+							if(data_s >= 0)
 							{
 								ssend(conn_s_ftp, FTP_OK_200);		// The requested action has been successfully completed.
 								dataactive = 1;
@@ -428,7 +423,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(strcasecmp(cmd, "PASTE") == 0)
 						{
 							absPath(param, filename, cwd);
-							if((!copy_in_progress) && (strlen(source) > 0) && (strcmp(source, param) != 0) && file_exists(source))
+							if((!copy_in_progress) && (source[0] != NULL) && (strcmp(source, param) != 0) && file_exists(source))
 							{
 								copy_in_progress=true; copied_count = 0;
 								ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
@@ -479,18 +474,20 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(strcasecmp(cmd, "MLSD") == 0 || strcasecmp(cmd, "LIST") == 0 || strcasecmp(cmd, "MLST") == 0)
 				{
-					if(data_s > 0)
+					if(data_s >= 0)
 					{
 						bool is_MLSD = (strcasecmp(cmd, "MLSD") == 0);
 
 						int nolist = (is_MLSD || strcasecmp(cmd, "MLST") == 0);
 
-						strcpy(tempcwd, cwd);
-
 						if(split == 1)
 						{
-							absPath(tempcwd, param, cwd);
+							strcpy(tempcwd, param);
+							absPath(d_path, tempcwd, cwd);
 						}
+						else
+							strcpy(d_path, cwd);
+
 #if NTFS_EXT
 						ntfs_md *mounts;
 						int mountCount;
@@ -498,15 +495,17 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						mountCount = ntfsMountAll(&mounts, NTFS_DEFAULT | NTFS_RECOVER | NTFS_READ_ONLY);
 						if (mountCount <= 0) continue;
 
-						DIR_ITER *pdir = ps3ntfs_diropen(isDir(tempcwd) ? tempcwd : cwd);
+						DIR_ITER *pdir = ps3ntfs_diropen(isDir(d_path) ? d_path : cwd);
 						if(pdir!=NULL)
 						//{
 							struct stat st; CellFsDirent entry;
 							while(ps3ntfs_dirnext(pdir, entry.d_name, &st) == 0)
 #else
-						if(cellFsOpendir( (isDir(tempcwd) ? tempcwd : cwd), &fd) == CELL_FS_SUCCEEDED)
+						if(cellFsOpendir( (isDir(d_path) ? d_path : cwd), &fd) == CELL_FS_SUCCEEDED)
 						{
 							ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
+
+							bool is_root = (strlen(d_path) < 6);
 
 							CellFsDirent entry;
 							u64 read_e; mode_t mode; char dirtype[2]; dirtype[1] = '\0';
@@ -516,7 +515,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							{
 								if(!strcmp(entry.d_name, "app_home") || !strcmp(entry.d_name, "host_root")) continue;
 
-								absPath(filename, entry.d_name, cwd);
+								absPath(filename, entry.d_name, d_path);
 
 								cellFsStat(filename, &buf); mode = buf.st_mode;
 								cellRtcSetTime_t(&rDate, buf.st_mtime);
@@ -568,22 +567,23 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							}
 
 							cellFsClosedir(fd);
-							if(strlen(tempcwd) > 6)
-							{
-								uint32_t blockSize;
-								uint64_t freeSize;
-								char *slash = strchr(tempcwd+1, '/');
-								if(slash) slash[0] = '\0';
 
-								cellFsGetFreeSize(tempcwd, &blockSize, &freeSize);
+							if(is_root)
+							{
 								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
-								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", tempcwd, (int)((blockSize*freeSize)>>20), STR_MBFREE, cpursx);
+								sprintf(buffer, "226 [/] [%s]\r\n", cpursx);
 								ssend(conn_s_ftp, buffer);
 							}
 							else
 							{
+								uint32_t blockSize;
+								uint64_t freeSize;
+								char *slash = strchr(d_path + 1, '/');
+								if(slash) slash[0] = '\0';
+
+								cellFsGetFreeSize(d_path, &blockSize, &freeSize);
 								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
-								sprintf(buffer, "226 [/] [%s]\r\n", cpursx);
+								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", d_path, (int)((blockSize*freeSize)>>20), STR_MBFREE, cpursx);
 								ssend(conn_s_ftp, buffer);
 							}
 						}
@@ -600,7 +600,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(strcasecmp(cmd, "PASV") == 0)
 				{
-					u8 pasv_retry=0;
+					u8 pasv_retry = 0;
 					rest = 0;
 pasv_again:
 					if(!p1x)
@@ -629,7 +629,7 @@ pasv_again:
 					else
 					{
 						p1x=0;
-						if(pasv_retry<10)
+						if(pasv_retry < 10)
 						{
 							pasv_retry++;
 							goto pasv_again;
@@ -640,7 +640,7 @@ pasv_again:
 				else
 				if(strcasecmp(cmd, "RETR") == 0)
 				{
-					if(data_s > 0)
+					if(data_s >= 0)
 					{
 						if(split == 1)
 						{
@@ -724,7 +724,6 @@ pasv_again:
 				{
 					if(split == 1)
 					{
-
 						absPath(filename, param, cwd);
 
 						if(cellFsUnlink(filename) == CELL_FS_SUCCEEDED)
@@ -746,7 +745,6 @@ pasv_again:
 				{
 					if(split == 1)
 					{
-
 						absPath(filename, param, cwd);
 
 						if(cellFsMkdir(filename, MODE) == CELL_FS_SUCCEEDED)
@@ -769,7 +767,6 @@ pasv_again:
 				{
 					if(split == 1)
 					{
-
 						absPath(filename, param, cwd);
 
 #ifndef LITE_EDITION
@@ -793,14 +790,14 @@ pasv_again:
 				else
 				if(strcasecmp(cmd, "STOR") == 0)
 				{
-					if(data_s > 0)
+					if(data_s >= 0)
 					{
 						if(split == 1)
 						{
 							absPath(filename, param, cwd);
 
-							int rr=FAILED;
-							u64 pos=0;
+							int rr = FAILED;
+							u64 pos = 0;
 
 							if(cellFsOpen(filename, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 							{
@@ -933,13 +930,13 @@ pasv_again:
 						}
 						else
 						{
-							source[0]=0;
+							source[0] = NULL;
 							ssend(conn_s_ftp, FTP_ERROR_RNFR_550);	// Requested action not taken. File unavailable
 						}
 					}
 					else
 					{
-						source[0]=0;
+						source[0] = NULL;
 						ssend(conn_s_ftp, FTP_ERROR_501);			// Syntax error in parameters or arguments.
 					}
 				}
