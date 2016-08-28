@@ -87,7 +87,6 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "p2l=1")) webman_config->ps2l = 1;
 	if(strstr(param, "rxv=1")) webman_config->rxvid = 1;
 	if(strstr(param, "pse=1")) webman_config->ps1emu = 1;
-	if(strstr(param, "ppe=1")) webman_config->psp_emu = 1;
 
 	webman_config->combo=webman_config->combo2=0;
 	if(!strstr(param, "pfs=1")) webman_config->combo|=FAIL_SAFE;
@@ -375,8 +374,6 @@ static void setup_form(char *buffer, char *templn)
 	//Scan for content
 	sprintf(templn, "<td nowrap valign=top style=\"text-align:left\"><u>%s:</u><br>", STR_SCAN2); buffer += concat(buffer, templn);
 
-	sprintf(templn, "pspemu %s)", fw_version);
-
 	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    , _BR_     , !(webman_config->cmask & PS3), buffer);
 	add_check_box("ps2", "1", "PLAYSTATION\xC2\xAE\x32"    , " ("     , !(webman_config->cmask & PS2), buffer);
 	add_check_box("p2l", "1", STR_PS2L                     , ")<br>"  ,  (webman_config->ps2l)       , buffer);
@@ -386,7 +383,6 @@ static void setup_form(char *buffer, char *templn)
 
     add_check_box("psp", "1", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
     add_check_box("psl", "1", STR_PSPL                     , " • "      ,(webman_config->pspl)       , buffer);
-    add_check_box("ppe", "1", templn                       , _BR_     ,  (webman_config->psp_emu)    , buffer);
 	add_check_box("blu", "1", "Blu-ray\xE2\x84\xA2"        , " ("     , !(webman_config->cmask & BLU), buffer);
 	add_check_box("rxv", "1", STR_RXVID                    , ")<br>"  ,  (webman_config->rxvid)      , buffer);
 
@@ -887,8 +883,6 @@ static void reset_settings()
 
 	webman_config->pspl = 1;       //Show PSP Launcher
 	webman_config->ps2l = 1;       //Show PS2 Classic Launcher
-
-	//webman_config->psp_emu = 0;  // 0 = EMU400 (lambda.db), 1 = /dev_flash/pspemu/psp_emulator.self
 
 	//webman_config->spp = 0;        //disable removal of syscalls
 	webman_config->fixgame = FIX_GAME_AUTO;

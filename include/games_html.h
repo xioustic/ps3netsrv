@@ -278,11 +278,11 @@ no_icon0:
 	if((webman_config->nocov==1) && get_cover_from_name(icon, file, titleid)) return; // show mm cover as last option (if it's disabled)
 
 	//show the default icon by type
-	if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8))
+	if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
 		strcpy(icon, wm_icons[7]);
 	else if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
 		strcpy(icon, wm_icons[6]);
-	else if(strstr(param, "/PSPISO") || strstr(param, "/ISO/"))
+	else if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
 		strcpy(icon, wm_icons[8]);
 	else if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
 		strcpy(icon, wm_icons[9]);
@@ -339,7 +339,7 @@ static void get_folder_icon(char *icon, u8 f1, u8 is_iso, char *param, char *ent
 			sprintf(icon, "%s/%s", param, entry_name);
 			int flen = strlen(icon);
 #ifdef COBRA_ONLY
-			if(flen > 13 && (!extcmp(icon, ".ntfs[PS3ISO]", 13) || !extcmp(icon, ".ntfs[DVDISO]", 13) || !extcmp(icon, ".ntfs[PSXISO]", 13) || !extcmp(icon, ".ntfs[BDFILE]", 13))) {flen -= 13; icon[flen] = NULL;} else
+			if(flen > 13 && (!extcmp(icon, ".ntfs[PS3ISO]", 13) || !extcmp(icon, ".ntfs[PS2ISO]", 13)  || !extcmp(icon, ".ntfs[PSPISO]", 13) || !extcmp(icon, ".ntfs[DVDISO]", 13) || !extcmp(icon, ".ntfs[PSXISO]", 13) || !extcmp(icon, ".ntfs[BDFILE]", 13))) {flen -= 13; icon[flen] = NULL;} else
 			if(flen > 12 &&  !extcmp(icon, ".ntfs[BDISO]" , 12)) {flen -= 12; icon[flen] = NULL;}
 #endif
 			if(flen > 4 && icon[flen-4]=='.')
@@ -661,7 +661,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 				//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
 				if(f1>=10) {if(f0<7 || f0>NTFS) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else continue;}
-				if(f0==NTFS) {if(f1>6 || !cobra_mode) break; else if(IS_JB_FOLDER || IS_PS2_FOLDER) continue;}
+				if(f0==NTFS) {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || f1 == 7) continue;}
 
 				is_net = (f0>=7 && f0<NTFS);
 
@@ -873,6 +873,9 @@ next_html_entry:
 									if(IS_BLU_FOLDER &&!strstr(entry.d_name+flen, ".ntfs[BD"     )) continue;
 									if(IS_DVD_FOLDER && strcmp(entry.d_name+flen, ".ntfs[DVDISO]")) continue;
 									if(IS_PSX_FOLDER && strcmp(entry.d_name+flen, ".ntfs[PSXISO]")) continue;
+
+									if(IS_PS2_FOLDER && strcmp(entry.d_name+flen, ".ntfs[PS2ISO]")) continue;
+									if(IS_PSP_FOLDER && strcmp(entry.d_name+flen, ".ntfs[PSPISO]")) continue;
 								}
 
 								if((IS_PS3_FOLDER) && ((f0!=NTFS) || (f0==NTFS && !extcmp(entry.d_name, ".ntfs[PS3ISO]", 13))))

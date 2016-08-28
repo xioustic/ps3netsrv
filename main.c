@@ -461,8 +461,7 @@ typedef struct
 	uint8_t  netd;
 	uint16_t netp;
 	uint8_t  launchpad_xml;
-	uint8_t  psp_emu;
-	char padding[98];
+	char padding[99];
 } __attribute__((packed)) WebmanCfg;
 
 static u8 wmconfig[sizeof(WebmanCfg)];
@@ -488,8 +487,8 @@ static CellRtcTick rTick, gTick;
 
 static void enable_fan_control(u8 enable, char *msg);
 static void set_buffer_sizes(int footprint);
-static void waitfor(const char *path, uint8_t timeout);
 static void show_msg(char* msg);
+int waitfor(const char *path, uint8_t timeout);
 
 #ifdef GET_KLICENSEE
 int npklic_struct_offset = 0; u8 klic_polling = 0;
@@ -2649,7 +2648,7 @@ relisten:
 			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s=FAILED;
+				list_s = FAILED;
 				if(working) goto relisten;
 				else break;
 			}

@@ -256,7 +256,7 @@ next_part:
 				else
 					{cellFsChmod(file2, MODE); copied_count++;}
 
-				ret=size;
+				ret = size;
 			}
 			sys_memory_free(sysmem);
 		}
@@ -352,14 +352,15 @@ static int del(const char *path, bool recursive)
 }
 #endif
 
-static void waitfor(const char *path, uint8_t timeout)
+int waitfor(const char *path, uint8_t timeout)
 {
 	struct CellFsStat s;
-	for(uint8_t n = 0; n < (timeout*2); n++)
+	for(uint8_t n = 0; n < (timeout*5); n++)
 	{
-		if(path[0]!=NULL && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) break;
-		sys_timer_usleep(500000); if(!working) break;
+		if(path[0]!=NULL && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return 0;
+		sys_timer_usleep(200000); if(!working) break;
 	}
+	return FAILED;
 }
 
 static void enable_dev_blind(const char *msg)

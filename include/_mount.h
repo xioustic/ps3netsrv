@@ -354,7 +354,6 @@ static void cache_icon0_and_param_sfo(char *templn)
 	}
 }
 
- #ifndef LITE_EDITION
 static void cache_file_to_hdd(char *source, char *target, const char *basepath, char *msg)
 {
 	sprintf(target, "/dev_hdd0%s", basepath);
@@ -377,8 +376,11 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 			show_msg((char*)STR_CPYABORT);
 		}
 	}
+
+	if(islike(source, "/dev_bdvd")) do_umount(false);
+
+	if(file_exists(target)) strcpy(source, target);
 }
- #endif
 #endif
 
 static void game_mount(char *buffer, char *templn, char *param, char *tempstr, bool mount_ps3, bool forced_mount)
@@ -402,12 +404,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 	{
 		uint8_t autoplay = webman_config->autoplay;
 
-		char *purl = strstr(param + 1, "emu="); // e.g. ?emu=ps1_netemu.self / ps1_netemu.self / EMU400 (lambda.db) / psp (/dev_flash/pspemu/psp_emulator.self)
+		char *purl = strstr(param + 1, "emu="); // e.g. ?emu=ps1_netemu.self / ps1_netemu.self
 		if(purl)
 		{
-			if(strstr(purl, "psp")) webman_config->psp_emu = 1; else
-			if(strstr(purl, "400")) webman_config->psp_emu = 0; else
-									webman_config->ps1emu = strstr(purl, "net") ? 1 : 0;
+			webman_config->ps1emu = strstr(purl, "net") ? 1 : 0;
 			purl--; purl[0] = NULL;
 		}
 
@@ -1016,6 +1016,11 @@ static void mount_autoboot(void)
 	}
 
 	bool do_mount = false;
+
+	CellPadData pad_data = pad_read();
+
+	// prevent auto-mount on startup if L2+R2 is pressed
+	if(pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2))) { BEEP2; return;}
 
 	if(from_reboot && !path[0] && strstr(path, "/PS2")) return; //avoid re-launch PS2 returning to XMB
 
@@ -1935,7 +1940,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// save lastgame.bin / process _next & _prev commands
 	if(do_eject)
 	{
-		bool _prev=false, _next=false;
+		bool _prev = false, _next = false;
 
 		_next=(bool)(!strcmp(_path, "_next"));
 		_prev=(bool)(!strcmp(_path, "_prev"));
@@ -1952,6 +1957,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		if(_next || _prev)
 		{
 			if(lastgames.last >= MAX_LAST_GAMES) lastgames.last = 0;
+
 			if(_prev)
 			{
 				if(lastgames.last == 0) lastgames.last = LAST_GAMES_UPPER_BOUND; else lastgames.last--;
@@ -1979,6 +1985,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			{
 				if(!strcmp(lastgames.game[n], _path)) {found = true; break;}
 			}
+
 			if(!found)
 			{
 				lastgames.last++;
@@ -2034,8 +2041,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == 0)
 					{
 						u8* sprx_data = (u8*)addr; uint64_t msiz = 0;
-
-						cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
 						cellFsRead(fdw, sprx_data, _64KB_, &msiz);
 						cellFsClose(fdw);
 
@@ -2197,13 +2202,13 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					int fdw;
 					if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 					{
-						u8* sprx_data = (u8*)addr; uint64_t msiz = 0;
-
-						cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-						cellFsRead(fdw, sprx_data, _64KB_, &msiz);
+						u8* rawiso_data = (u8*)addr; uint64_t msiz = 0;
+						cellFsRead(fdw, rawiso_data, _64KB_, &msiz);
 						cellFsClose(fdw);
 
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
+
+						waitfor("/dev_bdvd", 3);
 
 						if(!extcmp(_path, ".ntfs[PS3ISO]", 13))
 						{
@@ -2212,6 +2217,22 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
  #ifdef FIX_GAME
 							fix_game(_path, titleID, webman_config->fixgame);
  #endif
+						}
+
+						// cache PSPISO or PS2ISO to HDD0
+						char *pos;
+						pos = strstr(_path, ".ntfs[PS2ISO]");
+						if(pos)
+						{
+							pos[0] = NULL; sprintf(_path, "/dev_bdvd/%s", _path + 29);
+							goto copy_ps2iso_to_hdd0;
+						}
+
+						pos = strstr(_path, ".ntfs[PSPISO]");
+						if(pos)
+						{
+							pos[0] = NULL; sprintf(_path, "/dev_bdvd/%s", _path + 29);
+							goto copy_pspiso_to_hdd0;
 						}
 					}
 				}
@@ -2349,13 +2370,11 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				}
 				else if(strstr(_path, "/PSPISO") || strstr(_path, "/ISO/") || mount_unk == EMU_PSP)
 				{
- #ifndef LITE_EDITION
 					if(netid)
 					{
  copy_pspiso_to_hdd0:
 						cache_file_to_hdd(_path, iso_list[0], "/PSPISO", templn);
 					}
- #endif //#ifndef LITE_EDITION
 
 					mount_unk = EMU_PSP;
 
@@ -2364,11 +2383,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(file_exists(iso_list[0]))
 					{
-						CellPadData pad_data = pad_read();
-						bool pspemu = webman_config->psp_emu;
-						if(pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R1)) {pspemu = !pspemu; sprintf(templn, "pspemu %s", pspemu ? fw_version : "4.0"); show_msg(templn);}
-
-						int result = cobra_set_psp_umd2(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/psp_icon.png", pspemu ? EMU_AUTO : EMU_400);
+						int result = cobra_set_psp_umd2(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/psp_icon.png", EMU_400);
 
 						if(!result)
 						{
@@ -2385,13 +2400,11 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				}
 				else if(strstr(_path, "/PS2ISO") || mount_unk == EMU_PS2_DVD)
 				{
- #ifndef LITE_EDITION
 					if(!islike(_path, "/dev_hdd0"))
 					{
  copy_ps2iso_to_hdd0:
-						cache_file_to_hdd(_path, iso_list[0], "/PS2ISO", templn);
+						cache_file_to_hdd(_path, cobra_iso_list[0], "/PS2ISO", templn);
 					}
- #endif //#ifndef LITE_EDITION
 
 					if(file_exists(iso_list[0]))
 					{
@@ -2442,7 +2455,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 							if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
 							{
 								char *buf = (char*)sysmem; uint64_t msiz = 0;
-								cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
 								cellFsRead(fdw, (void *)buf, 65535, &msiz);
 								cellFsClose(fdw);
 
@@ -2782,6 +2794,7 @@ patch:
 			uint64_t read_e = 0;
 			if(cellFsRead(fdd, (void *)&extgdfile, 12, &read_e) == CELL_FS_SUCCEEDED) extgdfile[read_e] = NULL;
 			cellFsClose(fdd);
+
 			if((extgd == 0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1, false); else
 			if((extgd == 1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0, false);
 		}

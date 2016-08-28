@@ -103,6 +103,7 @@ typedef struct
 
 
 int file_copy(char *file1, char *file2, uint64_t maxbytes);
+int waitfor(const char *path, uint8_t timeout);
 
 // storage.h inline functions merged
 static int sys_storage_ext_get_emu_state(sys_emu_state_t *state)
@@ -1787,12 +1788,12 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 	{
 		return EABORT;
 	}
-
+/*
 	if (cellFsStat(PSPL_LAMBDA, &stat) != CELL_FS_SUCCEEDED)
 	{
 		return ESYSVER;
 	}
-
+*/
 	int fd;
 
 	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) != CELL_FS_SUCCEEDED)
@@ -1855,18 +1856,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		cobra_send_fake_disc_insert_event();
 
 		// Wait 0.5 seconds for automounter to mount iso
-		int retry;
-		for (retry = 0; retry < 25; retry++)
-		{
-			if (cellFsStat("/dev_bdvd", &stat) == CELL_FS_SUCCEEDED)
-			{
-				break;
-			}
-
-			sys_timer_usleep(20000);
-		}
-
-		if (retry == 25)
+		if (waitfor("/dev_bdvd", 1) == -1)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();
@@ -1884,7 +1874,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		real_disctype = DISC_TYPE_NONE;
 	}
 
-	int emu = options & 0xF;
+	//int emu = options & 0xF;
 
 	int prometheus = 0;
 	int decrypt_patch = 1;
@@ -1999,6 +1989,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	if (ret == 0)
 	{
+/*
 		if (emu == EMU_400)
 		{
 //			if (check_lambda() < 0)
@@ -2007,7 +1998,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 			sys_storage_ext_mount_encrypted_image((char*)PSPL_LAMBDA, (char*)"/dev_moo", (char*)"CELL_FS_FAT", PSPL_LAMBDA_NONCE);
 			sys_psp_change_emu_path("/dev_moo/pspemu");
 		}
-
+*/
 		sys_psp_set_umdfile(path, title_id, prometheus);
 		sys_psp_set_decrypt_options(decrypt_patch, tag, keys, code, 0, NULL, 0);
 	}
@@ -2023,7 +2014,7 @@ int cobra_unset_psp_umd(void)
 
 	sys_psp_set_umdfile(NULL, NULL, 0);
 	sys_psp_change_emu_path(NULL);
-	sys_storage_ext_mount_encrypted_image(NULL, (char*)"/dev_moo", NULL, 0);
+	//sys_storage_ext_mount_encrypted_image(NULL, (char*)"/dev_moo", NULL, 0);
 
 	return 0;
 }

@@ -351,11 +351,11 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 					sys_timer_usleep(1000);
 					if(fix_aborted) goto exit_fix;
 
-					if(t==0) lba=getlba(chunk, chunk_size, "EBOOT.BIN;1", 11, start);
-					if(t==1) lba=getlba(chunk, chunk_size, ".SELF;1", 7, start);
-					if(t==2) lba=getlba(chunk, chunk_size, ".self;1", 7, start);
-					if(t==3) lba=getlba(chunk, chunk_size, ".SPRX;1", 7, start);
-					if(t==4) lba=getlba(chunk, chunk_size, ".sprx;1", 7, start);
+					if(t==0) lba = getlba(chunk, chunk_size, "EBOOT.BIN;1", 11, start);
+					if(t==1) lba = getlba(chunk, chunk_size, ".SELF;1", 7, start);
+					if(t==2) lba = getlba(chunk, chunk_size, ".self;1", 7, start);
+					if(t==3) lba = getlba(chunk, chunk_size, ".SPRX;1", 7, start);
+					if(t==4) lba = getlba(chunk, chunk_size, ".sprx;1", 7, start);
 
 					if(lba)
 					{
@@ -366,13 +366,13 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 						cellFsRead(fd, (void *)&chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
 						offset=(chunk[0xC]<<24) + (chunk[0xD]<<16) + (chunk[0xE]<<8) + chunk[0xF]; offset-=0x78;
-						if(offset < 0x90 || offset > 0x800 || (chunk[offset] | chunk[offset+1] | chunk[offset+2] | chunk[offset+3] | chunk[offset+4] | chunk[offset+5])) offset=(t>2)?0x258:0x428;
+						if(offset < 0x90 || offset > 0x800 || (chunk[offset] | chunk[offset + 1] | chunk[offset + 2] | chunk[offset + 3] | chunk[offset + 4] | chunk[offset + 5])) offset = (t > 2) ? 0x258 : 0x428;
 
-						if((t>2) && (offset == 0x258) && (chunk[offset] | chunk[offset+1] | chunk[offset+2] | chunk[offset+3] | chunk[offset+4] | chunk[offset+5])) offset=0x278;
+						if((t>2) && (offset == 0x258) && (chunk[offset] | chunk[offset + 1] | chunk[offset + 2] | chunk[offset + 3] | chunk[offset + 4] | chunk[offset + 5])) offset = 0x278;
 
-						for(u8 i=0;i<8;i++) ps3_sys_version[i]=chunk[offset+i];
+						for(u8 i = 0; i < 8; i++) ps3_sys_version[i] = chunk[offset+i];
 
-						if((ps3_sys_version[0]+ps3_sys_version[1]+ps3_sys_version[2]+ps3_sys_version[3]+ps3_sys_version[4]+ps3_sys_version[5])==0 && (ps3_sys_version[6] & 0xFF)>0xA4)
+						if((ps3_sys_version[0] + ps3_sys_version[1] + ps3_sys_version[2] + ps3_sys_version[3] + ps3_sys_version[4] + ps3_sys_version[5]) ==0  && (ps3_sys_version[6] & 0xFF) >0xA4)
 						{
 							ps3_sys_version[6]=0XA4; ps3_sys_version[7]=0X10;
 							cellFsLseek(fd, lba+offset, CELL_FS_SEEK_SET, &bytes_read);
@@ -380,7 +380,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 						}
 						else goto exit_fix;
 
-						if(t==0) break;
+						if(t == 0) break;
 
 					} else break;
 				}

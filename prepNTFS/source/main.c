@@ -28,6 +28,8 @@ enum emu_modes
 	VIDEO  = 4,
 	MOVIES = 5,
 	BDFILE = 9,
+	PS2ISO = 10,
+	PSPISO = 11,
 };
 
 #define PKGFILE 6 || m == 7 || m == 8
@@ -84,7 +86,7 @@ int main(int argc, const char* argv[])
 	sysFSDirent dir;
 	DIR_ITER *pdir = NULL, *psubdir= NULL;
 	struct stat st;
-	char c_path[10][16]={"PS3ISO", "BDISO", "DVDISO", "PSXISO", "VIDEO", "MOVIES", "PKG", "Packages", "packages", "BDFILE"};
+	char c_path[12][16]={"PS3ISO", "BDISO", "DVDISO", "PSXISO", "VIDEO", "MOVIES", "PKG", "Packages", "packages", "BDFILE", "PS2ISO", "PSPISO"};
 	char cover_ext[4][8]={".jpg", ".png", ".PNG", ".JPG"};
 
 	sysLv2FsUnlink((char*)"/dev_hdd0/tmp/wmtmp/games.html");
@@ -165,7 +167,7 @@ int main(int argc, const char* argv[])
 		{
 			if (strncmp(mounts[i].name, "ntfs", 4) == 0 || strncmp(mounts[i].name, "ext", 3) == 0)
 			{
-				for(u8 m = 0; m < 10; m++) //0="PS3ISO", 1="BDISO", 2="DVDISO", 3="PSXISO", 4="VIDEO", 5="MOVIES", 6="PKG", 7="Packages", 8="packages", 9="BDFILE"
+				for(u8 m = 0; m < 12; m++) //0="PS3ISO", 1="BDISO", 2="DVDISO", 3="PSXISO", 4="VIDEO", 5="MOVIES", 6="PKG", 7="Packages", 8="packages", 9="BDFILE", 10="PS2ISO", 10="PSPISO"
 				{
 					has_dirs = false;
 
@@ -186,14 +188,21 @@ int main(int argc, const char* argv[])
 							{
 								if((m == VIDEO || m == MOVIES) && !strcasestr(".mp4|.mkv|.avi|.wmv|.flv|.mpg|mpeg|.mov|m2ts|.vob|.asf|divx|xvid|.pam|.bik|bink|.vp6|.mth|.3gp|rmvb|.ogm|.ogv|.m2t|.mts|.tsv|.tsa|.tts|.vp3|.vp5|.vp8|.264|.m1v|.m2v|.m4b|.m4p|.m4r|.m4v|mp4v|.mpe|bdmv|.dvb|webm|.nsv", filename + flen - ext_len)) continue; else
 								if((m == PKGFILE) && !strstr(".pkg", filename + flen - ext_len)) continue;
-								if((m == BDFILE)         && (dir.d_name[0] == '.' || strstr(dir.d_name, ".") == NULL)) continue;
+								if((m == BDFILE)  && (dir.d_name[0] == '.' || strstr(dir.d_name, ".") == NULL)) continue;
+								if((m == PS2ISO) && !strcasestr(".iso", filename + flen - ext_len)) continue;
+								if((m == PSPISO) && !strcasestr(".iso", filename + flen - ext_len)) continue;
 
 								sprintf(filename, "/dev_hdd0/tmp/wmtmp/[%s] %s.iso", c_path[m], dir.d_name);
 								if(file_exists(filename)) continue;
 
 								snprintf(path, sizeof(path), "%s:/%s%s/%s", mounts[i].name, c_path[m], SUFIX(profile), dir.d_name);
 
-								build_fake_iso(filename, path, (mounts[i].interface->ioType & 0xff) - '0');
+								char file_ext[16];
+								if(m == PS2ISO) sprintf(file_ext, ".ntfs[PS2ISO]"); else
+								if(m == PSPISO) sprintf(file_ext, ".ntfs[PSPISO]"); else
+												sprintf(file_ext, ".ntfs[BDFILE]");
+
+								build_fake_iso(filename, path, (mounts[i].interface->ioType & 0xff) - '0', file_ext);
 								continue;
 							}
 							//---------------

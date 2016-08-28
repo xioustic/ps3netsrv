@@ -158,22 +158,22 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 
 	if( !(webman_config->nogrp) )
 	{
-		if((IS_PS2_FOLDER) && xml_len[2] < (BUFFER_SIZE_PS2 - ITEMS_BUFFER(2)))
+		if((IS_PS3_TYPE) && xml_len[3] < (BUFFER_SIZE  - ITEMS_BUFFER(3) - _4KB_))
+		{xml_len[3] += concat(myxml_ps3+xml_len[3], tempstr); skey[0]=PS3_; ++item_count[3];}
+		else
+		if(((IS_PS2_FOLDER) || ((f0==NTFS) && !extcmp(entry_name, ".ntfs[PS2ISO]", 13))) && xml_len[2] < (BUFFER_SIZE_PS2 - ITEMS_BUFFER(2)))
 		{xml_len[2] += concat(myxml_ps2+xml_len[2], tempstr); skey[0]=PS2; ++item_count[2];}
 #ifdef COBRA_ONLY
-		else
-		if((IS_PSP_FOLDER) && xml_len[4] < (BUFFER_SIZE_PSP - ITEMS_BUFFER(4)))
-		{xml_len[4] += concat(myxml_psp+xml_len[4], tempstr); skey[0]=PSP; ++item_count[4];}
 		else
 		if(((IS_PSX_FOLDER) || ((f0==NTFS) && !extcmp(entry_name, ".ntfs[PSXISO]", 13))) && xml_len[1] < (BUFFER_SIZE_PSX - ITEMS_BUFFER(1)))
 		{xml_len[1] += concat(myxml_psx+xml_len[1], tempstr); skey[0]=PS1; ++item_count[1];}
 		else
+		if(((IS_PSP_FOLDER) || ((f0==NTFS) && !extcmp(entry_name, ".ntfs[PSPISO]", 13))) && xml_len[4] < (BUFFER_SIZE_PSP - ITEMS_BUFFER(4)))
+		{xml_len[4] += concat(myxml_psp+xml_len[4], tempstr); skey[0]=PSP; ++item_count[4];}
+		else
 		if(((IS_BLU_FOLDER) || (IS_DVD_FOLDER) || ((f0==NTFS) && (!extcmp(entry_name, ".ntfs[DVDISO]", 13) || !extcmp(entry_name, ".ntfs[BDISO]", 12) || !extcmp(entry_name, ".ntfs[BDFILE]", 13)))) && xml_len[0] < (BUFFER_SIZE_DVD - ITEMS_BUFFER(0)))
 		{xml_len[0] += concat(myxml_dvd+xml_len[0], tempstr); skey[0]=BLU; ++item_count[0];}
 #endif
-		else
-		if((IS_PS3_TYPE) && xml_len[3] < (BUFFER_SIZE  - ITEMS_BUFFER(3) - _4KB_))
-		{xml_len[3] += concat(myxml_ps3+xml_len[3], tempstr); skey[0]=PS3_; ++item_count[3];}
 		else
 			return (false);
 	}
@@ -539,7 +539,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 			//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
 			if(f1>=10) {if(f0<7 || f0>NTFS) strcpy(paths[10], f0==0 ? "video" : "GAMES_DUP"); else continue;}
-			if(f0==NTFS) {if(f1>6 || !cobra_mode) break; else if(IS_JB_FOLDER || IS_PS2_FOLDER) continue;}
+			if(f0==NTFS) {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || f1 == 7) continue;}
 
 			is_net = (f0>=7 && f0<NTFS);
 
@@ -738,6 +738,9 @@ next_xml_entry:
 									if(IS_BLU_FOLDER &&!strstr(entry.d_name+flen, ".ntfs[BD"     )) continue;
 									if(IS_DVD_FOLDER && strcmp(entry.d_name+flen, ".ntfs[DVDISO]")) continue;
 									if(IS_PSX_FOLDER && strcmp(entry.d_name+flen, ".ntfs[PSXISO]")) continue;
+
+									if(IS_PS2_FOLDER && strcmp(entry.d_name+flen, ".ntfs[PS2ISO]")) continue;
+									if(IS_PSP_FOLDER && strcmp(entry.d_name+flen, ".ntfs[PSPISO]")) continue;
 								}
 
 								if((IS_PS3_FOLDER) && ((f0!=NTFS) || (f0==NTFS && !extcmp(entry.d_name, ".ntfs[PS3ISO]", 13))))
