@@ -355,7 +355,8 @@ static void setup_parse_settings(char *param)
 
 static void setup_form(char *buffer, char *templn)
 {
-	sprintf(templn, "<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+	sprintf(templn, "<style>td+td{text-align:left;white-space:nowrap}</style>"
+					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
 					"<tr><td width=\"250\"><u>%s:</u><br>", STR_SCAN1); buffer += concat(buffer, templn);
 
@@ -372,7 +373,7 @@ static void setup_form(char *buffer, char *templn)
 	if(isDir(drives[13])) add_check_box("x2", "1", drives[13], _BR_, (webman_config->dev_cf), buffer);
 
 	//Scan for content
-	sprintf(templn, "<td nowrap valign=top style=\"text-align:left\"><u>%s:</u><br>", STR_SCAN2); buffer += concat(buffer, templn);
+	sprintf(templn, "<td nowrap valign=top><u>%s:</u><br>", STR_SCAN2); buffer += concat(buffer, templn);
 
 	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    , _BR_     , !(webman_config->cmask & PS3), buffer);
 	add_check_box("ps2", "1", "PLAYSTATION\xC2\xAE\x32"    , " ("     , !(webman_config->cmask & PS2), buffer);
@@ -382,7 +383,7 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("pse", "1", "ps1_netemu"                 , ")<br>"  ,  (webman_config->ps1emu)     , buffer);
 
     add_check_box("psp", "1", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
-    add_check_box("psl", "1", STR_PSPL                     , " • "      ,(webman_config->pspl)       , buffer);
+    add_check_box("psl", "1", STR_PSPL                     , ")<br>"    ,(webman_config->pspl)       , buffer);
 	add_check_box("blu", "1", "Blu-ray\xE2\x84\xA2"        , " ("     , !(webman_config->cmask & BLU), buffer);
 	add_check_box("rxv", "1", STR_RXVID                    , ")<br>"  ,  (webman_config->rxvid)      , buffer);
 
@@ -706,16 +707,16 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN), buffer);
 	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS), buffer);
  #ifdef WM_REQUEST
-	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #else
-	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #endif
 #else
 	add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"             , !(webman_config->combo & SHOW_IDPS), buffer);
  #ifdef WM_REQUEST
-	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #else
-	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td style=\"text-align:left\">", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #endif
 	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN), buffer);
 	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS), buffer);

@@ -22,42 +22,42 @@ enum SFO_Operation_Codes
 
 #define READ_SFO_HEADER(ret) \
 	if(!(mem[1]=='P' && mem[2]=='S' && mem[3]=='F')) return ret; \
-	u16 pos, str, dat, indx=0; \
-	str=(mem[0x8]+(mem[0x9]<<8)); \
+	u16 pos, str, fld, dat, indx=0; \
+	fld=str=(mem[0x8]+(mem[0x9]<<8)); \
 	dat=pos=(mem[0xc]+(mem[0xd]<<8));
 
 #define FOR_EACH_SFO_FIELD() \
-	while(str<4090) \
+	while(pos < sfo_size) \
 	{ \
-		if((mem[str]==0) || (str>=dat)) break;
+		if((str>=dat) || (mem[str]==0)) break;
 
 #define READ_NEXT_SFO_FIELD() \
-		while(mem[str]) str++;str++; \
+		while((str < dat) && mem[str]) str++;str++; \
 		pos+=(mem[0x1c+indx]+(mem[0x1d+indx]<<8)); \
-		indx+=0x10; \
+		indx+=0x10; if(indx>=fld) break; \
 	}
 
-static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
+static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 sfo_size)
 {
 	READ_SFO_HEADER()
 
 	memset(titleID, 0, 10);
 	memset(title, 0, 64);
 
-	u8 fcount=0;
+	u8 fcount = 0;
 
 	FOR_EACH_SFO_FIELD()
 	{
 		if(!memcmp((char *) &mem[str], "TITLE_ID", 8))
 		{
-			strncpy(titleID, (char *) &mem[pos], 9);
-			fcount++; if(fcount>=2) break;
+			strncpy(titleID, (char *)mem + pos, 9);
+			fcount++; if(fcount >= 2) break;
 		}
 		else
 		if(!memcmp((char *) &mem[str], "TITLE", 6))
 		{
-			strncpy(title, (char *) &mem[pos], 63);
-			fcount++; if(fcount>=2) break;
+			strncpy(title, (char *)mem + pos, 63);
+			fcount++; if(fcount >= 2) break;
 		}
 
 		READ_NEXT_SFO_FIELD()
@@ -69,17 +69,17 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title)
 	}
 }
 
-static bool fix_param_sfo(unsigned char *mem, char *titleID, u8 opcode)
+static bool fix_param_sfo(unsigned char *mem, char *titleID, u8 opcode, u16 sfo_size)
 {
 	READ_SFO_HEADER(false)
 
 	memset(titleID, 0, 10);
 
 #ifdef FIX_GAME
-	u8 fcount=0;
+	u8 fcount = 0;
 #endif
 
-	bool ret=false;
+	bool ret = false;
 
 	FOR_EACH_SFO_FIELD()
 	{
@@ -88,7 +88,7 @@ static bool fix_param_sfo(unsigned char *mem, char *titleID, u8 opcode)
 			strncpy(titleID, (char *) &mem[pos], 9);
 #ifdef FIX_GAME
 			if(opcode == GET_TITLE_ID_ONLY) break;
-			fcount++; if(fcount>=2) break;
+			fcount++; if(fcount >= 2) break;
 #else
 			break;
 #endif
@@ -116,7 +116,7 @@ static bool fix_param_sfo(unsigned char *mem, char *titleID, u8 opcode)
 	return ret;
 }
 
-static void get_app_ver(unsigned char *mem, char *version)
+static void get_app_ver(unsigned char *mem, char *version, u16 sfo_size)
 {
 	READ_SFO_HEADER()
 
@@ -139,30 +139,30 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 	if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
-		uint64_t bytes_read = 0;
+		uint64_t sfo_size = 0;
 
-		cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &bytes_read);
-		cellFsRead(fs, (void *)&paramsfo, _4KB_, &bytes_read);
+		cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &sfo_size);
+		cellFsRead(fs, (void *)&paramsfo, _4KB_, &sfo_size);
 		cellFsClose(fs);
 
 		// get titleid
-		if(opcode==GET_VERSION)
-			get_app_ver(mem, titleID);                  // get game version (app_ver)
+		if(opcode == GET_VERSION)
+			get_app_ver(mem, titleID, (u16)sfo_size);                 // get game version (app_ver)
 		else
-		if(opcode==GET_TITLE_AND_ID)
-			parse_param_sfo(mem, titleID, filename);    // get titleid & return title in the file name (used to backup games in _mount.h)
+		if(opcode == GET_TITLE_AND_ID)
+			parse_param_sfo(mem, titleID, filename, (u16)sfo_size);   // get titleid & return title in the file name (used to backup games in _mount.h)
 		else
 		{
-			ret = fix_param_sfo(mem, titleID, opcode);  // get titleid & show warning if game needs to fix PS3_SYSTEM_VER
+			ret = fix_param_sfo(mem, titleID, opcode, (u16)sfo_size); // get titleid & show warning if game needs to fix PS3_SYSTEM_VER
 
-			if(ret && opcode == FIX_SFO) savefile(filename, paramsfo, bytes_read);
+			if(ret && opcode == FIX_SFO) savefile(filename, paramsfo, sfo_size);
 		}
 	}
 	return ret;
 }
 
 #ifdef FIX_GAME
-static bool fix_sfo_attribute(unsigned char *mem)
+static bool fix_sfo_attribute(unsigned char *mem, u16 sfo_size)
 {
 	READ_SFO_HEADER(false)
 
@@ -312,7 +312,7 @@ void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 					cellFsLseek(fd, lba, CELL_FS_SEEK_SET, &bytes_read);
 					cellFsRead(fd, (void *)&chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
-					fix_ver = fix_param_sfo((unsigned char *)chunk, titleID, FIX_SFO);
+					fix_ver = fix_param_sfo((unsigned char *)chunk, titleID, FIX_SFO, (u16)bytes_read);
 
 					if(patch_update)
 					{
@@ -448,7 +448,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 				// fix ps3 extra or bgm + remoteplay + ps3 extra
 				char tmp_path[MAX_PATH_LEN]; sprintf(tmp_path, "%s/PS3_EXTRA", game_path); bool has_ps3_extra = isDir(tmp_path);
-				if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem))
+				if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem, (u16)bytes_read))
 				{
 					savefile(filename, paramsfo, bytes_read);
 				}
@@ -456,7 +456,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 				tmp_path[10] = NULL;
 
 				// get titleid & fix game folder if version is higher than cfw
-				if((fix_param_sfo(mem, titleID, FIX_SFO) || fix_type == FIX_GAME_FORCED) && fix_type != FIX_GAME_DISABLED && !islike(tmp_path, "/net") && !islike(tmp_path, "/dev_bdvd") && !strstr(game_path, ".ntfs["))
+				if((fix_param_sfo(mem, titleID, FIX_SFO, (u16)bytes_read) || fix_type == FIX_GAME_FORCED) && fix_type != FIX_GAME_DISABLED && !islike(tmp_path, "/net") && !islike(tmp_path, "/dev_bdvd") && !strstr(game_path, ".ntfs["))
 				{
 					savefile(filename, paramsfo, bytes_read);
 
@@ -480,12 +480,12 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 						cellFsClose(fs);
 
 						// fix ps3 extra or bgm + remoteplay + ps3 extra
-						if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem))
+						if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem, (u16)bytes_read))
 						{
 							savefile(filename, paramsfo, bytes_read);
 						}
 
-						if((fix_param_sfo(mem, titleID, FIX_SFO) || fix_type == FIX_GAME_FORCED) && fix_type!=FIX_GAME_DISABLED)
+						if((fix_param_sfo(mem, titleID, FIX_SFO, (u16)bytes_read) || fix_type == FIX_GAME_FORCED) && fix_type!=FIX_GAME_DISABLED)
 						{
 							savefile(filename, paramsfo, bytes_read);
 

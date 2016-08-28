@@ -31,32 +31,31 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 	flen = strlen(name); char *ext = name + MAX(flen - 4, 0); fsize[0] = NULL;
 
 	// get title & title ID from PARAM.SFO
-	if( !is_dir && !strcmp(ext, ".SFO") )
+	if( !is_dir && !strcmp(name, "PARAM.SFO") )
 	{
-		char *titleid = ename, *buff = fsize; strcpy(tempstr, templn);
+		char titleid[10], version[8], title[64]; strcpy(title, templn);
 
 		//get title & app version from PARAM.SFO
-		getTitleID(tempstr, buff, GET_VERSION);
-		getTitleID(tempstr, titleid, GET_TITLE_AND_ID); if(buff[0]) {strcat(tempstr, " v"); strcat(tempstr, buff);}
-		sprintf(buff, "%s%s", HDD0_GAME_DIR, titleid); bool has_updates_dir = file_exists(buff);
+		getTitleID(templn, version, GET_VERSION);
+		getTitleID(title, titleid, GET_TITLE_AND_ID); char *p = strstr(title, " ["); if(p) p[0] = NULL; //p = strstr(title, "\n"); if(p) p[0] = NULL;
+		if(version[0]>='0') {strcat(title, " v"); strcat(title, version);}
+		sprintf(tempstr, "%s%s", HDD0_GAME_DIR, titleid); bool has_updates_dir = file_exists(tempstr);
 
-		sprintf(buff, "<label title=\"%s\">%s</label></a><div style='position:absolute;top:300px;right:10px;font-size:14px'>", tempstr, name); strcpy(name, buff);
+		sprintf(tempstr, "<label title=\"%s\">%s</label></a>", title, name); strcpy(name, tempstr);
 
 		// show title & link to patches folder
 		if(has_updates_dir)
-			sprintf(buff, HTML_URL2, HDD0_GAME_DIR, titleid, tempstr);
+			sprintf(fsize, HTML_URL2, HDD0_GAME_DIR, titleid, title);
 		else
-			sprintf(buff, "%s", tempstr);
-
-		strcat(name, buff);
+			sprintf(fsize, "%s", title);
 
 		// show title id & link to updates
-		sprintf(buff, " [<a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>]</div>", "https://a0.ww.np.dl.playstation.net/tpl/np", titleid, titleid, titleid); strcat(name, buff);
+		sprintf(tempstr, "<div class='sfo'>%s [<a href=\"%s/%s/%s-ver.xml\">%s</a>]</div>", fsize, "https://a0.ww.np.dl.playstation.net/tpl/np", titleid, titleid, titleid);
 
-		fsize[0] = NULL;
+		sprintf(fsize, "%'llu %s%s", sz, sf, tempstr);
 
 		#ifdef FIX_GAME
-		if(has_updates_dir) sprintf(fsize, "<a href=\"/fixgame.ps3%s%s\">%'llu %s</a>", HDD0_GAME_DIR, titleid, sz, sf);
+		if(has_updates_dir) sprintf(fsize, "<a href=\"/fixgame.ps3%s%s\">%'llu %s</a>%s", HDD0_GAME_DIR, titleid, sz, sf, tempstr);
 		#endif
 	}
 
@@ -296,9 +295,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		u64 read_e;
 		unsigned long long sz = 0, dir_size = 0;
 		char sf[8];
-		char fsize[_LINELEN];
 		char ename[16];
-		char swap[_MAX_PATH_LEN];
+		char fsize[MAX_PATH_LEN], swap[MAX_PATH_LEN];
 		u16 idx = 0, dirs = 0, flen; bool is_dir;
 		u32 tlen = 0;
 		char *sysmem_html = buffer + _6KB_;
@@ -333,7 +331,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #ifdef COPY_PS3
 		if(cp_mode) {sprintf(tempstr, "<font size=2><a href=\"/paste.ps3%s\">&#128203;</a> ", is_net ? "/dev_hdd0/packages" : param); add_breadcrumb_trail(tempstr, cp_path); strcat(buffer, tempstr); strcat(buffer, "</font><p>"); }
 #endif
-		strcat(buffer, "<table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
+		strcat(buffer, "<style>.sfo{position:absolute;top:300px;right:10px;font-size:14px}</style><table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
 
 		tlen = strlen(buffer);
 
@@ -533,10 +531,11 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 		for(u16 m = 0; m < idx; m++)
 		{
+			if(tlen > BUFFER_SIZE_HTML) break;
+
 			tlen += concat(buffer + tlen, "<tr><td><a class=\"");
 			tlen += concat(buffer + tlen, (line_entry[m].path) + FILE_MGR_KEY_LEN);
 			tlen += concat(buffer + tlen, "</td></tr>");
-			if(tlen > BUFFER_SIZE_HTML) break;
 		}
 
 		buffer += tlen;

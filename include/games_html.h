@@ -298,15 +298,14 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_nam
 
 	if(ret == CELL_FS_SUCCEEDED)
 	{
-		uint64_t msiz = 0;
-		cellFsLseek(fdw, 0, CELL_FS_SEEK_SET, &msiz);
-		cellFsRead(fdw, (void *)data, _4KB_, &msiz);
+		uint64_t sfo_size = 0;
+		cellFsRead(fdw, (void *)data, _4KB_, &sfo_size);
 		cellFsClose(fdw);
 
-		if(msiz>256)
+		if(sfo_size > 256)
 		{
 			unsigned char *mem = (u8*)data;
-			parse_param_sfo(mem, tempID, templn);
+			parse_param_sfo(mem, tempID, templn, (u16)sfo_size);
 			if(webman_config->nocov==0) get_cover(icon, tempID);
 		}
 	}
@@ -1039,10 +1038,11 @@ next_html_entry:
 		tlen = buf_len;
 		for(u16 m = 0; m < idx; m++)
 		{
+			if(tlen > (BUFFER_MAXSIZE)) break;
+
 			tlen += concat(buffer + tlen, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3");
 			tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
 			tlen += concat(buffer + tlen, "</a></div></div>");
-			if(tlen > (BUFFER_MAXSIZE)) break;
 		}
 
 #ifndef LITE_EDITION
