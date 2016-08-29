@@ -339,6 +339,7 @@ static char STR_RBGMENU[20] 		= "MENU TOGGLE";
 
 #ifndef ENGLISH_ONLY
 
+/*
 static uint32_t get_xreg_value(const char *key, u32 default_value)
 {
 	int reg = -1;
@@ -405,12 +406,14 @@ static uint32_t get_xreg_value(const char *key, u32 default_value)
 
 	return reg_value;
 }
+*/
 
 static uint32_t get_system_language(uint8_t *lang)
 {
-	u32 val_lang = get_xreg_value("/setting/system/language", 1);
+	//u32 val_lang = get_xreg_value("/setting/system/language", 1);
 
-	//xsetting_0AF1F161()->GetSystemLanguage(&val_lang);
+	int val_lang = 1;
+	xsetting_0AF1F161()->GetSystemLanguage(&val_lang);
 
 	switch(val_lang)
 	{
@@ -510,7 +513,7 @@ static bool language(const char *key_name, char *default_str)
 		lang_pos = 0;
 
  retry:
-		cellFsLseek(fh, lang_pos, CELL_FS_SEEK_SET, NULL); p = 0;
+		cellFsLseek(fh, lang_pos, CELL_FS_SEEK_SET, NULL); p = CHUNK_SIZE;
 	}
 
 	int fd = fh;
@@ -549,7 +552,7 @@ static bool language(const char *key_name, char *default_str)
 
 	} while(lang_pos < size);
 
-	if(do_retry) {do_retry = false; lang_pos = 0; goto retry;}
+	if(do_retry) {do_retry = false, lang_pos = 0; goto retry;}
 
 	return true;
 }
