@@ -1,4 +1,4 @@
-// Mysis explore_plugin.h v0.1
+// Mysis explore_plugin.h v0.1 (http://www.psdevwiki.com/ps3/Explore_plugin)
 typedef struct
 {
 	int (*DoUnk0)(void);  // 1 Parameter: int value 0 - 4
@@ -7,7 +7,7 @@ typedef struct
 	int (*DoUnk3)(void);  // 0 Parameter: returns an uint[0x14 / 0x24]
 	int (*DoUnk4)(void);
 	int (*DoUnk5)(void);  // 3 Parameter: list[] {(reload_category game/network/..,reload_category_items game/...), command amount}  - send (sequences of)xmb command(s)
-	int (*DoUnk6)(const char *,void *,int); // 3 Parameter: char* (open_list nocheck/...), void * callback(can be 0), 0
+	int (*ExecXMBcommand)(const char *,void *,int); // 3 Parameter: char* (open_list nocheck/...), void * callback(can be 0), 0
 	int (*DoUnk7)(void);  // 2 Parameter:
 	int (*DoUnk8)(void);  // 3 Parameter:
 	int (*DoUnk9)(void);  // 3 Parameter: void *, void *, void *

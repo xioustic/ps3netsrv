@@ -33,7 +33,7 @@ static void add_log(const char *fmt, const char *value1, int value2)
 }
 */
 
-static int sysLv2FsLink(const char *oldpath,const char *newpath)
+static int sysLv2FsLink(const char *oldpath, const char *newpath)
 {
 	system_call_2(SC_FS_LINK, (u64)(u32)oldpath, (u64)(u32)newpath);
 	return_to_user_prog(int);
@@ -62,7 +62,7 @@ static bool file_exists(const char* path)
 	return (cellFsStat(path, &s) == CELL_FS_SUCCEEDED);
 }
 
-static int savefile(const char *file, char *mem, u64 size)
+static int savefile(const char *file, const char *mem, u64 size)
 {
 	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
 	cellFsChmod(file, MODE);
@@ -271,7 +271,7 @@ next_part:
 }
 
 #ifdef COPY_PS3
-static int folder_copy(char *path1, char *path2)
+static int folder_copy(const char *path1, const char *path2)
 {
 	cellFsChmod(path1, DMODE);
 	cellFsMkdir(path2, DMODE);

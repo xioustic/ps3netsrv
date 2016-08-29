@@ -70,7 +70,7 @@ static void downloadPKG_thread(void)
 	{
 		download_interface = (download_plugin_interface *)plugin_GetInterface(View_Find("download_plugin"),1);
 	}
-	download_interface->DoUnk5(0, pkg_durl, pkg_dpath);
+	download_interface->DownloadURL(0, pkg_durl, pkg_dpath);
 }
 
 static void installPKG_thread(void)
@@ -79,8 +79,8 @@ static void installPKG_thread(void)
 	{
 		game_ext_interface = (game_ext_plugin_interface *)plugin_GetInterface(View_Find("game_ext_plugin"),1);
 	}
-	game_ext_interface->DoUnk0(); // Load Page
-	game_ext_interface->DoUnk34(pkg_path); // install PKG from path
+	game_ext_interface->LoadPage();
+	game_ext_interface->installPKG(pkg_path);
 }
 
 static int download_file(char *param, char *msg)

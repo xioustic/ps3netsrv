@@ -1,7 +1,7 @@
 // Mysis game_ext_plugin.h v0.1
 typedef struct
 {
-	int (*DoUnk0)(void);                      // 0 Parameter: (creates page_game_main widget)
+	int (*LoadPage)(void);                    // 0 Parameter: (creates page_game_main widget)
 	int (*DoUnk1)(void *, void *);            // 2 Parameter: uint8_t [0x270], uint8_t[0x10?]
 	int (*DoUnk2)(char *, int, int);          // 3 Parameter: char * titleid[0x10], 1, 0 - (displays a message?) - link.xml related?
 	int (*DoUnk3)(char *, int);               // 2 Parameter: char * (max.0x80bytes), 1 - (displays a message?) - link.xml related?
@@ -35,7 +35,7 @@ typedef struct
 	int (*DoUnk31)(void);                     // 0 Parameter: returns uint8
 	int (*DoUnk32)(void*,char*,void*,int);    // 4 Parameter: uint8 [0x270], char * [0x800], uint64 [2], uint8
 	int (*DoUnk33)(char*);                    // 1 Parameter: char * titleid? [0x10] - msg auto update? - psn+/login checked.
-	int (*DoUnk34)(char*);                    // 1 Parameter: char * pkg_path[0x400] (example: /dev_usb006/test.pkg)
+	int (*installPKG)(char*);                 // 1 Parameter: char * pkg_path[0x400] (example: /dev_usb006/test.pkg)
 } game_ext_plugin_interface;
 
 game_ext_plugin_interface * game_ext_interface;

@@ -330,27 +330,28 @@ static void string_to_lv2(char* path, uint64_t addr)
 #endif
 
 #ifdef COBRA_ONLY
-static void cache_icon0_and_param_sfo(char *templn)
+static void cache_icon0_and_param_sfo(char *destpath)
 {
-	strcat(templn, ".SFO\0");
+	char *ext = destpath + strlen(destpath);
+	strcat(ext, ".SFO\0");
 
 	// cache PARAM.SFO
-	if(file_exists(templn) == false)
+	if(file_exists(destpath) == false)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", templn, _4KB_) == CELL_FS_SUCCEEDED) break;
+			if(file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", destpath, _4KB_) == CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
 
 	// cache ICON0.PNG
-	templn[strlen(templn)-4] = NULL; strcat(templn, ".PNG");
-	if((webman_config->nocov!=2) && file_exists(templn) == false)
+	ext[0] = NULL; strcat(ext, ".PNG");
+	if((webman_config->nocov!=2) && file_exists(destpath) == false)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", templn, COPY_WHOLE_FILE) == CELL_FS_SUCCEEDED) break;
+			if(file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", destpath, COPY_WHOLE_FILE) == CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
@@ -416,7 +417,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		purl = strstr(param, "?random=");
 		if(purl) purl[0] = NULL;
 
-		int plen = 10;
+		uint8_t plen = 10; // /mount.ps3
+
 #ifdef COPY_PS3
 		char target[MAX_PATH_LEN] = "", *pos;
 		if(islike(param, "/copy.ps3")) {plen = IS_COPY; pos = strstr(param, "&to="); if(pos) {strcpy(target, pos + 4); pos[0] = NULL;}}
@@ -477,27 +479,27 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 						explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
 						if(!extcmp(param, ".pkg", 4))
 						{
-							explore_interface->DoUnk6("close_all_list",0,0);
-							explore_interface->DoUnk6("focus_segment_index seg_package_files",0,0);
+							explore_interface->ExecXMBcommand("close_all_list",0,0);
+							explore_interface->ExecXMBcommand("focus_segment_index seg_package_files",0,0);
 						}
 						else
 						{
-							explore_interface->DoUnk6("focus_index rx_video",0,0);
+							explore_interface->ExecXMBcommand("focus_index rx_video",0,0);
 							sys_timer_usleep(200000);
-							explore_interface->DoUnk6("exec_push",0,0);
+							explore_interface->ExecXMBcommand("exec_push",0,0);
 							sys_timer_usleep(200000);
-							explore_interface->DoUnk6("focus_index 0",0,0);
+							explore_interface->ExecXMBcommand("focus_index 0",0,0);
 
 							if(!autoplay || strcasestr(param, ".mkv")) {is_busy=false; return;}
 
 							sys_timer_sleep(2);
-							explore_interface->DoUnk6("exec_push",0,0);
+							explore_interface->ExecXMBcommand("exec_push",0,0);
 						}
 
 						if(autoplay)
 						{
 							sys_timer_sleep(2);
-							explore_interface->DoUnk6("exec_push",0,0);
+							explore_interface->ExecXMBcommand("exec_push",0,0);
 						}
 					}
 				}
@@ -2331,7 +2333,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					sys_ppu_thread_create(&thread_id_net, netiso_thread, (uint64_t)sysmem, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
 
-					if(_netiso_args->emu_mode==EMU_PS3)
+					if(_netiso_args->emu_mode == EMU_PS3)
 					{
 						get_name(templn, _path, 1);
 						cache_icon0_and_param_sfo(templn);

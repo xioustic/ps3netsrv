@@ -76,7 +76,7 @@ static void enable_ingame_screenshot(void)
 {
 	vshmain_is_ss_enabled = getNIDfunc("vshmain", 0x981D7E9F, 0); //is screenshot enabled?
 
-	if(vshmain_is_ss_enabled()==0)
+	if(vshmain_is_ss_enabled() == 0)
 	{
 		set_SSHT_ = (uint32_t*)&opd;
 		memcpy(set_SSHT_, vshmain_is_ss_enabled, 8);
@@ -121,16 +121,16 @@ static void launch_disc(char *category, char *seg_name)
 			}
 
 			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
-			explore_interface->DoUnk6("close_all_list",0,0);
+			explore_interface->ExecXMBcommand("close_all_list",0,0);
 			sys_timer_usleep(200000);
-			{sprintf(explore_command, "focus_category %s", category); explore_interface->DoUnk6((char*)explore_command,0,0);}
+			{sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command,0,0);}
 			sys_timer_usleep(500000);
-			explore_interface->DoUnk6("close_all_list",0,0);
+			explore_interface->ExecXMBcommand("close_all_list",0,0);
 			sys_timer_usleep(200000);
 			sprintf(explore_command, "focus_segment_index %s", seg_name);
-			explore_interface->DoUnk6((char*)explore_command,0,0);
+			explore_interface->ExecXMBcommand((char*)explore_command,0,0);
 			sys_timer_usleep(500000);
-			explore_interface->DoUnk6("exec_push",0,0);
+			explore_interface->ExecXMBcommand("exec_push",0,0);
 		}
 		else {BEEP3}
 	}

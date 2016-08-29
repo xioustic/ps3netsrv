@@ -25,15 +25,17 @@ static int set_gamedata_status(u8 status, bool do_mount)
 		}
 		else
 		{
-			for(n = 0; n < 8; n++) {sprintf(gamei_path, "/dev_usb00%i/GAMEI", n); if(isDir(gamei_path)) break;}
-			if(n>7)
+			for(n = 1; n < 7; n++) {sprintf(gamei_path, "%s/GAMEI", drives[n]); if(isDir(gamei_path)) break;} // find first USB HDD with /GAMEI
+
+			if(n > 7)
 			{
-				for(n = 0; n < 8; n++) {sprintf(gamei_path, "/dev_usb00%i", n); if(isDir(gamei_path)) break;}
-				if(n < 8) {sprintf(gamei_path, "/dev_usb00%i/GAMEI", n); if(cellFsMkdir(gamei_path, MODE)!=CELL_FS_SUCCEEDED) n=99;}
+				for(n = 1; n < 7; n++) {if(isDir(drives[n])) break;} // find first USB HDD
+
+				if(n < 7) {sprintf(gamei_path, "%s/GAMEI", drives[n]); if(cellFsMkdir(gamei_path, MODE) != CELL_FS_SUCCEEDED) n = 99;}
 			}
 		}
 
-		if(n<8)
+		if(n < 7)
 		{
 #ifdef COBRA_ONLY
 			sys_map_path("/dev_hdd0/game", gamei_path);
@@ -42,7 +44,7 @@ static int set_gamedata_status(u8 status, bool do_mount)
 			if(isDir(MM_ROOT_STD)) add_to_map(MM_ROOT_STD, MM_ROOT_STD);
 			add_to_map("/dev_hdd0/game", gamei_path);
 #endif
-			sprintf(msg, "gameDATA %s (usb00%i)", STR_ENABLED, n);
+			sprintf(msg, "gameDATA %s (%s)", STR_ENABLED, drives[n]);
 		}
 		else
 		{

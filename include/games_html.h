@@ -14,6 +14,9 @@
 #define IS_PSX_FOLDER ((f1==6) || (f1==7))
 #define IS_PSP_FOLDER ((f1==8) || (f1==9))
 
+#define IS_HDD0       (f0 == 0)
+#define IS_NTFS       (f0 == NTFS)
+
 #define PS3 (1<<0)
 #define PS2 (1<<1)
 #define PS1 (1<<2)
@@ -28,7 +31,7 @@
 static void get_name(char *name, const char *filename, u8 cache)
 {
 	// name:
-	//   returns file name without extension & without title id (cache == 0 -> file name is without path, cache == 2 -> remove path first)
+	//   returns file name without extension & without title id (cache == 0 -> file name keeps path, cache == 2 -> remove path first)
 	//   returns file name with WMTMP path                      (cache == 1 -> remove path first)
 
 	int pos = 0;
@@ -325,7 +328,7 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_nam
 
 	if(ret != CELL_FS_SUCCEEDED)
 	{
-		get_name(templn, entry_name, 2); if(f0!=NTFS) utf8enc(data, templn, 1); //use file name as title
+		get_name(templn, entry_name, 2); if(!IS_NTFS) utf8enc(data, templn, 1); //use file name as title
 	}
 
 	return ( (ret == CELL_FS_SUCCEEDED) ? 0 : FAILED );
@@ -611,13 +614,13 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		char icon[MAX_PATH_LEN], enc_dir_name[1024], subpath[MAX_PATH_LEN];
 
 		// filter html content
-		u8 filter0, filter1, b0, b1; char filter_name[MAX_PATH_LEN]; filter_name[0] = NULL; filter0=filter1=b0=b1=0;
+		u8 filter0, filter1, b0, b1; char filter_name[MAX_PATH_LEN]; filter_name[0] = NULL, filter0 = filter1 = b0 = b1 = 0;
 
 #ifdef COBRA_ONLY
 		if(strstr(param, "ntfs")) {filter0 = NTFS, b0 = 1;} else
 #endif
-		for(u8 f0=0; f0<16; f0++) if(strstr(param, drives[f0])) {filter0=f0, b0=1; break;}
-		for(u8 f1=0; f1<11; f1++) if(strstr(param, paths [f1])) {filter1=f1, b1=1; break;}
+		for(u8 f0 = 0; f0 < 16; f0++) if(strstr(param, drives[f0])) {filter0 = f0, b0 = 1; break;}
+		for(u8 f1 = 0; f1 < 11; f1++) if(strstr(param, paths [f1])) {filter1 = f1, b1 = 1; break;}
 		if(!b0 && strstr(param, "hdd" ))  {filter0 = 0, b0 = 1;}
 		if(!b0 && strstr(param, "usb" ))  {filter0 = 1, b0 = 2;}
 		if(!b1 && strstr(param, "games")) {filter1 = 0, b1 = 2;}
@@ -627,7 +630,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		if(!b0 && strstr(param, "net" ))  {filter0=7;  b0=3;}
  #endif
 #endif
-		if(b0==0 && b1==0 && strstr(param, "?")!=NULL && strstr(param, "?html")==NULL && strstr(param, "mobile")==NULL) strcpy(filter_name, strstr(param, "?")+1);
+		if((b0 == 0) && (b1 == 0) && strstr(param, "?")!=NULL && strstr(param, "?html")==NULL && strstr(param, "mobile")==NULL) strcpy(filter_name, strstr(param, "?")+1);
 
 		int ns = -2; u8 uprofile = profile, default_icon = 0;
 
@@ -646,10 +649,12 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if(!webman_config->dev_ms && (f0 == 14)) continue;
 			if(!webman_config->dev_cf && (f0 == 15)) continue;
 
-			if( (f0 == NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-								 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
+			if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+							  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
 
-			if((f0 < 7 || f0 > NTFS) && file_exists(drives[f0]) == false) continue;
+			is_net = (f0 >= 7 && f0 < NTFS);
+
+			if(!(is_net || IS_NTFS) && (file_exists(drives[f0]) == false)) continue;
 //
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -665,16 +670,14 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(idx>=max_entries || tlen>=BUFFER_MAXSIZE) break;
 
 				//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-				if(f1 >= 10)   {if(f0 < 7 || f0 > NTFS) strcpy(paths[10], (f0 == 0) ? "video" : "GAMES_DUP"); else continue;}
-				if(f0 == NTFS) {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || f1 == 7) continue;}
-
-				is_net = (f0>=7 && f0<NTFS);
+				if(f1 >= 10) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
+				if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video"
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 				if(is_net)
 				{
-					if(f1 > 8 || !cobra_mode) break;
+					if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video"
 					if(f0 == 7  && !webman_config->netd0) break; //net0
 					if(f0 == 8  && !webman_config->netd1) break; //net1
 					if(f0 == 9  && !webman_config->netd2) break; //net2
@@ -687,8 +690,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				}
  #endif
 #endif
-				if(b0) {if(b0==2 && f0<7); else if(b0==3 && f0!=NTFS); else if(filter0!=f0) continue;}
-				if(b1) {if(b1>=2 && (f1<b1 || f1>=10) && filter1<3); else if(filter1!=f1) continue;}
+				if(b0) {if((b0 == 2) && (f0 < 7)); else if((b0 == 3) && (!IS_NTFS)); else if(filter0!=f0) continue;}
+				if(b1) {if((b1 >= 2) && ((f1 < b1) || (f1 >= 10)) && (filter1 < 3)); else if(filter1!=f1) continue;}
 				else
 				{
 					if( (webman_config->cmask & PS3) && IS_PS3_TYPE   ) continue; // 0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video"
@@ -726,7 +729,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
  #endif
 #endif
 				{
-					if(f0 == NTFS) //ntfs
+					if(IS_NTFS) //ntfs
 						sprintf(param, "%s", WMTMP);
 					else
 						sprintf(param, "%s/%s%s", drives[f0], paths[f1], SUFIX(uprofile));
@@ -756,7 +759,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(is_net)
 				{
 					v3_entries = read_remote_dir(ns, &data2, &abort_connection);
-					if(data2==NULL) goto continue_reading_folder_html; //continue;
+					if(!data2) goto continue_reading_folder_html; //continue;
 					data=(netiso_read_dir_result_data*)data2; sprintf(neth, "/net%i", (f0-7));
 				}
  #endif
@@ -774,7 +777,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #endif
 					)
 				{
-					if(idx>=max_entries || tlen>=BUFFER_MAXSIZE) break;
+					if(idx >= max_entries || tlen >= BUFFER_MAXSIZE) break;
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 					if(is_net)
@@ -788,12 +791,12 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						strcpy(tempstr, icon); urlenc(icon, tempstr);
 
-						snprintf(tempstr, 8, "%s      ", templn); // sort key
+						snprintf(tempstr, 8, "%s      ", templn); to_upper(tempstr, HTML_KEY_LEN); // sort key
 
 						if(mobile_mode)
 						{
 							if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
-							for(size_t c=0; templn[c]!=0; c++) {if(templn[c]=='"' || templn[c]<0x20) templn[c]=0x20;} // replace invalid chars
+							for(size_t c = 0; templn[c] != NULL; c++) {if(templn[c] == '"' || templn[c] < ' ') templn[c] = ' ';} // replace invalid chars
 
 							int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320; h=176;} else if(strstr(icon, "icon_wm_")) {w=280; h=280;}
 
@@ -835,13 +838,15 @@ next_html_entry:
 						if(idx >= max_entries || tlen >= BUFFER_MAXSIZE) break;
 
 #ifdef COBRA_ONLY
-						is_iso = ((f0 == NTFS) && (flen > 13) && strstr(entry.d_name + flen - 13, ".ntfs[") != NULL) ||
-								 (IS_ISO_FOLDER && flen > 4 && (
-								 (            !strncasecmp(entry.d_name + flen - 4, ".iso", 4)) ||
-								 (flen > 6 && !strncasecmp(entry.d_name + flen - 6, ".iso.0", 6)) ||
-								 ((IS_PS2_FOLDER) && strcasestr(".bin|.img|.mdf|.enc", entry.d_name + flen - 4)) ||
-								 ((IS_PSX_FOLDER || IS_DVD_FOLDER || IS_BLU_FOLDER) && strcasestr(".bin|.img|.mdf", entry.d_name + flen - 4))
-								 ));
+						if(IS_NTFS)
+							is_iso = (flen > 13) && (strstr(entry.d_name + flen - 13, ".ntfs[") != NULL);
+						else
+							is_iso = (IS_ISO_FOLDER && (flen > 4) && (
+									 (              !strncasecmp(entry.d_name + flen - 4, ".iso",   4)) ||
+									 ((flen > 6) && !strncasecmp(entry.d_name + flen - 6, ".iso.0", 6)) ||
+									 ((IS_PS2_FOLDER) && strcasestr(".bin|.img|.mdf|.enc", entry.d_name + flen - 4)) ||
+									 ((IS_PSX_FOLDER || IS_DVD_FOLDER || IS_BLU_FOLDER) && strcasestr(".bin|.img|.mdf", entry.d_name + flen - 4))
+									 ));
 #else
 						is_iso = (IS_PS2_FOLDER && flen > 8 && !strncmp(entry.d_name + flen - 8, ".BIN.ENC", 8));
 #endif
@@ -862,39 +867,44 @@ next_html_entry:
 							{
 								get_name(templn, entry.d_name, 0);
 #ifdef COBRA_ONLY
-								if(f0 == NTFS)
+								if(IS_NTFS)
 								{   // ntfs
-									if(f1 < 2 || f1 > 6) continue; //2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO"
+									char *ntfs_sufix = NULL;
 
-									// skip non-matching extended content
-									if((uprofile >0) && (strstr(entry.d_name, ").ntfs[")!=NULL) && !strstr(entry.d_name, SUFIX3(uprofile))) continue;
+									if(flen > 17) ntfs_sufix = strstr(entry.d_name + flen - 14, ").ntfs[");
 
-									// skip extended content of ntfs cached in /wmtmp if current user profile is 0
-									if((uprofile==0 && flen>17)) {u8 u; for(u=1;u<5;u++) if(strstr(entry.d_name + flen - 17, SUFIX3(u))) break; if(u!=5) continue;}
+									if(ntfs_sufix)
+									{
+										// skip extended content of ntfs cached in /wmtmp if current user profile is 0
+										if(uprofile == 0) continue;
 
-									flen-=13; if(flen < 0) continue; char *ntfs_ext = entry.d_name + flen;
+										ntfs_sufix--; u8 fprofile = (u8)ntfs_sufix[0]; if(fprofile > '0') fprofile -= '0';
 
-									if(IS_PS3_FOLDER && strcmp(ntfs_ext, ".ntfs[PS3ISO]")) continue;
-									if(IS_BLU_FOLDER &&!strstr(ntfs_ext, ".ntfs[BD"     )) continue;
-									if(IS_DVD_FOLDER && strcmp(ntfs_ext, ".ntfs[DVDISO]")) continue;
-									if(IS_PSX_FOLDER && strcmp(ntfs_ext, ".ntfs[PSXISO]")) continue;
+										// skip non-matching extended content
+										if((uprofile  > 0) && (uprofile != fprofile)) continue;
+									}
 
-									if(IS_PS2_FOLDER && strcmp(ntfs_ext, ".ntfs[PS2ISO]")) continue;
-									if(IS_PSP_FOLDER && strcmp(ntfs_ext, ".ntfs[PSPISO]")) continue;
+									flen-=13; char *ntfs_ext = entry.d_name + flen;
+									if(IS_PS3_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PS3ISO]"))) continue;
+									if(IS_BLU_FOLDER && (!strstr(ntfs_ext, ".ntfs[BD"     ))) continue;
+									if(IS_DVD_FOLDER && ( strcmp(ntfs_ext, ".ntfs[DVDISO]"))) continue;
+									if(IS_PS2_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PS2ISO]"))) continue;
+									if(IS_PSX_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PSXISO]"))) continue;
+									if(IS_PSP_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PSPISO]"))) continue;
 								}
 
-								if((IS_PS3_FOLDER) && ((f0!=NTFS) || ((f0 == NTFS) && !extcmp(entry.d_name, ".ntfs[PS3ISO]", 13))))
+								if(IS_PS3_FOLDER)
 								{
-									get_name(templn, entry.d_name, 1); strcat(templn, ".SFO\0");
-									if(f0!=NTFS && file_exists(templn) == false)
+									get_name(templn, entry.d_name, 1); strcat(templn, ".SFO\0"); // WMTMP
+									if( (!IS_NTFS) && file_exists(templn) == false)
 									{
 										get_name(tempstr, entry.d_name, 0);
-										sprintf(templn, "%s/%s.SFO", param, tempstr);
+										sprintf(templn, "%s/%s.SFO", param, tempstr); // /PS3ISO
 									}
 
 									if(get_title_and_id_from_sfo(templn, tempID, entry.d_name, icon, tempstr, f0)==FAILED)
 									{
-										if( f0!=NTFS && is_iso)
+										if( (!IS_NTFS) && is_iso)
 										{
 											int fs; char *ps3iso = icon;
 											sprintf(ps3iso, "%s/%s", param, entry.d_name);
@@ -932,7 +942,7 @@ next_html_entry:
 
 							urlenc(tempstr, icon);
 
-							snprintf(tempstr, 8, "%s      ", templn); // sort key
+							snprintf(tempstr, 8, "%s      ", templn); to_upper(tempstr, HTML_KEY_LEN); // sort key
 
 							if(mobile_mode)
 							{
@@ -982,8 +992,8 @@ next_html_entry:
 //
 	continue_reading_folder_html:
 
-				if((uprofile>0) && (f1<9)) {subfolder=uprofile=0; goto read_folder_html;}
-				if(is_net && ls && (li<27)) {li++; goto subfolder_letter_html;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_html;}
+				if((uprofile > 0) && (f1 < 9)) {subfolder = uprofile = 0; goto read_folder_html;}
+				if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_html;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_html;}
 //
 			}
 
@@ -1000,7 +1010,7 @@ next_html_entry:
 			char *swap = tempstr;
 			for(n=0; n<(idx-1); n++)
 				for(m=(n+1); m<idx; m++)
-					if(strncasecmp(line_entry[n].path, line_entry[m].path, HTML_KEY_LEN) > 0)
+					if(strncmp(line_entry[n].path, line_entry[m].path, HTML_KEY_LEN) > 0)
 					{
 						strcpy(swap, line_entry[n].path);
 						strcpy(line_entry[n].path, line_entry[m].path);

@@ -142,7 +142,7 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 	sprintf(skey, "!%c%c%c%c%c%c%04i", templn[c], templn[c+1], templn[c+2], templn[c+3], templn[c+4], templn[c+5], key);
 
 	char *p = strstr(templn + 5, "CD");
-	if(p) {if(ISDIGIT(p[2])) skey[6]=p[2]; if(ISDIGIT(p[3])) skey[6]=p[3];} // sort by CD#
+	if(p) {if(ISDIGIT(p[2])) skey[6]=p[2]; if(ISDIGIT(p[3])) skey[6] = p[3];} // sort by CD#
 	else
 	{
 		if(tlen > 64) tlen = 64;
@@ -154,6 +154,8 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 		}
 	}
 
+	to_upper(skey + 1, 6);
+
 	#define ITEMS_BUFFER(a)  (64 * (item_count[a] + 8))
 
 	if( !(webman_config->nogrp) )
@@ -161,17 +163,17 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 		if((IS_PS3_TYPE) && xml_len[3] < (BUFFER_SIZE  - ITEMS_BUFFER(3) - _4KB_))
 		{xml_len[3] += concat(myxml_ps3+xml_len[3], tempstr); skey[0]=PS3_; ++item_count[3];}
 		else
-		if(((IS_PS2_FOLDER) || ((f0 == NTFS) && !extcmp(entry_name, ".ntfs[PS2ISO]", 13))) && xml_len[2] < (BUFFER_SIZE_PS2 - ITEMS_BUFFER(2)))
+		if(((IS_PS2_FOLDER) || ((IS_NTFS) && !extcmp(entry_name, ".ntfs[PS2ISO]", 13))) && xml_len[2] < (BUFFER_SIZE_PS2 - ITEMS_BUFFER(2)))
 		{xml_len[2] += concat(myxml_ps2+xml_len[2], tempstr); skey[0]=PS2; ++item_count[2];}
 #ifdef COBRA_ONLY
 		else
-		if(((IS_PSX_FOLDER) || ((f0 == NTFS) && !extcmp(entry_name, ".ntfs[PSXISO]", 13))) && xml_len[1] < (BUFFER_SIZE_PSX - ITEMS_BUFFER(1)))
+		if(((IS_PSX_FOLDER) || ((IS_NTFS) && !extcmp(entry_name, ".ntfs[PSXISO]", 13))) && xml_len[1] < (BUFFER_SIZE_PSX - ITEMS_BUFFER(1)))
 		{xml_len[1] += concat(myxml_psx+xml_len[1], tempstr); skey[0]=PS1; ++item_count[1];}
 		else
-		if(((IS_PSP_FOLDER) || ((f0 == NTFS) && !extcmp(entry_name, ".ntfs[PSPISO]", 13))) && xml_len[4] < (BUFFER_SIZE_PSP - ITEMS_BUFFER(4)))
+		if(((IS_PSP_FOLDER) || ((IS_NTFS) && !extcmp(entry_name, ".ntfs[PSPISO]", 13))) && xml_len[4] < (BUFFER_SIZE_PSP - ITEMS_BUFFER(4)))
 		{xml_len[4] += concat(myxml_psp+xml_len[4], tempstr); skey[0]=PSP; ++item_count[4];}
 		else
-		if(((IS_BLU_FOLDER) || (IS_DVD_FOLDER) || ((f0 == NTFS) && (!extcmp(entry_name, ".ntfs[DVDISO]", 13) || !extcmp(entry_name, ".ntfs[BDISO]", 12) || !extcmp(entry_name, ".ntfs[BDFILE]", 13)))) && xml_len[0] < (BUFFER_SIZE_DVD - ITEMS_BUFFER(0)))
+		if(((IS_BLU_FOLDER) || (IS_DVD_FOLDER) || ((IS_NTFS) && (!extcmp(entry_name, ".ntfs[DVDISO]", 13) || !extcmp(entry_name, ".ntfs[BDISO]", 12) || !extcmp(entry_name, ".ntfs[BDFILE]", 13)))) && xml_len[0] < (BUFFER_SIZE_DVD - ITEMS_BUFFER(0)))
 		{xml_len[0] += concat(myxml_dvd+xml_len[0], tempstr); skey[0]=BLU; ++item_count[0];}
 #endif
 		else
@@ -401,47 +403,47 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	cellFsUnlink(xml);
 
-	key=0;
+	key = 0;
 
 	if(!(webman_config->nogrp))
 	{
-		if(!(webman_config->cmask & PS3)) strcpy(myxml_ps3, "<View id=\"seg_wm_ps3_items\"><Attributes>");
+		if(!(webman_config->cmask & PS3)) {strcpy(myxml_ps3, "<View id=\"seg_wm_ps3_items\"><Attributes>"); xml_len[3] = 40;}
 		if(!(webman_config->cmask & PS2))
 		{
-			strcpy(myxml_ps2, "<View id=\"seg_wm_ps2_items\"><Attributes>");
+			strcpy(myxml_ps2, "<View id=\"seg_wm_ps2_items\"><Attributes>"); xml_len[2] = 40;
 			if(webman_config->ps2l && file_exists("/dev_hdd0/game/PS2U10000"))
 			{
 				sprintf(templn, "<Table key=\"ps2_classic_launcher\">"
 								XML_PAIR("icon","/dev_hdd0/game/PS2U10000/ICON0.PNG")
 								XML_PAIR("title","PS2 Classic Launcher")
 								XML_PAIR("info","%s") "%s",
-								STR_LAUNCHPS2, "</Table>"); strcat(myxml_ps2, templn);
+								STR_LAUNCHPS2, "</Table>"); xml_len[2] += concat(myxml_ps2, templn);
 			}
 		}
 #ifdef COBRA_ONLY
-		if(!(webman_config->cmask & PS1)) strcpy(myxml_psx, "<View id=\"seg_wm_psx_items\"><Attributes>");
+		if(!(webman_config->cmask & PS1)) {strcpy(myxml_psx, "<View id=\"seg_wm_psx_items\"><Attributes>"); xml_len[1] = 40;}
 		if(!(webman_config->cmask & PSP))
 		{
-			strcpy(myxml_psp, "<View id=\"seg_wm_psp_items\"><Attributes>");
+			strcpy(myxml_psp, "<View id=\"seg_wm_psp_items\"><Attributes>"); xml_len[4] =  40;
 			if(webman_config->pspl && file_exists("/dev_hdd0/game/PSPC66820"))
 			{
 				sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
 								XML_PAIR("icon","/dev_hdd0/game/PSPC66820/ICON0.PNG")
 								XML_PAIR("title","PSP Launcher")
 								XML_PAIR("info","%s") "%s",
-								STR_LAUNCHPSP, "</Table>"); strcat(myxml_psp, templn);
+								STR_LAUNCHPSP, "</Table>"); xml_len[4] += concat(myxml_psp, templn);
 			}
 		}
 		if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU))
 		{
-			strcpy(myxml_dvd, "<View id=\"seg_wm_dvd_items\"><Attributes>");
+			strcpy(myxml_dvd, "<View id=\"seg_wm_dvd_items\"><Attributes>"); xml_len[0] = 40;
 			if(webman_config->rxvid)
 			{
 				sprintf(templn, "<Table key=\"rx_video\">"
 								XML_PAIR("icon","%s")
 								XML_PAIR("title","%s")
 								XML_PAIR("child","segment") "%s",
-								wm_icons[4], STR_VIDLG, STR_NOITEM_PAIR); strcat(myxml_dvd, templn);
+								wm_icons[4], STR_VIDLG, STR_NOITEM_PAIR); xml_len[0] += concat(myxml_dvd, templn);
 			}
 		}
 #endif
@@ -458,12 +460,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	u8 is_net = 0;
 	int abort_connection = 0;
-
-	xml_len[0] = strlen(myxml_dvd);
-	xml_len[1] = strlen(myxml_psx);
-	xml_len[2] = strlen(myxml_ps2);
-	xml_len[3] = strlen(myxml_ps3);
-	xml_len[4] = strlen(myxml_psp);
 
 	// --- scan xml content ---
 
@@ -498,12 +494,12 @@ static bool update_mygames_xml(u64 conn_s_p)
 		if(!webman_config->dev_ms && (f0 == 14)) continue;
 		if(!webman_config->dev_cf && (f0 == 15)) continue;
 
-		if( (f0 == NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-							 !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
+		if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+						  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
 
 		if(conn_s_p == START_DAEMON)
 		{
-			if(webman_config->bootd && (f0 == 0))
+			if(webman_config->bootd && (IS_HDD0))
 			{
 				waitfor("/dev_usb", webman_config->bootd); // wait for any usb
 			}
@@ -522,7 +518,9 @@ static bool update_mygames_xml(u64 conn_s_p)
 			}
 		}
 
-		if((f0 < 7 || f0 > NTFS) && file_exists(drives[f0]) == false) continue;
+		is_net = (f0 >= 7 && f0 < NTFS);
+
+		if(!(is_net || IS_NTFS) && (file_exists(drives[f0]) == false)) continue;
 //
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -535,19 +533,17 @@ static bool update_mygames_xml(u64 conn_s_p)
 #ifndef COBRA_ONLY
 			if(IS_ISO_FOLDER && !(IS_PS2_FOLDER)) continue; // 0="GAMES", 1="GAMEZ", 5="PS2ISO", 10="video"
 #endif
-			if(key>=max_xmb_items) break;
+			if(key >= max_xmb_items) break;
 
 			//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-			if(f1 >= 10)   {if(f0 < 7 || f0 > NTFS) strcpy(paths[10], (f0 == 0) ? "video" : "GAMES_DUP"); else continue;}
-			if(f0 == NTFS) {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || f1 == 7) continue;}
-
-			is_net = (f0>=7 && f0<NTFS);
+			if(f1 >= 10) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
+			if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video"
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 			if(is_net)
 			{
-				if(f1 > 8 || !cobra_mode) break;
+				if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video"
 				if(f0 == 7  && !webman_config->netd0) break; //net0
 				if(f0 == 8  && !webman_config->netd1) break; //net1
 				if(f0 == 9  && !webman_config->netd2) break; //net2
@@ -594,7 +590,7 @@ static bool update_mygames_xml(u64 conn_s_p)
  #endif
 #endif
 			{
-				if(f0 == NTFS) //ntfs
+				if(IS_NTFS)
 					sprintf(param, "%s", WMTMP);
 				else
 					sprintf(param, "%s/%s%s", drives[f0], paths[f1], SUFIX(uprofile));
@@ -612,7 +608,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 				CellFsDirent entry;
 				u64 read_e;
 				u8 is_iso = 0;
-				int fd2 = 0;
+				int fd2 = 0, flen;
 				char tempID[12];
 				cellRtcGetCurrentTick(&pTick);
 
@@ -624,7 +620,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 				if(is_net)
 				{
 					v3_entries = read_remote_dir(ns, &data2, &abort_connection);
-					if(data2==NULL) goto continue_reading_folder_xml; //continue;
+					if(!data2) goto continue_reading_folder_xml; //continue;
 					data=(netiso_read_dir_result_data*)data2; sprintf(neth, "/net%i", (f0-7));
 				}
  #endif
@@ -686,22 +682,24 @@ static bool update_mygames_xml(u64 conn_s_p)
 next_xml_entry:
 							cellFsReaddir(fd2, &entry, &read_e);
 							if(read_e<1) {cellFsClosedir(fd2); fd2 = 0; continue;}
-							if(entry.d_name[0]=='.') goto next_xml_entry;
+							if(entry.d_name[0] == '.') goto next_xml_entry;
 							sprintf(templn, "%s/%s", subpath, entry.d_name); strcpy(entry.d_name, templn);
 						}
-						int flen = strlen(entry.d_name);
+						flen = strlen(entry.d_name);
 //////////////////////////////
 
-						if(key>=max_xmb_items) break;
+						if(key >= max_xmb_items) break;
 
 #ifdef COBRA_ONLY
-						is_iso = ((f0 == NTFS) && (flen > 13) && strstr(entry.d_name + flen - 13, ".ntfs[") != NULL) ||
-								 (IS_ISO_FOLDER && flen > 4 && (
-								 (            !strncasecmp(entry.d_name + flen - 4, ".iso", 4)) ||
-								 (flen > 6 && !strncasecmp(entry.d_name + flen - 6, ".iso.0", 6)) ||
-								 ((IS_PS2_FOLDER) && strcasestr(".bin|.img|.mdf|.enc", entry.d_name + flen - 4)) ||
-								 ((IS_PSX_FOLDER || IS_DVD_FOLDER || IS_BLU_FOLDER) && strcasestr(".bin|.img|.mdf", entry.d_name + flen - 4))
-								 ));
+						if(IS_NTFS)
+							is_iso = (flen > 13) && (strstr(entry.d_name + flen - 13, ".ntfs[") != NULL);
+						else
+							is_iso = (IS_ISO_FOLDER && (flen > 4) && (
+									 (              !strncasecmp(entry.d_name + flen - 4, ".iso",   4)) ||
+									 ((flen > 6) && !strncasecmp(entry.d_name + flen - 6, ".iso.0", 6)) ||
+									 ((IS_PS2_FOLDER) && strcasestr(".bin|.img|.mdf|.enc", entry.d_name + flen - 4)) ||
+									 ((IS_PSX_FOLDER || IS_DVD_FOLDER || IS_BLU_FOLDER) && strcasestr(".bin|.img|.mdf", entry.d_name + flen - 4))
+									 ));
 #else
 						is_iso = (IS_PS2_FOLDER && flen > 8 && !strncmp(entry.d_name + flen - 8, ".BIN.ENC", 8));
 #endif
@@ -722,39 +720,44 @@ next_xml_entry:
 							{
 								get_name(templn, entry.d_name, 0);
 #ifdef COBRA_ONLY
-								if(f0 == NTFS)
+								if(IS_NTFS)
 								{   // ntfs
-									if(f1 < 2 || f1 > 6) continue; //2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO"
+									char *ntfs_sufix = NULL;
 
-									// skip non-matching extended content
-									if((uprofile >0) && (strstr(entry.d_name, ").ntfs[")!=NULL) && !strstr(entry.d_name, SUFIX3(uprofile))) continue;
+									if(flen > 17) ntfs_sufix = strstr(entry.d_name + flen - 14, ").ntfs[");
 
-									// skip extended content of ntfs cached in /wmtmp if current user profile is 0
-									if((uprofile==0 && flen>17)) {u8 u; for(u=1;u<5;u++) if(strstr(entry.d_name + flen - 17, SUFIX3(u))) break; if(u!=5) continue;}
+									if(ntfs_sufix)
+									{
+										// skip extended content of ntfs cached in /wmtmp if current user profile is 0
+										if(uprofile == 0) continue;
 
-									flen-=13; if(flen < 0) continue; char *ntfs_ext = entry.d_name + flen;
+										ntfs_sufix--; u8 fprofile = (u8)ntfs_sufix[0]; if(fprofile > '0') fprofile -= '0';
 
-									if(IS_PS3_FOLDER && strcmp(ntfs_ext, ".ntfs[PS3ISO]")) continue;
-									if(IS_BLU_FOLDER &&!strstr(ntfs_ext, ".ntfs[BD"     )) continue;
-									if(IS_DVD_FOLDER && strcmp(ntfs_ext, ".ntfs[DVDISO]")) continue;
-									if(IS_PSX_FOLDER && strcmp(ntfs_ext, ".ntfs[PSXISO]")) continue;
+										// skip non-matching extended content
+										if((uprofile  > 0) && (uprofile != fprofile)) continue;
+									}
 
-									if(IS_PS2_FOLDER && strcmp(ntfs_ext, ".ntfs[PS2ISO]")) continue;
-									if(IS_PSP_FOLDER && strcmp(ntfs_ext, ".ntfs[PSPISO]")) continue;
+									flen-=13; char *ntfs_ext = entry.d_name + flen;
+									if(IS_PS3_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PS3ISO]"))) continue;
+									if(IS_BLU_FOLDER && (!strstr(ntfs_ext, ".ntfs[BD"     ))) continue;
+									if(IS_DVD_FOLDER && ( strcmp(ntfs_ext, ".ntfs[DVDISO]"))) continue;
+									if(IS_PS2_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PS2ISO]"))) continue;
+									if(IS_PSX_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PSXISO]"))) continue;
+									if(IS_PSP_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PSPISO]"))) continue;
 								}
 
-								if((IS_PS3_FOLDER) && ((f0!=NTFS) || ((f0 == NTFS) && !extcmp(entry.d_name, ".ntfs[PS3ISO]", 13))))
+								if(IS_PS3_FOLDER)
 								{
-									get_name(templn, entry.d_name, 1); strcat(templn, ".SFO\0");
-									if(f0!=NTFS && file_exists(templn) == false)
+									get_name(templn, entry.d_name, 1); strcat(templn, ".SFO\0"); // WMTMP
+									if( (!IS_NTFS) && file_exists(templn) == false)
 									{
 										get_name(tempstr, entry.d_name, 0);
-										sprintf(templn, "%s/%s.SFO", param, tempstr);
+										sprintf(templn, "%s/%s.SFO", param, tempstr); // /PS3ISO
 									}
 
 									if(get_title_and_id_from_sfo(templn, tempID, entry.d_name, icon, tempstr, f0)==FAILED)
 									{
-										if( f0!=NTFS && is_iso)
+										if( (!IS_NTFS) && is_iso)
 										{
 											int fs; char *ps3iso = icon;
 											sprintf(ps3iso, "%s/%s", param, entry.d_name);
@@ -786,14 +789,14 @@ next_xml_entry:
 							urlenc(enc_dir_name, entry.d_name);
 
 							// subfolder name
-							if((f0 == NTFS) && entry.d_name[0]=='[')
+							if((IS_NTFS) && entry.d_name[0] == '[')
 							{
-								strcpy(folder_name, entry.d_name); folder_name[0]='/'; char *p=strchr(folder_name, ']'); if(p) p[0] = NULL;
+								strcpy(folder_name, entry.d_name); folder_name[0] = '/'; char *p = strchr(folder_name, ']'); if(p) p[0] = NULL;
 							}
 							else
 							{
-								char *p=strchr(entry.d_name, '/');
-								folder_name[0] = NULL; if(p) {p[0] = NULL; sprintf(folder_name, "/%s", entry.d_name); p[0]='/';}
+								folder_name[0] = NULL;
+								char *p = strchr(entry.d_name, '/'); if(p) {p[0] = NULL; sprintf(folder_name, "/%s", entry.d_name); p[0] = '/';}
 							}
 
 							sprintf(tempstr, "<Table key=\"%04i\">"
@@ -802,7 +805,7 @@ next_xml_entry:
 											 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
 											 XML_PAIR("info","%s%s%s") "</Table>",
 								key, icon,
-								templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((f0 == NTFS) ? "/ntfs/" : param), ((f0 == NTFS) ? paths[f1] : ""), folder_name);
+								templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
 
 							if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
 
@@ -831,8 +834,8 @@ next_xml_entry:
 //
 continue_reading_folder_xml:
 
-			if((uprofile>0) && (f1<9)) {subfolder=uprofile=0; goto read_folder_xml;}
-			if(is_net && ls && (li<27)) {li++; goto subfolder_letter_xml;} else if(li<99 && f1<7) {li=99; goto subfolder_letter_xml;}
+			if((uprofile > 0) && (f1 < 9)) {subfolder = uprofile = 0; goto read_folder_xml;}
+			if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_xml;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_xml;}
 //
 		}
 #ifdef COBRA_ONLY
@@ -870,7 +873,7 @@ continue_reading_folder_xml:
 		{
 			for(n=0; n<(key-1); n++)
 				for(m=(n+1); m<key; m++)
-					if(strncasecmp(skey[n]+1, skey[m]+1, XML_KEY_LEN) > 0)
+					if(strncmp(skey[n]+1, skey[m]+1, XML_KEY_LEN) > 0)
 					{
 						strcpy(swap, skey[n]);
 						strcpy(skey[n], skey[m]);
@@ -880,7 +883,7 @@ continue_reading_folder_xml:
 		else
 			for(n=0; n<(key-1); n++)
 				for(m=(n+1); m<key; m++)
-					if(strncasecmp(skey[n], skey[m], XML_KEY_LEN)>0)
+					if(strncmp(skey[n], skey[m], XML_KEY_LEN) > 0)
 					{
 						strcpy(swap, skey[n]);
 						strcpy(skey[n], skey[m]);
@@ -898,15 +901,15 @@ continue_reading_folder_xml:
 	{
 		sprintf(templn, "/dev_hdd0/game/XMBMANPLS/USRDIR/FEATURES/webMAN%s.xml", lang_code);
 		add_xmbm_plus = file_exists(templn);
-		if(add_xmbm_plus || lang_code[0]==0) break; lang_code[0] = NULL;
+		if(add_xmbm_plus || lang_code[0] == NULL) break; lang_code[0] = NULL;
 	}
 #endif
 
-	if( (webman_config->nogrp))
+	if(webman_config->nogrp)
 	{
 		if(!add_xmbm_plus) strcat(myxml_items, ADD_XMB_ITEM("eject"));
 
-		if(!webman_config->noset)
+		if(!webman_config->nosetup)
 		{
 			if(add_xmbm_plus)
 #ifdef ENGLISH_ONLY
@@ -920,10 +923,9 @@ continue_reading_folder_xml:
 			else
 				strcat(myxml_items, ADD_XMB_ITEM("setup"));
 		}
-	}
 
-	// --- add sorted items to xml
-	if(webman_config->nogrp) xml_len[3]=strlen(myxml_items);
+		xml_len[3] = strlen(myxml_items);
+	}
 	else
 	{
 		xml_len[0] = strlen(myxml_dvd);
@@ -933,19 +935,21 @@ continue_reading_folder_xml:
 		xml_len[4] = strlen(myxml_psp);
 	}
 
+	// --- add sorted items to xml
 	if( webman_config->nogrp )
 	{
 		for(u16 a = 0; a < key; a++)
 		{
-			if(xml_len[3] < (BUFFER_SIZE - 1000))
-				xml_len[3] += concat(myxml_items + xml_len[3], templn);
+			if(xml_len[3] >= (BUFFER_SIZE - 1000)) break;
+			sprintf(templn, ADD_XMB_ITEM("%s"), skey[a] + XML_KEY_LEN, skey[a] + XML_KEY_LEN);
+			xml_len[3] += concat(myxml_items + xml_len[3], templn);
 		}
 	}
 	else
 	{
 		for(u16 a = 0; a < key; a++)
 		{
-			sprintf(templn, ADD_XMB_ITEM("%s"), skey[(a)] + XML_KEY_LEN, skey[(a)] + XML_KEY_LEN);
+			sprintf(templn, ADD_XMB_ITEM("%s"), skey[a] + XML_KEY_LEN, skey[a] + XML_KEY_LEN);
 			if(skey[(a)][0] == PS3_&& xml_len[3] < (BUFFER_SIZE - 5000))
 				xml_len[3] += concat(myxml_ps3 + xml_len[3], templn);
 			else
@@ -1038,7 +1042,7 @@ continue_reading_folder_xml:
 #endif
 	}
 
-	if(!webman_config->noset)
+	if(!webman_config->nosetup)
 	{
 		sprintf(templn, "<Table key=\"setup\">"
 						 XML_PAIR("icon","%s")
@@ -1058,7 +1062,7 @@ continue_reading_folder_xml:
 	if(!(webman_config->nogrp))
 	{
 		strcat(myxml, "</Attributes><Items>");
-		if( !(webman_config->noset) )
+		if( !(webman_config->nosetup) )
 		{
 			if(add_xmbm_plus)
 #ifdef ENGLISH_ONLY

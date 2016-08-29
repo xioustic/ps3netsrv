@@ -69,7 +69,12 @@ static size_t concat(char *dest, const char *src)
 	return size;
 }
 
-static char h2a(char hex)
+static void to_upper(char *text, size_t size)
+{
+	for(size_t i = 0; i < size; i++) if(text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
+}
+
+static char h2a(const char hex)
 {
 	char c = hex;
 	if(c >= 0 && c <= 9)
@@ -88,10 +93,10 @@ static void urldec(char *url, char *original)
 		u16 pos = 0;
 		for(u16 i = 0; url[i] >= ' '; i++, pos++)
 		{
-			if(url[i]=='+')
-				url[pos]=' ';
-			else if(url[i]!='%')
-				url[pos]=url[i];
+			if(url[i] == '+')
+				url[pos] = ' ';
+			else if(url[i] != '%')
+				url[pos] = url[i];
 			else
 			{
 				i++;
@@ -109,7 +114,7 @@ static void urldec(char *url, char *original)
 	}
 }
 
-static bool urlenc(char *dst, char *src)
+static bool urlenc(char *dst, const char *src)
 {
 	size_t i, j = 0, n = strlen(src), pos = 0;
 
@@ -219,11 +224,9 @@ static void add_radio_button(const char *name, const char *value, const char *id
 
 static void add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
 {
-	char templn[MAX_LINE_LEN];
-	char clabel[MAX_LINE_LEN];
-	char *p;
+	char templn[MAX_LINE_LEN], clabel[MAX_LINE_LEN];
 	strcpy(clabel, label);
-	p = strstr(clabel, AUTOBOOT_PATH);
+	char *p = strstr(clabel, AUTOBOOT_PATH);
 	if(p != NULL)
 	{
 		p[0] = NULL;
@@ -243,7 +246,7 @@ static void add_option_item(const char *value, const char *label, bool selected,
 	strcat(buffer, templn);
 }
 
-static void prepare_header(char *buffer, char *param, u8 is_binary)
+static void prepare_header(char *buffer, const char *param, u8 is_binary)
 {
 	bool set_base_path = false;
 
@@ -405,49 +408,30 @@ static void get_value(char *text, char *url, u16 size)
 	u16 n;
 	for(n = 0; n < size; n++)
 	{
-		if(url[n]=='&' || url[n]==0) break;
-		if(url[n]=='+') url[n]=' ';
-		text[n]=url[n];
+		if(url[n] == '&' || url[n] == 0) break;
+		if(url[n] == '+') url[n] = ' ';
+		text[n] = url[n];
 	}
 	text[n] = NULL;
 }
 
-static u8 get_valuen(char *param, const char *label, u8 min_value, u8 max_value)
+static u32 get_valuen32(char *param, const char *label)
 {
-	char *pos, value[3];
-	pos = strstr(param, label);
+	char value[12], *pos = strstr(param, label);
 	if(pos)
 	{
-		get_value(value, pos + strlen(label), 2);
-		return RANGE(val(value), min_value, max_value);
+		get_value(value, pos + strlen(label), 11);
+		return (u32)val(value);
 	}
-	return min_value;
+	return 0;
 }
 
 static u16 get_valuen16(char *param, const char *label)
 {
-	char *pos, value[6];
-	pos = strstr(param, label);
-	if(pos)
-	{
-		get_value(value, pos + strlen(label), 5);
-		return RANGE(val(value), 0, 65535);
-	}
-	return 0;
+	return RANGE((u16)get_valuen32(param, label), 0, 65535);
 }
 
-#ifdef COBRA_ONLY
-#ifdef PS3MAPI
-static u32 get_valuen32(char *param, const char *label)
+static u8 get_valuen(const char *param, const char *label, u8 min_value, u8 max_value)
 {
-	char *pos, value[12];
-	pos = strstr(param, label);
-	if(pos)
-	{
-		get_value(value, pos + strlen(label), 11);
-		return val(value);
-	}
-	return 0;
+	return RANGE((u8)get_valuen32(param, label), min_value, max_value);
 }
-#endif
-#endif

@@ -14,7 +14,7 @@ static void get_idps_psid(void)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-	if(c_firmware<=4.53f)
+	if(c_firmware <= 4.53f)
 	{
 		{system_call_1(SC_GET_IDPS, (uint64_t) IDPS);}
 		{system_call_1(SC_GET_PSID, (uint64_t) PSID);}

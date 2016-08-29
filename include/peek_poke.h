@@ -123,7 +123,7 @@ static uint64_t convertH(char *val)
 {
 	uint64_t ret = 0;
 
-	for(uint8_t buff, i = 0, n=0; i < 16+n; i++)
+	for(uint8_t buff, i = 0, n = 0; i < 16 + n; i++)
 	{
 		if(val[i]==' ') {n++; continue;}
 

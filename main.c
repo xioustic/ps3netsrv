@@ -60,9 +60,9 @@ static char search_url[50] = "http://google.com/search?q=";
  #include "cobra/netiso.h"
 
  #ifdef LITE_EDITION
-    #define EDITION " [Lite]"
+	#define EDITION " [Lite]"
  #elif defined(PS3NET_SERVER) && defined(NET3NET4) && defined(XMB_SCREENSHOT)
-    #define EDITION " [Full]"
+	#define EDITION " [Full]"
  #else
   #ifdef PS3MAPI
 	#ifdef REX_ONLY
@@ -72,17 +72,17 @@ static char search_url[50] = "http://google.com/search?q=";
 	#endif
   #else
    #ifdef REX_ONLY
-    #define EDITION " [Rebug]"
+	#define EDITION " [Rebug]"
    #else
-    #define EDITION ""
+	#define EDITION ""
    #endif
   #endif
  #endif
 #else
  #ifdef CCAPI
-    #define EDITION " [CCAPI]"
+	#define EDITION " [CCAPI]"
  #else
-    #define EDITION " [nonCobra]"
+	#define EDITION " [nonCobra]"
  #endif
  #undef PS3MAPI
 #endif
@@ -393,7 +393,7 @@ typedef struct
 	uint8_t boots;
 	uint8_t blind;
 	uint8_t nogrp;
-	uint8_t noset;
+	uint8_t nosetup;
 	uint8_t cmask;
 	uint32_t netp0;
 	char neth0[16];
@@ -427,7 +427,7 @@ typedef struct
 	char vPSID1[17];
 	char vPSID2[17];
 	uint8_t tid;
-	uint8_t wmdn;
+	uint8_t wmstart;
 	char autoboot_path[256];
 	uint8_t ps2l;
 	uint32_t combo2;
@@ -557,7 +557,7 @@ static char local_ip[16] = "127.0.0.1";
 
 static bool file_exists(const char* path);
 static int isDir(const char* path);
-static int savefile(const char *file, char *mem, u64 size);
+static int savefile(const char *file, const char *mem, u64 size);
 
 #include "include/peek_poke.h"
 #include "include/led.h"
@@ -843,7 +843,7 @@ static void handleclient(u64 conn_s_p)
  #ifndef ENGLISH_ONLY
 			update_language();
  #endif
-			if(profile || (!(webman_config->wmdn) && strlen(STR_WMSTART) > 0))
+			if(profile || (!(webman_config->wmstart) && strlen(STR_WMSTART) > 0))
 			{
 				sys_timer_sleep(10);
 				sprintf(param, "%s%s", STR_WMSTART, SUFIX2(profile));
@@ -1302,7 +1302,7 @@ static void handleclient(u64 conn_s_p)
 					{
 						if(param2[0] == NULL) sprintf(param2, "/");
 						if(param2[0] == '/' ) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param2); open_browser(header, 0);} else
-						if(param2[0] == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->DoUnk6(url,0,0);}} else
+						if(param2[0] == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->ExecXMBcommand(url,0,0);}} else
 						if(param2[0] == '?' ) {do_umount(false); open_browser(url, 0);} else
 											  {					 open_browser(url, 1);} // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
 
@@ -1987,7 +1987,7 @@ static void handleclient(u64 conn_s_p)
 							sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"tg(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); pbuffer += concat(pbuffer, templn);
 							sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"tg(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); pbuffer += concat(pbuffer, templn);
 
-							if(cp_mode) {char *url=tempstr, *title=tempstr+MAX_PATH_LEN;urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); pbuffer += concat(pbuffer, templn);}
+							if(cp_mode) {char *url = tempstr, *title = tempstr + MAX_PATH_LEN; urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); pbuffer += concat(pbuffer, templn);}
 						}
 					}
  #endif
@@ -2504,7 +2504,7 @@ static void wwwd_thread(uint64_t arg)
 
 #ifdef PS3MAPI
  #ifdef REMOVE_SYSCALLS
-    backup_cfw_syscalls();
+	backup_cfw_syscalls();
  #endif
 #endif
 

@@ -1,4 +1,3 @@
-
 //combo
 #define FAIL_SAFE (1<<0)
 #define SHOW_TEMP (1<<1)
@@ -65,8 +64,8 @@ static void setup_parse_settings(char *param)
 	else
 		disable_dev_blind();
 
-	if(strstr(param, "ns=1")) webman_config->noset = 1;
-	if(strstr(param, "ng=1")) webman_config->nogrp = 1;
+	if(strstr(param, "ns=1")) webman_config->nosetup = 1;
+	if(strstr(param, "ng=1")) webman_config->nogrp   = 1;
 #ifdef NOSINGSTAR
 	if(strstr(param, "ss=1")) {webman_config->noss = 1; no_singstar_icon();}
 #endif
@@ -135,7 +134,7 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "vrc=1")) webman_config->combo2|=VIDRECORD;
 #endif
 
-	if( strstr(param, "wn=1")) webman_config->wmdn = 1;
+	if( strstr(param, "wn=1")) webman_config->wmstart = 1;
 	if( strstr(param, "tid=1"))  webman_config->tid  = 1;
 	if(!strstr(param, "sfo=1"))  webman_config->use_filename = 1;
 	if( strstr(param, "pl=1" ))  webman_config->poll = 1;
@@ -397,8 +396,8 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("ab", "1", STR_AUTOB  , _BR_, (webman_config->autob), buffer);
 	add_check_box("dy", "1", STR_DELAYAB, _BR_, (webman_config->delay), buffer);
 
-	add_check_box("bl", "1", STR_DEVBL,   _BR_, (webman_config->blind), buffer);
-	add_check_box("wn", "1", STR_NOWMDN,  _BR_, (webman_config->wmdn) , buffer);
+	add_check_box("bl", "1", STR_DEVBL,   _BR_, (webman_config->blind),   buffer);
+	add_check_box("wn", "1", STR_NOWMDN,  _BR_, (webman_config->wmstart), buffer);
 
 #ifdef LAUNCHPAD
 	add_check_box("rf", "1", STR_CONTSCAN, " & ", (webman_config->refr), buffer);
@@ -425,7 +424,7 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 #ifdef COBRA_ONLY
-	if((c_firmware!=4.53f))
+	if(c_firmware != 4.53f)
 		add_check_box("nsp", "1", STR_NOSPOOF, _BR_, (webman_config->nospoof), buffer);
 #endif
 
@@ -437,9 +436,9 @@ static void setup_form(char *buffer, char *templn)
 
 	//game listing
 	buffer += concat(buffer, HTML_BLU_SEPARATOR);
-	add_check_box("ng" , "1", STR_NOGRP,     _BR_, (webman_config->nogrp), buffer);
-	add_check_box("ns" , "1", STR_NOSETUP,   _BR_, (webman_config->noset), buffer);
-	add_check_box("nc" , "1", STR_MMCOVERS, " • ", (webman_config->nocov), buffer);
+	add_check_box("ng" , "1", STR_NOGRP,     _BR_, (webman_config->nogrp  ), buffer);
+	add_check_box("ns" , "1", STR_NOSETUP,   _BR_, (webman_config->nosetup), buffer);
+	add_check_box("nc" , "1", STR_MMCOVERS, " • ", (webman_config->nocov  ), buffer);
 
 	// icon0
 	buffer += concat(buffer, "<select name=\"ic\">");
@@ -848,9 +847,9 @@ static void reset_settings()
 	webman_config->boots = 3;        //wait 3 additional seconds for each selected USB device to be ready
 
 	//webman_config->nogrp = 0;      //group content on XMB
-	//webman_config->wmdn = 0;       //enable start up message (webMAN Loaded!)
+	//webman_config->wmstart = 0;    //enable start up message (webMAN Loaded!)
 	//webman_config->tid = 0;        //don't include the ID as part of the title of the game
-	//webman_config->noset = 0;      //enable webMAN Setup entry in "webMAN Games"
+	//webman_config->nosetup = 0;    //enable webMAN Setup entry in "webMAN Games"
 
 #ifdef COBRA_ONLY
 	webman_config->cmask = 0;
