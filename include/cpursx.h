@@ -168,21 +168,15 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	else
 		sprintf(max_temp1, " <small>[FAN: %i%% %s]</small>", webman_config->manu, STR_MANUAL);
 
-	uint32_t blockSize = 0;
-	uint64_t freeSize = 0;
-
 	templn[0] = NULL;
 
 	for(u8 d = 1; d < 7; d++)
 	{
 		if(isDir(drives[d]))
 		{
-			cellFsGetFreeSize(drives[d], &blockSize, &freeSize);
-			sprintf(param, "<br><a href=\"%s\">USB%c: %'d %s</a>", drives[d], drives[d][10], (int)((blockSize*freeSize)>>20), STR_MBFREE); strcat(templn, param);
+			sprintf(param, "<br><a href=\"%s\">USB%c: %'d %s</a>", drives[d], drives[d][10], (int)(get_free_space(drives[d])>>20), STR_MBFREE); strcat(templn, param);
 		}
 	}
-
-	cellFsGetFreeSize("/dev_hdd0", &blockSize, &freeSize);
 
 	sprintf(param, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
 											"CPU: %i°C%s<br>"
@@ -197,7 +191,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 											"FAN SPEED: %i%% (0x%X)</a><br>",
 					t1, max_temp1, t2,
 					t1f, max_temp2, t2f,
-					(meminfo.avail>>10), drives[0], (int)((blockSize*freeSize)>>20), STR_MBFREE, templn,
+					(meminfo.avail>>10), drives[0], (int)(get_free_space("/dev_hdd0")>>20), STR_MBFREE, templn,
 					(int)((int)fan_speed*100)/255, fan_speed); buffer += concat(buffer, param);
 
 	if( !max_temp && !is_ps3_http)

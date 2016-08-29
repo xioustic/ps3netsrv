@@ -70,4 +70,4 @@ window.addEventListener('contextmenu',function(e){
 },false);
 
 // Clear menu
-window.onclick=function(e){if(m)m.display='none';t=e.target;if(t.id.indexOf('im')==0||(typeof(t.href)=='string'&&t.href.indexOf('.ps3')>0))wmsg.style.display='block';}
+window.onclick=function(e){if(m)m.display='none';t=e.target;if(t.id.indexOf('im')==0||(typeof(t.href)=='string'&&t.href.indexOf('.ps3')>0&&t.href.indexOf('prompt')<0))wmsg.style.display='block';}

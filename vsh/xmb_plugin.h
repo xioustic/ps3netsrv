@@ -64,31 +64,31 @@ enum plugins
 
 typedef struct
 {
-	int (*GetPluginIdByName)(const char *);
-	int (*GetPluginNameById)(int);
-	int (*IsPluginViewAvailable)(int) ;
-	int (*LoadPlugin3)(int, void *, int) ;
-	int (*LoadPlugin4)(int *) ;
-	int (*Shutdown)(int,void *,int) ;
-	int (*DoUnk6)(int *) ; // shutdown as well?
-	int (*DoUnk7)(int) ;
-	int (*ActivatePlugin)(int) ;
-	int (*DoUnk9)(int) ;
-	int (*DoUnk10)(int) ;
+	int (*GetPluginIdByName)(const char *);      // char * plugin name - get plugin id by string name
+	int (*GetPluginNameById)(int);               // int value (Plugin Enum ID) - gets plugin name string by Id
+	int (*IsPluginViewAvailable)(int) ;          // can test if plugin view is available or not. (Result != 0)
+	int (*LoadPlugin3)(int, void *, int) ;       // Loads corresponding plugin and executes the thread for view/interface usage
+	int (*LoadPlugin4)(int *) ;                  // Utility::LoadPlugin, 1 Parameter: uint * { Plugin Enum Id, int, int, int }
+	int (*Shutdown)(int,void *,int) ;            // int value (Plugin Enum Id), void * callback, int
+	int (*DoUnk6)(int *) ;                       // shutdown as well?
+	int (*DoUnk7)(int) ;                         // int value (Plugin Enum ID) - _paf_99919819 - (module activate?)
+	int (*ActivatePlugin)(int) ;                 // int value (Plugin Enum ID)
+	int (*DoUnk9)(int) ;                         // int value (Plugin Enum ID) to store
+	int (*DoUnk10)(int) ;                        // int value to store - (module deactivate?)
 	int (*DoUnk11)(int,int) ;
-	int (*DoUnk12)(int,int,int) ;
-	int (*DoUnk13)(int *) ;
-	int (*DoUnk14)(int *) ;
-	int (*DoUnk15)(int *) ;
-	int (*GetModuleLoadOpinion)(int) ;
-	int (*SetModuleLoadOpinion)(int, long unk) ;
-	int (*DoUnk18)(void *, int) ;
-	int (*DoUnk19)(void *, int) ;
-	int (*DoUnk20)(int *, int *) ;
-	int (*DoUnk21)(int, int) ;
-	int (*DoUnk22)(int) ;
-	int (*DoUnk23)(const char *,int) ;
-	int (*DoUnk24)(const char *,int) ;
+	int (*DoUnk12)(int,int,int) ;                // int (Plugin Enum Id) , int value (Plugin Enum ID), int value to store - SendFinalizeEndNotify?
+	int (*DoUnk13)(int *) ;                      // uint* [0xED8] - receives
+	int (*DoUnk14)(int *) ;                      // uint* [0xED8] - sets
+	int (*DoUnk15)(int *) ;                      // struct *ptr
+	int (*GetModuleLoadOpinion)(int) ;           // int value (Plugin Enum ID)
+	int (*SetModuleLoadOpinion)(int, long unk) ; // int value (Plugin Enum ID), uint64 unknown - stores unknown value onto xmb plugin enum id's struct
+	int (*DoUnk18)(void *, int) ;                // void * handler, int
+	int (*DoUnk19)(void *, int) ;                // void * handler, int
+	int (*DoUnk20)(int *, int *) ;               // out: int *, out: int *
+	int (*DoUnk21)(int, int) ;                   // int value (Plugin Enum ID), int value (0 = _vshnet_965A7E9D( ) ,else= _vshnet_52122E7D(("PS3 %s"), ))
+	int (*DoUnk22)(int) ;                        // executes given Plugin ID MOD0-Inferface Function 4)
+	int (*DoUnk23)(const char *,int) ;           // Executes Action
+	int (*DoUnk24)(const char *,int) ;           // Gets Plugin ID Enum based by Action string
 	int (*DoUnk25)(void) ;
 } xmb_plugin_xmm0;
 

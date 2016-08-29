@@ -265,10 +265,6 @@ show_popup:
 								get_temperature(0, &t1); // CPU
 								get_temperature(1, &t2); // RSX
 
-								uint32_t blockSize;
-								uint64_t freeSize;
-								cellFsGetFreeSize("/dev_hdd0", &blockSize, &freeSize);
-
 								u8 speed = fan_speed;
 								if(fan_ps2_mode) speed=(int)(255.f*(float)(webman_config->ps2temp+1)/100.f); else
 								if((webman_config->fanc==0) && (get_fan_policy_offset>0))
@@ -314,7 +310,7 @@ show_popup:
 
 								sprintf(msg, "%s\n%s: %'i %s\n"
 											 "%s: %'i %s\n", tmp,
-											 STR_STORAGE, (int)((blockSize*freeSize)>>20), STR_MBFREE,
+											 STR_STORAGE, (int)(get_free_space("/dev_hdd0")>>20), STR_MBFREE,
 											 STR_MEMORY, meminfo.avail>>10, STR_KBFREE);
 
 								if(R2 && (gTick.tick>rTick.tick))

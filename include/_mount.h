@@ -16,8 +16,8 @@ typedef struct
 } __attribute__((packed)) _lastgames;
 
 #ifndef COBRA_ONLY
- static uint64_t base_addr=0;
- static uint64_t open_hook=0;
+ static uint64_t base_addr = 0;
+ static uint64_t open_hook = 0;
 
  typedef struct
  {
@@ -130,7 +130,8 @@ static void detect_firmware(void)
 		if(c_firmware == 4.65f) {base_addr = 0x2D88E0; open_hook = 0x2A02C8;} else
 		if(c_firmware == 4.66f) {base_addr = 0x2D88E0; open_hook = 0x2A02C8;} else
 		if(c_firmware == 4.70f) {base_addr = 0x2D8A70; open_hook = 0x2975C0;} else
-		if(c_firmware >= 4.75f && c_firmware <= 4.78f) {base_addr = 0x2D8AF0; open_hook = 0x297638;} else
+		if(c_firmware >= 4.75f &&
+		   c_firmware <= 4.78f) {base_addr = 0x2D8AF0; open_hook = 0x297638;} else
 		if(c_firmware == 4.80f) {base_addr = 0x2D8AE0; open_hook = 0x29762C;}
 	}
  #ifdef DECR_SUPPORT
@@ -139,7 +140,7 @@ static void detect_firmware(void)
 		if(c_firmware == 3.55f) {base_addr = 0x2F5320; open_hook = 0x2E31F4;} else
 	  //if(c_firmware == 4.50f) {base_addr = 0x30D2C0; open_hook = 0x2CEF08;} else
 		if(c_firmware == 4.60f) {base_addr = 0x310EE0; open_hook = 0x2D1464;} else
-		if(c_firmware == 4.78f) {base_addr = 0x3110F0; open_hook = 0x2C87E0;}
+		if(c_firmware == 4.78f) {base_addr = 0x3110F0; open_hook = 0x2C87E0;} else
 		if(c_firmware == 4.80f) {base_addr = 0x3110F0; open_hook = 0x2C87D4;}
 	}
  #endif
@@ -160,7 +161,8 @@ static void detect_firmware(void)
 		if(c_firmware == 4.65f) {base_addr = 0x2FA230; open_hook = 0x2BB010;} else
 		if(c_firmware == 4.66f) {base_addr = 0x2FA230; open_hook = 0x2BB010;} else
 		if(c_firmware == 4.70f) {base_addr = 0x2FA540; open_hook = 0x2B2480;} else
-		if(c_firmware >= 4.75f && c_firmware <= 4.78f) {base_addr = 0x2FA5B0; open_hook = 0x2B24F8;}
+		if(c_firmware >= 4.75f &&
+		   c_firmware <= 4.78f) {base_addr = 0x2FA5B0; open_hook = 0x2B24F8;}
 		if(c_firmware == 4.80f) {base_addr = 0x2FA680; open_hook = 0x2B25C4;}
 	}
  #endif

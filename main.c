@@ -319,7 +319,7 @@ static sys_ppu_thread_t thread_id_netsvr = -1;
 #define MIN(a, b)	((a) <= (b) ? (a) : (b))
 #define ABS(a)		(((a) < 0) ? -(a) : (a))
 #define RANGE(a, b, c)	((a) <= (b) ? (b) : (a) >= (c) ? (c) : (a))
-#define ISDIGIT(a)	((a) >= '0' && (a) <= '9')
+#define ISDIGIT(a)	('0' <= (unsigned char)(a) && (unsigned char)(a) <= '9')
 
 #define START_DAEMON		(0xC0FEBABE)
 #define REFRESH_CONTENT		(0xC0FEBAB0)
@@ -593,7 +593,7 @@ static void handleclient(u64 conn_s_p);
 static void do_umount(bool clean);
 static void mount_autoboot(void);
 static bool mount_with_mm(const char *_path, u8 do_eject);
-static void get_name(char *name, char *filename, u8 cache);
+static void get_name(char *name, const char *filename, u8 cache);
 static void add_breadcrumb_trail(char *buffer, char *param);
 static void get_cpursx(char *cpursx);
 

@@ -34,7 +34,7 @@ typedef struct xsetting_0AF1F161_class_t  // 28
 	int32_t (*GetSystemSoundEffectEnabled)(int32_t *);
 	int32_t (*unk_new)(void *, void *);
 	int32_t (*unk_delete)(void *, void *);
-} xsetting_0AF1F161_class; 
+} xsetting_0AF1F161_class;
 
 typedef struct xsetting_154430FC_class_t  // 48 sound
 {
@@ -91,21 +91,21 @@ typedef struct xsetting_154430FC_class_t  // 48 sound
 typedef struct xsetting_16A8A805_class_t  // 53
 {
 	int32_t (*SetBdMenuLanguage)(int32_t);
-	int32_t (*GetBdMenuLanguage)(int32_t *);	 
+	int32_t (*GetBdMenuLanguage)(int32_t *);
 	int32_t (*SetBdSoundLanguage)(int32_t);
-	int32_t (*GetBdSoundLanguage)(int32_t *);	 
+	int32_t (*GetBdSoundLanguage)(int32_t *);
 	int32_t (*SetBdCaptionLanguage)(int32_t);
 	int32_t (*GetBdCaptionLanguage)(int32_t *);
 	int32_t (*Set_unk6)(int32_t);
-	int32_t (*Get_unk7)(int32_t *);	 
+	int32_t (*Get_unk7)(int32_t *);
 	int32_t (*SetDvdMenuLanguage)(int32_t);
-	int32_t (*GetDvdMenuLanguage)(int32_t *);	 
+	int32_t (*GetDvdMenuLanguage)(int32_t *);
 	int32_t (*SetDvdSoundLanguage)(int32_t);
-	int32_t (*GetDvdSoundLanguage)(int32_t *);	 
+	int32_t (*GetDvdSoundLanguage)(int32_t *);
 	int32_t (*SetDvdCaptionLanguage)(int32_t);
-	int32_t (*GetDvdCaptionLanguage)(int32_t *);	 
+	int32_t (*GetDvdCaptionLanguage)(int32_t *);
 	int32_t (*Set_unk14)(int32_t);
-	int32_t (*Get_unk15)(int32_t *);	 
+	int32_t (*Get_unk15)(int32_t *);
 	int32_t (*SetFnr)(int32_t);
 	int32_t (*GetFnr)(int32_t *);
 	int32_t (*SetBnr)(int32_t);
@@ -117,7 +117,7 @@ typedef struct xsetting_16A8A805_class_t  // 53
 	int32_t (*SetBnrForDvdRom)(int32_t);
 	int32_t (*GetBnrForDvdRom)(int32_t *);
 	int32_t (*SetMnrForDvdRom)(int32_t);
-	int32_t (*GetMnrForDvdRom)(int32_t *);	 
+	int32_t (*GetMnrForDvdRom)(int32_t *);
 	int32_t (*SetCinemaConversion)(int32_t);
 	int32_t (*GetCinemaConversion)(int32_t *);
 	int32_t (*SetVolume)(int32_t);
@@ -134,15 +134,15 @@ typedef struct xsetting_16A8A805_class_t  // 53
 	int32_t (*GetDvdUpConvert)(int32_t *);
 	int32_t (*SetDrc)(int32_t);
 	int32_t (*GetDrc)(int32_t *);
-	int32_t (*GetColorButtonAssign)(int32_t *);	 
+	int32_t (*GetColorButtonAssign)(int32_t *);
 	int32_t (*SetNetworkConnect)(int32_t);
-	int32_t (*GetNetworkConnect)(int32_t *);	 
+	int32_t (*GetNetworkConnect)(int32_t *);
 	int32_t (*GetSoundFormatHdmi)(int32_t *);
 	int32_t (*SetSoundFormatHdmi)(int32_t);
 	int32_t (*GetVideoFormatHdmiColorSpace)(int32_t *);
 	int32_t (*SetVideoFormatHdmiColorSpace)(int32_t);
 	int32_t (*GetVideoFormatHdmi1080_24p)(int32_t *);
-	int32_t (*SetVideoFormatHdmi1080_24p)(int32_t);	 
+	int32_t (*SetVideoFormatHdmi1080_24p)(int32_t);
 } xsetting_16A8A805_class;
 
 typedef struct xsetting_1D6D60D4_class_t  // 4, printer
@@ -784,7 +784,7 @@ typedef struct _net_info {
   int32_t etherMode;                   //0x004:
   int32_t authProto;                   //0x008:
   char wirelessPassPhrase[0x41];       //0x00C: wepKey[0x1A] wpaKey[0x40]
-  char ssid[0x20];                     //0x04D: ssid[0x20] 
+  char ssid[0x20];                     //0x04D: ssid[0x20]
   uint8_t pad0[3];
   int32_t auth8021xType;               //0x070: int32_t auth8021xType
   char auth8021xAuthName[0x80];        //0x074: auth8021xAuthName[0x80]
@@ -796,8 +796,8 @@ typedef struct _net_info {
   char ipAddress[0x10];                //0x377: ipAddress[0x10]
   char netmask[0x10];                  //0x387: netmask[0x10]
   char defaultRoute[0x10];             //0x397: defaultRoute[0x10]
-  uint8_t pad1;                        
-  int32_t dnsFlag;                     //0x3A8: 
+  uint8_t pad1;
+  int32_t dnsFlag;                     //0x3A8:
   char primaryDns[0x10];               //0x3AC:
   char secondaryDns[0x10];             //0x3BC:
   int32_t httpProxyFlag;               //0x3CC:
@@ -845,20 +845,20 @@ typedef struct xsetting_F48C0548_class_t  // 38 net
 	int32_t (*GetSettingNet_secondaryDns)(address *);
 	int32_t (*SetSettingNet_httpProxyFlag)(int32_t);
 	int32_t (*GetSettingNet_httpProxyFlag)(int32_t *);
-	
+
 	int32_t (*sub_44A104)(void *);     // set "/setting/net/httpProxyServer"    [0x100]
 	int32_t (*sub_449F0C)(void *);     // get "/setting/net/httpProxyServer"    [0x100]
-	
+
 	int32_t (*SetSettingNet_httpProxyPort)(int16_t);
 	int32_t (*GetSettingNet_httpProxyPort)(int16_t *);
 	int32_t (*SetSettingNet_upnpFlag)(int32_t);
 	int32_t (*GetSettingNet_upnpFlag)(int32_t *);
-	
+
 	int32_t (*sub_44AE60)(net_info *);            // set network config, [0x664]
 	int32_t (*sub_44A47C)(net_info *);            // get network config, [0x664]
 	int32_t (*sub_44B2EC)(int32_t, net_info *);   // set network config, [0x664], arg1(device) 0 or 2
 	int32_t (*sub_44AA24)(int32_t, net_info *);   // get network config, [0x664], arg1(device) 0 or 2
-	
+
 	int32_t (*SetLeaseIPAndTime)(int32_t, lease_info *);       // arg1(device) 0 or 2
 	int32_t (*GetLeaseIPAndTime)(int32_t, lease_info *);       // arg1(device) 0 or 2
 	int32_t (*SetWirelessSsidAndPassPhrase)(wireless_info *);  // set wirelessSsid[0x20] and wirelessPassPhrase[0x41]
@@ -907,23 +907,4 @@ extern xsetting_F48C0548_class* xsetting_F48C0548(void);
 extern xsetting_FFAF9B19_class* xsetting_FFAF9B19(void);
 
 
-#endif // __XREGISTRY_H__ 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif // __XREGISTRY_H__

@@ -410,6 +410,8 @@ static uint32_t get_system_language(uint8_t *lang)
 {
 	u32 val_lang = get_xreg_value("/setting/system/language", 1);
 
+	//xsetting_0AF1F161()->GetSystemLanguage(&val_lang);
+
 	switch(val_lang)
 	{
 		case 0x0:

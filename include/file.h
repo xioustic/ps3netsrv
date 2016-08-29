@@ -39,6 +39,14 @@ static int sysLv2FsLink(const char *oldpath,const char *newpath)
 	return_to_user_prog(int);
 }
 
+static uint64_t get_free_space(const char *dev_name)
+{
+	uint32_t blockSize;
+	uint64_t freeSize;
+	if(cellFsGetFreeSize(dev_name, &blockSize, &freeSize)  == CELL_FS_SUCCEEDED) return (freeSize * blockSize);
+	return 0;
+}
+
 static int isDir(const char* path)
 {
 	struct CellFsStat s;
@@ -180,11 +188,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 		return sysLv2FsLink(file1, file2);
 	}
 
-	uint32_t blockSize;
-	uint64_t freeSize;
-	cellFsGetFreeSize("/dev_hdd0", &blockSize, &freeSize);
-
-	if(buf.st_size > ((u64)blockSize*freeSize)) return FAILED;
+	if(buf.st_size > get_free_space("/dev_hdd0")) return FAILED;
 
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
@@ -204,7 +208,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 				part++; part_size = 0xFFFF0000ULL; //4Gb - 64kb
 			}
 
-			uint64_t read = 0, written = 0, pos=0;
+			uint64_t read = 0, written = 0, pos = 0;
 			char *chunk = (char*)sysmem;
 			u16 flen = strlen(file2);
 next_part:

@@ -285,17 +285,16 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	_MAX_PATH_LEN = MAX_PATH_LEN;
 	_MAX_LINE_LEN = MAX_LINE_LEN;
 
-	int plen = strlen(param);
-
-	if(!extcmp(param + MAX(plen - 7, 0), "/exdata", 7)) {_LINELEN = _MAX_LINE_LEN = _MAX_PATH_LEN = 200; skip_cmd = 1;}
-
 	if(is_net || cellFsOpendir(param, &fd) == CELL_FS_SUCCEEDED)
 	{
+		int plen = strlen(param);
+
+		if(!extcmp(param + MAX(plen - 7, 0), "/exdata", 7)) {_LINELEN = _MAX_LINE_LEN = _MAX_PATH_LEN = 200; skip_cmd = 1;}
+
 		CellFsDirent entry;
 		u64 read_e;
 		unsigned long long sz = 0, dir_size = 0;
-		char sf[8];
-		char ename[16];
+		char ename[16], sf[8];
 		char fsize[MAX_PATH_LEN], swap[MAX_PATH_LEN];
 		u16 idx = 0, dirs = 0, flen; bool is_dir;
 		u32 tlen = 0;
@@ -634,12 +633,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 								"<b>" HTML_URL ":", param, param);
 			else
 			{
-				uint32_t blockSize;
-				uint64_t freeSize;
-				cellFsGetFreeSize(param, &blockSize, &freeSize);
 				sprintf(templn, "<hr>"
 								"<b>" HTML_URL ": %'d %s",
-								param, param, (int)((blockSize*freeSize)>>20), STR_MBFREE);
+								param, param, (int)(get_free_space(param)>>20), STR_MBFREE);
 			}
 
 			buffer += concat(buffer, templn);

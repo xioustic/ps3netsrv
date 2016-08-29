@@ -144,9 +144,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(strcasecmp(cmd, "CDUP") == 0)
 				{
-					u16 pos = strlen(cwd) - 2;
+					int pos = strlen(cwd) - 2;
 
-					for(u16 i = pos; i > 0; i--)
+					for(int i = pos; i > 0; i--)
 					{
 						if(i < pos && cwd[i] == '/')
 						{
@@ -215,8 +215,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					if(split == 1)
 					{
 						char data[6][4];
-						int i = 0;
-						u8 k = 0, plen = strlen(param);
+						u8 i = 0, k = 0, plen = strlen(param);
 
 						for(u8 j = 0; j <= plen; j++)
 						{
@@ -576,14 +575,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							}
 							else
 							{
-								uint32_t blockSize;
-								uint64_t freeSize;
 								char *slash = strchr(d_path + 1, '/');
 								if(slash) slash[0] = '\0';
 
-								cellFsGetFreeSize(d_path, &blockSize, &freeSize);
 								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
-								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", d_path, (int)((blockSize*freeSize)>>20), STR_MBFREE, cpursx);
+								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", d_path, (int)(get_free_space(d_path)>>20), STR_MBFREE, cpursx);
 								ssend(conn_s_ftp, buffer);
 							}
 						}
