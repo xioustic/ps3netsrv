@@ -1053,7 +1053,7 @@ next_html_entry:
 
 		tlen = buf_len;
 
-		if(!mobile_mode)
+		if(mobile_mode)
 			for(u16 m = 0; m < idx; m++)
 			{
 				if(tlen >= (BUFFER_MAXSIZE)) break;
