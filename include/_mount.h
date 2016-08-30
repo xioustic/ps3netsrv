@@ -2887,7 +2887,7 @@ exit_mount:
 		sprintf(path2, "\"%s", (strrchr(_path, '/') + 1));
 		if(strstr(path2, ".ntfs[")) path2[strrchr(path2, '.')-path2] = NULL;
 		if(strrchr(path2, '.')!=NULL) path2[strrchr(path2, '.')-path2] = NULL;
-		if(path2[1]==NULL) sprintf(path2, "\"%s", _path);
+		if(path2[1] == NULL) sprintf(path2, "\"%s", _path);
 		sprintf(temp, "\" %s", STR_LOADED2); strcat(path2, temp);
 		show_msg(path2);
 	}

@@ -788,17 +788,16 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						if(filter_name[0]>=' ' && strcasestr(templn, filter_name)==NULL && strcasestr(param, filter_name)==NULL && strcasestr(data[v3_entry].name, filter_name)==NULL) {v3_entry++; continue;}
 
+						if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
-						strcpy(tempstr, icon); urlenc(icon, tempstr);
-
-						snprintf(tempstr, 8, "%s      ", templn); to_upper(tempstr, HTML_KEY_LEN); // sort key
+						snprintf(tempstr, HTML_KEY_LEN + 1, "%s      ", templn); to_upper(tempstr, HTML_KEY_LEN); // sort key
 
 						if(mobile_mode)
 						{
 							if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
 							for(size_t c = 0; templn[c] != NULL; c++) {if(templn[c] == '"' || templn[c] < ' ') templn[c] = ' ';} // replace invalid chars
 
-							int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320; h=176;} else if(strstr(icon, "icon_wm_")) {w=280; h=280;}
+							int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320; h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280; h = 280;}
 
 							sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s%s/%s\"},",
 									icon[0] ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
@@ -938,30 +937,31 @@ next_html_entry:
 
 							urlenc(enc_dir_name, entry.d_name);
 
-							templn[64] = NULL; flen = strlen(templn);
+							templn[64] = NULL;
 
-							urlenc(tempstr, icon);
+							if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
-							snprintf(tempstr, 8, "%s      ", templn); to_upper(tempstr, HTML_KEY_LEN); // sort key
+							snprintf(tempstr, HTML_KEY_LEN + 1, "%s      ", templn); to_upper(tempstr, HTML_KEY_LEN); // sort key
 
 							if(mobile_mode)
 							{
 								if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
 								for(size_t c = 0; templn[c] > 0; c++) {if((templn[c] == '"') || (templn[c] < ' ')) templn[c] = ' ';} // replace invalid chars
 
-								int w=260, h=300; if(strstr(icon, "ICON0.PNG")) {w=320, h=176;} else if(strstr(icon, "icon_wm_")) {w=280, h=280;}
+								int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320, h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280, h = 280;}
 
 								sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s/%s\"},",
 										icon, w, h, templn, param, enc_dir_name);
 							}
 							else
 							{
+								flen = strlen(templn);
 								do
 								{
 									sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
 											param, "", enc_dir_name, (u16)pTick.tick, idx, icon, onerror_prefix, (onerror_prefix[0]!=NULL && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
 
-									flen-=4; if(flen<32) break;
+									flen -= 4; if(flen < 32) break;
 									templn[flen] = NULL;
 								}
 								while(strlen(tempstr + HTML_KEY_LEN)>MAX_LINE_LEN);
@@ -1052,14 +1052,23 @@ next_html_entry:
 		}
 
 		tlen = buf_len;
-		for(u16 m = 0; m < idx; m++)
-		{
-			if(tlen > (BUFFER_MAXSIZE)) break;
 
-			tlen += concat(buffer + tlen, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3");
-			tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
-			tlen += concat(buffer + tlen, "</a></div></div>");
-		}
+		if(!mobile_mode)
+			for(u16 m = 0; m < idx; m++)
+			{
+				if(tlen >= (BUFFER_MAXSIZE)) break;
+
+				tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
+			}
+		else
+			for(u16 m = 0; m < idx; m++)
+			{
+				if(tlen >= (BUFFER_MAXSIZE)) break;
+
+				tlen += concat(buffer + tlen, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3");
+				tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
+				tlen += concat(buffer + tlen, "</a></div></div>");
+			}
 
 #ifndef LITE_EDITION
 		if(sortable) tlen += concat(buffer + tlen, "</div>");

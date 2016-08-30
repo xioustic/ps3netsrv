@@ -60,7 +60,7 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 	}
 
 	// encode url for html
-	if(urlenc(tempstr, templn)) strncpy(templn, tempstr, _MAX_LINE_LEN);
+	if(urlenc(tempstr, templn)) {tempstr[_MAX_LINE_LEN] = NULL; sprintf(templn, "%s", tempstr);}
 
 	// is image?
 	u8 show_img = !is_ps3_http && (!is_dir && (!strcasecmp(ext, ".png") || !strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".bmp")));
@@ -163,7 +163,7 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 
 	snprintf(ename, FILE_MGR_KEY_LEN, "%s     ", name);
-	if(flen > 4) {char c = name[flen - 1]; if(c >= '0' && c <= '9') ename[4] = c;}
+	if(flen > 4) {char c = name[flen - 1]; if(c >= '0' && c <= '9') ename[4] = c;} to_upper(ename, FILE_MGR_KEY_LEN);
 
 	if((plen > 1) && memcmp(templn, param, plen) == 0) sprintf(templn, "%s", templn + plen + 1);
 
@@ -518,7 +518,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			u16 n, m;
 			for(n=0; n<(idx-1); n++)
 				for(m=(n+1); m<idx; m++)
-					if(strncasecmp(line_entry[n].path, line_entry[m].path, FILE_MGR_KEY_LEN) > 0)
+					if(strncmp(line_entry[n].path, line_entry[m].path, FILE_MGR_KEY_LEN) > 0)
 					{
 						strcpy(swap, line_entry[n].path);
 						strcpy(line_entry[n].path, line_entry[m].path);

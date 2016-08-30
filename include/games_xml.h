@@ -154,7 +154,7 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 		}
 	}
 
-	to_upper(skey + 1, 6);
+	to_upper(skey + 1, XML_KEY_LEN - 1);
 
 	#define ITEMS_BUFFER(a)  (64 * (item_count[a] + 8))
 
