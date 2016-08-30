@@ -256,7 +256,7 @@ static void prepare_header(char *buffer, const char *param, u8 is_binary)
 
 	if(is_binary == BINARY_FILE)
 	{
-		char *ext = param + MAX(flen - 4, 0), *ext5 = param + MAX(flen - 5, 0);
+		char *ext = (char*)param + MAX(flen - 4, 0), *ext5 = (char*)param + MAX(flen - 5, 0);
 
 		if(!extcasecmp(ext, ".png", 4))
 			strcat(header, "image/png");
@@ -415,7 +415,7 @@ static void get_value(char *text, char *url, u16 size)
 	text[n] = NULL;
 }
 
-static u32 get_valuen32(char *param, const char *label)
+static u32 get_valuen32(const char *param, const char *label)
 {
 	char value[12], *pos = strstr(param, label);
 	if(pos)
@@ -426,7 +426,7 @@ static u32 get_valuen32(char *param, const char *label)
 	return 0;
 }
 
-static u16 get_valuen16(char *param, const char *label)
+static u16 get_valuen16(const char *param, const char *label)
 {
 	return RANGE((u16)get_valuen32(param, label), 0, 65535);
 }

@@ -9,9 +9,14 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 #define _2MB_	0x200000ULL
 #define _48GB_	0xC00000000ULL
 
+#define TABLE_ITEM_PREFIX  "<tr><td><a class=\""
+#define TABLE_ITEM_SUFIX   "</td></tr>"
+
+#define TABLE_ITEM_SIZE  28  // strlen(TABLE_ITEM_PREFIX + TABLE_ITEM_SUFIX) = (18 + 10)
+
 #define FILE_MGR_KEY_LEN	6
 
-static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
+static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
 {
 	unsigned long long sbytes = sz; bool is_root = false;
 
@@ -30,6 +35,7 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 
 	flen = strlen(name); char *ext = name + MAX(flen - 4, 0); fsize[0] = NULL;
 
+#ifndef LITE_EDITION
 	// get title & title ID from PARAM.SFO
 	if( !is_dir && !strcmp(name, "PARAM.SFO") )
 	{
@@ -38,6 +44,7 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 		//get title & app version from PARAM.SFO
 		getTitleID(templn, version, GET_VERSION);
 		getTitleID(title, titleid, GET_TITLE_AND_ID); char *p = strstr(title, " ["); if(p) p[0] = NULL; //p = strstr(title, "\n"); if(p) p[0] = NULL;
+		get_cover_from_name(tempstr, strrchr(param, '/') + 1, titleid); // get title id from path (if title ID was not found in PARAM.SFO)
 		if(version[0]>='0') {strcat(title, " v"); strcat(title, version);}
 		sprintf(tempstr, "%s%s", HDD0_GAME_DIR, titleid); bool has_updates_dir = file_exists(tempstr);
 
@@ -58,16 +65,23 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 		if(has_updates_dir) sprintf(fsize, "<a href=\"/fixgame.ps3%s%s\">%'llu %s</a>%s", HDD0_GAME_DIR, titleid, sz, sf, tempstr);
 		#endif
 	}
+#endif
 
 	// encode url for html
 	if(urlenc(tempstr, templn)) {tempstr[_MAX_LINE_LEN] = NULL; sprintf(templn, "%s", tempstr);}
 
+#ifndef LITE_EDITION
 	// is image?
 	u8 show_img = !is_ps3_http && (!is_dir && (!strcasecmp(ext, ".png") || !strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".bmp")));
+#endif
+
+	char dclass = 'w'; // file class
 
 	// build size column
 	if(is_dir)
 	{
+		dclass = 'd'; // dir class
+
 		bool show_play = ((flen == 8) && !strcmp(templn, "/dev_bdvd") && IS_ON_XMB);
 
 		if(flen == 9 && !strcmp(templn, "/host_root")) strcpy(templn, "/dev_hdd0/packages"); // replace host_root with a shortcut to /dev_hdd0/packages
@@ -92,6 +106,7 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || !strcmp(name, "savedata") || !strcmp(name, "exdata") || !strcmp(name, "home") ))
 			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", islike(templn, param) ? templn + plen : templn, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", HTML_DIR);
 #endif
+#ifndef LITE_EDITION
 		else
 		if(strlen(templn) <= 11 && islike(templn, "/dev_"))
 		{
@@ -107,6 +122,7 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 							"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
 							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), is_ps3_http ? 20 : 18, templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
 		}
+#endif
 		else
 #ifdef PS2_DISC
 			sprintf(fsize, "<a href=\"/mount%s%s\">%s</a>", strstr(name, "[PS2")?".ps2":".ps3", templn, HTML_DIR);
@@ -155,8 +171,10 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 	else if(!is_net && ( !extcmp(name, ".sprx", 5)))
 		sprintf(fsize, "<a href=\"/loadprx.ps3?slot=6&prx=%s\">%'llu %s</a>", templn, sz, sf);
 #endif
+#ifndef LITE_EDITION
 	else if( (sz <= MAX_TEXT_LEN) && (strcasestr(".txt|.ini|.log|.sfx|.xml|.cfg|.his|.hip|.bup|.css|.html|conf|name", ext)!=NULL || strstr(templn, "wm_custom")!=NULL ) )
 			sprintf(fsize, "<a href=\"/edit.ps3%s\">%'llu %s</a>", templn, sz, sf);
+#endif
 	else if(sbytes < 10240)
 		sprintf(fsize, "%'llu %s", sz, sf);
 	else
@@ -169,9 +187,12 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 
 	sprintf(tempstr, "%c%c%c%c%c%c"
 					 "%c\" href=\"%s\"%s>%s</a></td>",
-					is_dir ? '0' : '1', ename[0], ename[1], ename[2], ename[3], ename[4],
-					is_dir ? 'd' : 'w', templn,
-					show_img ? " onmouseover=\"s(this,0);\"" : (is_dir && show_icon0) ? " onmouseover=\"s(this,1);\"" : "", name);
+					dclass, ename[0], ename[1], ename[2], ename[3], ename[4],
+					dclass, templn,
+#ifndef LITE_EDITION
+					show_img ? " onmouseover=\"s(this,0);\"" : (is_dir && show_icon0) ? " onmouseover=\"s(this,1);\"" :
+#endif
+					"", name);
 
 	flen = strlen(tempstr);
 
@@ -181,8 +202,8 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 
 		sprintf(tempstr, "%c%c%c%c%c%c"
 						 "%c\" href=\"%s\">%s</a></td>",
-		is_dir ? '0' : '1', ename[0], ename[1], ename[2], ename[3], ename[4],
-		is_dir ? 'd' : 'w', templn, name);
+		dclass, ename[0], ename[1], ename[2], ename[3], ename[4],
+		dclass, templn, name);
 
 		flen = strlen(tempstr);
 
@@ -192,8 +213,10 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 
 			sprintf(tempstr, "%c%c%c%c%c%c"
 							 "%c\">%s</a></td>",
-			is_dir ? '0' : '1', ename[0], ename[1], ename[2], ename[3], ename[4],
-			is_dir ? 'd' : 'w', name);
+			dclass, ename[0], ename[1], ename[2], ename[3], ename[4],
+			dclass, name);
+
+			flen = strlen(tempstr);
 		}
 	}
 
@@ -202,10 +225,11 @@ static void add_list_entry(char *param, int plen, char *tempstr, bool is_dir, ch
 					fsize, is_root ? "" : " &nbsp; ",
 					rDate.day, smonth[rDate.month-1], rDate.year, rDate.hour, rDate.minute);
 
-	strcat(tempstr, templn);
+	flen += concat(tempstr, templn);
 
-	flen = strlen(tempstr);
 	if(flen >= _LINELEN) {flen=0; tempstr[0] = NULL;} //ignore file if it is still too long
+
+	return flen;
 }
 
 static void add_breadcrumb_trail(char *pbuffer, char *param)
@@ -313,11 +337,13 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		u8 jb_games = (strstr(param, "/GAMES") || strstr(param, "/GAMEZ"));
 		u8 show_icon0 = jb_games || (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/"));
 
+#ifndef LITE_EDITION
 		sprintf(templn, "<img id=\"icon\"%s>"
 						"<script>"
 						// show icon of item pointed with mouse
 						"function s(o,d){u=o.href;p=u.indexOf('.ps3');if(p>0)u=u.substring(p+4);if(d){p=u.indexOf('/PS3_');if(p<0)p=u.indexOf('/USRDIR');if(p>0)u=u.substring(0,p);u+='%s/ICON0.PNG';}icon.src=u;icon.style.display='block';}"
 						"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : "")); strcat(buffer, templn);
+#endif
 
 		// breadcrumb trail //
 		add_breadcrumb_trail(buffer, param);
@@ -330,9 +356,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #ifdef COPY_PS3
 		if(cp_mode) {sprintf(tempstr, "<font size=2><a href=\"/paste.ps3%s\">&#128203;</a> ", is_net ? "/dev_hdd0/packages" : param); add_breadcrumb_trail(tempstr, cp_path); strcat(buffer, tempstr); strcat(buffer, "</font><p>"); }
 #endif
-		strcat(buffer, "<style>.sfo{position:absolute;top:300px;right:10px;font-size:14px}</style><table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
-
 		tlen = strlen(buffer);
+
+		tlen += concat(buffer, "<style>.sfo{position:absolute;top:300px;right:10px;font-size:14px}</style><table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
 
  #ifdef COBRA_ONLY
   #ifndef LITE_EDITION
@@ -359,13 +385,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 					flen = strlen(line_entry[idx].path);
 					if(flen >= _MAX_LINE_LEN) return false; //ignore lines too long
-					idx++; dirs++;
+					idx++, dirs++;
 					tlen += flen;
 
 					sys_addr_t data = 0;
 					netiso_read_dir_result_data *dir_items = NULL;
-					int v3_entries = 0;
-					v3_entries = read_remote_dir(ns, &data, &abort_connection);
+					int v3_entries = read_remote_dir(ns, &data, &abort_connection);
 					if(data != NULL)
 					{
 						dir_items = (netiso_read_dir_result_data*)data;
@@ -390,12 +415,11 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 							is_dir = dir_items[n].is_directory; if(is_dir) dirs++;
 
-							add_list_entry(param, plen, tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http, skip_cmd);
+							flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http, skip_cmd);
 
-							flen = strlen(tempstr);
 							if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
 							strcpy(line_entry[idx].path, tempstr); idx++;
-							tlen += flen;
+							tlen += (flen + TABLE_ITEM_SIZE);
 
 							if(!working) break;
 						}
@@ -466,12 +490,11 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				is_dir = (buf.st_mode & S_IFDIR); if(is_dir) dirs++;
 
-				add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http, skip_cmd);
+				flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http, skip_cmd);
 
-				flen = strlen(tempstr);
 				if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
 				strcpy(line_entry[idx].path, tempstr); idx++;
-				tlen += flen;
+				tlen += (flen + TABLE_ITEM_SIZE);
 
 				if(!working) break;
 			}
@@ -492,7 +515,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #endif
 			  )
 			{
-				sprintf(line_entry[idx].path, "0net%i "
+				sprintf(line_entry[idx].path, "dnet%i "
 											  "d\" href=\"/net%i\">net%i (%s:%i)</a></td>"
 											  "<td> <a href=\"/mount.ps3/net%i\">%s</a> &nbsp; </td><td>11-Nov-2006 11:11"
 											,  n, n, n,	n == 1 ? webman_config->neth1 :
@@ -532,9 +555,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		{
 			if(tlen > BUFFER_SIZE_HTML) break;
 
-			tlen += concat(buffer + tlen, "<tr><td><a class=\"");
+			tlen += concat(buffer + tlen, TABLE_ITEM_PREFIX);
 			tlen += concat(buffer + tlen, (line_entry[m].path) + FILE_MGR_KEY_LEN);
-			tlen += concat(buffer + tlen, "</td></tr>");
+			tlen += concat(buffer + tlen, TABLE_ITEM_SUFIX);
 		}
 
 		buffer += tlen;
@@ -628,17 +651,16 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			char *slash = strchr(param + 1, '/');
 			if(slash) slash[0] = NULL;
 
-			if(param[1] == 'n')
-				sprintf(templn, "<hr>"
-								"<b>" HTML_URL ":", param, param);
-			else
-			{
-				sprintf(templn, "<hr>"
-								"<b>" HTML_URL ": %'d %s",
-								param, param, (int)(get_free_space(param)>>20), STR_MBFREE);
-			}
+			sprintf(templn, "<hr>"
+							"<b>" HTML_URL ":", param, param);
 
 			buffer += concat(buffer, templn);
+
+			if(param[1] != 'n')
+			{
+				sprintf(templn, " %'d %s", (int)(get_free_space(param)>>20), STR_MBFREE);
+				buffer += concat(buffer, templn);
+			}
 
 			// summary
 			sprintf(templn, "</b> &nbsp; <font color=\"#707070\">%'i Dir(s) %'d %s %'d %s</font>%s",

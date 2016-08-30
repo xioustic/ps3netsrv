@@ -102,7 +102,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.34 MOD"						// webMAN version
+#define WM_VERSION			"1.43.35 MOD"						// webMAN version
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -850,28 +850,30 @@ static void handleclient(u64 conn_s_p)
 				show_msg(param);
 			}
 
-			//////////// usb ports ////////////
-			if(cellFsOpendir("/", &fd) == CELL_FS_SUCCEEDED)
-			{
-				CellFsDirent entry; u64 read_e; u8 indx = 5; // 5 = /dev_usb006, 6 = /dev_usb007
-
-				while(cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
-				{
-					if(islike(entry.d_name, "dev_usb"))
-					{
-						if(entry.d_name[7] == '0' && entry.d_name[8] == '0' && entry.d_name[9] < '4') continue;
-						sprintf(drives[indx], "/%s", entry.d_name);
-						indx++; if(indx > 6) break;
-					}
-				}
-				cellFsClosedir(fd);
-			}
-			///////////////////////////////////
+			if(webman_config->bootd) waitfor("/dev_usb", webman_config->bootd); // wait for any usb
 		}
 		else //if(conn_s_p == REFRESH_CONTENT)
 		{
 			{DELETE_CACHED_GAMES} // refresh XML will force "refresh HTML" to rebuild the cache file
 		}
+
+		//////////// usb ports ////////////
+		if(cellFsOpendir("/", &fd) == CELL_FS_SUCCEEDED)
+		{
+			CellFsDirent entry; u64 read_e; u8 indx = 5; // 5 = /dev_usb006, 6 = /dev_usb007
+
+			while(cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
+			{
+				if(islike(entry.d_name, "dev_usb"))
+				{
+					if(entry.d_name[7] == '0' && entry.d_name[8] == '0' && entry.d_name[9] < '4') continue;
+					sprintf(drives[indx], "/%s", entry.d_name);
+					indx++; if(indx > 6) break;
+				}
+			}
+			cellFsClosedir(fd);
+		}
+		///////////////////////////////////
 
 		cellFsMkdir(WMTMP, DMODE);
 
@@ -883,13 +885,14 @@ static void handleclient(u64 conn_s_p)
 			{
 				sprintf(param, "/dev_flash/vsh/resource/explore/icon/%s", wm_icons[i] + 23); strcpy(wm_icons[i], param);
 				if(file_exists(param)) continue;
-				else
-				if(i == 0 || i == 5) strcpy(wm_icons[i] + 32, "user/024.png\0"); else //ps3
-				if(i == 1 || i == 6) strcpy(wm_icons[i] + 32, "user/026.png\0"); else //psx
-				if(i == 2 || i == 7) strcpy(wm_icons[i] + 32, "user/025.png\0"); else //ps2
-				if(i == 3 || i == 8) strcpy(wm_icons[i] + 32, "user/022.png\0"); else //psp
-				if(i == 4 || i == 9) strcpy(wm_icons[i] + 32, "user/023.png\0"); else //dvd
-									 strcpy(wm_icons[i] + 37, "icon_home.png\0"); //setup / eject
+
+				char *icon = wm_icons[i] + 32;
+				if(i == 0 || i == 5) strcpy(icon, "user/024.png\0"); else // ps3
+				if(i == 1 || i == 6) strcpy(icon, "user/026.png\0"); else // psx
+				if(i == 2 || i == 7) strcpy(icon, "user/025.png\0"); else // ps2
+				if(i == 3 || i == 8) strcpy(icon, "user/022.png\0"); else // psp
+				if(i == 4 || i == 9) strcpy(icon, "user/023.png\0"); else // dvd
+									 strcpy(icon + 5, "icon_home.png\0"); // setup / eject
 			}
 		}
 
@@ -1252,6 +1255,7 @@ static void handleclient(u64 conn_s_p)
 				else
    #endif
    #ifdef COBRA_ONLY
+    #ifndef LITE_EDITION
 				if(islike(param2, "$toggle_cobra"))
 				{
 					if(toggle_cobra()) goto restart;
@@ -1293,6 +1297,7 @@ static void handleclient(u64 conn_s_p)
 					sys_timer_sleep(3);
 				}
 				else
+    #endif //#ifndef LITE_EDITION
    #endif // #ifdef COBRA_ONLY
 				if(IS_ON_XMB)
 				{   // in-XMB
@@ -2003,6 +2008,8 @@ static void handleclient(u64 conn_s_p)
 									 HTML_BUTTON, STR_SHUTDOWN, HTML_ONCLICK, "/shutdown.ps3",
 									 HTML_BUTTON, STR_RESTART, HTML_ONCLICK, "/restart.ps3"); pbuffer += concat(pbuffer, templn);
 
+ #ifndef LITE_EDITION
+					if(!strstr(param, "$nobypass")) { PS3MAPI_REENABLE_SYSCALL8 }
 					// game list resizer
 					if(!is_ps3_http && islike(param, "/index.ps3"))
 						sprintf( templn, "<script>function rz(z){document.cookie=z;var i,el=document.getElementsByClassName('gc');for(i=0;i<el.length;++i)el[i].style.zoom=z/100;}</script>"
@@ -2010,6 +2017,7 @@ static void handleclient(u64 conn_s_p)
 										 "<script>var d=document,z=d.cookie;css=d.styleSheets[0];css.insertRule('.gc{zoom:'+z+'%%}',css.cssRules.length);d.getElementById('sz').value=z;</script>"
 										 "</form><hr>");
 					else
+ #endif
 						sprintf( templn, "</form><hr>");
 
 					pbuffer += concat(pbuffer, templn);
@@ -2289,19 +2297,19 @@ static void handleclient(u64 conn_s_p)
 							if(cellFsStat("/dev_hdd0/boot_plugins.txt", &buf) == CELL_FS_SUCCEEDED && buf.st_size < 40) cellFsUnlink("/dev_hdd0/boot_plugins.txt");
 
 							// delete files
-							unlink_file("/dev_hdd0", "webftp_server.sprx", "", tempstr);
-							unlink_file("/dev_hdd0", "webftp_server_ps3mapi.sprx", "", tempstr);
-							unlink_file("/dev_hdd0", "webftp_server_noncobra.sprx", "", tempstr);
-							unlink_file("/dev_hdd0", "raw_iso.sprx", "", tempstr);
+							unlink_file("/dev_hdd0", "webftp_server.sprx", "");
+							unlink_file("/dev_hdd0", "webftp_server_ps3mapi.sprx", "");
+							unlink_file("/dev_hdd0", "webftp_server_noncobra.sprx", "");
+							unlink_file("/dev_hdd0", "raw_iso.sprx", "");
 
-							unlink_file("/dev_hdd0", "plugins/", "webftp_server.sprx", tempstr);
-							unlink_file("/dev_hdd0", "plugins/", "webftp_server_ps3mapi.sprx", tempstr);
-							unlink_file("/dev_hdd0", "plugins/", "webftp_server_noncobra.sprx", tempstr);
-							unlink_file("/dev_hdd0", "plugins/", "raw_iso.sprx", tempstr);
-							unlink_file("/dev_hdd0", "plugins/", "wm_vsh_menu.sprx", tempstr);
+							unlink_file("/dev_hdd0", "plugins/", "webftp_server.sprx");
+							unlink_file("/dev_hdd0", "plugins/", "webftp_server_ps3mapi.sprx");
+							unlink_file("/dev_hdd0", "plugins/", "webftp_server_noncobra.sprx");
+							unlink_file("/dev_hdd0", "plugins/", "raw_iso.sprx");
+							unlink_file("/dev_hdd0", "plugins/", "wm_vsh_menu.sprx");
 
-							unlink_file("/dev_hdd0", "tmp/", "wm_vsh_menu.cfg", tempstr);
-							unlink_file("/dev_hdd0", "tmp/", "wm_custom_combo", tempstr);
+							unlink_file("/dev_hdd0", "tmp/", "wm_vsh_menu.cfg");
+							unlink_file("/dev_hdd0", "tmp/", "wm_custom_combo");
 
 							cellFsUnlink(WMCONFIG);
 

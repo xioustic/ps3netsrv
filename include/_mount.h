@@ -405,8 +405,9 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif
 	else
 	{
+#ifndef LITE_EDITION
 		uint8_t autoplay = webman_config->autoplay;
-
+#endif
 		char *purl = strstr(param + 1, "emu="); // e.g. ?emu=ps1_netemu.self / ps1_netemu.self
 		if(purl)
 		{
@@ -459,17 +460,18 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// auto-play
 		if(mount_ps3)
 		{
+#ifndef LITE_EDITION
 			if(mounted && IS_ON_XMB && strstr(param, "/PSPISO") == NULL && extcmp(param, ".BIN.ENC", 8)!=0)
 			{
 				CellPadData pad_data = pad_read();
 				bool atag = (strcasestr(param, AUTOPLAY_TAG)!=NULL) || (autoplay);
-#ifdef REMOVE_SYSCALLS
+ #ifdef REMOVE_SYSCALLS
 				bool l2 = (pad_data.len>0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2));
-#else
+ #else
 				bool l2 = (pad_data.len>0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)));
-#endif
+ #endif
 
-#ifdef FAKEISO
+ #ifdef FAKEISO
 				if(!l2 && !extcmp(param, ".ntfs[BDFILE]", 13))
 				{
 					int view = View_Find("explore_plugin");
@@ -504,12 +506,13 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					}
 				}
 				else
-#endif
+ #endif
 				{
 					char category[16] = "game", seg_name[80] = "seg_device";
 					if((atag && !l2) || (!atag && l2)) {sys_timer_sleep(1); launch_disc(category, seg_name);} // L2 + X
 				}
 			}
+#endif // #ifndef LITE_EDITION
 
 			is_busy=false;
 			return;
@@ -545,6 +548,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			htmlenc(_path, source, 0);
 
 #ifdef COPY_PS3
+
 			if(plen == IS_COPY)
 			{
 				bool is_copying_from_hdd = islike(source, "/dev_hdd0");
@@ -556,7 +560,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				else
 				if(target[0]) {if(!isDir(source) && isDir(target)) strcat(target, filename);}
 				else
-#ifdef SWAP_KERNEL
+ #ifdef SWAP_KERNEL
 				if(strstr(source, "/lv2_kernel"))
 				{
 					struct CellFsStat buf;
@@ -617,7 +621,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					plen = 0; //do not copy
 				}
 				else
-#endif // #ifdef SWAP_KERNEL
+ #endif // #ifdef SWAP_KERNEL
 				if(!extcmp(source, ".pkg", 4))
 				{
 					if(is_copying_from_hdd)
@@ -2073,11 +2077,13 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			copy_in_progress = true; copied_count = 0;
 			show_msg(temp);
 
+ #ifndef LITE_EDITION
 			if(c_firmware >= 4.65f)
 			{   // Auto create "classic_ps2 flag" for PS2 Classic (.BIN.ENC) on rebug 4.65.2
 				do_umount(false);
 				enable_classic_ps2_mode();
 			}
+ #endif
 
 			cellFsUnlink(PS2_CLASSIC_ISO_PATH);
 			if(file_copy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
@@ -2117,10 +2123,12 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		goto patch;
 	}
 
+ #ifndef LITE_EDITION
 	if((c_firmware >= 4.65f) && strstr(_path, "/PS2ISO")!=NULL)
 	{   // Auto remove "classic_ps2" flag for PS2 ISOs on rebug 4.65.2
 		disable_classic_ps2_mode();
 	}
+ #endif
 
 #ifdef COBRA_ONLY
 	//if(cobra_mode)

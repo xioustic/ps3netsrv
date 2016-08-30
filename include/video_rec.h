@@ -163,7 +163,7 @@ static bool rec_start(const char *param)
 	{
 		if(strcasestr(param, ".mp4"))
 		{
-			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_5000K_30FPS;										// .mp4 (720p)
+			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_5000K_30FPS;									// .mp4 (720p)
 
 			if(strstr(param, "240"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_SMALL_768K_30FPS;		// .mp4 (240p / 208p)
 			if(strstr(param, "272"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_MIDDLE_768K_30FPS;		// .mp4 (272p)
@@ -174,13 +174,13 @@ static bool rec_start(const char *param)
 
 		if(strcasestr(param, "psp"))
 		{
-			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_SMALL_768K_30FPS;									// psp (512k)
-			if(strcasestr(param, "hd"))    rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_SMALL_768K_30FPS;		// psp m4hd
+			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_SMALL_768K_30FPS;								// psp (512k)
+			if(strcasestr(param, "hd"))    rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_SMALL_768K_30FPS;	// psp m4hd
 		}
 		else
 		if(strcasestr(param, "hd"))
 		{
-			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_11000K_30FPS;									// hd (11000k)
+			rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_HD720_11000K_30FPS;								// hd (11000k)
 
 			if(strstr(param, "768"))   rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_MIDDLE_768K_30FPS;		// hd 768k  (272p)
 			if(strstr(param, "1536"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_M4HD_LARGE_1536K_30FPS;		// hd 1536k (368p)
@@ -188,11 +188,12 @@ static bool rec_start(const char *param)
 		}
 		else
 		{
-			if(strcasestr(param, "avc"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;		// avc (psp/ps3)
-			if(strcasestr(param, "512"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_512K_30FPS;		// avc 512k
-			if(strcasestr(param, "768"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;		// avc 768k
-			if(strcasestr(param, "1024")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1024K_30FPS;	// avc 1024k
-			if(strcasestr(param, "1536")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1536K_30FPS;	// avc 1536k
+			if(strcasestr(param, "avc"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;	// avc (psp/ps3)
+
+			if(strstr(param, "512"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_512K_30FPS;		// avc 512k
+			if(strstr(param, "768"))  rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_768K_30FPS;		// avc 768k
+			if(strstr(param, "1024")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1024K_30FPS;	// avc 1024k
+			if(strstr(param, "1536")) rec_video_format = CELL_REC_PARAM_VIDEO_FMT_AVC_MP_MIDDLE_1536K_30FPS;	// avc 1536k
 		}
 	}
 
@@ -211,21 +212,21 @@ static bool rec_start(const char *param)
 	else
 	if(strcasestr(param, "aac"))
 	{
-		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_96K;								// aac_96k
+		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_96K;							// aac_96k
 		if(strstr(param, "64"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;	// aac_64k
 		if(strstr(param, "128")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_128K;	// aac_128k
 	}
 	else
 	if(strcasestr(param, "pcm"))
 	{
-		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_768K;									// pcm_768k
+		rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_768K;								// pcm_768k
 		if(strstr(param, "384"))  rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_384K;		// pcm_384k
 		if(strstr(param, "1536")) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_PCM_1536K;	// pcm_1536k
 	}
 
 	// validate audio format (use default if invalid)
 	uint32_t audio_formats[8] = {CELL_REC_PARAM_AUDIO_FMT_AAC_64K, CELL_REC_PARAM_AUDIO_FMT_AAC_96K, CELL_REC_PARAM_AUDIO_FMT_AAC_128K, CELL_REC_PARAM_AUDIO_FMT_ULAW_384K, CELL_REC_PARAM_AUDIO_FMT_ULAW_768K, CELL_REC_PARAM_AUDIO_FMT_PCM_384K, CELL_REC_PARAM_AUDIO_FMT_PCM_768K, CELL_REC_PARAM_AUDIO_FMT_PCM_1536K};
-	for(n = 0; n < 8; n++) if(rec_audio_format == audio_formats[n]) break; if(n>=8) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;
+	for(n = 0; n < 8; n++) if(rec_audio_format == audio_formats[n]) break; if(n >= 8) rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_64K;
 
 	// set video options
 	recOpt[1] = rec_video_format;
@@ -308,7 +309,7 @@ static void toggle_video_rec(const char *param)
 		if(recording == false)
 		{
 			// not recording yet
-			show_rec_format((char*)"Recording started");
+			show_rec_format("Recording started");
 
 			if(rec_start(param) == false)
 			{
@@ -328,7 +329,8 @@ static void toggle_video_rec(const char *param)
 			recording = false;
 		}
 	}
-	else recording = false;
+	else
+		recording = false;
 }
 
 #endif // #ifdef VIDEO_REC

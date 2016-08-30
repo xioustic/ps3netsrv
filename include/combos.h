@@ -140,6 +140,7 @@
 							goto reboot; // vsh reboot
 						}
 #ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
 						else
 						if( !(webman_config->combo2 & PS2TOGGLE)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
@@ -169,6 +170,7 @@
 						{
 								toggle_ps2emu();
 						}
+ #endif //#ifndef LITE_EDITION
 #endif //#ifdef COBRA_ONLY
 
 						else
@@ -633,11 +635,13 @@ show_popup:
 					if((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_L3) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))
 					{
 #ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
 						if(!(webman_config->combo & DISACOBRA)
 							&& (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_TRIANGLE))
 						{ // L3+L2+TRIANGLE COBRA Toggle
 							reboot = toggle_cobra();
 						}
+ #endif
 #endif //#ifdef COBRA_ONLY
 
 #ifdef REX_ONLY

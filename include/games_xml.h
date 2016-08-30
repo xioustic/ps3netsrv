@@ -499,11 +499,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 		if(conn_s_p == START_DAEMON)
 		{
-			if(webman_config->bootd && (IS_HDD0))
-			{
-				waitfor("/dev_usb", webman_config->bootd); // wait for any usb
-			}
-
 			if(webman_config->boots && (f0 >= 1 && f0 <= 6)) // usb000->007
 			{
 				if( (webman_config->usb0 && (f0 == 1)) ||

@@ -170,6 +170,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	templn[0] = NULL;
 
+#ifndef LITE_EDITION
 	for(u8 d = 1; d < 7; d++)
 	{
 		if(isDir(drives[d]))
@@ -177,6 +178,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 			sprintf(param, "<br><a href=\"%s\">USB%c: %'d %s</a>", drives[d], drives[d][10], (int)(get_free_space(drives[d])>>20), STR_MBFREE); strcat(templn, param);
 		}
 	}
+#endif
 
 	sprintf(param, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
 											"CPU: %i°C%s<br>"

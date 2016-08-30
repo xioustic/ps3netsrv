@@ -19,7 +19,7 @@ static int ssplit(const char* str, char* left, int lmaxlen, char* right, int rma
 {
 	int ios = strcspn(str, " ");
 	int ret = (ios < (int)strlen(str) - 1);
-	int lmax = (ios < lmaxlen) ? ios : lmaxlen;
+	int lmax = MIN(ios, lmaxlen);
 
 	strncpy(left, str, lmax);
 	left[lmax] = '\0';
@@ -966,6 +966,7 @@ pasv_again:
 					ssend(conn_s_ftp, FTP_OK_USER_230); // User logged in, proceed.
 				}
 				else
+#ifndef LITE_EDITION
 				if(strcasecmp(cmd, "OPTS") == 0
 				|| strcasecmp(cmd, "REIN") == 0 || strcasecmp(cmd, "ADAT") == 0
 				|| strcasecmp(cmd, "AUTH") == 0 || strcasecmp(cmd, "CCC" ) == 0
@@ -982,6 +983,7 @@ pasv_again:
 					ssend(conn_s_ftp, FTP_ERROR_502);	// Command not implemented.
 				}
 				else
+#endif
 				{
 					ssend(conn_s_ftp, FTP_ERROR_500);	// Syntax error, command unrecognized and the requested	action did not take place.
 				}
@@ -1073,7 +1075,7 @@ relisten:
 	if(working) list_s = slisten(FTPPORT, 4);
 	else goto end;
 
-	if(working && (list_s<0))
+	if(working && (list_s < 0))
 	{
 		sys_timer_sleep(3);
 		if(working) goto relisten;

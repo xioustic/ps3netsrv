@@ -26,7 +26,21 @@
 
 #define PS3_ '3'
 
+#define GAME_DIV_PREFIX  "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3"
+#define GAME_DIV_SUFIX   "</a></div></div>"
+
+#define GAME_DIV_SIZE    72 // strlen(GAME_DIV_PREFIX + GAME_DIV_SUFIX) = (56 + 16)
+
 #define HTML_KEY_LEN  6
+
+enum
+{
+	SHOW_COVER = 0,
+	SHOW_ICON0 = 1,
+	SHOW_DISC  = 2,
+};
+
+#define SHOW_COVER_ICON (webman_config->nocov < SHOW_DISC)
 
 static void get_name(char *name, const char *filename, u8 cache)
 {
@@ -79,7 +93,7 @@ static bool get_cover(char *icon, char *titleid)
 	}
 #endif
 
-	if(webman_config->nocov<2)
+	if(SHOW_COVER_ICON)
 	{
 		const char cpath[5][32] = {MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"};
 
@@ -192,7 +206,7 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 
 		if(isdir)
 		{
-			if(webman_config->nocov>1) return; // no icon0
+			if(!SHOW_COVER_ICON) return; // no icon0
 			sprintf(tempstr, "%s/%s/PS3_GAME/ICON0.PNG", param, file);
 		}
 		else
@@ -227,18 +241,18 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 	}
 }
 
-static bool get_cover_from_name(char *icon, char *name, char *titleid)
+static bool get_cover_from_name(char *icon, const char *name, char *titleid)
 {
-	if(icon[0]!=0 && file_exists(icon)) return true;
+	if((icon[0] != NULL) && file_exists(icon)) return true;
 
 	// get cover from titleid in PARAM.SFO
 	if(get_cover(icon, titleid)) return true;
 
 	// get titleid from file name
-	if(titleid[0]==0 && (strstr(name, "-[") || strstr(name, " [B") || strstr(name, " [N") || strstr(name, " [S")))
+	if((titleid[0] == NULL) && (strstr(name, "-[") || strstr(name, " [B") || strstr(name, " [N") || strstr(name, " [S")))
 	{
 		if(strstr(name, "-["))
-			{char *p=name; while(*p && p[9]!='-' && p[10]!='[' && p[9]!=0) p++; strncpy(titleid, p, 10);}
+			strncpy(titleid, strstr(name, "-[")  + 2, 10);
 		else if(strstr(name, " [B"))
 			strncpy(titleid, strstr(name, " [B") + 2, 10); //BCES/BLES/BCUS/BLUS/etc.
 		else if(strstr(name, " [N"))
@@ -246,9 +260,12 @@ static bool get_cover_from_name(char *icon, char *name, char *titleid)
 		else
 			strncpy(titleid, strstr(name, " [S") + 2, 10); //SLES/SCES/SCUS/SLUS/etc.
 	}
-	else if(titleid[0]==0 && name[4] == '_' && name[8] == '.' && (name[0] == 'B' || name[0] == 'N' || name[0] == 'S' || name[0] == 'U') && ISDIGIT(name[9]) && ISDIGIT(name[10]))
+	else if((titleid[0] == NULL) && (name[0] == 'B' || name[0] == 'N' || name[0] == 'S' || name[0] == 'U') && ISDIGIT(name[6]) && ISDIGIT(name[7]))
 	{
-		sprintf(titleid, "%c%c%c%c%c%c%c%c%c", name[0], name[1], name[2], name[3], name[5], name[6], name[7], name[9], name[10]); //SCUS_999.99.filename.iso
+		if(name[4] == '_' && name[8] == '.')
+			sprintf(titleid, "%c%c%c%c%c%c%c%c%c", name[0], name[1], name[2], name[3], name[5], name[6], name[7], name[9], name[10]); //SCUS_999.99.filename.iso
+		else
+			strncpy(titleid, name, 10);
 	}
 
 	if(titleid[4] == '-') strncpy(&titleid[4], &titleid[5], 5); titleid[9] = NULL;
@@ -261,7 +278,7 @@ static bool get_cover_from_name(char *icon, char *name, char *titleid)
 
 static void get_default_icon(char *icon, char *param, char *file, int isdir, char *titleid, int ns, int abort_connection)
 {
-	if(webman_config->nocov > 1) {if(get_cover_from_name(icon, file, titleid)) return; goto no_icon0;}
+	if(!SHOW_COVER_ICON) {if(get_cover_from_name(icon, file, titleid)) return; goto no_icon0;}
 
 	// continue using cover or default icon0.png
 	if(icon[0]>0 && file_exists(icon))
@@ -270,7 +287,7 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, cha
 		icon[0] = NULL;
 	}
 
-	if((webman_config->nocov == 0) && get_cover_from_name(icon, file, titleid)) return; // show mm cover
+	if((webman_config->nocov == SHOW_COVER) && get_cover_from_name(icon, file, titleid)) return; // show mm cover
 
 	// get icon from folder && copy remote icon
 	get_iso_icon(icon, param, file, isdir, ns, abort_connection);
@@ -284,7 +301,7 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, cha
 no_icon0:
 	if(icon[0]>0 && file_exists(icon)) return;
 
-	if((webman_config->nocov == 1) && get_cover_from_name(icon, file, titleid)) return; // show mm cover as last option (if it's disabled)
+	if((webman_config->nocov == SHOW_ICON0) && get_cover_from_name(icon, file, titleid)) return; // show mm cover as last option (if it's disabled)
 
 	//show the default icon by type
 	if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
@@ -315,7 +332,8 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_nam
 		{
 			unsigned char *mem = (u8*)data;
 			parse_param_sfo(mem, tempID, templn, (u16)sfo_size);
-			if(webman_config->nocov==0) get_cover(icon, tempID);
+
+			if(webman_config->nocov == SHOW_COVER) get_cover(icon, tempID);
 		}
 	}
 
@@ -336,9 +354,9 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_nam
 
 static void get_folder_icon(char *icon, u8 f1, u8 is_iso, char *param, char *entry_name, char *tempID)
 {
-	if(webman_config->nocov < 2)
+	if(SHOW_COVER_ICON)
 	{
-		if(!is_iso && IS_JB_FOLDER && (icon[0]==0 || webman_config->nocov)) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name);
+		if(!is_iso && IS_JB_FOLDER && ((icon[0] == NULL) || (webman_config->nocov == SHOW_ICON0))) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name);
 
 		get_cover_from_name(icon, entry_name, tempID);
 
@@ -460,7 +478,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 	urlenc(enc_dir_name, data[v3_entry].name);
 	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection);
 
-	if(webman_config->nocov<2 && (icon[0]==0 || webman_config->nocov)) {get_name(tempstr, data[v3_entry].name, 1); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
+	if(SHOW_COVER_ICON && ((icon[0] == NULL) || (webman_config->nocov == SHOW_ICON0))) {get_name(tempstr, data[v3_entry].name, 1); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
 
 	return 0;
 }
@@ -483,7 +501,7 @@ static void check_cover_folders(char *buffer)
 	sprintf(buffer, "%s/covers", MM_ROOT_SSTL); covers_exist[3] = isDir(buffer);
 												covers_exist[4] = isDir("/dev_hdd0/GAMES/covers");
 												covers_exist[5] = isDir("/dev_hdd0/GAMEZ/covers");
-												covers_exist[6] = isDir(WMTMP) && (webman_config->nocov!=2);
+												covers_exist[6] = isDir(WMTMP) && SHOW_COVER_ICON;
 
 #ifndef ENGLISH_ONLY
 	if(!covers_exist[0]) {use_custom_icon_path = strstr(COVERS_PATH, "%s"); use_icon_region = strstr(COVERS_PATH, "%s/%s");} else {use_icon_region = use_custom_icon_path = false;}
@@ -615,6 +633,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		// filter html content
 		u8 filter0, filter1, b0, b1; char filter_name[MAX_PATH_LEN]; filter_name[0] = NULL, filter0 = filter1 = b0 = b1 = 0;
+
+		u8 div_size = mobile_mode ? 0 : GAME_DIV_SIZE;
 
 #ifdef COBRA_ONLY
 		if(strstr(param, "ntfs")) {filter0 = NTFS, b0 = 1;} else
@@ -811,7 +831,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 						v3_entry++; flen = strlen(tempstr);
 						if(flen > MAX_LINE_LEN) continue; //ignore lines too long
 						strcpy(line_entry[idx].path, tempstr); idx++;
-						tlen += flen;
+						tlen += (flen + div_size);
 					}
 					else
  #endif
@@ -971,7 +991,7 @@ next_html_entry:
 							if(flen > MAX_LINE_LEN) continue; //ignore lines too long
 
 							strcpy(line_entry[idx].path, tempstr); idx++;
-							tlen += flen;
+							tlen += (flen + div_size);
 
 							cellRtcGetCurrentTick(&pTick);
 						}
@@ -1056,18 +1076,14 @@ next_html_entry:
 		if(mobile_mode)
 			for(u16 m = 0; m < idx; m++)
 			{
-				if(tlen >= (BUFFER_MAXSIZE)) break;
-
 				tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
 			}
 		else
 			for(u16 m = 0; m < idx; m++)
 			{
-				if(tlen >= (BUFFER_MAXSIZE)) break;
-
-				tlen += concat(buffer + tlen, "<div class=\"gc\"><div class=\"ic\"><a href=\"/mount.ps3");
+				tlen += concat(buffer + tlen, GAME_DIV_PREFIX);
 				tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
-				tlen += concat(buffer + tlen, "</a></div></div>");
+				tlen += concat(buffer + tlen, GAME_DIV_SUFIX);
 			}
 
 #ifndef LITE_EDITION

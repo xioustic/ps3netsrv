@@ -1,3 +1,5 @@
+#ifndef LITE_EDITION
+
 #if defined(COBRA_ONLY) || defined(REX_ONLY)
 static void swap_file(const char *path, const char *curfile, const char *rento, const char *newfile)
 {
@@ -14,6 +16,8 @@ static void swap_file(const char *path, const char *curfile, const char *rento, 
 		cellFsRename(file3, file1);
 	}
 }
+#endif
+
 #endif
 
 #ifdef REX_ONLY
@@ -125,6 +129,8 @@ static void toggle_debug_menu(void)
 #endif //#ifdef REX_ONLY
 
 #ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+
 static bool toggle_cobra(void)
 {
 	enable_dev_blind("COBRA Toggle activated!");
@@ -286,4 +292,6 @@ static void toggle_ps2emu(void)
 		}
 	}
 }
+
+ #endif //#ifndef LITE_EDITION
 #endif //#ifdef COBRA_ONLY

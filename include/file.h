@@ -383,9 +383,10 @@ static void disable_dev_blind(void)
 	system_call_3(SC_FS_UMOUNT, (u64)(char*)"/dev_blind", 0, 1);
 }
 
-static void unlink_file(const char *drive, const char *path, const char *file, char *buffer)
+static void unlink_file(const char *drive, const char *path, const char *file)
 {
-	sprintf(buffer, "%s/%s%s", drive, path, file); cellFsUnlink(buffer);
+	char filename[64];
+	sprintf(filename, "%s/%s%s", drive, path, file); cellFsUnlink(filename);
 }
 
 #if defined(WM_CUSTOM_COMBO) || defined(WM_REQUEST)
@@ -421,16 +422,16 @@ static void delete_history(bool delete_folders)
 		while(!cellFsReaddir(fd, &dir, &read))
 		{
 			if(!read) break;
-			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/boot_history.dat", path);
-			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/community/CI.TMP", path);
-			unlink_file("/dev_hdd0/home", dir.d_name, "/community/MI.TMP", path);
-			unlink_file("/dev_hdd0/home", dir.d_name, "/community/PTL.TMP", path);
+			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/boot_history.dat");
+			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/community/CI.TMP");
+			unlink_file("/dev_hdd0/home", dir.d_name, "/community/MI.TMP");
+			unlink_file("/dev_hdd0/home", dir.d_name, "/community/PTL.TMP");
 		}
 		cellFsClosedir(fd);
 	}
 
-	unlink_file("/dev_hdd0", "vsh/pushlist/", "game.dat", path);
-	unlink_file("/dev_hdd0", "vsh/pushlist/", "patch.dat", path);
+	unlink_file("/dev_hdd0", "vsh/pushlist/", "game.dat");
+	unlink_file("/dev_hdd0", "vsh/pushlist/", "patch.dat");
 
 	if(!delete_folders) return;
 

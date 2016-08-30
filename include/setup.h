@@ -103,7 +103,9 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "kcc=1")) webman_config->keep_ccapi = true;
 
 #ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
 	if(!strstr(param, "pdc=1")) webman_config->combo|=DISACOBRA;
+ #endif
 
 	if(strstr(param, "bus=1")) webman_config->bus = 1;
 #endif
@@ -119,9 +121,9 @@ static void setup_parse_settings(char *param)
 #ifdef PKG_HANDLER
 	if(!strstr(param, "pkg=1")) webman_config->combo2|=INSTALPKG;
 #endif
-	if(!strstr(param, "p2s=1")) webman_config->combo2|=PS2SWITCH;
 	if(!strstr(param, "pgd=1")) webman_config->combo2|=EXTGAMDAT;
 #ifndef LITE_EDITION
+	if(!strstr(param, "p2s=1")) webman_config->combo2|=PS2SWITCH;
 	if(!strstr(param, "pn0=1")) webman_config->combo2|=MOUNTNET0;
 	if(!strstr(param, "pn1=1")) webman_config->combo2|=MOUNTNET1;
 #endif
@@ -140,7 +142,7 @@ static void setup_parse_settings(char *param)
 	if( strstr(param, "pl=1" ))  webman_config->poll = 1;
 	if( strstr(param, "ft=1" ))  webman_config->ftpd = 1;
 	if( strstr(param, "np=1" ))  webman_config->nopad = 1;
-	if( strstr(param, "nc=1" )) {webman_config->nocov = 1; if(strstr(param, "ic=2")) webman_config->nocov=2;} // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons)
+	if( strstr(param, "nc=1" )) {webman_config->nocov = SHOW_ICON0; if(strstr(param, "ic=2")) webman_config->nocov = SHOW_DISC;} // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons)
 
 	if( strstr(param, "nd=1" )) webman_config->netd = 1;
 	webman_config->netp=get_valuen16(param, "netp=");
@@ -315,6 +317,7 @@ static void setup_parse_settings(char *param)
 	if(pos) get_value(webman_config->autoboot_path, pos + 6, 255);
 	if(strlen(webman_config->autoboot_path)==0) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
+#ifndef LITE_EDITION
 	pos = strstr(param, "uacc=");
 	if(pos) get_value(webman_config->uaccount, pos + 5, 8);
 
@@ -322,6 +325,7 @@ static void setup_parse_settings(char *param)
 
 	pos = strstr(param, "hurl=");
 	if(pos) get_value(webman_config->home_url, pos + 5, 255);
+#endif
 
 #ifdef COBRA_ONLY
 #ifdef BDVD_REGION
@@ -442,8 +446,8 @@ static void setup_form(char *buffer, char *templn)
 
 	// icon0
 	buffer += concat(buffer, "<select name=\"ic\">");
-	add_option_item("1" , "ICON0.PNG"		 , (webman_config->nocov<2), buffer);
-	add_option_item("2" , "No ICON0.PNG"	 , (webman_config->nocov>1), buffer);
+	add_option_item("1" , "ICON0.PNG"	,  SHOW_COVER_ICON, buffer);
+	add_option_item("2" , "No ICON0.PNG", !SHOW_COVER_ICON, buffer);
 	buffer += concat(buffer, "</select><br>");
 
 	add_check_box("tid", "1", STR_TITLEID, " • ", (webman_config->tid),  buffer);
@@ -536,9 +540,11 @@ static void setup_form(char *buffer, char *templn)
 	buffer += concat(buffer, HTML_BLU_SEPARATOR);
 #endif
 
+#ifndef LITE_EDITION
 	//Home
 	sprintf(templn, " : " HTML_INPUT("hurl", "%s", "255", "50") "<br>", webman_config->home_url);
 	add_check_box("hm", "hom", STR_HOME, templn, webman_config->homeb, buffer);
+#endif
 
 	//Disable lv1&lv2 peek&poke syscalls (6,7,9,10,36) and delete history files at system startup
 #ifdef COBRA_ONLY
@@ -549,6 +555,7 @@ static void setup_form(char *buffer, char *templn)
 #endif
 	buffer += concat(buffer, HTML_BLU_SEPARATOR);
 
+#ifndef LITE_EDITION
 	//default content profile
 	sprintf(templn, "%s : <select name=\"usr\">", STR_PROFILE); buffer += concat(buffer, templn);
 	add_option_item("0" , STR_DEFAULT, (profile==0) , buffer);
@@ -578,12 +585,9 @@ static void setup_form(char *buffer, char *templn)
 	}
 
 	//memory usage
-#ifndef LITE_EDITION
 	sprintf(templn, "</select> &nbsp; %s : [<a href=\"/delete.ps3?wmconfig\">wmconfig</a>] [<a href=\"/delete.ps3?wmtmp\">wmtmp</a>] [<a href=\"/delete.ps3?history\">history</a>] • [<a href=\"/rebuild.ps3\">rebuild</a>] [<a href=\"/recovery.ps3\">recovery</a>]<p>", STR_DELETE); buffer += concat(buffer, templn);
-	sprintf(templn, " %s [%iKB]: <select name=\"fp\">", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); buffer += concat(buffer, templn);
-#else
-	sprintf(templn, "</select><p> %s [%iKB]: <select name=\"fp\">", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); buffer += concat(buffer, templn);
 #endif
+	sprintf(templn, " %s [%iKB]: <select name=\"fp\">", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); buffer += concat(buffer, templn);
 
 	add_option_item("0", "Standard (896KB)"                , (webman_config->foot==0), buffer);
 	add_option_item("1", "Min (320KB)"                     , (webman_config->foot==1), buffer);
@@ -594,13 +598,6 @@ static void setup_form(char *buffer, char *templn)
 	add_option_item("6", "Max BLU+ ( 368K PS3 + 720K BLU)" , (webman_config->foot==6), buffer);
 	buffer += concat(buffer, "</select><p>");
 
-/*
-	add_radio_button("fp", "0", "fo_0", "Standard (896KB)", ", " , (webman_config->foot==0), buffer);
-	add_radio_button("fp", "1", "fo_1", "Min (320KB)"     , ", " , (webman_config->foot==1), buffer);
-	add_radio_button("fp", "3", "fo_3", "Min+ (512KB)"    , ", " , (webman_config->foot==3), buffer);
-	add_radio_button("fp", "2", "fo_2", "Max (1280KB)"    , ", " , (webman_config->foot==2), buffer);
-	add_radio_button("fp", "4", "fo_4", "Max+ (1280KB)"   , _BR_ , (webman_config->foot==4), buffer);
-*/
 #ifndef ENGLISH_ONLY
 	//language
 	sprintf(templn, " %s: <select name=\"l\">", STR_PLANG); buffer += concat(buffer, templn);
@@ -727,11 +724,11 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> &nbsp; ("  , !(webman_config->combo & DISABLESH), buffer);
 	add_check_box("kcc", "1", "CCAPI)", _BR_, !(webman_config->keep_ccapi), buffer);
 #endif
-#ifdef COBRA_ONLY
-	add_check_box("pdc", "1", STR_DISCOBRA,   " : <b>L3+L2+&#8710;</b><br>"    , !(webman_config->combo & DISACOBRA), buffer);
-#endif
 
 #ifndef LITE_EDITION
+ #ifdef COBRA_ONLY
+	add_check_box("pdc", "1", STR_DISCOBRA,   " : <b>L3+L2+&#8710;</b><br>"    , !(webman_config->combo & DISACOBRA), buffer);
+ #endif
 	add_check_box("pn0", "1", "NET0",       " : <b>SELECT+R2+&#9633;</b><br>"  , !(webman_config->combo2 & MOUNTNET0), buffer);
 	add_check_box("pn1", "1", "NET1",       " : <b>SELECT+L2+&#9633;</b><br>"  , !(webman_config->combo2 & MOUNTNET1), buffer);
 #endif
@@ -745,7 +742,10 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("p2c", "1", "PS2 CLASSIC",  " : <b>SELECT+L2+&#8710;</b><br>", !(webman_config->combo2 & PS2TOGGLE), buffer);
 #endif
 
+#ifndef LITE_EDITION
 	add_check_box("p2s", "1", "PS2 SWITCH",   " : <b>SELECT+L2+R2</b><br>"     , !(webman_config->combo2 & PS2SWITCH), buffer);
+#endif
+
 #ifdef PKG_HANDLER
 	add_check_box("pkg", "1", "INSTALL PKG",  " : <b>SELECT+R2+O</b><br>"      , !(webman_config->combo2 & INSTALPKG), buffer);
 #endif
@@ -789,9 +789,14 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(templn, HTML_RED_SEPARATOR "<input type=\"submit\" value=\" %s \"/>"
 					"</form>", STR_SAVE); buffer += concat(buffer, templn);
 
+#ifndef LITE_EDITION
 	strcat(buffer,  HTML_RED_SEPARATOR
 					"<a href=\"http://github.com/aldostools/webMAN-MOD/releases\">webMAN-MOD - Latest version of webMAN-MOD on Github</a><br>"
 					"<a href=\"http://www.psx-place.com/threads/webman-mod-general-information-thread.27/\">webMAN-MOD - Main thread of webMAN-MOD on Psx-place</a><br>");
+#else
+	strcat(buffer,  HTML_BLU_SEPARATOR
+					"webMAN - Simple Web Server" EDITION "<br>");
+#endif
 
 /*
 	#define VSH_GCM_OBJ			0x70A8A8 // 4.53cex
