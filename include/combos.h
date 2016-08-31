@@ -539,7 +539,7 @@ show_popup:
 							working = 0;
 							{ DELETE_TURNOFF }{ BEEP1 }
 
-							vshmain_87BB0001(1); // VSH shutdown
+							vsh_shutdown(); // VSH shutdown
 
 							sys_ppu_thread_exit(0);
 						}
@@ -550,7 +550,7 @@ show_popup:
 							working = 0;
 							{ DELETE_TURNOFF }{ BEEP2 }
 
-							vshmain_87BB0001(2); // VSH reboot
+							vsh_reboot(); // VSH reboot
 
 							sys_ppu_thread_exit(0);
 						}
@@ -679,7 +679,7 @@ reboot:
 					{ DELETE_TURNOFF }
 					savefile(WMNOSCAN, NULL, 0);
 
-					vshmain_87BB0001(2); // VSH reboot
+					vsh_reboot(); // VSH reboot
 
 					sys_ppu_thread_exit(0);
 				}

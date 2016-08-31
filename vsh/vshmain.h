@@ -80,7 +80,8 @@ extern uint32_t vshmain_EB757101(void);        // get running mode flag, 0 = XMB
 // vshmain_CAA863A1  //
 
 extern int vshmain_87BB0001(int param);  // shutdown_reset()
-#define shutdown_reset vshmain_87BB0001
+#define vsh_shutdown(a) vshmain_87BB0001(1)
+#define vsh_reboot(a)   vshmain_87BB0001(2)
 
 // vshmain_7B3BBD9D  //
 // vshmain_242E9C0C  //

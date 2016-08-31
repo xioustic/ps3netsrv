@@ -1247,12 +1247,12 @@ static void handleclient(u64 conn_s_p)
    #ifdef REX_ONLY
 				if(islike(param2, "$toggle_rebug_mode"))
 				{
-					if(toggle_rebug_mode()) goto restart;
+					if(toggle_rebug_mode()) goto reboot;
 				}
 				else
 				if(islike(param2, "$toggle_normal_mode"))
 				{
-					if(toggle_normal_mode()) goto restart;
+					if(toggle_normal_mode()) goto reboot;
 				}
 				else
 				if(islike(param2, "$toggle_debug_menu"))
@@ -1265,7 +1265,7 @@ static void handleclient(u64 conn_s_p)
     #ifndef LITE_EDITION
 				if(islike(param2, "$toggle_cobra"))
 				{
-					if(toggle_cobra()) goto restart;
+					if(toggle_cobra()) goto reboot;
 				}
 				else
 				if(islike(param2, "$toggle_ps2emu"))
@@ -1610,12 +1610,16 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/shutdown.ps3"))
 			{
+				#ifndef EMBED_JS
+				css_exists = common_js_exists = false;
+				#endif
+
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				working = 0;
 				{ DELETE_TURNOFF } { BEEP1 }
 
 				if(strstr(param, "?"))
-					vshmain_87BB0001(1); // shutdown using VSH
+					vsh_shutdown(); // shutdown using VSH
 				else
 					{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
 
@@ -1625,7 +1629,7 @@ static void handleclient(u64 conn_s_p)
 			{
 				cmd[0] = cmd[1] = 0; cmd[2] = 0x03; cmd[3] = 0xE9; // 00 00 03 E9
 				savefile("/dev_hdd0/mms/db.err", cmd, 4);
-				goto restart;
+				goto reboot; // hard reboot
 			}
 			if(islike(param, "/recovery.ps3"))
 			{
@@ -1639,18 +1643,21 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/restart.ps3"))
 			{
- restart:
-				goto reboot;
+				goto reboot; // VSH reboot
 			}
 			if(islike(param, "/reboot.ps3"))
 			{
  reboot:
+				#ifndef EMBED_JS
+				css_exists = common_js_exists = false;
+				#endif
+
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				working = 0;
 
 				{ DELETE_TURNOFF } { BEEP2 }
 
-				if(strstr(param, "?v") || (param[3] == 's' && param[12] == NULL)) vshmain_87BB0001(2); // VSH reboot
+				if(strstr(param, "?v") || (param[3] == 's' && param[12] == NULL) || param[12] == '$') vsh_reboot(); // VSH reboot
 				else
 				if(strstr(param, "?q"))
 					{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} // (quick reboot) load LPAR id 1
@@ -2327,7 +2334,7 @@ static void handleclient(u64 conn_s_p)
 							del("/dev_hdd0/tmp/wm_icons", true);
 							del("/dev_hdd0/tmp/wm_combo", true);
 							del("/dev_hdd0/plugins/images", true);
-							goto restart;
+							goto reboot;
 						}
 						else if(del(param2, islike(param, "/delete.ps3")))
 						{
