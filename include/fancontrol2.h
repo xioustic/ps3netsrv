@@ -60,7 +60,7 @@ static void poll_thread(uint64_t poll)
 
 	u8 show_persistent_popup = 0; // combos.h
 
-	old_fan=0;
+	old_fan = 0;
 	while(working)
 	{
 		if(fan_ps2_mode) /* skip dynamic fan control */; else
@@ -68,7 +68,7 @@ static void poll_thread(uint64_t poll)
 		// dynamic fan control
 		if(max_temp)
 		{
-			t1=t2=0;
+			t1 = t2 = 0;
 			get_temperature(0, &t1); // CPU: 3E030000 -> 3E.03°C -> 62.(03/256)°C
 			sys_timer_usleep(300000);
 
@@ -130,8 +130,8 @@ static void poll_thread(uint64_t poll)
 				}
 			}
 
-			if(t1>76 && old_fan<0x43) fan_speed++; // <26%
-			if(t1>=MAX_FANSPEED && fan_speed<0xB0) {old_fan=0; fan_speed=0xB0;} // <69%
+			if(t1 > 76 && old_fan < 0x43) fan_speed++; // <26%
+			if(t1 >= MAX_FANSPEED && fan_speed < 0xB0) {old_fan = 0, fan_speed = 0xB0;} // <69%
 
 			if(fan_speed < ((webman_config->minfan*255)/100)) fan_speed = (webman_config->minfan*255)/100;
 			if(fan_speed > MAX_FANSPEED) fan_speed = MAX_FANSPEED;
@@ -142,7 +142,7 @@ static void poll_thread(uint64_t poll)
 			{
 				//if(t1>76 && fan_speed<0x50) fan_speed=0x50;
 				//if(t1>77 && fan_speed<0x58) fan_speed=0x58;
-				if(t1>78 && fan_speed<0x50) fan_speed += 2; // <31%
+				if(t1>78 && fan_speed < 0x50) fan_speed += 2; // <31%
 				if(old_fan!=fan_speed)
 				{
 					old_fan = fan_speed;
@@ -165,7 +165,7 @@ static void poll_thread(uint64_t poll)
 			get_temperature(0, &t1); // CPU
 			get_temperature(1, &t2); // RSX
 
-			if(t1>(MAX_TEMPERATURE-2) || t2>(MAX_TEMPERATURE-2))
+			if(t1 > (MAX_TEMPERATURE-2) || t2 > (MAX_TEMPERATURE-2))
 			{
 				if(!webman_config->warn)
 				{

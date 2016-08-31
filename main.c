@@ -369,11 +369,18 @@ static u8 dex_mode = 0;
 static u64 SYSCALL_TABLE = 0;
 static u64 LV2_OFFSET_ON_LV1; // value is set on detect_firmware -> 0x1000000 on 4.46, 0x8000000 on 4.76/4.78
 
-enum
+enum is_binary_options
 {
 	WEB_COMMAND = 0,
 	BINARY_FILE = 1,
 	FOLDER_LISTING = 2
+};
+
+enum get_name_options
+{
+	NO_EXT    = 0,
+	GET_WMTMP = 1,
+	NO_PATH   = 2,
 };
 
 ////////////////////////////////

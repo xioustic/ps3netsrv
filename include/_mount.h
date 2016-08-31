@@ -541,7 +541,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				// get iso name
 				strcpy(fpath, _path); fpath[strlen(fpath)-strlen(filename)] = NULL;
 
-				get_default_icon(icon, fpath, filename + 1, 0, tempID, -1, 0);
+				get_default_icon(icon, fpath, filename + 1, 0, tempID, -1, 0, 0);
 			}
 
 			urlenc(enc_dir_name, icon);
@@ -2224,7 +2224,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 						if(!extcmp(_path, ".ntfs[PS3ISO]", 13))
 						{
-							get_name(templn, _path, 0);
+							get_name(templn, _path, NO_EXT);
 							cache_icon0_and_param_sfo(templn);
  #ifdef FIX_GAME
 							fix_game(_path, titleID, webman_config->fixgame);
@@ -2343,7 +2343,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(_netiso_args->emu_mode == EMU_PS3)
 					{
-						get_name(templn, _path, 1);
+						get_name(templn, _path, GET_WMTMP);
 						cache_icon0_and_param_sfo(templn);
  #ifdef FIX_GAME
 						fix_game(_path, titleID, webman_config->fixgame);
@@ -2374,7 +2374,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					cobra_send_fake_disc_insert_event();
 
 					{
-						get_name(templn, _path, 1);
+						get_name(templn, _path, GET_WMTMP);
 						cache_icon0_and_param_sfo(templn);
 					}
 					goto patch;

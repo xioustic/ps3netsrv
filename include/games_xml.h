@@ -713,7 +713,7 @@ next_xml_entry:
 							}
 							else
 							{
-								get_name(templn, entry.d_name, 0);
+								get_name(templn, entry.d_name, NO_EXT);
 #ifdef COBRA_ONLY
 								if(IS_NTFS)
 								{   // ntfs
@@ -743,10 +743,10 @@ next_xml_entry:
 
 								if(IS_PS3_FOLDER)
 								{
-									get_name(templn, entry.d_name, 1); strcat(templn, ".SFO\0"); // WMTMP
+									get_name(templn, entry.d_name, GET_WMTMP); strcat(templn, ".SFO\0"); // WMTMP
 									if( (!IS_NTFS) && file_exists(templn) == false)
 									{
-										get_name(tempstr, entry.d_name, 0);
+										get_name(tempstr, entry.d_name, NO_EXT);
 										sprintf(templn, "%s/%s.SFO", param, tempstr); // /PS3ISO
 									}
 
@@ -775,9 +775,9 @@ next_xml_entry:
 #endif
 							}
 
-							get_folder_icon(icon, f1, is_iso, param, entry.d_name, tempID);
+							get_folder_icon(icon, is_iso, param, entry.d_name, tempID, f0);
 
-							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection);
+							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection, f1);
 
 							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 

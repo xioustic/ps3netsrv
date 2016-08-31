@@ -33,12 +33,17 @@
 
 #define HTML_KEY_LEN  6
 
-enum
+enum nocov_options
 {
 	SHOW_COVER = 0,
 	SHOW_ICON0 = 1,
 	SHOW_DISC  = 2,
 };
+
+#define HAS_TITLE_ID  (tempID[0] > '@')
+
+#define HAS_ICON      (icon[0] != NULL) && file_exists(icon)
+#define NO_ICON       (!icon[0])
 
 #define SHOW_COVER_ICON (webman_config->nocov < SHOW_DISC)
 
@@ -146,7 +151,42 @@ static bool get_cover(char *icon, char *titleid)
 	return false;
 }
 
-static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
+static bool get_cover_from_name(char *icon, const char *name, char *titleid)
+{
+	if(HAS_ICON) return true;
+
+	// get cover from titleid in PARAM.SFO
+	if(get_cover(icon, titleid)) return true;
+
+	// get titleid from file name
+	if((titleid[0] == NULL) && (strstr(name, "-[") || strstr(name, " [B") || strstr(name, " [N") || strstr(name, " [S")))
+	{
+		if(strstr(name, "-["))
+			strncpy(titleid, strstr(name, "-[")  + 2, 10);
+		else if(strstr(name, " [B"))
+			strncpy(titleid, strstr(name, " [B") + 2, 10); //BCES/BLES/BCUS/BLUS/etc.
+		else if(strstr(name, " [N"))
+			strncpy(titleid, strstr(name, " [N") + 2, 10); //NP*
+		else
+			strncpy(titleid, strstr(name, " [S") + 2, 10); //SLES/SCES/SCUS/SLUS/etc.
+	}
+	else if((titleid[0] == NULL) && (name[0] == 'B' || name[0] == 'N' || name[0] == 'S' || name[0] == 'U') && ISDIGIT(name[6]) && ISDIGIT(name[7]))
+	{
+		if(name[4] == '_' && name[8] == '.')
+			sprintf(titleid, "%c%c%c%c%c%c%c%c%c", name[0], name[1], name[2], name[3], name[5], name[6], name[7], name[9], name[10]); //SCUS_999.99.filename.iso
+		else
+			strncpy(titleid, name, 10);
+	}
+
+	if(titleid[4] == '-') strncpy(&titleid[4], &titleid[5], 5); titleid[9] = NULL;
+
+	// get cover from titleid in file name
+	if(get_cover(icon, titleid)) return true;
+
+	return false;
+}
+
+static void get_default_icon_for_iso(char *icon, char *param, char *file, int isdir, int ns, int abort_connection)
 {
 	//this function is called only from get_default_icon
 
@@ -159,8 +199,8 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 		sprintf(icon, "%s/%s.PNG", param, file);
 		if(file_exists(icon)) return;
 
-		flen=strlen(icon)-12;
-		if(flen>0 && icon[flen] == '.')
+		flen = strlen(icon) - 12;
+		if(flen > 0 && icon[flen] == '.')
 		{
 			icon[flen] = NULL; strcat(icon, ".png");
 			if(file_exists(icon)) return;
@@ -172,7 +212,7 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 	const char ext[4][5] = {".jpg", ".png", ".PNG", ".JPG"};
 
 	if(isdir || (ns >= 0))
-		{get_name(icon, file, 1); strcat(icon, ".PNG");} //wmtmp
+		{get_name(icon, file, GET_WMTMP); strcat(icon, ".PNG");} //wmtmp
 	else
 	{
 		sprintf(icon, "%s/%s", param, file);
@@ -211,10 +251,10 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 		}
 		else
 		{
-			get_name(icon, file, 0);
+			get_name(icon, file, NO_EXT);
 			sprintf(tempstr, "%s/%s.jpg", param, icon);
 
-			get_name(icon, file, 1); strcat(icon, ".jpg"); //wmtmp
+			get_name(icon, file, GET_WMTMP); strcat(icon, ".jpg"); //wmtmp
 			if(file_exists(icon)) return;
 		}
 
@@ -241,47 +281,12 @@ static void get_iso_icon(char *icon, char *param, char *file, int isdir, int ns,
 	}
 }
 
-static bool get_cover_from_name(char *icon, const char *name, char *titleid)
-{
-	if((icon[0] != NULL) && file_exists(icon)) return true;
-
-	// get cover from titleid in PARAM.SFO
-	if(get_cover(icon, titleid)) return true;
-
-	// get titleid from file name
-	if((titleid[0] == NULL) && (strstr(name, "-[") || strstr(name, " [B") || strstr(name, " [N") || strstr(name, " [S")))
-	{
-		if(strstr(name, "-["))
-			strncpy(titleid, strstr(name, "-[")  + 2, 10);
-		else if(strstr(name, " [B"))
-			strncpy(titleid, strstr(name, " [B") + 2, 10); //BCES/BLES/BCUS/BLUS/etc.
-		else if(strstr(name, " [N"))
-			strncpy(titleid, strstr(name, " [N") + 2, 10); //NP*
-		else
-			strncpy(titleid, strstr(name, " [S") + 2, 10); //SLES/SCES/SCUS/SLUS/etc.
-	}
-	else if((titleid[0] == NULL) && (name[0] == 'B' || name[0] == 'N' || name[0] == 'S' || name[0] == 'U') && ISDIGIT(name[6]) && ISDIGIT(name[7]))
-	{
-		if(name[4] == '_' && name[8] == '.')
-			sprintf(titleid, "%c%c%c%c%c%c%c%c%c", name[0], name[1], name[2], name[3], name[5], name[6], name[7], name[9], name[10]); //SCUS_999.99.filename.iso
-		else
-			strncpy(titleid, name, 10);
-	}
-
-	if(titleid[4] == '-') strncpy(&titleid[4], &titleid[5], 5); titleid[9] = NULL;
-
-	// get cover from titleid in file name
-	if(get_cover(icon, titleid)) return true;
-
-	return false;
-}
-
-static void get_default_icon(char *icon, char *param, char *file, int isdir, char *titleid, int ns, int abort_connection)
+static void get_default_icon(char *icon, char *param, char *file, int isdir, char *titleid, int ns, int abort_connection, u8 f1)
 {
 	if(!SHOW_COVER_ICON) {if(get_cover_from_name(icon, file, titleid)) return; goto no_icon0;}
 
 	// continue using cover or default icon0.png
-	if(icon[0]>0 && file_exists(icon))
+	if(HAS_ICON)
 	{
 		if(!extcasecmp(icon, ".png", 4) || !extcasecmp(icon, ".jpg", 4)) return;
 		icon[0] = NULL;
@@ -290,29 +295,29 @@ static void get_default_icon(char *icon, char *param, char *file, int isdir, cha
 	if((webman_config->nocov == SHOW_COVER) && get_cover_from_name(icon, file, titleid)) return; // show mm cover
 
 	// get icon from folder && copy remote icon
-	get_iso_icon(icon, param, file, isdir, ns, abort_connection);
+	get_default_icon_for_iso(icon, param, file, isdir, ns, abort_connection);
 
-	if((icon[0] > 0) && file_exists(icon)) return;
+	if(HAS_ICON) return;
 
 	//use the cached PNG from wmtmp if available
-	get_name(icon, file, 1);
+	get_name(icon, file, GET_WMTMP);
 	strcat(icon, ".PNG");
 
 no_icon0:
-	if(icon[0]>0 && file_exists(icon)) return;
+	if(HAS_ICON) return;
 
 	if((webman_config->nocov == SHOW_ICON0) && get_cover_from_name(icon, file, titleid)) return; // show mm cover as last option (if it's disabled)
 
 	//show the default icon by type
-	if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
+	if(IS_PS2_FOLDER || (strstr(param, "PS2") != NULL))      //if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
 		strcpy(icon, wm_icons[7]);
-	else if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
+	else if(IS_PSX_FOLDER || (strstr(param, "PSX") != NULL)) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
 		strcpy(icon, wm_icons[6]);
-	else if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
+	else if(IS_PSP_FOLDER || (strstr(param, "PSP") != NULL)) //if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
 		strcpy(icon, wm_icons[8]);
-	else if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
+	else if(IS_DVD_FOLDER || (strstr(param, "DVD") != NULL)) //if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
 		strcpy(icon, wm_icons[9]);
-	else //if(strstr(param, "/BDISO") || !extcmp(file, ".ntfs[BDISO]", 12) || || !extcmp(file, ".ntfs[BDFILE]", 13))
+	else                                                     //if(strstr(param, "/BDISO") || !extcmp(file, ".ntfs[BDISO]", 12) || || !extcmp(file, ".ntfs[BDFILE]", 13))
 		strcpy(icon, wm_icons[5]);
 }
 
@@ -339,34 +344,47 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_nam
 
 	if(webman_config->use_filename)
 	{
-		if(!icon[0] && !tempID[0]) get_cover_from_name(icon, templn, tempID); // get titleID from name
+		if(NO_ICON && !HAS_TITLE_ID) get_cover_from_name(icon, templn, tempID); // get titleID from name
 
 		ret=~CELL_FS_SUCCEEDED;
 	}
 
 	if(ret != CELL_FS_SUCCEEDED)
 	{
-		get_name(templn, entry_name, 2); if(!IS_NTFS) utf8enc(data, templn, 1); //use file name as title
+		get_name(templn, entry_name, NO_PATH); if(!IS_NTFS) utf8enc(data, templn, GET_WMTMP); //use file name as title
 	}
 
 	return ( (ret == CELL_FS_SUCCEEDED) ? 0 : FAILED );
 }
 
-static void get_folder_icon(char *icon, u8 f1, u8 is_iso, char *param, char *entry_name, char *tempID)
+static void get_folder_icon(char *icon, u8 is_iso, char *param, char *entry_name, char *tempID, u8 f0)
 {
 	if(SHOW_COVER_ICON)
 	{
-		if(!is_iso && IS_JB_FOLDER && ((icon[0] == NULL) || (webman_config->nocov == SHOW_ICON0))) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name);
+		if(!is_iso && (NO_ICON || (webman_config->nocov == SHOW_ICON0))) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name);
 
 		get_cover_from_name(icon, entry_name, tempID);
 
-		if(icon[0]==0)
+		if(NO_ICON)
 		{
+			if(HAS_TITLE_ID)
+			{
+				sprintf(icon, "%s/%s.JPG", param, tempID);
+				if(file_exists(icon)) return;
+
+				sprintf(icon, "%s/%s.PNG", param, tempID);
+				if(file_exists(icon)) return;
+			}
+
 			sprintf(icon, "%s/%s", param, entry_name);
 			int flen = strlen(icon);
+
 #ifdef COBRA_ONLY
-			if(flen > 13 && (!extcmp(icon, ".ntfs[PS3ISO]", 13) || !extcmp(icon, ".ntfs[PS2ISO]", 13)  || !extcmp(icon, ".ntfs[PSPISO]", 13) || !extcmp(icon, ".ntfs[DVDISO]", 13) || !extcmp(icon, ".ntfs[PSXISO]", 13) || !extcmp(icon, ".ntfs[BDFILE]", 13))) {flen -= 13; icon[flen] = NULL;} else
-			if(flen > 12 &&  !extcmp(icon, ".ntfs[BDISO]" , 12)) {flen -= 12; icon[flen] = NULL;}
+			if(f0 == NTFS)
+			{
+				if(flen > 13 && (!extcmp(icon, ".ntfs[PS3ISO]", 13) || !extcmp(icon, ".ntfs[PS2ISO]", 13)  || !extcmp(icon, ".ntfs[PSPISO]", 13) || !extcmp(icon, ".ntfs[DVDISO]", 13) || !extcmp(icon, ".ntfs[PSXISO]", 13) || !extcmp(icon, ".ntfs[BDFILE]", 13))) {flen -= 13; icon[flen] = NULL;} else
+				if(flen > 12 &&  !extcmp(icon, ".ntfs[BDISO]" , 12)) {flen -= 12; icon[flen] = NULL;}
+			}
 #endif
 			if(flen > 4 && icon[flen-4] == '.')
 			{
@@ -387,16 +405,18 @@ static void get_folder_icon(char *icon, u8 f1, u8 is_iso, char *param, char *ent
 			icon[flen-3]='j'; icon[flen-2]='p'; icon[flen-1]='g';
 			if(file_exists(icon)) return;
 
-			get_name(icon, entry_name, 1); strcat(icon, ".jpg");
+			get_name(icon, entry_name, GET_WMTMP); strcat(icon, ".jpg");
 			if(file_exists(icon)) return;
 
-			get_name(icon, entry_name, 1); strcat(icon, ".png");
+			flen = strlen(icon) - 4;
+
+			icon[flen] = NULL; strcat(icon, ".png");
 			if(file_exists(icon)) return;
 
-			get_name(icon, entry_name, 1); strcat(icon, ".PNG");
+			icon[flen] = NULL; strcat(icon, ".PNG");
 			if(file_exists(icon)) return;
 
-			get_name(icon, entry_name, 1); strcat(icon, ".JPG");
+			icon[flen] = NULL; strcat(icon, ".JPG");
 			if(file_exists(icon) == false) icon[0] = NULL;
 		}
 	}
@@ -428,7 +448,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		if(data[v3_entry].is_directory)
 			sprintf(templn, WMTMP "/%s.SFO", data[v3_entry].name);
 		else
-			{get_name(templn, data[v3_entry].name, 1); strcat(templn, ".SFO\0");}
+			{get_name(templn, data[v3_entry].name, GET_WMTMP); strcat(templn, ".SFO\0");}
 
 		if(file_exists(templn) == false)
 		{
@@ -439,7 +459,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		get_title_and_id_from_sfo(templn, tempID, data[v3_entry].name, icon, tempstr, 0);
 	}
 	else
-		{get_name(enc_dir_name, data[v3_entry].name, 0); utf8enc(templn, enc_dir_name, 1);}
+		{get_name(enc_dir_name, data[v3_entry].name, NO_EXT); utf8enc(templn, enc_dir_name, 1);}
 
 	if(data[v3_entry].is_directory && IS_ISO_FOLDER)
 	{
@@ -464,7 +484,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 
 		if(index < 4)
 		{
-			get_name(icon, data[v3_entry].name, 1); strcat(icon, img_ext[index]);
+			get_name(icon, data[v3_entry].name, GET_WMTMP); strcat(icon, img_ext[index]);
 			copy_net_file(icon, enc_dir_name, ns, COPY_WHOLE_FILE);
 
 			if(file_exists(icon) == false) icon[0] = NULL;
@@ -473,12 +493,12 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		sprintf(data[v3_entry].name, "%s", tempstr + strlen(param) + 1);
 	}
 
-	if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
+	if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 	urlenc(enc_dir_name, data[v3_entry].name);
-	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection);
+	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection, f1);
 
-	if(SHOW_COVER_ICON && ((icon[0] == NULL) || (webman_config->nocov == SHOW_ICON0))) {get_name(tempstr, data[v3_entry].name, 1); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
+	if(SHOW_COVER_ICON && (NO_ICON || (webman_config->nocov == SHOW_ICON0))) {get_name(tempstr, data[v3_entry].name, GET_WMTMP); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
 
 	return 0;
 }
@@ -884,7 +904,7 @@ next_html_entry:
 							}
 							else
 							{
-								get_name(templn, entry.d_name, 0);
+								get_name(templn, entry.d_name, NO_EXT);
 #ifdef COBRA_ONLY
 								if(IS_NTFS)
 								{   // ntfs
@@ -914,10 +934,10 @@ next_html_entry:
 
 								if(IS_PS3_FOLDER)
 								{
-									get_name(templn, entry.d_name, 1); strcat(templn, ".SFO\0"); // WMTMP
+									get_name(templn, entry.d_name, GET_WMTMP); strcat(templn, ".SFO\0"); // WMTMP
 									if( (!IS_NTFS) && file_exists(templn) == false)
 									{
-										get_name(tempstr, entry.d_name, 0);
+										get_name(tempstr, entry.d_name, NO_EXT);
 										sprintf(templn, "%s/%s.SFO", param, tempstr); // /PS3ISO
 									}
 
@@ -949,11 +969,11 @@ next_html_entry:
 							if(filter_name[0]>=' ' && strcasestr(templn, filter_name)==NULL && strcasestr(param, filter_name)==NULL && strcasestr(entry.d_name, filter_name)==NULL)
 							{if(subfolder) goto next_html_entry; else continue;}
 
-							get_folder_icon(icon, f1, is_iso, param, entry.d_name, tempID);
+							get_folder_icon(icon, is_iso, param, entry.d_name, tempID, f0);
 
-							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection);
+							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection, f1);
 
-							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
+							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.d_name);
 

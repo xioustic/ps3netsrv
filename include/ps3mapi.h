@@ -58,29 +58,6 @@ u16 sc_disable[14] = {200, 201, 203, 204, 1022, 6, 7, 10, 11, 35, 36, 38, 8, 9};
 
 #ifdef PS3MAPI
 
-static int Char2Int(char input);
-static void Hex2Bin(const char* src, char* target);
-
-static int Char2Int(char input)
-{
-	if(input >= '0' && input <= '9')
-		return input - '0';
-	if(input >= 'A' && input <= 'F')
-		return input - 'A' + 10;
-	if(input >= 'a' && input <= 'f')
-		return input - 'a' + 10;
-	return NULL;
-}
-
-static void Hex2Bin(const char* src, char* target)
-{
-	while(*src && src[1])
-	{
-		*(target++) = Char2Int(*src)*16 + Char2Int(src[1]);
-		src += 2;
-	}
-}
-
 static void ps3mapi_buzzer(char *buffer, char *templn, char *param);
 static void ps3mapi_led(char *buffer, char *templn, char *param);
 static void ps3mapi_notify(char *buffer, char *templn, char *param);
@@ -265,16 +242,11 @@ static void ps3mapi_notify(char *buffer, char *templn, char *param)
 {
 	bool is_ps3mapi_home = (param[0] == ' ');
 
-	char msg[200] = "Hello :)";
-	if(islike(param, "/notify.ps3mapi?"))
+	char msg[200]; strcpy(msg, "Hello :)");
+	if(islike(param, "/notify.ps3mapi?msg="))
 	{
-		char *pos;
-		pos = strstr(param, "msg=");
-		if(pos)
-		{
-			get_value(msg, pos + 4, 199);
-			show_msg(msg);
-		}
+		get_value(msg, param + 20, 199);
+		show_msg(msg);
 	}
 
 	if(!is_ps3mapi_home)

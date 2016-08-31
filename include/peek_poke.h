@@ -119,6 +119,7 @@ static u32 lv2peek32(u64 addr)
 */
 
 #if defined(PS3MAPI) || defined(DEBUG_MEM) || defined(SPOOF_CONSOLEID)
+
 static uint64_t convertH(char *val)
 {
 	uint64_t ret = 0;
@@ -136,6 +137,17 @@ static uint64_t convertH(char *val)
 	}
 
 	return ret;
+}
+
+static void Hex2Bin(const char* src, char* target)
+{
+	char value[3]; value[2] = NULL;
+	while(*src && src[1])
+	{
+		value[0] = *src, value[1] = src[1];
+		*(target++) = (u8)convertH(value);
+		src += 2;
+	}
 }
 #endif
 

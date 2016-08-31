@@ -327,12 +327,12 @@ static char STR_NOTFOUND[40]		= "Not found!";
 static char COVERS_PATH[100]		= "";
 
 #ifdef COBRA_ONLY
-static char STR_DISCOBRA[20]		= "COBRA TOGGLE";
+static const char STR_DISCOBRA[20]	= "COBRA TOGGLE";
 #endif
 #ifdef REX_ONLY
-static char STR_RBGMODE[20]			= "RBG MODE TOGGLE";
-static char STR_RBGNORM[20]			= "NORM MODE TOGGLE";
-static char STR_RBGMENU[20] 		= "MENU TOGGLE";
+static const char STR_RBGMODE[20]	= "RBG MODE TOGGLE";
+static const char STR_RBGNORM[20]	= "NORM MODE TOGGLE";
+static const char STR_RBGMENU[20] 	= "MENU TOGGLE";
 #endif
 
 #endif
