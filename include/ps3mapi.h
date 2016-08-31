@@ -265,14 +265,17 @@ static void ps3mapi_notify(char *buffer, char *templn, char *param)
 {
 	bool is_ps3mapi_home = (param[0] == ' ');
 
-	char *msg = param + 20;
-	if(islike(param, "/notify.ps3mapi?msg="))
+	char msg[200] = "Hello :)";
+	if(islike(param, "/notify.ps3mapi?"))
 	{
-		msg[200] = NULL;
-		show_msg(msg);
+		char *pos;
+		pos = strstr(param, "msg=");
+		if(pos)
+		{
+			get_value(msg, pos + 4, 199);
+			show_msg(msg);
+		}
 	}
-	else
-		sprintf(msg, "Hello :)");
 
 	if(!is_ps3mapi_home)
 		sprintf(templn, "<b>%s --> %s --> %s</b>"
