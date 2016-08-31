@@ -194,12 +194,13 @@ static void poll_thread(uint64_t poll)
 		// USB Polling
 		if(poll == 0 && sec >= 120) // check USB drives each 120 seconds
 		{
-			uint8_t tmp[2048];
+			uint8_t tmp[2048], f0 = 0;
 			uint32_t usb_handle = -1, r;
 
-			for(u8 f0=0; f0<8; f0++)
+			for(u8 i = 0; i < 6; i++)
 			{
-				if(sys_storage_open(((f0<6)?USB_MASS_STORAGE_1(f0):USB_MASS_STORAGE_2(f0)), 0, &usb_handle, 0)==0)
+				f0 = (u8)val(drives[i] + 8);
+				if(sys_storage_open(((f0 < 6) ? USB_MASS_STORAGE_1(f0) : USB_MASS_STORAGE_2(f0)), 0, &usb_handle, 0)==0)
 				{
 					sys_storage_read(usb_handle, 0, to, 1, tmp, &r, 0);
 					sys_storage_close(usb_handle);
