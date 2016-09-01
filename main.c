@@ -520,7 +520,7 @@ static bool css_exists = false;
 static bool common_js_exists = false;
 #endif
 
-static char html_base_path[MAX_PATH_LEN] = "";
+static char html_base_path[MAX_PATH_LEN];
 
 static char smonth[12][4]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
@@ -1166,7 +1166,7 @@ static void handleclient(u64 conn_s_p)
  #ifdef PKG_HANDLER
 			if(islike(param, "/download.ps3"))
 			{
-				char msg[MAX_LINE_LEN] = "";
+				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
 
 				int ret = download_file(strchr(param_original, '%') ? param_original : param, msg);
 
@@ -1184,7 +1184,7 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/install.ps3"))
 			{
-				char msg[MAX_LINE_LEN] = "";
+				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
 
 				int ret = installPKG(param + 12, msg);
 
@@ -1452,10 +1452,10 @@ static void handleclient(u64 conn_s_p)
 
 				memset(header, 0, HTML_RECV_SIZE);
 
-				if(param[10]=='/') get_value(path1, param + 10, MAX_PATH_LEN); else
-				if(param[11]=='/') get_value(path1, param + 11, MAX_PATH_LEN); else
+				if(param[10] == '/') get_value(path1, param + 10, MAX_PATH_LEN); else
+				if(param[11] == '/') get_value(path1, param + 11, MAX_PATH_LEN); else
 				{
-					pos=strstr(param, "src=");
+					pos = strstr(param, "src=");
 					if(pos) get_value(path1, pos + 4, MAX_PATH_LEN);
 				}
 
@@ -1463,7 +1463,7 @@ static void handleclient(u64 conn_s_p)
 
 				if(isremap)
 				{
-					pos=strstr(param, "to=");
+					pos = strstr(param, "to=");
 					if(pos) get_value(path2, pos + 3, MAX_PATH_LEN);
 				}
 
@@ -1527,16 +1527,16 @@ static void handleclient(u64 conn_s_p)
 					sprintf(param, "/dev_hdd0");
 
 					cellFsMkdir("/dev_hdd0/packages", DMODE);
-					cellFsMkdir("/dev_hdd0/GAMES", DMODE);
-					cellFsMkdir("/dev_hdd0/PS3ISO", DMODE);
-					cellFsMkdir("/dev_hdd0/PSXISO", DMODE);
-					cellFsMkdir("/dev_hdd0/PS2ISO", DMODE);
-					cellFsMkdir("/dev_hdd0/PSPISO", DMODE);
-					cellFsMkdir("/dev_hdd0/DVDISO", DMODE);
-					cellFsMkdir("/dev_hdd0/BDISO", DMODE);
+					cellFsMkdir("/dev_hdd0/GAMES",    DMODE);
+					cellFsMkdir("/dev_hdd0/PS3ISO",   DMODE);
+					cellFsMkdir("/dev_hdd0/PSXISO",   DMODE);
+					cellFsMkdir("/dev_hdd0/PS2ISO",   DMODE);
+					cellFsMkdir("/dev_hdd0/PSPISO",   DMODE);
+					cellFsMkdir("/dev_hdd0/DVDISO",   DMODE);
+					cellFsMkdir("/dev_hdd0/BDISO",    DMODE);
 
 					// Let the user create these folders manually or enable webman_config->autoplay
-					//cellFsMkdir("/dev_hdd0/GAMES" AUTOPLAY_TAG, DMODE);
+					//cellFsMkdir("/dev_hdd0/GAMES"  AUTOPLAY_TAG, DMODE);
 					//cellFsMkdir("/dev_hdd0/PS3ISO" AUTOPLAY_TAG, DMODE);
 					//cellFsMkdir("/dev_hdd0/PSXISO" AUTOPLAY_TAG, DMODE);
 					//cellFsMkdir("/dev_hdd0/PS2ISO" AUTOPLAY_TAG, DMODE);
@@ -1815,9 +1815,9 @@ static void handleclient(u64 conn_s_p)
 
 				for(u8 i = 0; i < 5; i++)
 				{
-					sprintf(url, "?%i", i); if(strstr(param, url)) {profile=i; break;}
-					sprintf(url, "usr=%i", i); if(strstr(param, url)) {profile=i; break;}
-					if(is_index_ps3) {sprintf(url, "_%i", i); if(strstr(param, url)) {profile=i; break;}}
+					sprintf(url, "?%i", i); if(strstr(param, url)) {profile = i; break;}
+					sprintf(url, "usr=%i", i); if(strstr(param, url)) {profile = i; break;}
+					if(is_index_ps3) {sprintf(url, "_%i", i); if(strstr(param, url)) {profile = i; break;}}
 				}
 
 				if(uprofile != profile) {webman_config->profile = profile; save_settings();}
@@ -2145,7 +2145,7 @@ static void handleclient(u64 conn_s_p)
  #ifndef LITE_EDITION
 					if(!strstr(param, "$nobypass")) { PS3MAPI_REENABLE_SYSCALL8 }
  #endif
-					is_busy=true;
+					is_busy = true;
 
 					if(islike(param, "/refresh.ps3") && refreshing_xml == 0)
 					{
@@ -2254,10 +2254,10 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/extgd.ps3"))
 					{
-						if(strstr(param,"?s" /*status */ )); else
-						if(strstr(param,"?e" /*enable */ ) || strstr(param, "?1"))  extgd=1; else
-						if(strstr(param,"?d" /*disable*/ ) || strstr(param, "?0"))  extgd=0; else
-																					extgd=extgd^1;
+						if(param[10] != '?') extgd = extgd ^ 1; else
+						if(param[11] == 'e' /*enable */ || param[11] == '1') extgd = 1; else
+						if(param[11] == 'd' /*disable*/ || param[11] == '0') extgd = 0; else
+						if(param[11] == 's' /*status */) ;      else         extgd = extgd ^ 1;
 
 						strcat(pbuffer, "External Game DATA: ");
 
@@ -2272,14 +2272,17 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/sysbgm.ps3"))
 					{
-						if(strstr(param, "?1") || strstr(param, "?e")) system_bgm=0; //enable
-						if(strstr(param, "?0") || strstr(param, "?d")) system_bgm=1; //disable
+						if(param[11] == '?')
+						{
+							if((param[12] == '1') || (param[12] == 'e')) system_bgm = 0; //enable
+							if((param[12] == '0') || (param[12] == 'd')) system_bgm = 1; //disable
+						}
 
-						if(!strstr(param, "?s"))
+						if(param[12] != 's')
 						{
 							int * arg2;
-							if(system_bgm)  {BgmPlaybackDisable(0, &arg2); system_bgm=0;} else
-											{BgmPlaybackEnable(0, &arg2);  system_bgm=1;}
+							if(system_bgm)  {BgmPlaybackDisable(0, &arg2); system_bgm = 0;} else
+											{BgmPlaybackEnable(0, &arg2);  system_bgm = 1;}
 						}
 
 						sprintf(templn, "System BGM: %s", (system_bgm)?STR_ENABLED:STR_DISABLED);

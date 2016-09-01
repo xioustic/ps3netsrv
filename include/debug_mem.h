@@ -50,14 +50,14 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 	char dump_file[MAX_PATH_LEN]; uint64_t start=0; uint32_t size=8;
 	strcat(buffer, "Dump: [<a href=\"/dump.ps3?mem\">Full Memory</a>] [<a href=\"/dump.ps3?lv1\">LV1</a>] [<a href=\"/dump.ps3?lv2\">LV2</a>]<hr>");
 
-	if(strlen(param+10))
+	if(param[9] == '?' && param[10] >= '0')
 	{
-		if(strstr(param,"?lv1")        ) {size=16;} else
-		if(strstr(param,"?lv2")        ) {start=LV2_OFFSET_ON_LV1;} else
+		if(param[10] == 'l' && param[11] == 'v' && param[12] == '1') {size=16;} else
+		if(param[10] == 'l' && param[11] == 'v' && param[12] == '2') {start=LV2_OFFSET_ON_LV1;} else
 		//if(strstr(param,"?v") /*vsh  */) {start=0x910000;}  else
-		if(strstr(param,"?r") /*rsx  */) {start=0x0000028080000000ULL; size=256;}  else
-		if(strstr(param,"?f") /*full */) {size=(dex_mode==1) ? 512 : 256;} else
-		if(strstr(param,"?m") /*mem  */) {size=(dex_mode==1) ? 512 : 256;} else
+		if(param[10] == 'r' /*rsx  */) {start=0x0000028080000000ULL; size=256;}  else
+		if(param[10] == 'f' /*full */) {size=(dex_mode==1) ? 512 : 256;} else
+		if(param[10] == 'm' /*mem  */) {size=(dex_mode==1) ? 512 : 256;} else
 		{
 			start = convertH(param+10);
 			if(start>=LV1_UPPER_MEMORY-((uint64_t)(size*_1MB_))) start=LV1_UPPER_MEMORY-((uint64_t)(size*_1MB_));

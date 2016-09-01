@@ -181,7 +181,7 @@ static bool fix_sfo_attribute(unsigned char *mem, u16 sfo_size)
 	return false;
 }
 
-char fix_game_path[7][256]; int plevel=-1;
+char fix_game_path[7][256]; int plevel = -1;
 
 static void fix_game_folder(char *path)
 {

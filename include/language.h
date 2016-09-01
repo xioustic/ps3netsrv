@@ -736,5 +736,7 @@ static void update_language(void)
 	}
 
 	if(fh) {cellFsClose(fh); fh = 0;}
+
+	html_base_path[0] = NULL;
 }
 #endif //#ifndef ENGLISH_ONLY

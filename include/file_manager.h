@@ -18,12 +18,12 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 
 static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
 {
+	if(param[1] == NULL) sz = 0, is_dir = true; // force folders in root -> fix: host_root, app_home
+
 	unsigned long long sbytes = sz; bool is_root = false;
 
 	if(!is_dir)
 	{
-		if(sz > 0x4000000000000ULL) sz = 0, is_dir = true; // fix host_root, app_home
-
 		if(sz < 10240)	{sprintf(sf, "%s", STR_BYTE);} else
 		if(sz < _2MB_)	{sprintf(sf, "%s", STR_KILOBYTE); sz >>= 10;} else
 		if(sz < _48GB_) {sprintf(sf, "%s", STR_MEGABYTE); sz >>= 20;} else

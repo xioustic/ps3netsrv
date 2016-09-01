@@ -421,7 +421,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		uint8_t plen = 10; // /mount.ps3
 
 #ifdef COPY_PS3
-		char target[MAX_PATH_LEN] = "", *pos;
+		char target[MAX_PATH_LEN], *pos; target[0] = NULL;
 		if(islike(param, "/copy.ps3")) {plen = IS_COPY; pos = strstr(param, "&to="); if(pos) {strcpy(target, pos + 4); pos[0] = NULL;}}
 #endif
 		char enc_dir_name[1024], *source = param + plen;
@@ -876,7 +876,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				copy_in_progress = true; copied_count = 0;
 
 				// make target dir tree
-				for(u16 p=12; p<strlen(target); p++)
+				for(u16 p = 12; p < strlen(target); p++)
 					if(target[p]=='/') {target[p] = NULL; cellFsMkdir((char*)target, MODE); target[p]='/';}
 
 				// copy folder to target
