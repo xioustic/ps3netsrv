@@ -96,13 +96,12 @@ static int download_file(char *param, char *msg)
 	char *msg_durl = msg;
 	char *msg_dpath = msg + MAX_URL_LEN + 16;
 
-	char pdurl[MAX_URL_LEN] = "";
-	char pdpath[MAX_DLPATH_LEN] = "";
+	char pdurl[MAX_URL_LEN];
+	char pdpath[MAX_DLPATH_LEN];
 
 	size_t conv_num_durl = 0;
 	size_t conv_num_dpath = 0;
 
-	size_t ptemp_len;
 	int pdurl_len;
 
 	size_t dparam_len;
@@ -117,14 +116,16 @@ static int download_file(char *param, char *msg)
 	sprintf(msg_durl,  "ERROR: Invalid URL");
 	sprintf(msg_dpath, "Download canceled");
 
-	if(islike(param + 13, "?to="))  //Use of the optional parameter
+	char *param2 = param + 13;
+
+	if(islike(param2, "?to="))  //Use of the optional parameter
 	{
-		char *ptemp = strstr(param, "&url=");
+		char *ptemp = strstr(param2, "&url=");
 
 		if(ptemp != NULL)
 		{
-			ptemp_len = strlen((const char *)ptemp);
-			pdurl_len = ptemp_len - 5;
+			pdurl_len = strlen(ptemp + 5);
+
 			if((pdurl_len > 0) && (pdurl_len < MAX_URL_LEN))
 			{
 				strncpy(pdurl, ptemp + 5, pdurl_len);
@@ -135,22 +136,22 @@ static int download_file(char *param, char *msg)
 		else
 			goto end_download_process;
 
-		dparam_len = strlen((const char *)param + 13);
-		pdpath_len = dparam_len - ptemp_len - 4;
+		dparam_len = strlen(param2);
+		pdpath_len = dparam_len - pdurl_len - 5 - 4;
 
-		if(pdpath_len > 0) strncpy(pdpath, (const char *)param + 17, pdpath_len);
+		if(pdpath_len > 0) strncpy(pdpath, param2 + 4, pdpath_len);
 
 		conv_num_durl = mbstowcs((wchar_t *)pkg_durl, (const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 
 	}
-	else if(islike(param + 13, "?url="))
+	else if(islike(param2, "?url="))
 	{
-		pdurl_len = strlen(param) - 18;
+		pdurl_len = strlen(param2 + 5);
 		if((pdurl_len > 0) && (pdurl_len < MAX_URL_LEN))
 		{
 			pdpath_len = strlen(DEFAULT_PKG_PATH);
 			strncpy(pdpath, DEFAULT_PKG_PATH, pdpath_len);
-			strncpy(pdurl, param + 18, pdurl_len);
+			strncpy(pdurl, param2 + 5, pdurl_len);
 			conv_num_durl = mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 		}
 	}
@@ -233,7 +234,7 @@ static int installPKG_combo(char *msg)
 
 	if(cellFsOpendir(DEFAULT_PKG_PATH, &fd) == CELL_FS_SUCCEEDED)
 	{
-		char pkgfile[MAX_PKGPATH_LEN] = "";
+		char pkgfile[MAX_PKGPATH_LEN];
 
 		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
 

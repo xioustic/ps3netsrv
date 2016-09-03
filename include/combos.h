@@ -44,6 +44,8 @@
  Normal Mode Switcher : L3+L2+O
  DEBUG  Menu Switcher : L3+L2+X
 
+ Skip auto-mount   : L2+R2                           Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2 (not overriden)
+
  Open File Manager : L2+R2+O                    *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_circle
  Open Games List   : L2+R2+R1+O                 *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_r1_circle
  Open System Info  : L2+R2+L1+O                 *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_l1_circle
@@ -67,7 +69,7 @@
 #ifdef VIRTUAL_PAD
 				if(vcombo)
 				{
-					data.len=16; data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] = (vcombo & 0xFF); data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] = (vcombo & 0xFF00) >> 8; vcombo = 0;
+					data.len = 16; data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] = (vcombo & 0xFF); data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] = (vcombo & 0xFF00) >> 8; vcombo = 0;
 				}
 				else
 #endif
@@ -83,7 +85,7 @@
 				{
 					if(!(webman_config->combo2 & PLAY_DISC) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L2))
 					{
-						char category[16] = "game", seg_name[80] = "seg_device";
+						char category[16] = "game", seg_name[80]; sprintf(seg_name, "seg_device");
 						launch_disc(category, seg_name); // L2+START
 						break;
 					}
@@ -558,7 +560,7 @@ show_popup:
 					else
 					if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2)
 					{
-						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE))==(CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE) && IS_ON_XMB) // L2+R2+O
+						if(!(webman_config->combo & SHOW_IDPS) && ((data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE)) == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_CIRCLE)) && IS_ON_XMB) // L2+R2+O
 						{
 #ifdef WM_CUSTOM_COMBO
 								 if(do_custom_combo("l2_r2_circle")) ;
@@ -581,12 +583,11 @@ show_popup:
 									{open_browser((char*)"http://127.0.0.1/", 0); show_msg((char*)"webMAN " WM_VERSION);}     // L2+R2+O
 #endif
 							}
-							sys_timer_sleep(3);
-							break;
 						}
+                        else
 						if((copy_in_progress || fix_in_progress) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE)) // R2+O Abort copy process
 						{
-							fix_aborted=copy_aborted=true;
+							fix_aborted = copy_aborted =true;
 						}
 						else
 						if(!(webman_config->combo & DISABLESH) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_TRIANGLE) ) // R2+TRIANGLE Disable CFW Sycalls
@@ -630,6 +631,15 @@ show_popup:
 								show_idps(msg);
 							}
 						}
+#ifdef WM_CUSTOM_COMBO
+						else
+						if(!(webman_config->combo & SHOW_IDPS) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2))) // L2+R2
+						{
+							if(do_custom_combo("l2_r2") == false) continue;
+						}
+#endif
+						sys_timer_sleep(3);
+						break;
 					}
 					else
 					if((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_L3) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))

@@ -13,6 +13,7 @@ static bool copy_in_progress = false;
 static u32 copied_count = 0;
 
 #define COPY_WHOLE_FILE		0
+#define SAVE_ALL			0
 
 /*
 static void add_log(const char *fmt, const char *value1, int value2)
@@ -71,6 +72,8 @@ static int savefile(const char *file, const char *mem, u64 size)
 
 	if(cellFsOpen(file, flags, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
+		if((size == SAVE_ALL) && mem) size = strlen(mem);
+
 		if(size) cellFsWrite(fd, (void *)mem, size, NULL);
 		cellFsClose(fd);
 
@@ -159,7 +162,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 	int ret = FAILED;
 	copy_aborted = false;
 
-	if(strcmp(file1, file2) == 0) return FAILED;
+	if(IS(file1, file2)) return FAILED;
 
 #ifdef COPY_PS3
 	sprintf(current_file, "%s", file2);
@@ -202,7 +205,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 			uint64_t size = buf.st_size, part_size = buf.st_size; u8 part = 0;
 			if(maxbytes > 0 && size > maxbytes) size = maxbytes;
 
-			if(islike(file2, "/dev_usb"))
+			if((part_size > 0xFFFF0000ULL) && islike(file2, "/dev_usb"))
 			{
 				if(!extcasecmp(file2, ".iso", 4)) strcat(file2, ".0"); else strcat(file2, ".66600");
 				part++; part_size = 0xFFFF0000ULL; //4Gb - 64kb
@@ -297,7 +300,7 @@ static int folder_copy(const char *path1, const char *path2)
 
 			if(isDir(source))
 			{
-				if(!strcmp(source, "/dev_bdvd/PS3_UPDATE")) continue;
+				if(IS(source, "/dev_bdvd/PS3_UPDATE")) continue;
 				folder_copy(source, target);
 			}
 			else

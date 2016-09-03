@@ -10,15 +10,16 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 	int fd, size = 0;
 
 	// truncate msg log
-	if(cellFsStat(WMCHATFILE, &buf)!=CELL_FS_SUCCEEDED || buf.st_size>0x8000UL || buf.st_size==0)
+	if(cellFsStat(WMCHATFILE, &buf) != CELL_FS_SUCCEEDED || buf.st_size > _32KB_ || buf.st_size == 0)
 	{
 		memset(tempstr, 0, _4KB_);
 
-		if(buf.st_size>0x8000UL)
+		if(buf.st_size > _32KB_)
 		{
 			if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDONLY, &fd, NULL, 0)==CELL_FS_SUCCEEDED)
 			{
-				cellFsLseek(fd, (buf.st_size-4080), CELL_FS_SEEK_SET, NULL);
+				u64 pos;
+				cellFsLseek(fd, (buf.st_size - 4080), CELL_FS_SEEK_SET, &pos);
 				cellFsRead(fd, (void *)&tempstr, 4080, NULL);
 				cellFsClose(fd);
 			}
@@ -28,17 +29,16 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 
 		if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 		{
-			strcpy(templn,	"<meta http-equiv=\"refresh\" content=\"10\">"
-							"<body bgcolor=\"#101010\" text=\"#c0c0c0\">"
-							"<script>window.onload=toBottom;function toBottom(){window.scrollTo(0, document.body.scrollHeight);}</script>\0");
-			if(tempstr[0]) strcat(templn, "<!--");
-			size = strlen(templn);
+			size = sprintf(templn,	"<meta http-equiv=\"refresh\" content=\"10\">"
+									"<body bgcolor=\"#101010\" text=\"#c0c0c0\">"
+									"<script>window.onload=toBottom;function toBottom(){window.scrollTo(0, document.body.scrollHeight);}</script>\0");
+			if(tempstr[0]) {strcat(templn, "<!--"); size += 4;}
+
 			cellFsWrite(fd, templn, size, NULL);
-			size = strlen(templn);
-            if(size) cellFsWrite(fd, tempstr, size, NULL);
+			cellFsWrite(fd, tempstr, size, NULL);
 		}
 		cellFsClose(fd);
-    }
+	}
 
 	// append msg
 	char msg[200]="", user[20]="guest\0"; char *pos;
@@ -48,12 +48,11 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 		pos = strstr(param, "u="); if(pos) get_value(user, pos+2, 20);
 		pos = strstr(param, "m="); if(pos) get_value(msg , pos+2, 200);
 
-		sprintf(templn, "<font color=\"red%s\"><b>%s</b></font><br>%s<br><!---->", user, user, msg);
+		size = sprintf(templn, "<font color=\"red%s\"><b>%s</b></font><br>%s<br><!---->", user, user, msg);
 
 		if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 		{
-		    size = strlen(templn);
-		    cellFsWrite(fd, templn, size, NULL);
+			cellFsWrite(fd, templn, size, NULL);
 		}
 		cellFsClose(fd);
 

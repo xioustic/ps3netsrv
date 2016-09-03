@@ -40,11 +40,11 @@ static void add_launchpad_header(void)
 {
 	mtrl_items = 0;
 
-	char *tempstr =  (char*)"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-							"<nsx anno=\"\" lt-id=\"131\" min-sys-ver=\"1\" rev=\"1093\" ver=\"1.0\">\n"
-							"<spc anno=\"csxad=1&amp;adspace=9,10,11,12,13\" id=\"33537\" multi=\"o\" rep=\"t\">\n\n";
+	const char *tempstr = (char*)"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+								 "<nsx anno=\"\" lt-id=\"131\" min-sys-ver=\"1\" rev=\"1093\" ver=\"1.0\">\n"
+								 "<spc anno=\"csxad=1&amp;adspace=9,10,11,12,13\" id=\"33537\" multi=\"o\" rep=\"t\">\n\n"; /* size: 196 */
 
-	savefile(LAUNCHPAD_FILE_XML, tempstr, strlen(tempstr));
+	savefile(LAUNCHPAD_FILE_XML, tempstr, SAVE_ALL);
 }
 
 static void add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID)
@@ -72,14 +72,13 @@ static void add_launchpad_entry(char *tempstr, char *templn, const char *url, ch
 			strncpy(templn, tempstr, j);
 		}
 
-		sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
-						 "<desc>%s</desc>\n"
-						 "<url type=\"2\">%s/%s%s</url>\n"
-						 "<target type=\"u\">%s</target>\n"
-						 "<cntry agelmt=\"0\">all</cntry>\n"
-						 "<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
+		u16 size = sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
+									"<desc>%s</desc>\n"
+									"<url type=\"2\">%s/%s%s</url>\n"
+									"<target type=\"u\">%s</target>\n"
+									"<cntry agelmt=\"0\">all</cntry>\n"
+									"<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
 
-		uint64_t size = strlen(tempstr);
 		cellFsWrite(fd, tempstr, size, NULL);
 
 		cellFsClose(fd);
@@ -117,15 +116,14 @@ static void add_launchpad_footer(char *tempstr)
 	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_RDWR | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
 	{
 		// --- add scroller placeholder
-		sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
-						 "<desc></desc>\n"
-						 "<url type=\"2\"></url>\n"
-						 "<target type=\"u\"></target>\n"
-						 "<cntry agelmt=\"0\">all</cntry>\n"
-						 "<lang>all</lang></mtrl>\n\n"
-						 "</spc></nsx>");
+		u16 size = sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
+									"<desc></desc>\n"
+									"<url type=\"2\"></url>\n"
+									"<target type=\"u\"></target>\n"
+									"<cntry agelmt=\"0\">all</cntry>\n"
+									"<lang>all</lang></mtrl>\n\n"
+									"</spc></nsx>");
 
-		uint64_t size = strlen(tempstr);
 		cellFsWrite(fd, tempstr, size, NULL);
 
 		cellFsClose(fd);
@@ -133,9 +131,9 @@ static void add_launchpad_footer(char *tempstr)
 }
 #endif //#ifdef LAUNCHPAD
 
-static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)
+static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn, u16 tlen, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)
 {
-	u16 tlen = strlen(templn); if(tlen < 6) strcat(templn, "      ");
+	if(tlen < 6) strcat(templn, "      ");
 
 	u8 c = 0;
 	if(templn[0]=='[' && templn[4]==']') {c = (templn[5]!=' ') ? 5 : 6;} // ignore tag prefixes. e.g. [PS3] [PS2] [PSX] [PSP] [DVD] [BDV] [ISO] etc.
@@ -154,7 +152,7 @@ static bool add_xmb_entry(u8 f0, u8 f1, char *param, char *tempstr, char *templn
 		}
 	}
 
-	to_upper(skey + 1, XML_KEY_LEN - 1);
+	to_upper(skey + 1);
 
 	#define ITEMS_BUFFER(a)  (64 * (item_count[a] + 8))
 
@@ -199,18 +197,18 @@ static void make_fb_xml(char *myxml, char *templn)
 	else
 		sprintf(templn, XML_PAIR("icon_rsc", "item_tex_ps3util"));
 
-	sprintf(myxml,  "%s"
-					"<View id=\"seg_fb\">"
-					"<Attributes><Table key=\"mgames\">%s"
-					XML_PAIR("icon_notation","WNT_XmbItemSavePS3")
-					XML_PAIR("title","%s%s")
-					XML_PAIR("info","%s")
-					"</Table>"
-					"%s"
-					QUERY_XMB("mgames", "xmb://localhost%s#seg_mygames")
-					"%s</XMBML>", XML_HEADER, templn, STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
+	u16 size = sprintf(myxml, "%s"
+							  "<View id=\"seg_fb\">"
+							  "<Attributes><Table key=\"mgames\">%s"
+							  XML_PAIR("icon_notation","WNT_XmbItemSavePS3")
+							  XML_PAIR("title","%s%s")
+							  XML_PAIR("info","%s")
+							  "</Table>"
+							  "%s"
+							  QUERY_XMB("mgames", "xmb://localhost%s#seg_mygames")
+							  "%s</XMBML>", XML_HEADER, templn, STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
 
-	savefile(FB_XML, (char*)myxml, strlen(myxml));
+	savefile(FB_XML, myxml, size);
 }
 
 static u32 get_buffer_size(int footprint)
@@ -603,7 +601,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 				CellFsDirent entry;
 				u64 read_e;
 				u8 is_iso = 0;
-				int fd2 = 0, flen;
+				int fd2 = 0, flen, slen;
 				char tempID[12];
 				cellRtcGetCurrentTick(&pTick);
 
@@ -642,15 +640,15 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0)==FAILED) {v3_entry++; continue;}
 
-						sprintf(tempstr, "<Table key=\"%04i\">"
-										 XML_PAIR("icon","%s")
-										 XML_PAIR("title","%s") "%s"
-										 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
-										 XML_PAIR("info","%s%s%s") "</Table>",
-								key, icon,
-								templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, (u16)pTick.tick, neth, param, "");
+						slen = sprintf(tempstr, "<Table key=\"%04i\">"
+												XML_PAIR("icon","%s")
+												XML_PAIR("title","%s") "%s"
+												XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
+												XML_PAIR("info","%s%s%s") "</Table>",
+												key, icon,
+												templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, (u16)pTick.tick, neth, param, "");
 
-						if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
+						if(add_xmb_entry(f0, f1, param, tempstr, templn, slen, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
 						if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
@@ -676,11 +674,11 @@ static bool update_mygames_xml(u64 conn_s_p)
 							strcpy(subpath, entry.d_name); subfolder = 1;
 next_xml_entry:
 							cellFsReaddir(fd2, &entry, &read_e);
-							if(read_e<1) {cellFsClosedir(fd2); fd2 = 0; continue;}
+							if(read_e < 1) {cellFsClosedir(fd2); fd2 = 0; continue;}
 							if(entry.d_name[0] == '.') goto next_xml_entry;
-							sprintf(templn, "%s/%s", subpath, entry.d_name); strcpy(entry.d_name, templn);
+							sprintf(templn, "%s/%s", subpath, entry.d_name); entry.d_name[0] = NULL; entry.d_namlen = concat(entry.d_name, templn);
 						}
-						flen = strlen(entry.d_name);
+						flen = entry.d_namlen;
 //////////////////////////////
 
 						if(key >= max_xmb_items) break;
@@ -733,12 +731,12 @@ next_xml_entry:
 									}
 
 									flen-=13; char *ntfs_ext = entry.d_name + flen;
-									if(IS_PS3_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PS3ISO]"))) continue;
-									if(IS_BLU_FOLDER && (!strstr(ntfs_ext, ".ntfs[BD"     ))) continue;
-									if(IS_DVD_FOLDER && ( strcmp(ntfs_ext, ".ntfs[DVDISO]"))) continue;
-									if(IS_PS2_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PS2ISO]"))) continue;
-									if(IS_PSX_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PSXISO]"))) continue;
-									if(IS_PSP_FOLDER && ( strcmp(ntfs_ext, ".ntfs[PSPISO]"))) continue;
+									if(IS_PS3_FOLDER && !IS(ntfs_ext, ".ntfs[PS3ISO]")) continue;
+									if(IS_PS2_FOLDER && !IS(ntfs_ext, ".ntfs[PS2ISO]")) continue;
+									if(IS_PSX_FOLDER && !IS(ntfs_ext, ".ntfs[PSXISO]")) continue;
+									if(IS_PSP_FOLDER && !IS(ntfs_ext, ".ntfs[PSPISO]")) continue;
+									if(IS_DVD_FOLDER && !IS(ntfs_ext, ".ntfs[DVDISO]")) continue;
+									if(IS_BLU_FOLDER && !strstr(ntfs_ext, ".ntfs[BD" )) continue;
 								}
 
 								if(IS_PS3_FOLDER)
@@ -794,15 +792,15 @@ next_xml_entry:
 								char *p = strchr(entry.d_name, '/'); if(p) {p[0] = NULL; sprintf(folder_name, "/%s", entry.d_name); p[0] = '/';}
 							}
 
-							sprintf(tempstr, "<Table key=\"%04i\">"
-											 XML_PAIR("icon","%s")
-											 XML_PAIR("title","%s") "%s"
-											 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
-											 XML_PAIR("info","%s%s%s") "</Table>",
-								key, icon,
-								templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
+							slen = sprintf(tempstr, "<Table key=\"%04i\">"
+													XML_PAIR("icon","%s")
+													XML_PAIR("title","%s") "%s"
+													XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
+													XML_PAIR("info","%s%s%s") "</Table>",
+													key, icon,
+													templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
 
-							if(add_xmb_entry(f0, f1, param, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
+							if(add_xmb_entry(f0, f1, param, tempstr, templn, slen, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
 							if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
@@ -866,8 +864,8 @@ continue_reading_folder_xml:
 
 		if((webman_config->nogrp))
 		{
-			for(n=0; n<(key-1); n++)
-				for(m=(n+1); m<key; m++)
+			for(n = 0; n < (key - 1); n++)
+				for(m = (n + 1); m < key; m++)
 					if(strncmp(skey[n]+1, skey[m]+1, XML_KEY_LEN) > 0)
 					{
 						strcpy(swap, skey[n]);
@@ -876,8 +874,8 @@ continue_reading_folder_xml:
 					}
 		}
 		else
-			for(n=0; n<(key-1); n++)
-				for(m=(n+1); m<key; m++)
+			for(n = 0; n < (key - 1); n++)
+				for(m = (n + 1); m < key; m++)
 					if(strncmp(skey[n], skey[m], XML_KEY_LEN) > 0)
 					{
 						strcpy(swap, skey[n]);
@@ -1087,7 +1085,7 @@ continue_reading_folder_xml:
 	}
 
 	// --- save xml file
-	int fdxml=0;
+	int fdxml = 0, slen;
 	cellFsOpen(xml, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdxml, NULL, 0);
 	cellFsWrite(fdxml, (char*)myxml, strlen(myxml), NULL);
 
@@ -1096,7 +1094,7 @@ continue_reading_folder_xml:
 		cellFsWrite(fdxml, (char*)myxml_ps3, strlen(myxml_ps3), NULL);
 		cellFsWrite(fdxml, (char*)"</Attributes><Items>", 20, NULL);
 		cellFsWrite(fdxml, (char*)myxml_items, strlen(myxml_items), NULL);
-		sprintf(myxml, "%s%s", "</Items></View>", "</XMBML>\r\n");
+		slen = sprintf(myxml, "%s%s", "</Items></View>", "</XMBML>\r\n");
 	}
 	else
 	{
@@ -1107,10 +1105,10 @@ continue_reading_folder_xml:
 		if(!(webman_config->cmask & PSP)) cellFsWrite(fdxml, (char*)myxml_psp, strlen(myxml_psp), NULL);
 		if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) cellFsWrite(fdxml, (char*)myxml_dvd, strlen(myxml_dvd), NULL);
 #endif
-		sprintf(myxml, "</XMBML>\r\n");
+		slen = sprintf(myxml, "</XMBML>\r\n");
 	}
 
-	cellFsWrite(fdxml, (char*)myxml, strlen(myxml), NULL);
+	cellFsWrite(fdxml, (char*)myxml, slen, NULL);
 	cellFsClose(fdxml);
 	cellFsChmod(xml, MODE);
 

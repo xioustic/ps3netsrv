@@ -54,6 +54,8 @@
 
 #define open_browser			vshmain_AE35CF2D
 
+#define IS(a, b)				(strcmp(a, b) == 0)		// compare two strings. returns true if are identical
+
 int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
 char *strcasestr(const char *s1, const char *s2);
@@ -69,9 +71,15 @@ static size_t concat(char *dest, const char *src)
 	return size;
 }
 
-static void to_upper(char *text, size_t size)
+static char *to_upper(char *text)
 {
-	for(size_t i = 0; i < size; i++) if(text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
+	for(size_t i = 0; text[i] != NULL; i++) if(text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
+	return text;
+}
+
+static bool islike(const char *param, const char *text)
+{
+	return (memcmp(param, text, strlen(text)) == 0);
 }
 
 static char h2a(const char hex)
@@ -118,7 +126,7 @@ static bool urlenc(char *dst, const char *src)
 {
 	size_t i, j = 0, n = strlen(src), pos = 0;
 
-	if(src[0] == 'h' && src[1] == 't' && src[2] == 't' && src[3] == 'p' && (src[4] == ':' || src[5] == ':') && (n > 7)) { for(i = 7; i < n; i++) if(src[i] == '/') {pos = i; break;} }
+	if(islike(src, "http") && (src[4] == ':' || src[5] == ':') && (n > 8)) { for(i = 8; i < n; i++) if(src[i] == '/') {pos = i; break;} }
 
 	for(i = 0; i < n; i++, j++)
 	{
@@ -147,31 +155,33 @@ static bool urlenc(char *dst, const char *src)
 	return (j > n); // true if dst != src
 }
 
-static void htmlenc(char *dst, char *src, u8 cpy2src)
+static size_t htmlenc(char *dst, char *src, u8 cpy2src)
 {
 	size_t j = 0;
-	size_t n = strlen(src); char tmp[8]; u8 t, c;
-	for(size_t i = 0; i < n; i++)
+	char tmp[8]; u8 t, c;
+	for(size_t i = 0; src[i] != NULL; i++)
 	{
 		if(src[i] & 0x80)
 		{
 			dst[j++] = '&';
 			dst[j++] = '#';
-			sprintf(tmp, "%i;", (int)(unsigned char)src[i]); t = strlen(tmp); c = 0;
+			t = sprintf(tmp, "%i;", (int)(unsigned char)src[i]); c = 0;
 			while(t--) {dst[j++] = tmp[c++];}
 		}
 		else dst[j++] = src[i];
 	}
 
-	dst[MIN(j, MAX_LINE_LEN)] = '\0';
+	j = MIN(j, MAX_LINE_LEN);
+	dst[j] = '\0';
 
 	if(cpy2src) strcpy(src, dst);
+	return j;
 }
 
-static void utf8enc(char *dst, char *src, u8 cpy2src)
+static size_t utf8enc(char *dst, char *src, u8 cpy2src)
 {
-	size_t j = 0, n = strlen(src); u16 c;
-	for(size_t i = 0; i < n; i++)
+	size_t j = 0; u16 c;
+	for(size_t i = 0; src[i] != NULL; i++)
 	{
 		c = (src[i] & 0xFF);
 
@@ -191,38 +201,41 @@ static void utf8enc(char *dst, char *src, u8 cpy2src)
 */
 	}
 
-	dst[MIN(j, MAX_LINE_LEN)] = '\0';
+	j = MIN(j, MAX_LINE_LEN);
+	dst[j] = '\0';
 
 	if(cpy2src) strcpy(src, dst);
+	return j;
 }
 /*
-static void utf8dec(char *dst, char *src, u8 cpy2src)
+static size_t utf8dec(char *dst, char *src, u8 cpy2src)
 {
-	size_t j=0;
-	size_t n=strlen(src); u8 c;
-	for(size_t i=0; i<n; i++)
+	size_t j = 0;
+	u8 c;
+	for(size_t i=0; src[i] != NULL; i++)
 	{
-		c=(src[i]&0xFF);
-		if(c<0x80)
-			dst[j++]=c;
+		c = (src[i]&0xFF);
+		if(c < 0x80)
+			dst[j++] = c;
 		else if(c & 0x20)
-			dst[j++]=(((src[i++] & 0x1F)<<6)+(c & 0x3F));
+			dst[j++] = (((src[i++] & 0x1F)<<6) + (c & 0x3F));
 		else
-			dst[j++]=(((src[i++] & 0xF)<<12)+((src[i++] & 0x3F)<<6)+(c & 0x3F));
+			dst[j++] = (((src[i++] & 0xF)<<12) + ((src[i++] & 0x3F)<<6) + (c & 0x3F));
 	}
 	dst[j] = '\0';
 
 	if(cpy2src) strncpy(src, dst, MAX_LINE_LEN);
+	return j;
 }
 */
-static void add_radio_button(const char *name, const char *value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
+static size_t add_radio_button(const char *name, const char *value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
 	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\"%s/> %s%s</label>", name, value, id, checked ? ITEM_CHECKED : "", label, (!sufix) ? "<br>" : sufix);
-	strcat(buffer, templn);
+	return concat(buffer, templn);
 }
 
-static void add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
+static size_t add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[MAX_LINE_LEN], clabel[MAX_LINE_LEN];
 	strcpy(clabel, label);
@@ -236,21 +249,22 @@ static void add_check_box(const char *name, const char *value, const char *label
 		strcat(clabel, p);
 	}
 	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
-	strcat(buffer, templn);
+	return concat(buffer, templn);
 }
 
-static void add_option_item(const char *value, const char *label, bool selected, char *buffer)
+static size_t add_option_item(const char *value, const char *label, bool selected, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
 	sprintf(templn, "<option value=\"%s\"%s/>%s</option>", value, selected?ITEM_SELECTED:"", label);
-	strcat(buffer, templn);
+	return concat(buffer, templn);
 }
 
-static void prepare_header(char *buffer, const char *param, u8 is_binary)
+static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 {
 	bool set_base_path = false;
 
-	strcpy(buffer, "HTTP/1.1 200 OK\r\nContent-Type: \0"); char *header = buffer + 31;
+	size_t slen = sprintf(buffer, "HTTP/1.1 200 OK\r\n"
+								  "Content-Type: "); char *header = buffer + slen;
 
 	int flen = strlen(param);
 
@@ -361,14 +375,11 @@ static void prepare_header(char *buffer, const char *param, u8 is_binary)
 	else
 		{strcat(header, "text/html"); set_base_path = true;}
 
-	if(set_base_path && param[0]=='/' && (param[1] == 'n' || param[1] == 'd' || param[1] == 'a')) {strncpy(html_base_path, param, flen); if((param[1] != 'n') && !isDir(param)) flen = strrchr(html_base_path, '/') - html_base_path; html_base_path[flen] = NULL; }
+	if(set_base_path && param[0]=='/' && (param[1] == 'n' || param[1] == 'd' || param[1] == 'a')) {strcpy(html_base_path, param); if((param[1] != 'n') && !isDir(param)) flen = strrchr(html_base_path, '/') - html_base_path; html_base_path[flen] = NULL; }
 
 	strcat(header, "\r\n");
-}
 
-static bool islike(const char *param, const char *text)
-{
-	return (memcmp(param, text, strlen(text)) == 0);
+	return slen + strlen(header);
 }
 
 static int val(const char *c)
@@ -384,26 +395,26 @@ static int val(const char *c)
 
 	while(*c)
 	{
-		if(*c < '0' || *c > '9') return result * multiplier;
+		if(!ISDIGIT(*c)) return result * multiplier;
 
 		result *= 10;
 		if(result < previous_result)
-			return(0);
+			return(0); // overflow
 		else
-			previous_result *= 10;
+			previous_result = result;
 
-		result += *c - '0';
+		result += (*c - '0');
 		if(result < previous_result)
-			return(0);
+			return(0); // overflow
 		else
-			previous_result += *c - '0';
+			previous_result = result;
 
 		c++;
 	}
 	return(result * multiplier);
 }
 
-static void get_value(char *text, char *url, u16 size)
+static u16 get_value(char *text, char *url, u16 size)
 {
 	u16 n;
 	for(n = 0; n < size; n++)
@@ -413,6 +424,7 @@ static void get_value(char *text, char *url, u16 size)
 		text[n] = url[n];
 	}
 	text[n] = NULL;
+	return n;
 }
 
 static u32 get_valuen32(const char *param, const char *label)

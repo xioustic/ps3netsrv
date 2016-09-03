@@ -275,7 +275,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	/////////////////////////////
 
 	strcat(buffer,  HTML_BLU_SEPARATOR
-					"webMAN - Simple Web Server" EDITION "<br>");
+					"webMAN - Simple Web Server" EDITION "<p>");
 
 	{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 }

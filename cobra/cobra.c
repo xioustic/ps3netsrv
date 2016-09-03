@@ -397,7 +397,7 @@ static char *get_blank_iso_path(void)
 }
 */
 
-static void build_blank_iso(char *title_id)
+static void build_blank_iso(const char *title_id)
 {
 	sys_addr_t sysmem = NULL;
 	if(sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0) return;
@@ -1456,7 +1456,7 @@ int cobra_create_mds(char *path, uint64_t size_in_sectors, DiscPhysInfo *layer0,
 	return 0;
 }
 */
-int cobra_map_game(char *path, char *title_id, int *special_mode)
+int cobra_map_game(const char *path, const char *title_id, int *special_mode)
 {
 /*
 	if (!path)
@@ -1492,7 +1492,7 @@ int cobra_map_game(char *path, char *title_id, int *special_mode)
 		sys_timer_usleep(20000);
 
 		char *files[1];
-		const char blank_iso[128] = "/dev_hdd0/vsh/task.dat";
+		const char blank_iso[24] = "/dev_hdd0/vsh/task.dat";
 
 		files[0] = (char*)blank_iso;
 

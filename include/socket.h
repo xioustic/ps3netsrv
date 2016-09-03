@@ -1,5 +1,9 @@
-#define ssend(socket, str) send(socket, str, strlen(str), 0)
 #define getPort(p1x, p2x) ((p1x * 256) + p2x)
+
+static int ssend(int socket, const char *str)
+{
+	return send(socket, str, strlen(str), 0);
+}
 
 static int connect_to_server(const char *server, uint16_t port)
 {

@@ -89,8 +89,8 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	if(v)
 	{
 		flen = strlen(v+1);
-		for(p=1; p<=flen;p++) if(!memcmp(v+p," ",1)) byte++; //ignore spaces
-		flen-=byte; byte=p=0;
+		for(p = 1; p <= flen; p++) if(!memcmp(v + p, " ", 1)) byte++; //ignore spaces
+		flen -= byte; byte = p = 0;
 	}
 
 	bits32=(flen>4) && (flen<=8);

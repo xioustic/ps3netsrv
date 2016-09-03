@@ -63,7 +63,7 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 
 		READ_NEXT_SFO_FIELD()
 	}
 
-	if(webman_config->tid && strlen(titleID)==9 && (titleID[0]=='B' || titleID[0]=='N'))
+	if(webman_config->tid && (titleID[8] != NULL) && (titleID[0]=='B' || titleID[0]=='N'))
 	{
 		strcat(title, " ["); strcat(title, titleID); strcat(title, "]");
 	}
@@ -203,7 +203,7 @@ static void fix_game_folder(char *path)
 
 			sprintf(fix_game_path[plevel], "%s/%s", path, dir.d_name);
 
-			if(!extcasecmp(dir.d_name, ".sprx", 5) || !extcasecmp(dir.d_name, ".self", 5) || !strcmp(dir.d_name, "EBOOT.BIN"))
+			if(!extcasecmp(dir.d_name, ".sprx", 5) || !extcasecmp(dir.d_name, ".self", 5) || IS(dir.d_name, "EBOOT.BIN"))
 			{
 				if(cellFsStat(fix_game_path[plevel], &s) != CELL_FS_SUCCEEDED || s.st_size < 0x500) continue;
 

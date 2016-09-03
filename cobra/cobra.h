@@ -399,7 +399,7 @@ int cobra_umount_disc_image(void);
  * Additional info: this function requires that the ps3 disc filesystem is mounted in /dev_bdvd
  * If the disc is not authentificated, encrypted sectors will remain encrypted.
  */
-int cobra_read_ps3_disc(void *buf, uint64_t sector, uint32_t count);
+//int cobra_read_ps3_disc(void *buf, uint64_t sector, uint32_t count);
 
 
 /*
@@ -414,7 +414,7 @@ int cobra_read_ps3_disc(void *buf, uint64_t sector, uint32_t count);
  * EINVAL -> invalid params
  * Other -> An error from the kernel
  */
-int cobra_get_disc_phys_info(uint32_t handle, uint8_t layer, DiscPhysInfo *info);
+//int cobra_get_disc_phys_info(uint32_t handle, uint8_t layer, DiscPhysInfo *info);
 
 
 /*
@@ -432,7 +432,7 @@ int cobra_get_disc_phys_info(uint32_t handle, uint8_t layer, DiscPhysInfo *info)
  * ENOTSUP -> the track info returned by the driver is odd and cannot be processed.
  * Other -> An error from the kernel
  */
-int cobra_get_cd_td(uint32_t handle, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, uint32_t *lba_end);
+//int cobra_get_cd_td(uint32_t handle, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, uint32_t *lba_end);
 
 
 /*
@@ -458,7 +458,7 @@ int cobra_get_cd_td(uint32_t handle, TrackDef *tracks, unsigned int max_tracks, 
  * Cobra USB manager currently continues dumping the disc despite of that. It would be probably a better solution to report at the end the total number of errors.
  * Apprently, a small number of errors is something normal.
  */
-int cobra_cd_read(uint32_t handle, void *buf, uint32_t sector, uint32_t count, int is_audio, int *num_errors);
+//int cobra_cd_read(uint32_t handle, void *buf, uint32_t sector, uint32_t count, int is_audio, int *num_errors);
 
 
 /*
@@ -482,7 +482,7 @@ int cobra_cd_read(uint32_t handle, void *buf, uint32_t sector, uint32_t count, i
  *
  * Additional info: if the cue file contained wav files paths for audio tracks, the function may succeed, but those tracks won't be parsed.
  */
-int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, char *filename, unsigned int fn_size);
+//int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, char *filename, unsigned int fn_size);
 
 
 /*
@@ -498,7 +498,7 @@ int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max
  * EINVAL -> invalid parameter
  * Other -> error from the kernel
  */
-int cobra_create_cue(char *path, char *filename, TrackDef *tracks, unsigned int num_tracks);
+//int cobra_create_cue(char *path, char *filename, TrackDef *tracks, unsigned int num_tracks);
 
 
 /*
@@ -514,7 +514,7 @@ int cobra_create_cue(char *path, char *filename, TrackDef *tracks, unsigned int 
  * EINVAL -> invalid parameter
  * Other -> error from the kernel
 */
-int cobra_create_mds(char *path, uint64_t size_in_sectors, DiscPhysInfo *layer0, DiscPhysInfo *layer1);
+//int cobra_create_mds(char *path, uint64_t size_in_sectors, DiscPhysInfo *layer0, DiscPhysInfo *layer1);
 
 
 /*
@@ -539,7 +539,7 @@ int cobra_create_mds(char *path, uint64_t size_in_sectors, DiscPhysInfo *layer0,
  *
  * When the game is unmapped, this function remaps /app_home to /dev_usb000 instead of deleting the entry
  */
-int cobra_map_game(char *path, char *title_id, int *special_mode);
+int cobra_map_game(const char *path, const char *title_id, int *special_mode);
 
 
 /*
@@ -605,7 +605,7 @@ int cobra_map_paths(char *paths[], char *new_paths[], unsigned int num);
  * Upon success, the file in icon_save_path will have the psp icon and the icon of psp launcher is mapped to it.
  * This function allocates temporally a 512 KB buffer, so at least that memory should be available
  */
-int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path);
+//int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path);
 
 /*
  * Sets the umd iso for psp emulation and sets the apropiated emulation parameters.
@@ -660,7 +660,7 @@ int cobra_unset_psp_umd(void);
  *
  * Additional info: don't call this function in a loop, it has some cost.
  */
-int cobra_get_usb_device_name(char *mount_point, char *dev_name);
+//int cobra_get_usb_device_name(char *mount_point, char *dev_name);
 
 /*
  * Gets the ps2 emu type of this console
@@ -682,7 +682,7 @@ int cobra_get_ps2_emu_type(void);
  * 0 -> success
  * ENOSYS -> not in cobra
  */
-int cobra_get_version(uint16_t *cobra_version, uint16_t *ps3_version);
+//int cobra_get_version(uint16_t *cobra_version, uint16_t *ps3_version);
 int sys_get_version2(uint16_t *version);
 
 /*
@@ -724,7 +724,7 @@ int cobra_write_config(CobraConfig *cfg);
  * ENOSYS -> not in cobra old version of cobra
  * Other -> error from kernel, for example when cobra is not present
  */
-int cobra_led_control(unsigned int led);
+//int cobra_led_control(unsigned int led);
 
 
 /*
@@ -742,7 +742,7 @@ int cobra_led_control(unsigned int led);
  * 0 -> success
  * EINVAL -> invalid param(s)
  */
-int cobra_build_netiso_params(void *param_buf, char *server, uint16_t port, char *remote_path, int emu_mode, int num_tracks, TrackDef *tracks);
+//int cobra_build_netiso_params(void *param_buf, char *server, uint16_t port, char *remote_path, int emu_mode, int num_tracks, TrackDef *tracks);
 
 /*
  * Loads a module in the vsh process.

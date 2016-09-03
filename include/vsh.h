@@ -94,7 +94,7 @@ static void launch_disc(char *category, char *seg_name)
 	u8 n;
 	for(n = 0; n < 15; n++) {if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
 
-	if(!strcmp(seg_name, "seg_device")) waitfor("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
+	if(IS(seg_name, "seg_device")) waitfor("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
 
 	int view = View_Find("explore_plugin");
 
@@ -108,10 +108,10 @@ static void launch_disc(char *category, char *seg_name)
 		// default segment
 		if(!seg_name[0]) sprintf(seg_name, "seg_device");
 
-		if(strcmp(seg_name, "seg_device") || isDir("/dev_bdvd"))
+		if(!IS(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{
 			// use segment for media type
-			if(!strcmp(category, "game") && !strcmp(seg_name, "seg_device"))
+			if(IS(category, "game") && IS(seg_name, "seg_device"))
 			{
 				if(isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")) ; else
 				if(isDir("/dev_bdvd/BDMV") )    {sprintf(category, "video"); sprintf(seg_name, "seg_bdmav_device");} else
