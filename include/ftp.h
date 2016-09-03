@@ -104,7 +104,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	}
 
 	sprintf(ip_address, "%s", inet_ntoa(conn_info.local_adr));
-	for(u8 n = 0; n < strlen(ip_address); n++) if(ip_address[n] == '.') ip_address[n] = ',';
+	for(u8 n = 0; ip_address[n] != NULL; n++) if(ip_address[n] == '.') ip_address[n] = ',';
 
 	sprintf(buffer, "%i webMAN ftpd " WM_VERSION "\r\n", 220); ssend(conn_s_ftp, buffer);
 
@@ -429,7 +429,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							absPath(param, filename, cwd);
 							if((!copy_in_progress) && (source[0] != NULL) && (!IS(source, param)) && file_exists(source))
 							{
-								copy_in_progress=true; copied_count = 0;
+								copy_in_progress = true; copied_count = 0;
 								ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 
 								sprintf(buffer, "%s %s\n%s %s", STR_COPYING, source, STR_CPYDEST, param);
@@ -442,7 +442,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 								show_msg((char*)STR_CPYFINISH);
 								//memset(source, 0, 512);
-								copy_in_progress=false;
+								copy_in_progress = false;
 							}
 							else
 							{
@@ -511,10 +511,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							bool is_root = (strlen(d_path) < 6);
 
-							CellFsDirent entry; u16 slen;
-							u64 read_e; mode_t mode; char dirtype[2]; dirtype[1] = '\0';
+							CellFsDirent entry; u64 read_e;
+							u16 slen; mode_t mode; char dirtype[2]; dirtype[1] = '\0';
 
-							while(cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
+							while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #endif
 							{
 								if(IS(entry.d_name, "app_home") || IS(entry.d_name, "host_root")) continue;

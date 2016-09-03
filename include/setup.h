@@ -578,11 +578,10 @@ static void setup_form(char *buffer, char *templn)
 	{
 		if(cellFsOpendir("/dev_hdd0/home", &fd) == CELL_FS_SUCCEEDED)
 		{
-			CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+			CellFsDirent dir; u64 read_e;
 
-			while(!cellFsReaddir(fd, &dir, &read))
+			while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 			{
-				if(!read) break;
 				if(dir.d_namlen == 8)
 					add_option_item(dir.d_name, dir.d_name, IS(dir.d_name, webman_config->uaccount), buffer);
 			}

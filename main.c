@@ -681,7 +681,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 	}
 	else
 	{
-		char templn[MAX_TEXT_LEN];
+		char templn[_2KB_];
 
 		if(msg[0] == '/')
 			{sprintf(templn, "%s : OK", msg+1); show_msg(templn);}
@@ -1043,9 +1043,6 @@ static void handleclient(u64 conn_s_p)
 		tv.tv_usec = 0;
 		tv.tv_sec = 3;
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-		int optval = HTML_RECV_SIZE;
-		setsockopt(conn_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
 	}
 
 //// process commands ////

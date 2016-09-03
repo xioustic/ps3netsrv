@@ -309,8 +309,6 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 		if(!extcmp(param + MAX(plen - 7, 0), "/exdata", 7)) {_LINELEN = _MAX_LINE_LEN = _MAX_PATH_LEN = 200; skip_cmd = 1;}
 
-		CellFsDirent entry;
-		u64 read_e;
 		unsigned long long sz = 0, dir_size = 0;
 		char ename[16], sf[8];
 		char fsize[MAX_PATH_LEN], *swap = fsize;
@@ -465,7 +463,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
   #endif
  #endif
 		{
-			while(cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
+			CellFsDirent entry; u64 read_e;
+
+			while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 			{
 				if(entry.d_name[0] == '.' && entry.d_name[1] == 0) continue;
 				if(tlen > BUFFER_SIZE_HTML) break;

@@ -16,6 +16,7 @@
 
 #define IS_HDD0       (f0 == 0)
 #define IS_NTFS       (f0 == NTFS)
+#define IS_NET        (f0 >= 7 && f0 < NTFS)
 
 #define PS3 (1<<0)
 #define PS2 (1<<1)
@@ -82,7 +83,7 @@ static void get_name(char *name, const char *filename, u8 cache)
 	if(!webman_config->tid) {char *p = strstr(name, " ["); if(p) p[0] = NULL;}                        // Name [BLES00000]
 }
 
-static bool get_cover(char *icon, char *tempID)
+static bool get_cover_by_titleid(char *icon, char *tempID)
 {
 	if(!HAS_TITLE_ID) return false;
 
@@ -135,18 +136,18 @@ static bool get_cover(char *icon, char *tempID)
 				if(file_exists(icon)) return true;
 			}
 		}
-	}
 
 #ifndef ENGLISH_ONLY
-	if(use_custom_icon_path && webman_config->nocov == ONLINE_COVERS && COVERS_PATH[0] == 'h')
-	{
-		if(use_icon_region) sprintf(icon, COVERS_PATH,  (tempID[2] == 'U') ? "US" :
-														(tempID[2] == 'J') ? "JA" : "EN", tempID);
-		else
-							sprintf(icon, COVERS_PATH, tempID);
-		return true;
-	}
+		if(use_custom_icon_path && (webman_config->nocov == ONLINE_COVERS) && (COVERS_PATH[0] == 'h'))
+		{
+			if(use_icon_region) sprintf(icon, COVERS_PATH,  (tempID[2] == 'U') ? "US" :
+															(tempID[2] == 'J') ? "JA" : "EN", tempID);
+			else
+								sprintf(icon, COVERS_PATH, tempID);
+			return true;
+		}
 #endif
+	}
 
 	icon[0] = NULL;
 	return false;
@@ -157,7 +158,7 @@ static bool get_cover_from_name(char *icon, const char *name, char *tempID)
 	if(HAS_ICON) return true;
 
 	// get cover from tempID in PARAM.SFO
-	if(get_cover(icon, tempID)) return true;
+	if(get_cover_by_titleid(icon, tempID)) return true;
 
 	// get titleid from file name
 	if(HAS_TITLE_ID) ;
@@ -187,10 +188,70 @@ static bool get_cover_from_name(char *icon, const char *name, char *tempID)
 
 	if(tempID[4] == '-') strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
 
-	// get cover from tempID in file name
-	if(get_cover(icon, tempID)) return true;
+	// get cover using titleID obtained from file name
+	if(get_cover_by_titleid(icon, tempID)) return true;
 
 	return false;
+}
+
+static void get_default_icon_from_folder(char *icon, u8 is_iso, const char *param, const char *entry_name, char *tempID, u8 f0)
+{
+	//this function is called only from get_default_icon
+
+	if(SHOW_COVERS_OR_ICON0)
+	{
+		if(!is_iso && (NO_ICON || (webman_config->nocov == SHOW_ICON0))) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name);
+
+		get_cover_from_name(icon, entry_name, tempID);
+
+		if(NO_ICON || icon[0] == 'h')
+		{
+			char tmp[MAX_PATH_LEN]; sprintf(tmp, "%s", icon);
+
+			if(HAS_TITLE_ID && (f0 != NTFS))
+			{
+				char titleid[MAX_PATH_LEN];
+				char *pos = strchr(entry_name, '/'); if(pos) {pos[0] = NULL; sprintf(titleid, "%s/%s", entry_name, tempID); pos[0] = '/';} else sprintf(titleid, "%s", tempID);
+
+				sprintf(icon, "%s/%s.JPG", param, titleid); if(file_exists(icon)) return;
+				sprintf(icon, "%s/%s.PNG", param, titleid); if(file_exists(icon)) return;
+			}
+
+			int flen = sprintf(icon, "%s/%s", param, entry_name);
+
+#ifdef COBRA_ONLY
+			if(f0 == NTFS)
+			{
+				if(SHOW_COVERS && tmp[0]) {sprintf(icon, "%s", tmp); return;}
+
+				if(flen > 13 && icon[flen-13] == '.' && (!extcmp(icon, ".ntfs[PS3ISO]", 13) || !extcmp(icon, ".ntfs[PS2ISO]", 13)  || !extcmp(icon, ".ntfs[PSPISO]", 13) || !extcmp(icon, ".ntfs[DVDISO]", 13) || !extcmp(icon, ".ntfs[PSXISO]", 13) || !extcmp(icon, ".ntfs[BDFILE]", 13))) flen -= 13; else
+				if(flen > 12 && icon[flen-12] == '.' &&  !extcmp(icon, ".ntfs[BDISO]" , 12)) flen -= 12;
+			}
+#endif
+			if(flen > 2 && icon[flen-2] == '.') flen -= 2;
+			if(flen > 4 && icon[flen-4] == '.') flen -= 4;
+
+			char *icon_ext = icon + flen;
+
+			icon[flen] = NULL; strcat(icon_ext, ".jpg"); if(file_exists(icon)) return;
+			icon[flen] = NULL; strcat(icon_ext, ".JPG"); if(file_exists(icon)) return;
+			icon[flen] = NULL; strcat(icon_ext, ".png"); if(file_exists(icon)) return;
+			icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
+
+			if(SHOW_COVERS && tmp[0]) {sprintf(icon, "%s", tmp); return;}
+
+			get_name(icon, entry_name, GET_WMTMP); strcat(icon_ext, ".jpg");
+			if(file_exists(icon)) return;
+
+			flen = strlen(icon) - 4;
+
+			icon[flen] = NULL; strcat(icon_ext, ".png"); if(file_exists(icon)) return;
+			icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
+			icon[flen] = NULL; strcat(icon_ext, ".JPG"); if(file_exists(icon) == false) icon[0] = NULL;
+
+			if(NO_ICON && tmp[0]) sprintf(icon, "%s", tmp);
+		}
+	}
 }
 
 static void get_default_icon_for_iso(char *icon, const char *param, char *file, int isdir, int ns, int abort_connection)
@@ -284,9 +345,11 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 	}
 }
 
-static void get_default_icon(char *icon, const char *param, char *file, int isdir, char *tempID, int ns, int abort_connection, u8 f1)
+static void get_default_icon(char *icon, const char *param, char *file, int isdir, char *tempID, int ns, int abort_connection, u8 f0, u8 f1)
 {
 	if(webman_config->nocov == SHOW_DISC) {if(get_cover_from_name(icon, file, tempID)) return; goto no_icon0;}
+
+	if(!IS_NET) get_default_icon_from_folder(icon, (f1 > 1), param, file, tempID, f0);
 
 	// continue using cover or default icon0.png
 	if(HAS_ICON)
@@ -324,12 +387,13 @@ no_icon0:
 		strcpy(icon, wm_icons[5]);
 }
 
-static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_name, char *icon, char *data, u8 f0)
+static int get_title_and_id_from_sfo(char *templn, char *tempID, const char *entry_name, char *icon, char *data, u8 f0)
 {
 	int fdw, ret;
 
 	ret = cellFsOpen(templn, CELL_FS_O_RDONLY, &fdw, NULL, 0); // get titleID & title from PARAM.SFO
 
+	// read param.sfo
 	if(ret == CELL_FS_SUCCEEDED)
 	{
 		uint64_t sfo_size = 0;
@@ -341,7 +405,7 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_nam
 			unsigned char *mem = (u8*)data;
 			parse_param_sfo(mem, tempID, templn, (u16)sfo_size);
 
-			if(SHOW_COVERS) get_cover(icon, tempID);
+			if(SHOW_COVERS) get_cover_by_titleid(icon, tempID);
 		}
 	}
 
@@ -357,65 +421,57 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, char *entry_nam
 		get_name(templn, entry_name, NO_PATH); if(!IS_NTFS) utf8enc(data, templn, GET_WMTMP); //use file name as title
 	}
 
-	return ( (ret == CELL_FS_SUCCEEDED) ? 0 : FAILED );
+	return ret;
 }
 
-static void get_folder_icon(char *icon, u8 is_iso, const char *param, const char *entry_name, char *tempID, u8 f0)
+static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const char *param, const char *entry_name, u8 f0, u8 f1, u8 uprofile, int flen, char *tempstr)
 {
-	if(SHOW_COVERS_OR_ICON0)
-	{
-		if(!is_iso && (NO_ICON || (webman_config->nocov == SHOW_ICON0))) sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name);
+	// check entry path & returns file name without extension or path of sfo (for /PS3ISO) in templn
 
-		get_cover_from_name(icon, entry_name, tempID);
+	if(IS_NTFS)
+	{   // ntfs
+		char *ntfs_sufix = NULL;
 
-		if(NO_ICON || icon[0] == 'h')
+		if(flen > 17) ntfs_sufix = strstr((char*)entry_name + flen - 14, ").ntfs[");
+
+		if(ntfs_sufix)
 		{
-			char tmp[MAX_PATH_LEN]; sprintf(tmp, "%s", icon);
+			// skip extended content of ntfs cached in /wmtmp if current user profile is 0
+			if(uprofile == 0) return FAILED;
 
-			if(HAS_TITLE_ID && (f0 != NTFS))
-			{
-				char titleid[255];
-				size_t pos = strcspn(entry_name, "/"); if(entry_name[pos] == '/') {strncpy(titleid, entry_name, pos); titleid[pos+1] = NULL; strcat(titleid, tempID);} else sprintf(titleid, "%s", tempID);
+			ntfs_sufix--; u8 fprofile = (u8)ntfs_sufix[0]; if(fprofile >= '0') fprofile -= '0';
 
-				sprintf(icon, "%s/%s.JPG", param, titleid); if(file_exists(icon)) return;
-				sprintf(icon, "%s/%s.PNG", param, titleid); if(file_exists(icon)) return;
-			}
+			// skip non-matching extended content
+			if((uprofile  > 0) && (uprofile != fprofile)) return FAILED;
+		}
 
-			int flen = sprintf(icon, "%s/%s", param, entry_name);
+		flen-=13; char *ntfs_ext = (char*)entry_name + flen;
+		if(IS_PS3_FOLDER && !IS(ntfs_ext, ".ntfs[PS3ISO]")) return FAILED;
+		if(IS_PS2_FOLDER && !IS(ntfs_ext, ".ntfs[PS2ISO]")) return FAILED;
+		if(IS_PSX_FOLDER && !IS(ntfs_ext, ".ntfs[PSXISO]")) return FAILED;
+		if(IS_PSP_FOLDER && !IS(ntfs_ext, ".ntfs[PSPISO]")) return FAILED;
+		if(IS_DVD_FOLDER && !IS(ntfs_ext, ".ntfs[DVDISO]")) return FAILED;
+		if(IS_BLU_FOLDER && !strstr(ntfs_ext, ".ntfs[BD" )) return FAILED;
+	}
 
-#ifdef COBRA_ONLY
-			if(f0 == NTFS)
-			{
-				if(SHOW_COVERS && tmp[0]) {sprintf(icon, "%s", tmp); return;}
+	if(IS_PS3_FOLDER)
+	{
+		get_name(templn, entry_name, GET_WMTMP); strcat(templn, ".SFO\0"); // WMTMP
+		if( (!IS_NTFS) && file_exists(templn) == false)
+		{
+			get_name(tempstr, entry_name, NO_EXT);
+			sprintf(templn, "%s/%s.SFO", param, tempstr); // /PS3ISO
+		}
 
-				if(flen > 13 && icon[flen-13] == '.' && (!extcmp(icon, ".ntfs[PS3ISO]", 13) || !extcmp(icon, ".ntfs[PS2ISO]", 13)  || !extcmp(icon, ".ntfs[PSPISO]", 13) || !extcmp(icon, ".ntfs[DVDISO]", 13) || !extcmp(icon, ".ntfs[PSXISO]", 13) || !extcmp(icon, ".ntfs[BDFILE]", 13))) flen -= 13; else
-				if(flen > 12 && icon[flen-12] == '.' &&  !extcmp(icon, ".ntfs[BDISO]" , 12)) flen -= 12;
-			}
-#endif
-			if(flen > 2 && icon[flen-2] == '.') flen -= 2;
-			if(flen > 4 && icon[flen-4] == '.') flen -= 4;
-
-			char *icon_ext = icon + flen;
-
-			icon[flen] = NULL; strcat(icon_ext, ".jpg"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".JPG"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".png"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
-
-			if(SHOW_COVERS && tmp[0]) {sprintf(icon, "%s", tmp); return;}
-
-			get_name(icon, entry_name, GET_WMTMP); strcat(icon_ext, ".jpg");
-			if(file_exists(icon)) return;
-
-			flen = strlen(icon) - 4;
-
-			icon[flen] = NULL; strcat(icon_ext, ".png"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".JPG"); if(file_exists(icon) == false) icon[0] = NULL;
-
-			if(NO_ICON && tmp[0]) sprintf(icon, "%s", tmp);
+		if(get_title_and_id_from_sfo(templn, tempID, entry_name, icon, tempstr, f0) != CELL_FS_SUCCEEDED || !HAS_TITLE_ID)
+		{
+			sprintf(templn, "%s/%s", param, entry_name); // return ISO file name
 		}
 	}
+	else
+		get_name(templn, entry_name, NO_EXT);
+
+	return 0;
 }
 
 #ifdef COBRA_ONLY
@@ -492,7 +548,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 	if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 	urlenc(enc_dir_name, data[v3_entry].name);
-	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection, f1);
+	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection, (neth[4] - '0' + 7), f1);
 
 	if(SHOW_COVERS_OR_ICON0 && (NO_ICON || (webman_config->nocov == SHOW_ICON0))) {get_name(tempstr, data[v3_entry].name, GET_WMTMP); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
 
@@ -530,6 +586,58 @@ static void check_cover_folders(char *buffer)
 		if(ip[0] == NULL) use_custom_icon_path = false;
 	}
 #endif
+}
+
+static int check_drive(u8 f0)
+{
+	if(!webman_config->usb0 && (f0 == 1)) return FAILED;
+	if(!webman_config->usb1 && (f0 == 2)) return FAILED;
+	if(!webman_config->usb2 && (f0 == 3)) return FAILED;
+	if(!webman_config->usb3 && (f0 == 4)) return FAILED;
+	if(!webman_config->usb6 && (f0 == 5)) return FAILED;
+	if(!webman_config->usb7 && (f0 == 6)) return FAILED;
+
+	// f0 -> 7 to 11 (net), 12 ntfs/ext
+
+	if(!webman_config->dev_sd && (f0 == 13)) return FAILED;
+	if(!webman_config->dev_ms && (f0 == 14)) return FAILED;
+	if(!webman_config->dev_cf && (f0 == 15)) return FAILED;
+
+	if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+					  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) return FAILED;
+
+	// is_net
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+	if(f0 == 7  && !webman_config->netd0) return FAILED; //net0
+	if(f0 == 8  && !webman_config->netd1) return FAILED; //net1
+	if(f0 == 9  && !webman_config->netd2) return FAILED; //net2
+  #ifdef NET3NET4
+	if(f0 == 10 && !webman_config->netd3) return FAILED; //net3
+	if(f0 == 11 && !webman_config->netd4) return FAILED; //net4
+  #else
+	if(f0 == 10 || f0 == 11) return FAILED;              //net3 / net4
+  #endif
+ #else
+	if(IS_NET) return FAILED; // is_net (LITE_EDITION)
+ #endif
+#else
+	if(IS_NET) return FAILED; // is_net (nonCobra)
+#endif
+
+	return 0;
+}
+
+static int check_content(u8 f1)
+{
+	if( (webman_config->cmask & PS3) && IS_PS3_TYPE   ) return FAILED; // 0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video"
+	if( (webman_config->cmask & BLU) && IS_BLU_FOLDER ) return FAILED;
+	if( (webman_config->cmask & DVD) && IS_DVD_FOLDER ) return FAILED;
+	if( (webman_config->cmask & PS2) && IS_PS2_FOLDER ) return FAILED;
+	if( (webman_config->cmask & PS1) && IS_PSX_FOLDER ) return FAILED;
+	if( (webman_config->cmask & PSP) && IS_PSP_FOLDER ) return FAILED;
+
+	return 0;
 }
 
 static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, bool mobile_mode, bool auto_mount)
@@ -672,25 +780,11 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		for(u8 f0 = filter0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
 		{
-			if(!webman_config->usb0 && (f0 == 1)) continue;
-			if(!webman_config->usb1 && (f0 == 2)) continue;
-			if(!webman_config->usb2 && (f0 == 3)) continue;
-			if(!webman_config->usb3 && (f0 == 4)) continue;
-			if(!webman_config->usb6 && (f0 == 5)) continue;
-			if(!webman_config->usb7 && (f0 == 6)) continue;
+			if(check_drive(f0)) continue;
 
-			// f0 -> 7 to 11 (net), 12 ntfs/ext
+			is_net = IS_NET;
 
-			if(!webman_config->dev_sd && (f0 == 13)) continue;
-			if(!webman_config->dev_ms && (f0 == 14)) continue;
-			if(!webman_config->dev_cf && (f0 == 15)) continue;
-
-			if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-							  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
-
-			is_net = (f0 >= 7 && f0 < NTFS);
-
-			if(!(is_net || IS_NTFS) && (file_exists(drives[f0]) == false)) continue;
+			if(!(is_net || IS_NTFS) && (isDir(drives[f0]) == false)) continue;
 //
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -714,29 +808,13 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(is_net)
 				{
 					if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video"
-					if(f0 == 7  && !webman_config->netd0) break; //net0
-					if(f0 == 8  && !webman_config->netd1) break; //net1
-					if(f0 == 9  && !webman_config->netd2) break; //net2
- #ifdef NET3NET4
-					if(f0 == 10 && !webman_config->netd3) break; //net3
-					if(f0 == 11 && !webman_config->netd4) break; //net4
- #else
-					if(f0 == 10 || f0 == 11) break;
- #endif
 				}
  #endif
 #endif
 				if(b0) {if((b0 == 2) && (f0 < 7)); else if((b0 == 3) && (!IS_NTFS)); else if(filter0!=f0) continue;}
 				if(b1) {if((b1 >= 2) && ((f1 < b1) || (f1 >= 10)) && (filter1 < 3)); else if(filter1!=f1) continue;}
 				else
-				{
-					if( (webman_config->cmask & PS3) && IS_PS3_TYPE   ) continue; // 0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video"
-					if( (webman_config->cmask & BLU) && IS_BLU_FOLDER ) continue;
-					if( (webman_config->cmask & DVD) && IS_DVD_FOLDER ) continue;
-					if( (webman_config->cmask & PS2) && IS_PS2_FOLDER ) continue;
-					if( (webman_config->cmask & PS1) && IS_PSX_FOLDER ) continue;
-					if( (webman_config->cmask & PSP) && IS_PSP_FOLDER ) continue;
-				}
+					if(check_content(f1)) continue;
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -780,11 +858,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #endif
 
 
-				CellFsDirent entry;
-				u64 read_e;
-				u8 is_iso = 0;
+				CellFsDirent entry; u64 read_e;
 				int fd2 = 0, flen, slen;
 				char tempID[12];
+				u8 is_iso = 0;
 				cellRtcGetCurrentTick(&pTick);
 
 #ifdef COBRA_ONLY
@@ -900,74 +977,41 @@ next_html_entry:
 							}
 							else
 							{
+#ifndef COBRA_ONLY
 								get_name(templn, entry.d_name, NO_EXT);
-#ifdef COBRA_ONLY
-								if(IS_NTFS)
-								{   // ntfs
-									char *ntfs_sufix = NULL;
+#else
+								if(get_name_iso_or_sfo(templn, tempID, icon, param, entry.d_name, f0, f1, uprofile, flen, tempstr) == FAILED) continue;
 
-									if(flen > 17) ntfs_sufix = strstr(entry.d_name + flen - 14, ").ntfs[");
-
-									if(ntfs_sufix)
-									{
-										// skip extended content of ntfs cached in /wmtmp if current user profile is 0
-										if(uprofile == 0) continue;
-
-										ntfs_sufix--; u8 fprofile = (u8)ntfs_sufix[0]; if(fprofile > '0') fprofile -= '0';
-
-										// skip non-matching extended content
-										if((uprofile  > 0) && (uprofile != fprofile)) continue;
-									}
-
-									flen-=13; char *ntfs_ext = entry.d_name + flen;
-									if(IS_PS3_FOLDER && !IS(ntfs_ext, ".ntfs[PS3ISO]")) continue;
-									if(IS_PS2_FOLDER && !IS(ntfs_ext, ".ntfs[PS2ISO]")) continue;
-									if(IS_PSX_FOLDER && !IS(ntfs_ext, ".ntfs[PSXISO]")) continue;
-									if(IS_PSP_FOLDER && !IS(ntfs_ext, ".ntfs[PSPISO]")) continue;
-									if(IS_DVD_FOLDER && !IS(ntfs_ext, ".ntfs[DVDISO]")) continue;
-									if(IS_BLU_FOLDER && !strstr(ntfs_ext, ".ntfs[BD" )) continue;
-								}
-
-								if(IS_PS3_FOLDER)
+								if(IS_PS3_FOLDER && !HAS_TITLE_ID)
 								{
-									get_name(templn, entry.d_name, GET_WMTMP); strcat(templn, ".SFO\0"); // WMTMP
-									if( (!IS_NTFS) && file_exists(templn) == false)
+									if(!IS_NTFS)
 									{
-										get_name(tempstr, entry.d_name, NO_EXT);
-										sprintf(templn, "%s/%s.SFO", param, tempstr); // /PS3ISO
-									}
-
-									if(get_title_and_id_from_sfo(templn, tempID, entry.d_name, icon, tempstr, f0)==FAILED)
-									{
-										if( (!IS_NTFS) && is_iso)
+										int fs;
+										if(cellFsOpen(templn, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
 										{
-											int fs; char *ps3iso = icon;
-											sprintf(ps3iso, "%s/%s", param, entry.d_name);
-											if(cellFsOpen(ps3iso, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+											uint64_t msiz = 0;
+											if(cellFsLseek(fs, 0x810, CELL_FS_SEEK_SET, &msiz) == CELL_FS_SUCCEEDED)
 											{
-												uint64_t msiz = 0;
-												if(cellFsLseek(fs, 0x810, CELL_FS_SEEK_SET, &msiz) == CELL_FS_SUCCEEDED)
+												if(cellFsRead(fs, (void *)&tempID, 11, &msiz) == CELL_FS_SUCCEEDED)
 												{
-													if(cellFsRead(fs, (void *)&tempID, 11, &msiz) == CELL_FS_SUCCEEDED)
-													{
-														strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
-													}
+													strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
 												}
-												cellFsClose(fs);
 											}
-											ps3iso[0] = NULL;
+											cellFsClose(fs);
 										}
 									}
+
+									get_name(templn, entry.d_name, NO_EXT);
 								}
 #endif
 							}
 
-							if(filter_name[0]>=' ' && strcasestr(templn, filter_name)==NULL && strcasestr(param, filter_name)==NULL && strcasestr(entry.d_name, filter_name)==NULL)
+							if(filter_name[0] >= ' ' && !strcasestr(templn, filter_name) &&
+														!strcasestr(param,  filter_name) &&
+														!strcasestr(entry.d_name, filter_name))
 							{if(subfolder) goto next_html_entry; else continue;}
 
-							get_folder_icon(icon, is_iso, param, entry.d_name, tempID, f0);
-
-							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection, f1);
+							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection, f0, f1);
 
 							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
@@ -981,7 +1025,7 @@ next_html_entry:
 
 							if(mobile_mode)
 							{
-								if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
+								if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore names with quotes: cause syntax error in javascript: gamelist.js
 								for(size_t c = 0; templn[c] > 0; c++) {if((templn[c] == '"') || (templn[c] < ' ')) templn[c] = ' ';} // replace invalid chars
 
 								int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320, h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280, h = 280;}

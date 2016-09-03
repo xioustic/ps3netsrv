@@ -236,13 +236,12 @@ static int installPKG_combo(char *msg)
 	{
 		char pkgfile[MAX_PKGPATH_LEN];
 
-		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read_e;
 
 		if(file_exists(pkg_path)) {sprintf(pkgfile, "%s.bak", pkg_path); cellFsRename(pkg_path, pkgfile); pkg_path[0] = NULL;}
 
-		while(!cellFsReaddir(fd, &dir, &read))
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read) break;
 			if(!extcasecmp(dir.d_name, ".pkg", 4))
 			{
 				sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dir.d_name); ret = 0; { BEEP1 }

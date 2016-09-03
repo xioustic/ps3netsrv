@@ -516,7 +516,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 
 		dirpath_len = strlen(dirpath);
 
-		while(cellFsReaddir(dir, &entry, &read_e) == 0 && read_e > 0)
+		while((cellFsReaddir(dir, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(entry.d_name[0] == '.' && (entry.d_name[1] == '.' || entry.d_name[1] == 0)) continue;
 

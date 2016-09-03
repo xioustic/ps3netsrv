@@ -205,7 +205,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 			uint64_t size = buf.st_size, part_size = buf.st_size; u8 part = 0;
 			if(maxbytes > 0 && size > maxbytes) size = maxbytes;
 
-			if((part_size > 0xFFFF0000ULL) && islike(file2, "/dev_usb"))
+			if((part_size > 0xFFFFFFFFULL) && islike(file2, "/dev_usb"))
 			{
 				if(!extcasecmp(file2, ".iso", 4)) strcat(file2, ".0"); else strcat(file2, ".66600");
 				part++; part_size = 0xFFFF0000ULL; //4Gb - 64kb
@@ -229,11 +229,12 @@ next_part:
 					cellFsWrite(fd2, chunk, read, &written);
 					if(!written) break;
 
-					pos+=written;
-					size-=written;
-					if(chunk_size>size) chunk_size=(int) size;
+					pos  += written;
+					size -= written;
 
-					part_size-=written;
+					if(chunk_size > size) chunk_size = (int) size;
+
+					part_size -= written;
 					if(part_size == 0) break;
 
 					sys_timer_usleep(1000);
@@ -285,15 +286,15 @@ static int folder_copy(const char *path1, const char *path2)
 
 	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
-		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read_e;
 
 		char source[MAX_PATH_LEN];
 		char target[MAX_PATH_LEN];
 
-		while(!cellFsReaddir(fd, &dir, &read))
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read || copy_aborted) break;
-			if(dir.d_name[0]=='.' && (dir.d_name[1]=='.' || dir.d_name[1]==0)) continue;
+			if(copy_aborted) break;
+			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == NULL)) continue;
 
 			sprintf(source, "%s/%s", path1, dir.d_name);
 			sprintf(target, "%s/%s", path2, dir.d_name);
@@ -330,13 +331,13 @@ static int del(const char *path, bool recursive)
 
 	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
-		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read_e;
 
 		char entry[MAX_PATH_LEN];
 
-		while(!cellFsReaddir(fd, &dir, &read))
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read || copy_aborted) break;
+			if(copy_aborted) break;
 			if(dir.d_name[0]=='.' && (dir.d_name[1]=='.' || dir.d_name[1]==0)) continue;
 
 			sprintf(entry, "%s/%s", path, dir.d_name);
@@ -420,11 +421,10 @@ static void delete_history(bool delete_folders)
 
 	if(cellFsOpendir("/dev_hdd0/home", &fd) == CELL_FS_SUCCEEDED)
 	{
-		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read_e;
 
-		while(!cellFsReaddir(fd, &dir, &read))
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read) break;
 			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/boot_history.dat");
 			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/community/CI.TMP");
 			unlink_file("/dev_hdd0/home", dir.d_name, "/community/MI.TMP");
@@ -461,14 +461,14 @@ static void import_edats(const char *path1, const char *path2)
 
 	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
-		CellFsDirent dir; u64 read = sizeof(CellFsDirent);
+		CellFsDirent dir; u64 read_e;
 
 		char source[MAX_PATH_LEN];
 		char target[MAX_PATH_LEN];
 
-		while(!cellFsReaddir(fd, &dir, &read))
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read || copy_aborted) break;
+			if(copy_aborted) break;
 			if(strstr(dir.d_name, ".edat")==NULL || !extcmp(dir.d_name, ".bak", 4)) continue;
 
 			sprintf(source, "%s/%s", path1, dir.d_name);

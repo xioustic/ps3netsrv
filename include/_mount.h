@@ -1,4 +1,5 @@
 #define MAX_ISO_PARTS			(16)
+#define MAX_LAST_GAMES			(5)
 #define LAST_GAMES_UPPER_BOUND	(4)
 
 // File name TAGS:
@@ -8,7 +9,6 @@
 // [raw]    Use raw_iso.sprx to mount the ISO (ntfs)
 // [PS2]    PS2 extracted folders in /PS2DISC (needs PS2_DISC compilation flag)
 
-#define MAX_LAST_GAMES			(5)
 
 typedef struct
 {
@@ -519,7 +519,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			is_busy=false;
 			return;
 		}
-		else
+		else if(source[0] == '/')
 		{
 			char _path[MAX_PATH_LEN];
 
@@ -534,18 +534,28 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			}
 
 			char *filename = strrchr(_path, '/'), *icon = tempstr;
-			sprintf(icon, "%s/PS3_GAME/ICON0.PNG", source);
-
-			if(file_exists(icon) == false)
 			{
-				char fpath[MAX_PATH_LEN], tempID[10]; icon[0] = tempID[0] = NULL;
+				char tempstr[_4KB_], tempID[10], *d_name; icon[0] = tempID[0] = NULL;
+				u8 f0 = strstr(filename, ".ntfs[") ? NTFS : 0, f1 = strstr(_path, "PS3") ? 2 : 0, is_iso = !isDir(source);
 
 				// get iso name
-				u16 slen = sprintf(fpath, "%s", _path); fpath[slen - strlen(filename)] = NULL;
+				filename[0] = NULL; // sets _path
+				d_name = filename + 1;
 
-				get_folder_icon(icon, true, _path, filename + 1, tempID, strstr(_path, ".ntfs[") ? NTFS : 0);
+				if(!is_iso)
+				{
+					sprintf(templn, "%s/PS3_GAME/PARAM.SFO", source);
+					get_title_and_id_from_sfo(templn, tempID, d_name, icon, tempstr, 0);
+				}
+#ifdef COBRA_ONLY
+				else
+				{
+					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, 0, strlen(d_name), tempstr);
+				}
+#endif
+				get_default_icon(icon, _path, d_name, 0, tempID, -1, 0, f1, f0);
 
-				get_default_icon(icon, fpath, filename + 1, 0, tempID, -1, 0, 0);
+				filename[0] = '/';
 			}
 
 			urlenc(enc_dir_name, icon);
@@ -836,9 +846,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #ifdef PS2_DISC
 			if(mounted && (strstr(source, "/GAME") || strstr(source, "/PS3ISO") || strstr(source, ".ntfs[PS3ISO]")))
 			{
-				CellFsDirent entry; uint64_t read_e; int fd2; u16 pcount=0; u32 tlen = strlen(buffer) + 8;
+				CellFsDirent entry; u64 read_e;
+				int fd2; u16 pcount = 0; u32 tlen = strlen(buffer) + 8; u8 is_iso = 0;
 
-				sprintf(target, "%s", source); u8 is_iso = 0;
+				sprintf(target, "%s", source);
 				if(strstr(target, "Sing"))
 				{
 					if(strstr(target, "/PS3ISO")) {strcpy(strstr(target, "/PS3ISO"), "/PS2DISC\0"); is_iso = 1;}

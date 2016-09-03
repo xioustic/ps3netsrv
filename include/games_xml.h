@@ -479,41 +479,19 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	for(u8 f0 = 0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
 	{
-		if(!webman_config->usb0 && (f0 == 1)) continue;
-		if(!webman_config->usb1 && (f0 == 2)) continue;
-		if(!webman_config->usb2 && (f0 == 3)) continue;
-		if(!webman_config->usb3 && (f0 == 4)) continue;
-		if(!webman_config->usb6 && (f0 == 5)) continue;
-		if(!webman_config->usb7 && (f0 == 6)) continue;
-
-		// f0 -> 7 to 11 (net), 12 ntfs/ext
-
-		if(!webman_config->dev_sd && (f0 == 13)) continue;
-		if(!webman_config->dev_ms && (f0 == 14)) continue;
-		if(!webman_config->dev_cf && (f0 == 15)) continue;
-
-		if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-						  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) continue;
+		if(check_drive(f0)) continue;
 
 		if(conn_s_p == START_DAEMON)
 		{
 			if(webman_config->boots && (f0 >= 1 && f0 <= 6)) // usb000->007
 			{
-				if( (webman_config->usb0 && (f0 == 1)) ||
-					(webman_config->usb1 && (f0 == 2)) ||
-					(webman_config->usb2 && (f0 == 3)) ||
-					(webman_config->usb3 && (f0 == 4)) ||
-					(webman_config->usb6 && (f0 == 5)) ||
-					(webman_config->usb7 && (f0 == 6)) )
-				{
-					waitfor(drives[f0], webman_config->boots);
-				}
+				waitfor(drives[f0], webman_config->boots);
 			}
 		}
 
-		is_net = (f0 >= 7 && f0 < NTFS);
+		is_net = IS_NET;
 
-		if(!(is_net || IS_NTFS) && (file_exists(drives[f0]) == false)) continue;
+		if(!(is_net || IS_NTFS) && (isDir(drives[f0]) == false)) continue;
 //
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -537,24 +515,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 			if(is_net)
 			{
 				if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video"
-				if(f0 == 7  && !webman_config->netd0) break; //net0
-				if(f0 == 8  && !webman_config->netd1) break; //net1
-				if(f0 == 9  && !webman_config->netd2) break; //net2
- #ifdef NET3NET4
-				if(f0 == 10 && !webman_config->netd3) break; //net3
-				if(f0 == 11 && !webman_config->netd4) break; //net4
- #else
-				if(f0 == 10 || f0 == 11) break;
- #endif
 			}
  #endif
 #endif
-			if( (webman_config->cmask & PS3) && IS_PS3_TYPE   ) continue; // 0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video"
-			if( (webman_config->cmask & BLU) && IS_BLU_FOLDER ) continue;
-			if( (webman_config->cmask & DVD) && IS_DVD_FOLDER ) continue;
-			if( (webman_config->cmask & PS2) && IS_PS2_FOLDER ) continue;
-			if( (webman_config->cmask & PS1) && IS_PSX_FOLDER ) continue;
-			if( (webman_config->cmask & PSP) && IS_PSP_FOLDER ) continue;
+			if(check_content(f1)) continue;
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -598,11 +562,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 #endif
 			//led(YELLOW, ON);
 			{
-				CellFsDirent entry;
-				u64 read_e;
-				u8 is_iso = 0;
+				CellFsDirent entry; u64 read_e;
 				int fd2 = 0, flen, slen;
 				char tempID[12];
+				u8 is_iso = 0;
 				cellRtcGetCurrentTick(&pTick);
 
 #ifdef COBRA_ONLY
@@ -711,73 +674,38 @@ next_xml_entry:
 							}
 							else
 							{
+#ifndef COBRA_ONLY
 								get_name(templn, entry.d_name, NO_EXT);
-#ifdef COBRA_ONLY
-								if(IS_NTFS)
-								{   // ntfs
-									char *ntfs_sufix = NULL;
+#else
+								if(get_name_iso_or_sfo(templn, tempID, icon, param, entry.d_name, f0, f1, uprofile, flen, tempstr) == FAILED) continue;
 
-									if(flen > 17) ntfs_sufix = strstr(entry.d_name + flen - 14, ").ntfs[");
-
-									if(ntfs_sufix)
-									{
-										// skip extended content of ntfs cached in /wmtmp if current user profile is 0
-										if(uprofile == 0) continue;
-
-										ntfs_sufix--; u8 fprofile = (u8)ntfs_sufix[0]; if(fprofile > '0') fprofile -= '0';
-
-										// skip non-matching extended content
-										if((uprofile  > 0) && (uprofile != fprofile)) continue;
-									}
-
-									flen-=13; char *ntfs_ext = entry.d_name + flen;
-									if(IS_PS3_FOLDER && !IS(ntfs_ext, ".ntfs[PS3ISO]")) continue;
-									if(IS_PS2_FOLDER && !IS(ntfs_ext, ".ntfs[PS2ISO]")) continue;
-									if(IS_PSX_FOLDER && !IS(ntfs_ext, ".ntfs[PSXISO]")) continue;
-									if(IS_PSP_FOLDER && !IS(ntfs_ext, ".ntfs[PSPISO]")) continue;
-									if(IS_DVD_FOLDER && !IS(ntfs_ext, ".ntfs[DVDISO]")) continue;
-									if(IS_BLU_FOLDER && !strstr(ntfs_ext, ".ntfs[BD" )) continue;
-								}
-
-								if(IS_PS3_FOLDER)
+								if(IS_PS3_FOLDER && !HAS_TITLE_ID)
 								{
-									get_name(templn, entry.d_name, GET_WMTMP); strcat(templn, ".SFO\0"); // WMTMP
-									if( (!IS_NTFS) && file_exists(templn) == false)
+									if(!IS_NTFS)
 									{
-										get_name(tempstr, entry.d_name, NO_EXT);
-										sprintf(templn, "%s/%s.SFO", param, tempstr); // /PS3ISO
-									}
-
-									if(get_title_and_id_from_sfo(templn, tempID, entry.d_name, icon, tempstr, f0)==FAILED)
-									{
-										if( (!IS_NTFS) && is_iso)
+										int fs;
+										if(cellFsOpen(templn, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
 										{
-											int fs; char *ps3iso = icon;
-											sprintf(ps3iso, "%s/%s", param, entry.d_name);
-											if(cellFsOpen(ps3iso, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+											uint64_t msiz = 0;
+											if(cellFsLseek(fs, 0x810, CELL_FS_SEEK_SET, &msiz) == CELL_FS_SUCCEEDED)
 											{
-												uint64_t msiz = 0;
-												if(cellFsLseek(fs, 0x810, CELL_FS_SEEK_SET, &msiz) == CELL_FS_SUCCEEDED)
+												if(cellFsRead(fs, (void *)&tempID, 11, &msiz) == CELL_FS_SUCCEEDED)
 												{
-													if(cellFsRead(fs, (void *)&tempID, 11, &msiz) == CELL_FS_SUCCEEDED)
-													{
-														strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
-													}
+													strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
 												}
-												cellFsClose(fs);
 											}
-											ps3iso[0] = NULL;
+											cellFsClose(fs);
 										}
 									}
+
+									get_name(templn, entry.d_name, NO_EXT);
 								}
 #endif
 							}
 
-							get_folder_icon(icon, is_iso, param, entry.d_name, tempID, f0);
+							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection, f1, f0);
 
-							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection, f1);
-
-							if(webman_config->tid && tempID[0]>'@' && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
+							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.d_name);
 
@@ -1112,8 +1040,8 @@ continue_reading_folder_xml:
 	cellFsClose(fdxml);
 	cellFsChmod(xml, MODE);
 
+#ifndef LITE_EDITION
 	// --- replace & with ^ for droidMAN
-
 	if(cellFsOpen(xml, CELL_FS_O_RDONLY, &fdxml, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		u64 read_e = 0;
@@ -1121,11 +1049,12 @@ continue_reading_folder_xml:
 		cellFsRead(fdxml, (void *)myxml_ps3, xmlsize, &read_e);
 		cellFsClose(fdxml);
 
-		for(u32 n = 0; n < read_e; n++) if(myxml_ps3[n]=='&') myxml_ps3[n]='^';
+		for(u32 n = 0; n < read_e; n++) if(myxml_ps3[n] == '&') myxml_ps3[n] = '^';
 
 		strcpy(xml + 37, ".droid\0"); // .xml -> .droid
 		savefile(xml, myxml_ps3, read_e);
 	}
+#endif
 
 #ifdef LAUNCHPAD
 	// --- launchpad footer

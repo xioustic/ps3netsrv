@@ -185,20 +185,24 @@ char fix_game_path[7][256]; int plevel = -1;
 
 static void fix_game_folder(char *path)
 {
-	int fd; if(plevel>=6) return; // limit recursion up to 6 levels
+	if(plevel >= 6) return; // limit recursion up to 6 levels
+
+	int fd;
 
 	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
 		plevel++;
-		CellFsDirent dir; uint64_t read = sizeof(CellFsDirent); struct CellFsStat s; u16 sum;
 
 #ifdef COPY_PS3
 		sprintf(current_file, "%s", path);
 #endif
 
-		while(cellFsReaddir(fd, &dir, &read) == CELL_FS_SUCCEEDED)
+		struct CellFsStat s; u16 sum;
+		CellFsDirent dir; uint64_t read_e;
+
+		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
-			if(!read || fix_aborted) break;
+			if(fix_aborted) break;
 			if(dir.d_name[0]=='.') continue;
 
 			sprintf(fix_game_path[plevel], "%s/%s", path, dir.d_name);
@@ -217,15 +221,15 @@ static void fix_game_folder(char *path)
 					cellFsRead(fdw, (void *)&offset, 4, &bytes_read); offset-=0x78;
 
 				retry_offset:
-					if(offset < 0x90 || offset > 0x800) offset=!extcasecmp(dir.d_name, ".sprx", 5)?0x258:0x428;
+					if(offset < 0x90 || offset > 0x800) offset=!extcasecmp(dir.d_name, ".sprx", 5) ? 0x258 : 0x428;
 					cellFsLseek(fdw, offset, CELL_FS_SEEK_SET, &bytes_read);
 					cellFsRead(fdw, (void *)&ps3_sys_version, 8, &bytes_read);
 
 					sum = 0; for(u8 i = 0; i < 6; i++) sum += (ps3_sys_version[i] & 0xFF);
 
-					if(offset!=0x278 && offset!=0x428 && sum!=0)
+					if(offset != 0x278 && offset != 0x428 && sum != 0)
 					{
-						offset=(offset==0x258) ? 0x278 : 0; goto retry_offset;
+						offset = (offset == 0x258) ? 0x278 : 0; goto retry_offset;
 					}
 
 					if((sum == 0) && (ps3_sys_version[6] & 0xFF)>0xA4)
