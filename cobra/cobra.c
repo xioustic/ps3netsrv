@@ -9,6 +9,8 @@
 // #include <string.h>
 // #include <cell/hash/libmd5.h>
 
+#define _COBRA_C
+
 #include "cobra.h"
 #include "storage.h"
 #include "psp.h"
@@ -153,13 +155,13 @@ static int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
 	system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_MAP_PATHS, (uint64_t)(uint32_t)paths, (uint64_t)(uint32_t)new_paths, num);
 	return (int)p1;
 }
-
+/*
 static int sys_storage_ext_mount_encrypted_image(char *image, char *mount_point, char *filesystem, uint64_t nonce)
 {
 	system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_MOUNT_ENCRYPTED_IMAGE, (uint64_t)(uint32_t)image, (uint64_t)(uint32_t)mount_point, (uint64_t)(uint32_t)filesystem, nonce);
 	return (int)p1;
 }
-
+*/
 /*
 #define N_TITLE_IDS	102
 #define N_TITLE_NAMES	24
@@ -2013,7 +2015,7 @@ int cobra_unset_psp_umd(void)
 		return ret;
 
 	sys_psp_set_umdfile(NULL, NULL, 0);
-	sys_psp_change_emu_path(NULL);
+	//sys_psp_change_emu_path(NULL);
 	//sys_storage_ext_mount_encrypted_image(NULL, (char*)"/dev_moo", NULL, 0);
 
 	return 0;

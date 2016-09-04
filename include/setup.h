@@ -450,7 +450,7 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("nc" , "1\" onclick=\"if(nc.checked)ic.value=1; else ic.value=0;", STR_MMCOVERS, " : ", (webman_config->nocov == SHOW_ICON0), buffer);
 
 	// icon type
-	strcat(buffer, "<select name=\"ic\" onchange=\"nc.checked=(ic.value==1);\">");
+	strcat(buffer, "<select name=\"ic\" onchange=\"nc.checked=(ic.value==1);\" accesskey=\"C\">");
 	add_option_item("0" , "MM COVERS",     (webman_config->nocov == SHOW_MMCOVERS), buffer);
 	add_option_item("1" , "ICON0.PNG",     (webman_config->nocov == SHOW_ICON0),    buffer);
 	add_option_item("2" , "No ICON0.PNG",  (webman_config->nocov == SHOW_DISC),     buffer);
@@ -485,7 +485,7 @@ static void setup_form(char *buffer, char *templn)
 
 	strcat(buffer, "<tr class=\"propfont\"><td>");
 	add_radio_button("temp", "0", "t_0", STR_AUTOAT , " : ", (webman_config->temp0==0), buffer);
-	sprintf(templn, HTML_NUMBER("step", "%i", "2", "3", "40", "80") " °C</td><td><label><input type=\"checkbox\"%s/> %s</label> : " HTML_NUMBER("mfan", "%i", "2", "3", "20", "95") " %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?ITEM_CHECKED:"", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
+	sprintf(templn, HTML_NUMBER("step\"  accesskey=\"T", "%i", "2", "3", "40", "80") " °C</td><td><label><input type=\"checkbox\"%s/> %s</label> : " HTML_NUMBER("mfan", "%i", "2", "3", "20", "95") " %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?ITEM_CHECKED:"", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
 
 	strcat(buffer, "<tr class=\"propfont\"><td>");
 	add_radio_button("temp", "1", "t_1", STR_MANUAL , " : ", (webman_config->temp0!=0), buffer);
@@ -590,10 +590,11 @@ static void setup_form(char *buffer, char *templn)
 
 	}
 
-	//memory usage
 	sprintf(templn, "</select> &nbsp; %s : [<a href=\"/delete.ps3?wmconfig\">wmconfig</a>] [<a href=\"/delete.ps3?wmtmp\">wmtmp</a>] [<a href=\"/delete.ps3?history\">history</a>] • [<a href=\"/rebuild.ps3\">rebuild</a>] [<a href=\"/recovery.ps3\">recovery</a>]<p>", STR_DELETE); strcat(buffer, templn);
 #endif
-	sprintf(templn, " %s [%iKB]: <select name=\"fp\">", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); strcat(buffer, templn);
+
+	//memory usage
+	sprintf(templn, " %s [%iKB]: <select name=\"fp\" accesskey=\"M\">", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); strcat(buffer, templn);
 
 	add_option_item("0", "Standard (896KB)"                , (webman_config->foot==0), buffer);
 	add_option_item("1", "Min (320KB)"                     , (webman_config->foot==1), buffer);

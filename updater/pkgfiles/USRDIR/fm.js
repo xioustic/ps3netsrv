@@ -40,6 +40,7 @@ document.write( "<div id='mnu' style='position:fixed;width:180px;background:#333
 				"<a id='m5'>Copy<br></a>" +
 				"<a id='m6'>Paste<br></a>" +
 				"<hr>" +
+				"<a id='ml'>Open Location<br></a>" +
 				"<a id='m7'>Rename<br></a>" +
 				"<a id='m8'>Copy To<br></a></div>");
 
@@ -66,6 +67,7 @@ window.addEventListener('contextmenu',function(e){
 		m7.href='javascript:rn(\"'+p+'\")';m7.style.display=(p.substring(0,5)=='/dev_')?b:n;
 		m8.href='/copy.ps3'+p; m8.text = 'Copy to ' + ((p.indexOf('/dev_hdd')==0) ? "usb0" : "hdd0");
 		ms.href='http://google.com/search?q='+t.text;ms.style.display=(t.parentNode.className=='gn')?b:n;
+		y=p.indexOf('.ps3');if(y>0)p=p.substring(y+4);ml.href=p.substring(0,p.lastIndexOf("/"));
 	}
 },false);
 

@@ -536,16 +536,18 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			char *filename = strrchr(_path, '/'), *icon = tempstr;
 			{
 				char tempstr[_4KB_], tempID[10], *d_name; icon[0] = tempID[0] = NULL;
-				u8 f0 = strstr(filename, ".ntfs[") ? NTFS : 0, f1 = strstr(_path, "PS3") ? 2 : 0, is_iso = !isDir(source);
+				u8 f0 = strstr(filename, ".ntfs[") ? NTFS : 0, f1 = strstr(_path, "PS2") ? 5 : strstr(_path, "PSX") ? 6 : strstr(_path, "PSP") ? 8 : 2, is_dir = isDir(source);
+
+				check_cover_folders(templn);
 
 				// get iso name
 				filename[0] = NULL; // sets _path
 				d_name = filename + 1;
 
-				if(!is_iso)
+				if(is_dir)
 				{
-					sprintf(templn, "%s/PS3_GAME/PARAM.SFO", source);
-					get_title_and_id_from_sfo(templn, tempID, d_name, icon, tempstr, 0);
+					sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", _path, d_name);
+					get_title_and_id_from_sfo(templn, tempID, d_name, icon, tempstr, 0); f1 = 0;
 				}
 #ifdef COBRA_ONLY
 				else
@@ -553,7 +555,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, 0, strlen(d_name), tempstr);
 				}
 #endif
-				get_default_icon(icon, _path, d_name, 0, tempID, -1, 0, f1, f0);
+				get_default_icon(icon, _path, d_name, is_dir, tempID, -1, 0, f1, f0);
 
 				filename[0] = '/';
 			}
@@ -2526,18 +2528,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 										tracks[num_tracks].lba = (tmin * 60 + tsec) * 75 + tfrm;
 
 										num_tracks++; if(num_tracks >= 32) break;
-									}
-
-									if (tracks)
-									{
-										ScsiTrackDescriptor *scsi_tracks = (ScsiTrackDescriptor *)&tracks[0];
-
-										for (unsigned int i = 0; i < num_tracks; i++)
-										{
-											scsi_tracks[i].adr_control = (tracks[i].is_audio) ? 0x10 : 0x14;
-											scsi_tracks[i].track_number = i + 1;
-											scsi_tracks[i].track_start_addr = tracks[i].lba;
-										}
 									}
 
 									if(!num_tracks) num_tracks++;

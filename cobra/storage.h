@@ -75,6 +75,7 @@ typedef struct
 
 int sys_storage_get_device_info(uint64_t device_id, sys_device_info_t *device_info);
 
+#ifndef _COBRA_C
 static int sys_storage_open(uint64_t device_id, uint64_t unk, sys_device_handle_t *device_handle, uint64_t unk2)
 {
 	system_call_4(SYS_STORAGE_OPEN, device_id, unk, (uint64_t)(uint32_t)device_handle, unk2);
@@ -86,6 +87,7 @@ static int sys_storage_close(sys_device_handle_t device_handle)
 	system_call_1(SYS_STORAGE_CLOSE, device_handle);
 	return (int)p1;
 }
+#endif
 
 int sys_storage_read(sys_device_handle_t device_handle, uint64_t unk, uint64_t start_sector, uint32_t sector_count, void *buf, uint32_t *nread, uint64_t unk2);
 

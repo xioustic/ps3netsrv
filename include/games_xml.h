@@ -703,7 +703,7 @@ next_xml_entry:
 #endif
 							}
 
-							get_default_icon(icon, param, entry.d_name, 0, tempID, ns, abort_connection, f1, f0);
+							get_default_icon(icon, param, entry.d_name, !is_iso, tempID, ns, abort_connection, f1, f0);
 
 							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 

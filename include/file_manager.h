@@ -672,7 +672,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		{
 
 #ifndef LITE_EDITION
-			strcat(buffer, "<a onclick=\"o=lg.style,o.display=(o.display=='none')?'block':'none';\">");
+			strcat(buffer, "<a onclick=\"o=lg.style,o.display=(o.display=='none')?'block':'none';\" style=\"cursor:pointer;\">");
 #endif
 			buffer += concat(buffer, HTML_BLU_SEPARATOR
 									 "webMAN - Simple Web Server" EDITION "<p>");
@@ -680,7 +680,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #ifndef LITE_EDITION
 			if(cellFsOpen(WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
-				buffer += concat(buffer, "<div id=\"lg\" style=\"display:none\" style=\"cursor:pointer;\">");
+				buffer += concat(buffer, "<div id=\"lg\" style=\"display:none\">");
 
 				_lastgames lastgames; memset(&lastgames, 0, sizeof(_lastgames));
 
