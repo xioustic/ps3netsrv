@@ -555,7 +555,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, 0, strlen(d_name), tempstr);
 				}
 #endif
-				get_default_icon(icon, _path, d_name, is_dir, tempID, -1, 0, f1, f0);
+				get_default_icon(icon, _path, d_name, is_dir, tempID, -1, 0, f0, f1);
 
 				filename[0] = '/';
 			}

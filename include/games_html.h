@@ -386,14 +386,16 @@ no_icon0:
 
 	if((webman_config->nocov == SHOW_ICON0) && get_cover_from_name(icon, file, tempID)) return; // show mm cover as last option (if it's disabled)
 
+	if(f1 < 4 || f1 == 10) sprintf(icon, "%s/%s", param, file);
+
 	//show the default icon by type
-	if(IS_PS2_FOLDER || (strstr(param, "PS2") != NULL))      //if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
+	if(IS_PS2_FOLDER || (strstr(icon, "PS2") != NULL))      //if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
 		strcpy(icon, wm_icons[7]);
-	else if(IS_PSX_FOLDER || (strstr(param, "PSX") != NULL)) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
+	else if(IS_PSX_FOLDER || (strstr(icon, "PSX") != NULL)) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
 		strcpy(icon, wm_icons[6]);
-	else if(IS_PSP_FOLDER || (strstr(param, "PSP") != NULL)) //if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
+	else if(IS_PSP_FOLDER || (strstr(icon, "PSP") != NULL)) //if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
 		strcpy(icon, wm_icons[8]);
-	else if(IS_DVD_FOLDER || (strstr(param, "DVD") != NULL)) //if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
+	else if(IS_DVD_FOLDER || (strstr(icon, "DVD") != NULL)) //if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
 		strcpy(icon, wm_icons[9]);
 	else                                                     //if(strstr(param, "/BDISO") || !extcmp(file, ".ntfs[BDISO]", 12) || || !extcmp(file, ".ntfs[BDFILE]", 13))
 		strcpy(icon, wm_icons[5]);
