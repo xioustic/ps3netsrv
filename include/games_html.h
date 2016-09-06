@@ -50,7 +50,7 @@ enum nocov_options
 #define SHOW_COVERS_OR_ICON0  (webman_config->nocov != SHOW_DISC)
 #define SHOW_COVERS          ((webman_config->nocov == SHOW_MMCOVERS) || (webman_config->nocov == ONLINE_COVERS))
 
-static void get_name(char *name, const char *filename, u8 cache)
+static size_t get_name(char *name, const char *filename, u8 cache)
 {
 	// name:
 	//   returns file name without extension & without title id (cache == 0 -> file name keeps path, cache == 2 -> remove path first)
@@ -70,17 +70,19 @@ static void get_name(char *name, const char *filename, u8 cache)
 	else
 	if(strstr(filename + pos, ".ntfs["))
 	{
-		while(name[flen] != '.') flen--; name[flen] = NULL;
-		if((flen > 4) && name[flen - 4] == '.' && (strcasestr(ISO_EXTENSIONS, &name[flen - 4]))) name[flen - 4] = NULL; else
-		if(!extcmp(name, ".BIN.ENC", 8)) name[flen-8] = NULL;
+		while(name[flen] != '.') flen--; name[flen] = NULL; pos = flen - 4;
+		if((pos > 0) && name[pos] == '.' && (strcasestr(ISO_EXTENSIONS, &name[pos]))) {flen = pos; name[flen] = NULL;} else
+		if(!extcmp(name, ".BIN.ENC", 8)) {flen -= 8; name[flen] = NULL;}
 	}
-	if(cache) return;
+	if(cache) return (size_t) flen;
 
 	// remove title id from file name
-	if(name[4] == '_' && name[8] == '.' && (name[0] == 'B' || name[0] == 'N' || name[0] == 'S' || name[0] == 'U') && ISDIGIT(name[9]) && ISDIGIT(name[10])) strcpy(&name[0], &name[12]); // SLES_000.00-Name
-	if(name[9] == '-' && name[10]== '[') {strcpy(&name[0], &name[11]); name[strlen(name) - 1] = NULL;} // BLES00000-[Name]
-	if(name[10]== '-' && name[11]== '[') {strcpy(&name[0], &name[12]); name[strlen(name) - 1] = NULL;} // BLES-00000-[Name]
-	if(!webman_config->tid) {char *p = strstr(name, " ["); if(p) p[0] = NULL;}                        // Name [BLES00000]
+	if(name[4] == '_' && name[8] == '.' && (name[0] == 'B' || name[0] == 'N' || name[0] == 'S' || name[0] == 'U') && ISDIGIT(name[9]) && ISDIGIT(name[10])) {strcpy(&name[0], &name[12]); flen = strlen(name);}// SLES_000.00-Name
+	if(name[9] == '-' && name[10]== '[') {strcpy(&name[0], &name[11]); flen = strlen(name) - 1; name[flen] = NULL;} // BLES00000-[Name]
+	if(name[10]== '-' && name[11]== '[') {strcpy(&name[0], &name[12]); flen = strlen(name) - 1; name[flen] = NULL;} // BLES-00000-[Name]
+	if(!webman_config->tid) {char *p = strstr(name, " ["); if(p) p[0] = NULL; flen = strlen(name);}    // Name [BLES00000]
+
+	return (size_t) flen;
 }
 
 static bool get_cover_by_titleid(char *icon, char *tempID)
@@ -258,11 +260,10 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 			if(SHOW_COVERS) return;
 
 			// get covers/icons from /dev_hdd0/tmp/wmtmp
-			get_name(icon, entry_name, GET_WMTMP); strcat(icon_ext, ".jpg");
-			if(file_exists(icon)) return;
+			flen = get_name(icon, entry_name, GET_WMTMP);
+			icon_ext = icon + flen;
 
-			flen = strlen(icon) - 4;
-
+			icon[flen] = NULL; strcat(icon_ext, ".jpg"); if(file_exists(icon)) return;
 			icon[flen] = NULL; strcat(icon_ext, ".png"); if(file_exists(icon)) return;
 			icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
 			icon[flen] = NULL; strcat(icon_ext, ".JPG"); if(file_exists(icon) == false) icon[0] = NULL;

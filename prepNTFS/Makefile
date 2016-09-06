@@ -37,8 +37,10 @@ BUILD		:=	build
 SOURCES		:=	source
 DATA		:=	datas
 SHADERS		:=	shaders
-INCLUDES	:=	include 
-ICON0		:=	$(CURDIR)/ICON0.PNG
+INCLUDES	:=	include
+PKGFILES	:=	$(CURDIR)/pkgfiles
+ICON0		:=	$(PKGFILES)/ICON0.PNG
+PARAMSFO	:=	$(PKGFILES)/PARAM.SFO
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
@@ -145,9 +147,10 @@ pkg: $(BUILD) $(OUTPUT).pkg
 	@echo Creating PKG...
 	@mkdir -p $(BUILD)/pkg
 	@mkdir -p $(BUILD)/pkg/USRDIR
-	@cp $(ICON0) $(BUILD)/pkg/
 	@$(SELF_NPDRM) $(SCETOOL_FLAGS) --np-content-id=$(CONTENTID) --encrypt $(BUILDDIR)/$(basename $(notdir $(OUTPUT))).elf $(BUILDDIR)/../EBOOT.BIN
-	@$(SFO) --title "$(TITLE)" --appid "$(APPID)" -f $(SFOXML) $(BUILD)/pkg/PARAM.SFO
+#	@$(SFO) --title "$(TITLE)" --appid "$(APPID)" -f $(SFOXML) $(BUILD)/pkg/PARAM.SFO
+	@cp $(ICON0) $(BUILD)/pkg/
+	@cp $(PARAMSFO) $(BUILD)/pkg/
 	@$(PKG) --contentid $(CONTENTID) $(BUILD)/pkg/ $(OUTPUT).pkg
 
 #---------------------------------------------------------------------------------

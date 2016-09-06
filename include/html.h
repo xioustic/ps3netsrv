@@ -183,22 +183,20 @@ static size_t utf8enc(char *dst, char *src, u8 cpy2src)
 	size_t j = 0; u16 c;
 	for(size_t i = 0; src[i] != NULL; i++)
 	{
-		c = (src[i] & 0xFF);
+		c = (src[i] & 0xFFFF);
 
 		if(!(c & 0xff80)) dst[j++]=c;
-		else //if(!(c & 0xf800))
+		else if(!(c & 0xf800))
 		{
 			dst[j++]=0xC0|(c>>6);
 			dst[j++]=0x80|(0x3F&c);
 		}
-/*
 		else
 		{
 			dst[j++]=0xE0|(0x0F&(c>>12));
 			dst[j++]=0x80|(0x3F&(c>>06));
 			dst[j++]=0x80|(0x3F&(c    ));
 		}
-*/
 	}
 
 	j = MIN(j, MAX_LINE_LEN);
@@ -212,19 +210,23 @@ static size_t utf8dec(char *dst, char *src, u8 cpy2src)
 {
 	size_t j = 0;
 	u8 c;
-	for(size_t i=0; src[i] != NULL; i++)
+	for(size_t i = 0; src[i] != '\0'; i++, j++)
 	{
 		c = (src[i]&0xFF);
 		if(c < 0x80)
-			dst[j++] = c;
+			dst[j] = c;
 		else if(c & 0x20)
-			dst[j++] = (((src[i++] & 0x1F)<<6) + (c & 0x3F));
+			dst[j] = (((src[i++] & 0x1F)<<6) + (c & 0x3F));
 		else
-			dst[j++] = (((src[i++] & 0xF)<<12) + ((src[i++] & 0x3F)<<6) + (c & 0x3F));
+		{
+			dst[j] = ((src[i++] & 0xF)<<12) + ((src[i++] & 0x3F)<<6) + (c & 0x3F);
+		}
 	}
+
+	j = MIN(j, MAX_LINE_LEN);
 	dst[j] = '\0';
 
-	if(cpy2src) strncpy(src, dst, MAX_LINE_LEN);
+	if(cpy2src) strcpy(src, dst);
 	return j;
 }
 */

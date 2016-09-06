@@ -31,7 +31,10 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 	}
 
 	// encode file name for html
-	flen = htmlenc(tempstr, name, 1);
+	if(plen == 19 && IS(param, WMTMP))
+		flen = strlen(name);
+	else
+		flen = htmlenc(tempstr, name, 1);
 
 	char *ext = name + MAX(flen - 4, 0); fsize[0] = NULL;
 
@@ -221,7 +224,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 
 	flen += concat(tempstr, templn);
 
-	if(flen >= _LINELEN) {flen=0; tempstr[0] = NULL;} //ignore file if it is still too long
+	if(flen >= _LINELEN) {flen = 0; tempstr[0] = NULL;} //ignore file if it is still too long
 
 	return flen;
 }
@@ -232,7 +235,8 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 
 	char swap[_MAX_PATH_LEN], templn[_MAX_PATH_LEN], url[_MAX_PATH_LEN], *slash, *buffer = pbuffer;
 
-	strcpy(templn, param);
+	sprintf(templn, "%s", param);
+
 	while((slash = strchr(templn + 1, '/')))
 	{
 		slash[0] = NULL;
@@ -257,7 +261,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	{
 		char label[_MAX_PATH_LEN]; tlen = strlen(param) - 4; if(tlen < 0) tlen = 0;
 
-		urlenc(url, param); htmlenc(label, templn, 0);
+		urlenc(url, param); if(strstr(templn, ".ntfs[")) strcpy(label, templn); else htmlenc(label, templn, 0);
 		sprintf(swap, HTML_URL2,
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
@@ -688,13 +692,18 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				cellFsClose(fd);
 
 				u8 n, m;
+				for(n = 0; n < MAX_LAST_GAMES; n++)
+				{
+					if(file_exists(lastgames.game[n]) == false) lastgames.game[n][0] = NULL;
+				}
+
 				for(n = 0; n < (MAX_LAST_GAMES - 1); n++)
 					for(m = (n + 1); m < MAX_LAST_GAMES; m++)
-						if(strcasecmp(strrchr(lastgames.game[n], '/'), strrchr(lastgames.game[m], '/')) > 0)
+						if(lastgames.game[n][0] == '/' && lastgames.game[m][0] == '/' && (strcasecmp(strrchr(lastgames.game[n], '/'), strrchr(lastgames.game[m], '/')) > 0))
 						{
-							strcpy(swap, lastgames.game[n]);
-							strcpy(lastgames.game[n], lastgames.game[m]);
-							strcpy(lastgames.game[m], swap);
+							strncpy(swap, lastgames.game[n], MAX_PATH_LEN);
+							strncpy(lastgames.game[n], lastgames.game[m], MAX_PATH_LEN);
+							strncpy(lastgames.game[m], swap, MAX_PATH_LEN);
 						}
 
 				for(n = 0; n < MAX_LAST_GAMES; n++)

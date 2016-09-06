@@ -96,7 +96,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	ssend(conn_s_ftp, FTP_OK_TYPE_220); // Service ready for new user.
 
-	if(webman_config->bind && ((conn_info.local_adr.s_addr!=conn_info.remote_adr.s_addr)  && strncmp(ip_address, webman_config->allow_ip, strlen(webman_config->allow_ip))!=0))
+	if(webman_config->bind && ((conn_info.local_adr.s_addr != conn_info.remote_adr.s_addr) && strncmp(ip_address, webman_config->allow_ip, strlen(webman_config->allow_ip)) != 0))
 	{
 		sprintf(buffer, "451 Access Denied. Use SETUP to allow remote connections.\r\n"); ssend(conn_s_ftp, buffer);
 		sclose(&conn_s_ftp);
@@ -1068,6 +1068,7 @@ pasv_again:
 static void ftpd_thread(uint64_t arg)
 {
 	int list_s = FAILED;
+
 relisten:
 	if(working) list_s = slisten(FTPPORT, 4);
 	else goto end;

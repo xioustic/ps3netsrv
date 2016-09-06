@@ -600,9 +600,9 @@ static void handleclient(u64 conn_s_p);
 static void do_umount(bool clean);
 static void mount_autoboot(void);
 static bool mount_with_mm(const char *_path, u8 do_eject);
-static void get_name(char *name, const char *filename, u8 cache);
 static void add_breadcrumb_trail(char *buffer, char *param);
 static void get_cpursx(char *cpursx);
+static size_t get_name(char *name, const char *filename, u8 cache);
 
 #ifdef COBRA_ONLY
 static void do_umount_iso(void);
@@ -1123,7 +1123,7 @@ static void handleclient(u64 conn_s_p)
 				if(is_combo != 1) {if(!webman_config->nopad) parse_pad_command(buttons, is_combo);}
 				else
 				{   // default: play.ps3?col=game&seg=seg_device
-					char *pos, col[16] = {NULL}, seg[80] = {NULL}, *param2 = buttons;
+					char *pos, col[16], seg[80], *param2 = buttons; col[0] = seg[0] = NULL;
 					pos = strstr(param2, "col="); if(pos) get_value(col, pos + 4, 16); // game / video / friend / psn / network / music / photo / tv
 					pos = strstr(param2, "seg="); if(pos) get_value(seg, pos + 4, 80);
 					launch_disc(col, seg);
@@ -1501,7 +1501,7 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/dev_blind"))
 			{
-				is_binary = FOLDER_LISTING;
+				is_binary = FOLDER_LISTING, small_alloc = false;
 				goto html_response;
 			}
 			if(islike(param, "/edit.ps3"))

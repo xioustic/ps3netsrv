@@ -6,7 +6,7 @@
 // vshcommon_EC73D438(void);  // custom_render_plugin IF 1: - (increase)
 // vshcommon_BF88BEE4(void);  // custom_render_plugin IF 1: - blur (decrease?)
 // vshcommon_C8FFD88F(void);  // custom_render_plugin IF 1: - blur (increase?)
-// vshcommon_16E29622(const char *str);  // custom_render_plugin IF 1: 
+// vshcommon_16E29622(const char *str);  // custom_render_plugin IF 1:
 // vshcommon_5723C3C1(float x, const char * str, int y);  // ?
 // vshcommon_25111EFB  // ?
 
@@ -15,10 +15,12 @@
 // vshcommon_E011E7D0(uint8_t x);  // system_plugin interface_1: 23: anim_triangle_show_hide
 // vshcommon_9BD8429E(uint8_t x);  // system_plugin interface_1: 22: anim_cross_circle_show_hide
 // vshcommon_2438F1A4(uint8_t x);  // system_plugin interface_1: 21: anim_cross_circle_show_hide
+
 // vshcommon_F7A67D49(uint8_t x[0x1C], wchar *s);  // system_plugin interface_1: 28: rectangle_text
-// vshcommon_60DEE5B3  // ?
-// vshcommon_75DC9C2D  // ?
-// vshcommon_79A562D5  // ?
+// vshcommon_F7A67D49  // _ZN3vsh30SetButtonNavigationString_ViewEPKw vsh::SetButtonNavigationString_View(wchar_t const*) System_plugin#1_Interface func 28 rectangle
+// vshcommon_60DEE5B3  // _ZN3vsh32SetButtonNavigationString_OptionEPKw	vsh::SetButtonNavigationString_Option(wchar_t const*) System_plugin#1_Interface func 27 triangle
+// vshcommon_75DC9C2D  // _ZN3vsh30SetButtonNavigationString_BackEPKw	vsh::SetButtonNavigationString_Back(wchar_t const*) System_plugin#1_Interface func 26 cross_circle
+// vshcommon_79A562D5  // _ZN3vsh31SetButtonNavigationString_EnterEPKw	vsh::SetButtonNavigationString_Enter(wchar_t const*) System_plugin#1_Interface func 25 circle_cross
 // vshcommon_B9473E7A  // ?
 // vshcommon_D1DE9F38  // ?
 
@@ -32,13 +34,13 @@
 
 // vshcommon_55A60B1A  // ?
 
-// vshcommon_F9E43DA2(void);  // returns localized string of "msg_ok" 
-// vshcommon_CCD2C319(void);  // returns localized string of "msg_cancel" 
+// vshcommon_F9E43DA2(void);  // returns localized string of "msg_ok"
+// vshcommon_CCD2C319(void);  // returns localized string of "msg_cancel"
 // vshcommon_746C5F88(void);  // returns localized string of "msg_option"
-// vshcommon_F995E53F(void);  // returns localized string of "msg_back" 
-// vshcommon_26F18EDF(void);  // returns localized string of "msg_enter" 
-// vshcommon_0E9E8DA5(void);  // returns localized string of "msg_no" 
-// vshcommon_B8E256D7(void);  // returns localized string of "msg_yes" 
+// vshcommon_F995E53F(void);  // returns localized string of "msg_back"
+// vshcommon_26F18EDF(void);  // returns localized string of "msg_enter"
+// vshcommon_0E9E8DA5(void);  // returns localized string of "msg_no"
+// vshcommon_B8E256D7(void);  // returns localized string of "msg_yes"
 // vshcommon_8D173737  // ?
 
 // vshcommon_28549FD0  // ?
@@ -89,7 +91,7 @@
 // vshcommon_74EAD50B  // ?
 // vshcommon_F06004CD  // ?
 
-// vshcommon_A20E43DB  // ? Displays a notification in XMB with texture 
+// vshcommon_A20E43DB  // ? Displays a notification in XMB with texture -> void(*vshcommon_A20E43DB)(int32_t, const char* eventName, int32_t, int32_t* texture, int32_t*, const char*, const char*, float, const wchar_t* text, int32_t, int32_t, int32_t); int dummy = 0; vshcommon_A20E43DB(0, const char* eventName, int32_t, int32_t* texture /*paf_3A8454FC*/, &dummy, "", "", 0f, L"notification", 0, 0, 0)
 // vshcommon_7504447B  // ?
 
 // vshcommon_F1918912  // ?
@@ -134,9 +136,9 @@
 
 // vshcommon_D9B63654  // ?
 
-// vshcommon_BB2EC9CD  // ?
+// vshcommon_BB2EC9CD  // PageCloses "page_pointcursor"
 
-// vshcommon_ABEB01DA  // ?
+// vshcommon_ABEB01DA  // PageCreates "page_pointcursor"
 
 // vshcommon_980513A4  // ?
 
@@ -155,7 +157,7 @@
 // vshcommon_1452A4D3  // ?
 
 // vshcommon_6F5A9C38  // ?
-// vshcommon_16106ACD  // ?
+// vshcommon_16106ACD  // returns "impose_plugin" interface 1 -> uint vshcommon_16106ACD()
 
 // vshcommon_C08C2D22  // ?
 // vshcommon_98E05EDA  // ?
@@ -216,8 +218,9 @@
 
 // vshcommon_A2312283  // ?
 
-// vshcommon_CC2C67F2  // ?
-// vshcommon_09A43140  // ?
+// vshcommon_CC2C67F2  // reads /pushlist/patch.dat vshcommon_CC2C67F2(int* count,uint8_t buf[0x680])
+
+// vshcommon_09A43140  // adds info to /pushlist/patch.dat
 // vshcommon_7EE0068F  // ?
 
 // vshcommon_B49AF109  // ?
@@ -233,8 +236,8 @@
 // vshcommon_A05B2B54  // ?
 // vshcommon_E2D6F3D7  // ?
 
-// vshcommon_8B2110D5  // ?
-// vshcommon_9EA67737  // ?
+// vshcommon_8B2110D5  // reads boot_history.dat
+// vshcommon_9EA67737  // vsh::ws_boot_history::Set() { uint8 type, char TitleId [0x1F] } titleid to boot_history.dat (creates if not present)
 
 
-#endif // __VSHCOMMON_H__ 
+#endif // __VSHCOMMON_H__

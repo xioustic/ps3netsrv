@@ -163,7 +163,8 @@ extern int32_t vshmain_AE35CF2D(char *, int value);  // call_xmb_plugin
 
 // vshmain_A3E81C3B  // "xmb_plugin", "ViewLoad_InGameXMB"
 
-// vshmain_6D5FC398  // Show Ingame XMB || int vshmain_6D5FC398_0, 0, 0)
+extern int32_t vshmain_6D5FC398(int dev_type, int port_num, int intr_type);  // Show Ingame XMB || int vshmain_6D5FC398_0, 0, 0)
+#define Show_InGameXMB(a) vshmain_6D5FC398(0, a, 0)
 
 // vshmain_BEFC4BA2  //
 // vshmain_6D8BD460  //

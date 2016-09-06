@@ -40,12 +40,12 @@ static void set723(unsigned char *p,int n)
 
 void UTF8_to_UTF16(u8 *stb, u16 *stw)
 {
-   int n, m;
-   u32 UTF32;
-   while(*stb)
-   {
-	   if(*stb & 128)
-	   {
+	int n, m;
+	u32 UTF32;
+	while(*stb)
+	{
+		if(*stb & 128)
+		{
 			m = 1;
 
 			if((*stb & 0xf8) == 0xf0)
@@ -88,9 +88,9 @@ void UTF8_to_UTF16(u8 *stb, u16 *stw)
 			*stw++= (((u16) (UTF32>>10)) & 0x3ff) | 0xD800;
 			*stw++= (((u16) (UTF32)) & 0x3ff) | 0xDC00;
 		}
-   }
+	}
 
-   *stw++ = 0;
+	*stw++ = 0;
 }
 
 u8 *create_fake_file_iso_mem(char *filename, u64 size)

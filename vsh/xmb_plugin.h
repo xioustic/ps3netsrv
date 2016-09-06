@@ -96,39 +96,39 @@ xmb_plugin_xmm0 * xmm0_interface;
 
 typedef struct
 {
-	int (*DoUnk0)(int);
-	int (*DoUnk1)(int,int);
-	int (*DoUnk2)(int, float);
-	int (*DoUnk3)(void);
-	int (*DoUnk4)(void);
-	int (*DoUnk5)(float);
-	float (*DoUnk6)(void);
-	int (*DoUnk7)(int,int);
-	int (*DoUnk8)(void);
-	int (*DoUnk9)(int*,void*,const wchar_t *);
-	int (*DoUnk10)(void);
-	int (*DoUnk11)(int);
-	int (*DoUnk12)(int);
-	int (*DoUnk13)(void);
-	int (*DoUnk14)(void);
-	int (*DoUnk15)(int,int);
-	int (*DoUnk16)(void *, int, int);
-	int (*DoUnk17)(void);
-	int (*DoUnk18)(int,int,float);
-	int (*DoUnk19)(int,int);
-	int (*DoUnk20)(void *);
-	int (*DoUnk21)(void *);
-	int (*showMsg)(const wchar_t *);
-	void * (*DoUnk23)(void);
-	int (*DoUnk24)(void);
-	void * (*DoUnk25)(void);
-	int (*DoUnk26)(int);
-	int (*DoUnk27)(void);
-	int (*DoUnk28)(const char *);
-	int (*DoUnk29)(void);
-	int (*DoUnk30)(void *, int*);
-	int (*DoUnk31)(int);
-	int (*DoUnk32)(int);
+	int (*DoUnk0)(int);                         // int value (0 - 0x14)
+	int (*DoUnk1)(int,int);                     // int value (can be gotten from 13), 11) ), int value (0 - 0x14)
+	int (*DoUnk2)(int, float);                  // int value, float value
+	int (*DoUnk3)(void);                        //
+	int (*DoUnk4)(void);                        // returns int (like 7) 0x1C0)
+	int (*DoUnk5)(float);                       // float value
+	float (*DoUnk6)(void);                      // returns float
+	int (*DoUnk7)(int,int);                     // int, int - (example: See Table Function 7) - page_xmb page_xmb_indicator
+	int (*DoUnk8)(void);                        //
+	int (*DoUnk9)(int*,void*,const wchar_t *);  // int *, int* , wchar * infotext1
+	int (*DoUnk10)(void);                       // - close page infobar?
+	int (*DoUnk11)(int);                        // int
+	int (*DoUnk12)(int);                        // int id
+	int (*DoUnk13)(void);                       // returns int - (Hakoniwa/VideoEdit-Enabled Flag?)
+	int (*DoUnk14)(void);                       // returns uint8
+	int (*DoUnk15)(int,int);                    // calls 16) with int,int, 0
+	int (*DoUnk16)(void *, int, int);           // uint8_t * struct[] ,int (gamepad port id),int explore_action (0 = return, 1 = FocusMessageBox,2 = FocusFriend,3 = impose_pad_battery_notice)
+	int (*DoUnk17)(void);                       // returns struct according to gametool/gametool2
+	int (*DoUnk18)(int,int,float);              // int, float, float
+	int (*DoUnk19)(int,int);                    // int,int (0x0C memsets 2 regions)
+	int (*DoUnk20)(void *);                     // in:  uint8 [0x38]
+	int (*DoUnk21)(void *);                     // out: uint8 [0x38]
+	int (*showMsg)(const wchar_t *);            // wchar * - page_xmb_indicator - Shows XMB-Notifications at the bottom like "(Triangle): Options"
+	void * (*DoUnk23)(void);                    // returns ptr* ( ptr[0x908] = -1 -> ClearWBoardFocus)
+	int (*DoUnk24)(void);                       // - _vshcommon_34A05733 ("xmb_plugin2", 0x15480) - returns some list
+	void * (*DoUnk25)(void);                    // returns sys_lwmutex_t * "_pf_lwm"
+	int (*DoUnk26)(int);                        // int value (0=decrease(+page_xmb_fg) + xmb2_interface_7(0,0x1C0/0x40,0x1C0),else=increase (page_xmb_fg))
+	int (*DoUnk27)(void);                       // - calls category_setting_plugin CAT0 interface #24 + explore_plugin CAT0 interface #24
+	int (*DoUnk28)(const char *);               // char* - Example: ""wbrd:show?"" , ""tchat:fullvsh_ps""
+	int (*DoUnk29)(void);                       //
+	int (*DoUnk30)(void *, int*);               // void *callback,uint8 [0x2F8] - set new custom_render_plugin callback and its parameter r8
+	int (*DoUnk31)(int);                        // int value (0=page close, else= setwidget) - page_xmb_bg
+	int (*DoUnk32)(int);                        // int value (0=page close, else= setwidget) - page_xmb_fg
 } xmb_plugin_xmb2;
 
 xmb_plugin_xmb2 * xmb2_interface;

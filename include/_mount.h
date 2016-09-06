@@ -875,6 +875,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 							strcat(buffer, templn); pcount++;
 						}
 					}
+					cellFsClosedir(fd2);
 				}
 			}
 #endif // #ifdef PS2_DISC
@@ -1994,13 +1995,13 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			if(lastgames.game[lastgames.last][0]!='/') lastgames.last = 0;
 			if(lastgames.game[lastgames.last][0]!='/' || strlen(lastgames.game[lastgames.last]) < 7) goto exit_mount;
 
-			strcpy(_path, lastgames.game[lastgames.last]);
+			sprintf(_path, "%s", lastgames.game[lastgames.last]);
 		}
 		else
 		if(lastgames.last >= MAX_LAST_GAMES)
 		{
 			lastgames.last = 0;
-			strcpy(lastgames.game[lastgames.last], _path);
+			snprintf(lastgames.game[lastgames.last], MAX_PATH_LEN, "%s", _path);
 		}
 		else
 		{
@@ -2013,8 +2014,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			if(!found)
 			{
 				lastgames.last++;
-				if(lastgames.last>=MAX_LAST_GAMES) lastgames.last = 0;
-				strcpy(lastgames.game[lastgames.last], _path);
+				if(lastgames.last >= MAX_LAST_GAMES) lastgames.last = 0;
+				snprintf(lastgames.game[lastgames.last], MAX_PATH_LEN, "%s", _path);
 			}
 		}
 
@@ -2239,20 +2240,33 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
  #endif
 						}
 
-						// cache PSPISO or PS2ISO to HDD0
-						char *pos;
-						pos = strstr(_path, ".ntfs[PS2ISO]");
-						if(pos)
-						{
-							pos[0] = NULL; sprintf(_path, "/dev_bdvd/%s", _path + 29);
-							goto copy_ps2iso_to_hdd0;
-						}
+						// cache PS2ISO or PSPISO to HDD0
+						bool is_ps2 = (strstr(_path, ".ntfs[PS2ISO]") != NULL);
+						bool is_psp = (strstr(_path, ".ntfs[PSPISO]") != NULL);
 
-						pos = strstr(_path, ".ntfs[PSPISO]");
-						if(pos)
+						if(is_psp || is_ps2)
 						{
-							pos[0] = NULL; sprintf(_path, "/dev_bdvd/%s", _path + 29);
-							goto copy_pspiso_to_hdd0;
+							CellFsDirent entry; u64 read_e; int fd;
+
+							if(cellFsOpendir("/dev_bdvd", &fd) == CELL_FS_SUCCEEDED)
+							{
+								while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+								{
+									if(entry.d_name[0] != '.') break;
+								}
+								cellFsClosedir(fd);
+
+								if(entry.d_name[0] == NULL) goto patch;
+
+								sprintf(_path, "/dev_bdvd/%s", entry.d_name);
+
+								if(file_exists(_path) == false) goto patch;
+
+								if(is_ps2)
+									goto copy_ps2iso_to_hdd0;
+								else
+									goto copy_pspiso_to_hdd0;
+							}
 						}
 					}
 				}
