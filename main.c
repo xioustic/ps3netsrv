@@ -552,6 +552,7 @@ static char wm_icons[12][60] = {WM_ICONS_PATH "icon_wm_album_ps3.png", //024.png
 
 #ifndef ENGLISH_ONLY
 static bool use_custom_icon_path = false, use_icon_region = false;
+static bool is_xmbmods_server = false;
 #endif
 
 static bool covers_exist[7];
@@ -810,14 +811,7 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 
 	sprintf(templn, "</head>%s"
 					"<div style=\"position:fixed;right:20px;bottom:10px;opacity:0.2\"><a href=\"#Top\">&#9650;</a></div><b>", HTML_BODY); buffer += concat(buffer, templn);
-/*
-#ifndef ENGLISH_ONLY
-	if(STR_TRADBY[0] == 0) language("STR_TRADBY", STR_TRADBY); //strcpy(STR_TRADBY, "<br>");
-	if(STR_HOME  [0] == 0) language("STR_HOME"  , STR_HOME  ); //strcpy(STR_HOME  , "<br>");
-#else
-	strcpy(STR_HOME, "Home");
-#endif
-*/
+
 #ifdef PS3MAPI
 	#ifdef WEB_CHAT
 		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>] [<a href=\"/games.ps3\">Slider</a>] [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, STR_SETUP); buffer += concat(buffer, templn);
@@ -2168,6 +2162,7 @@ static void handleclient(u64 conn_s_p)
 					if(islike(param, "/refresh.ps3") && refreshing_xml == 0)
 					{
 						refresh_xml(templn);
+
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
 					}
 					else

@@ -186,6 +186,7 @@ static void poll_thread(uint64_t poll)
 					show_msg(msg);
 					sys_timer_sleep(2);
 				}
+
 				if((t1 > MAX_TEMPERATURE) || (t2 > MAX_TEMPERATURE))
 				{
 					if(!max_temp) max_temp = (MAX_TEMPERATURE - 3);
@@ -195,6 +196,7 @@ static void poll_thread(uint64_t poll)
 
 					old_fan = fan_speed;
 					fan_control(fan_speed, 0);
+
 					if(!webman_config->warn) show_msg((char*)STR_OVERHEAT2);
 				}
 			}
@@ -249,9 +251,12 @@ static void poll_thread(uint64_t poll)
 								struct CellFsStat s;
 								if(cellFsStat(dlfile, &s) == CELL_FS_SUCCEEDED && pkg_header.pkg_size == s.st_size)
 								{
-									char pkgfile[MAX_PATH_LEN];
-									sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dlfile + strlen(TEMP_DOWNLOAD_PATH));
-									cellFsRename(dlfile, pkgfile);
+									char pkgfile[MAX_PATH_LEN]; u16 pkg_len, retry = 0;
+									pkg_len = sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dlfile + strlen(TEMP_DOWNLOAD_PATH));
+									while(cellFsRename(dlfile, pkgfile) != CELL_FS_SUCCEEDED && retry < 100)
+									{
+										sprintf(pkgfile + pkg_len - 4, " (%i).pkg", retry); retry++;
+									}
 									pkg_dcount--;
 
 									if(pkg_auto_install) installPKG(pkgfile, msg);

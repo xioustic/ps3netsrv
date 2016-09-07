@@ -139,6 +139,9 @@ static uint64_t convertH(char *val)
 	return ret;
 }
 
+#endif
+#ifdef PS3MAPI
+
 static void Hex2Bin(const char* src, char* target)
 {
 	char value[3]; value[2] = NULL;
@@ -149,9 +152,11 @@ static void Hex2Bin(const char* src, char* target)
 		src += 2;
 	}
 }
+
 #endif
 
 #ifdef GET_KLICENSEE
+
 static char *hex_dump(char *buffer, int offset, int size)
 {
 	for (int k = 0; k < size ; k++)
@@ -160,6 +165,7 @@ static char *hex_dump(char *buffer, int offset, int size)
 	}
 	return buffer;
 }
+
 #endif
 
 /*

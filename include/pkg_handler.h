@@ -133,11 +133,9 @@ static int download_file(const char *param, char *msg)
 	sprintf(msg_durl,  "ERROR: Invalid URL");
 	sprintf(msg_dpath, "Download canceled");
 
-	char *param2 = param; //(char*)param + 13;
-
-	if(islike(param2, "?to="))  //Use of the optional parameter
+	if(islike(param, "?to="))  //Use of the optional parameter
 	{
-		char *ptemp = strstr(param2, "&url=");
+		char *ptemp = strstr((char*)param + 4, "&url=");
 
 		if(ptemp != NULL)
 		{
@@ -153,22 +151,22 @@ static int download_file(const char *param, char *msg)
 		else
 			goto end_download_process;
 
-		dparam_len = strlen(param2);
+		dparam_len = strlen(param);
 		pdpath_len = dparam_len - pdurl_len - 5 - 4;
 
-		if(pdpath_len > 0) strncpy(pdpath, param2 + 4, pdpath_len);
+		if(pdpath_len > 0) strncpy(pdpath, param + 4, pdpath_len);
 
 		conv_num_durl = mbstowcs((wchar_t *)pkg_durl, (const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 
 	}
-	else if(islike(param2, "?url="))
+	else if(islike(param, "?url="))
 	{
-		pdurl_len = strlen(param2 + 5);
+		pdurl_len = strlen(param + 5);
 		if((pdurl_len > 0) && (pdurl_len < MAX_URL_LEN))
 		{
 			pdpath_len = strlen(DEFAULT_PKG_PATH);
 			strncpy(pdpath, DEFAULT_PKG_PATH, pdpath_len);
-			strncpy(pdurl, param2 + 5, pdurl_len);
+			strncpy(pdurl, param + 5, pdurl_len);
 			conv_num_durl = mbstowcs((wchar_t *)pkg_durl,(const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 		}
 	}

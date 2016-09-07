@@ -483,7 +483,7 @@ static uint32_t get_system_language(uint8_t *lang)
 }
 
 #define CHUNK_SIZE 512
-#define GET_NEXT_BYTE  {if(p < CHUNK_SIZE) c = buffer[p++]; else {cellFsRead(fd, buffer, CHUNK_SIZE, &bytes_read); c = buffer[0], p = 1;} lang_pos++;}
+#define GET_NEXT_BYTE  {if(p < CHUNK_SIZE) c = buffer[p++]; else {cellFsRead(fd, buffer, CHUNK_SIZE, &bytes_read); c = *buffer, p = 1;} lang_pos++;}
 
 static bool language(const char *key_name, char *default_str)
 {
@@ -735,7 +735,7 @@ static void update_language(void)
 
 		sprintf(STR_NOTFOUND,     "Not found!");
 
-		COVERS_PATH[0] = NULL;
+		*COVERS_PATH = NULL;
 
 		sprintf(search_url,       "http://google.com/search?q=");
 
@@ -915,6 +915,6 @@ static void update_language(void)
 
 	if(fh) {cellFsClose(fh); fh = 0;}
 
-	html_base_path[0] = NULL;
+	*html_base_path = NULL;
 }
 #endif //#ifndef ENGLISH_ONLY
