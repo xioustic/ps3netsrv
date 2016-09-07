@@ -402,7 +402,7 @@ static char *get_blank_iso_path(void)
 static void build_blank_iso(const char *title_id)
 {
 	sys_addr_t sysmem = NULL;
-	if(sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0) return;
+	if(sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK) return;
 	uint8_t *buf = (uint8_t*)sysmem;
 
 	memset(buf, 0, _128KB_);

@@ -155,7 +155,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 		return FAILED;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_file_critical(u8 index, netiso_read_file_critical_cmd *cmd)
@@ -223,7 +223,7 @@ static int process_read_file_critical(u8 index, netiso_read_file_critical_cmd *c
 	}
 
 	/// exit ///
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_cd_2048_critical_cmd(u8 index, netiso_read_cd_2048_critical_cmd *cmd)
@@ -262,7 +262,7 @@ static int process_read_cd_2048_critical_cmd(u8 index, netiso_read_cd_2048_criti
 		///////////////
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_file_cmd(u8 index, netiso_read_file_cmd *cmd)
@@ -283,7 +283,7 @@ static int process_read_file_cmd(u8 index, netiso_read_file_cmd *cmd)
 	sys_addr_t sysmem = 0; size_t buffer_size = 0;
 
 	for(uint8_t n = MAX_PAGES; n > 0; n--)
-		if(remaining >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0) {buffer_size = n * _64KB_; break;}
+		if(remaining >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; break;}
 
 	char *buffer = (char*)sysmem;
 
@@ -325,7 +325,7 @@ send_result_read_file:
 	/// free memory ///
 
 	if(sysmem) sys_memory_free(sysmem);
-	return 0;
+	return CELL_OK;
 }
 
 static int process_stat_cmd(u8 index, netiso_stat_cmd *cmd)
@@ -407,7 +407,7 @@ static int process_stat_cmd(u8 index, netiso_stat_cmd *cmd)
 		return FAILED;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_open_dir_cmd(u8 index, netiso_open_dir_cmd *cmd)
@@ -460,7 +460,7 @@ static int process_open_dir_cmd(u8 index, netiso_open_dir_cmd *cmd)
 		return FAILED;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
@@ -475,7 +475,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 	sys_addr_t sysmem = 0;
 
 	for(uint64_t n = MAX_PAGES; n > 0; n--)
-		if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0) {max_entries = (n * _64KB_) / sizeof(netiso_read_dir_result_data); break;}
+		if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {max_entries = (n * _64KB_) / sizeof(netiso_read_dir_result_data); break;}
 
 	(void) cmd;
 	netiso_read_dir_result result;
@@ -585,7 +585,7 @@ send_result_read_dir_cmd:
 	/// free memory ///
 
 	if(sysmem) sys_memory_free(sysmem);
-	return 0;
+	return CELL_OK;
 }
 
 static void handleclient_net(uint64_t arg)

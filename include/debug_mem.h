@@ -24,7 +24,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t size_mb)
 
 	if(start < 0x0000028080000000ULL) start |= 0x8000000000000000ULL;
 
-	if(sys_memory_allocate(mem_size, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem)==0)
+	if(sys_memory_allocate(mem_size, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem) == CELL_OK)
 	{
 		uint8_t *mem_buf = (uint8_t*)sys_mem;
 

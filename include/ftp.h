@@ -118,11 +118,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 			buffer[strcspn(buffer, "\n")] = '\0';
 			buffer[strcspn(buffer, "\r")] = '\0';
 
-			int split = ssplit(buffer, cmd, 15, param, MAX_PATH_LEN-1); to_upper(cmd);
+			int split = ssplit(buffer, cmd, 15, param, MAX_PATH_LEN-1);
 
 			if(working && loggedin == 1)
 			{
-				if(IS(cmd, "CWD"))
+				if(_IS(cmd, "CWD"))
 				{
 					if(split == 1)
 					{
@@ -142,7 +142,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(IS(cmd, "CDUP"))
+				if(_IS(cmd, "CDUP"))
 				{
 					int pos = strlen(cwd) - 2;
 
@@ -160,19 +160,19 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 				}
 				else
-				if(IS(cmd, "PWD"))
+				if(_IS(cmd, "PWD"))
 				{
 					sprintf(buffer, "257 \"%s\"\r\n", cwd);
 					ssend(conn_s_ftp, buffer);
 				}
 				else
-				if(IS(cmd, "TYPE"))
+				if(_IS(cmd, "TYPE"))
 				{
 					ssend(conn_s_ftp, FTP_OK_TYPE_200); // The requested action has been successfully completed.
 					dataactive = 1;
 				}
 				else
-				if(IS(cmd, "REST"))
+				if(_IS(cmd, "REST"))
 				{
 					if(split == 1)
 					{
@@ -186,13 +186,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(IS(cmd, "QUIT") || IS(cmd, "BYE"))
+				if(_IS(cmd, "QUIT") || _IS(cmd, "BYE"))
 				{
 					ssend(conn_s_ftp, FTP_OK_221);
 					connactive = 0;
 				}
 				else
-				if(IS(cmd, "FEAT"))
+				if(_IS(cmd, "FEAT"))
 				{
 					ssend(conn_s_ftp,	"211-Ext:\r\n"
 										" SIZE\r\n"
@@ -208,7 +208,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										"211 End\r\n");
 				}
 				else
-				if(IS(cmd, "PORT"))
+				if(_IS(cmd, "PORT"))
 				{
 					rest = 0;
 
@@ -252,13 +252,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(IS(cmd, "SITE"))
+				if(_IS(cmd, "SITE"))
 				{
 					if(split == 1)
 					{
-						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN-1); to_upper(cmd);
+						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN-1);
 
-						if(IS(cmd, "HELP"))
+						if(_IS(cmd, "HELP"))
 						{
 							ssend(conn_s_ftp, "214-CMDs:\r\n"
 #ifndef LITE_EDITION
@@ -283,7 +283,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 											  "214 End\r\n");
 						}
 						else
-						if(IS(cmd, "SHUTDOWN"))
+						if(_IS(cmd, "SHUTDOWN"))
 						{
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
 
@@ -293,18 +293,18 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							sys_ppu_thread_exit(0);
 						}
 						else
-						if(IS(cmd, "RESTART") || IS(cmd, "REBOOT"))
+						if(_IS(cmd, "RESTART") || _IS(cmd, "REBOOT"))
 						{
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
 
 							working = 0;
 							{ DELETE_TURNOFF } { BEEP2 }
-							if(IS(cmd, "REBOOT")) savefile(WMNOSCAN, NULL, 0);
+							if(_IS(cmd, "REBOOT")) savefile(WMNOSCAN, NULL, 0);
 							{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 							sys_ppu_thread_exit(0);
 						}
 						else
-						if(IS(cmd, "FLASH"))
+						if(_IS(cmd, "FLASH"))
 						{
 							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 
@@ -322,7 +322,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 #ifndef LITE_EDITION
  #ifdef PKG_HANDLER
 						else
-						if(IS(cmd, "INSTALL"))
+						if(_IS(cmd, "INSTALL"))
 						{
 							absPath(param, filename, cwd); char *msg = filename;
 
@@ -336,7 +336,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
  #endif
  #ifdef EXT_GDATA
 						else
-						if(IS(cmd, "EXTGD"))
+						if(_IS(cmd, "EXTGD"))
 						{
 							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 
@@ -349,14 +349,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						}
  #endif
 						else
-						if(IS(cmd, "UMOUNT"))
+						if(_IS(cmd, "UMOUNT"))
 						{
 							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 							do_umount(true);
 						}
  #ifdef COBRA_ONLY
 						else
-						if(IS(cmd, "MAPTO"))
+						if(_IS(cmd, "MAPTO"))
 						{
 							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 
@@ -375,7 +375,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
  #endif //#ifdef COBRA_ONLY
  #ifdef FIX_GAME
 						else
-						if(IS(cmd, "FIX"))
+						if(_IS(cmd, "FIX"))
 						{
 							if(fix_in_progress)
 							{
@@ -400,7 +400,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						}
  #endif //#ifdef FIX_GAME
 						else
-						if(IS(cmd, "CHMOD"))
+						if(_IS(cmd, "CHMOD"))
 						{
 							split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN-1);
 
@@ -415,7 +415,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						}
  #ifdef COPY_PS3
 						else
-						if(IS(cmd, "COPY"))
+						if(_IS(cmd, "COPY"))
 						{
 							sprintf(buffer, "%s %s", STR_COPYING, filename);
 							show_msg(buffer);
@@ -424,10 +424,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							ssend(conn_s_ftp, FTP_OK_200); // The requested action has been successfully completed.
 						}
 						else
-						if(IS(cmd, "PASTE"))
+						if(_IS(cmd, "PASTE"))
 						{
 							absPath(param, filename, cwd);
-							if((!copy_in_progress) && (source[0] != NULL) && (!IS(source, param)) && file_exists(source))
+							if((!copy_in_progress) && (*source) && (!IS(source, param)) && file_exists(source))
 							{
 								copy_in_progress = true; copied_count = 0;
 								ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
@@ -471,18 +471,18 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(IS(cmd, "NOOP"))
+				if(_IS(cmd, "NOOP"))
 				{
 					ssend(conn_s_ftp, "200 NOOP\r\n");
 				}
 				else
-				if(IS(cmd, "MLSD") || IS(cmd, "LIST") || IS(cmd, "MLST"))
+				if(_IS(cmd, "MLSD") || _IS(cmd, "LIST") || _IS(cmd, "MLST"))
 				{
 					if(data_s >= 0)
 					{
-						bool is_MLSD = IS(cmd, "MLSD");
+						bool is_MLSD = _IS(cmd, "MLSD");
 
-						int nolist = (is_MLSD || IS(cmd, "MLST"));
+						int nolist = (is_MLSD || _IS(cmd, "MLST"));
 
 						if(split == 1)
 						{
@@ -599,7 +599,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(IS(cmd, "PASV"))
+				if(_IS(cmd, "PASV"))
 				{
 					u8 pasv_retry = 0;
 					rest = 0;
@@ -639,7 +639,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "RETR"))
+				if(_IS(cmd, "RETR"))
 				{
 					if(data_s >= 0)
 					{
@@ -658,7 +658,7 @@ pasv_again:
 								{
 									sys_addr_t sysmem = 0; size_t buffer_size = BUFFER_SIZE_FTP;
 
-									if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
+									if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 									{
 										char *buffer2 = (char*)sysmem;
 
@@ -715,7 +715,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "DELE"))
+				if(_IS(cmd, "DELE"))
 				{
 					if(split == 1)
 					{
@@ -736,7 +736,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "MKD"))
+				if(_IS(cmd, "MKD"))
 				{
 					if(split == 1)
 					{
@@ -758,7 +758,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "RMD"))
+				if(_IS(cmd, "RMD"))
 				{
 					if(split == 1)
 					{
@@ -783,7 +783,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "STOR"))
+				if(_IS(cmd, "STOR"))
 				{
 					if(data_s >= 0)
 					{
@@ -800,10 +800,10 @@ pasv_again:
 								sys_addr_t sysmem = 0; size_t buffer_size = BUFFER_SIZE_FTP;;
 
 								//for(uint8_t n = MAX_PAGES; n > 0; n--)
-								//	if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0) {buffer_size = n * _64KB_; break;}
+								//	if(sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; break;}
 
 								//if(buffer_size >= _64KB_)
-								if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
+								if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 								{
 									char *buffer2= (char*)sysmem;
 									u64 read_e = 0;
@@ -857,7 +857,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "SIZE"))
+				if(_IS(cmd, "SIZE"))
 				{
 					if(split == 1)
 					{
@@ -879,12 +879,12 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "SYST"))
+				if(_IS(cmd, "SYST"))
 				{
 					ssend(conn_s_ftp, "215 UNIX Type: L8\r\n");
 				}
 				else
-				if(IS(cmd, "MDTM"))
+				if(_IS(cmd, "MDTM"))
 				{
 					if(split == 1)
 					{
@@ -906,14 +906,14 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "ABOR"))
+				if(_IS(cmd, "ABOR"))
 				{
 					sclose(&data_s);
 					ssend(conn_s_ftp, FTP_OK_ABOR_226);			// Closing data connection. Requested file action successful
 				}
 
 				else
-				if(IS(cmd, "RNFR"))
+				if(_IS(cmd, "RNFR"))
 				{
 					if(split == 1)
 					{
@@ -937,7 +937,7 @@ pasv_again:
 				}
 
 				else
-				if(IS(cmd, "RNTO"))
+				if(_IS(cmd, "RNTO"))
 				{
 					if(split == 1 && source[0]=='/')
 					{
@@ -960,23 +960,23 @@ pasv_again:
 				}
 
 				else
-				if(IS(cmd, "USER") || IS(cmd, "PASS"))
+				if(_IS(cmd, "USER") || _IS(cmd, "PASS"))
 				{
 					ssend(conn_s_ftp, FTP_OK_USER_230); // User logged in, proceed.
 				}
 				else
-				/*if(  IS(cmd, "OPTS") == 0
-					|| IS(cmd, "REIN") || IS(cmd, "ADAT")
-					|| IS(cmd, "AUTH") || IS(cmd, "CCC" )
-					|| IS(cmd, "CONF") || IS(cmd, "ENC" )
-					|| IS(cmd, "EPRT") || IS(cmd, "EPSV")
-					|| IS(cmd, "LANG") || IS(cmd, "LPRT")
-					|| IS(cmd, "LPSV") || IS(cmd, "MIC" )
-					|| IS(cmd, "PBSZ") || IS(cmd, "PROT")
-					|| IS(cmd, "SMNT") || IS(cmd, "STOU")
-					|| IS(cmd, "XRCP") || IS(cmd, "XSEN")
-					|| IS(cmd, "XSEM") || IS(cmd, "XRSQ")
-					|| IS(cmd, "STAT"))
+				/*if(  _IS(cmd, "OPTS") == 0
+					|| _IS(cmd, "REIN") || _IS(cmd, "ADAT")
+					|| _IS(cmd, "AUTH") || _IS(cmd, "CCC" )
+					|| _IS(cmd, "CONF") || _IS(cmd, "ENC" )
+					|| _IS(cmd, "EPRT") || _IS(cmd, "EPSV")
+					|| _IS(cmd, "LANG") || _IS(cmd, "LPRT")
+					|| _IS(cmd, "LPSV") || _IS(cmd, "MIC" )
+					|| _IS(cmd, "PBSZ") || _IS(cmd, "PROT")
+					|| _IS(cmd, "SMNT") || _IS(cmd, "STOU")
+					|| _IS(cmd, "XRCP") || _IS(cmd, "XSEN")
+					|| _IS(cmd, "XSEM") || _IS(cmd, "XRSQ")
+					|| _IS(cmd, "STAT"))
 				{
 					ssend(conn_s_ftp, FTP_ERROR_502);	// Command not implemented.
 				}
@@ -999,7 +999,7 @@ pasv_again:
 			else if (working)
 			{
 				// commands available when not logged in
-				if(IS(cmd, "USER"))
+				if(_IS(cmd, "USER"))
 				{
 					if(split == 1)
 					{
@@ -1011,7 +1011,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "PASS"))
+				if(_IS(cmd, "PASS"))
 				{
 					if(split == 1)
 					{
@@ -1031,7 +1031,7 @@ pasv_again:
 					}
 				}
 				else
-				if(IS(cmd, "QUIT") || IS(cmd, "BYE"))
+				if(_IS(cmd, "QUIT") || _IS(cmd, "BYE"))
 				{
 					ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
 					connactive = 0;

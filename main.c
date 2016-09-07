@@ -663,12 +663,13 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 #include "include/cpursx.h"
 #include "include/setup.h"
 #include "include/togglers.h"
-#include "include/fancontrol2.h"
 
 #include "include/_mount.h"
 #include "include/file_manager.h"
 #include "include/netserver.h"
+
 #include "include/pkg_handler.h"
+#include "include/fancontrol2.h"
 
 static void http_response(int conn_s, char *header, const char *url, int code, const char *msg)
 {
@@ -683,7 +684,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 	{
 		char templn[_2KB_];
 
-		if(msg[0] == '/')
+		if(*msg == '/')
 			{sprintf(templn, "%s : OK", msg+1); show_msg(templn);}
 		else if(islike(msg, "http"))
 			sprintf(templn, "<a style=\"%s\" href=\"%s\">%s</a>", "color:#ccc;text-decoration:none;", msg, msg);
@@ -1050,7 +1051,7 @@ static void handleclient(u64 conn_s_p)
 	while(!served && working)
 	{
 		served++;
-		header[0] = NULL;
+		*header = NULL;
 
 		#ifdef USE_DEBUG
 		ssend(debug_s, "ACC - ");
@@ -1069,7 +1070,7 @@ static void handleclient(u64 conn_s_p)
 		}
  #endif
 
-		if(((header[0] == 'G') || recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && header[0] == 'G' && header[4] == '/') // serve only GET /xxx requests
+		if(((*header == 'G') || recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && *header == 'G' && header[4] == '/') // serve only GET /xxx requests
 		{
 			if(strstr(header, "x-ps3-browser")) is_ps3_http = 1; else
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
@@ -1123,7 +1124,7 @@ static void handleclient(u64 conn_s_p)
 				if(is_combo != 1) {if(!webman_config->nopad) parse_pad_command(buttons, is_combo);}
 				else
 				{   // default: play.ps3?col=game&seg=seg_device
-					char *pos, col[16], seg[80], *param2 = buttons; col[0] = seg[0] = NULL;
+					char *pos, col[16], seg[80], *param2 = buttons; *col = *seg = NULL;
 					pos = strstr(param2, "col="); if(pos) get_value(col, pos + 4, 16); // game / video / friend / psn / network / music / photo / tv
 					pos = strstr(param2, "seg="); if(pos) get_value(seg, pos + 4, 80);
 					launch_disc(col, seg);
@@ -1175,7 +1176,7 @@ static void handleclient(u64 conn_s_p)
 			{
 				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
 
-				int ret = download_file(strchr(param_original, '%') ? param_original : param, msg);
+				int ret = download_file(strchr(param_original, '%') ? (param_original + 13) : (param + 13), msg);
 
 				#ifdef WM_REQUEST
 				if(!wmget)
@@ -1319,10 +1320,10 @@ static void handleclient(u64 conn_s_p)
 					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param + 27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
    #endif
 					{
-						if(param2[0] == NULL) sprintf(param2, "/");
-						if(param2[0] == '/' ) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param2); open_browser(header, 0);} else
-						if(param2[0] == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->ExecXMBcommand(url,0,0);}} else
-						if(param2[0] == '?' ) {do_umount(false); open_browser(url, 0);} else
+						if(*param2 == NULL) sprintf(param2, "/");
+						if(*param2 == '/' ) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param2); open_browser(header, 0);} else
+						if(*param2 == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->ExecXMBcommand(url,0,0);}} else
+						if(*param2 == '?' ) {do_umount(false); open_browser(url, 0);} else
 											  {					 open_browser(url, 1);} // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
 
 						show_msg(url);
@@ -1398,7 +1399,7 @@ static void handleclient(u64 conn_s_p)
 
 				http_response(conn_s, header, param, CODE_HTTP_OK, buffer);
 
-				if(kl[0]>0 && klic_polling>0)
+				if(*kl && (klic_polling > 0))
 				{
 					get_game_info(); sprintf(header, "%s [%s]", _game_Title, _game_TitleID);
 
@@ -1449,7 +1450,7 @@ static void handleclient(u64 conn_s_p)
 			#endif
 			if(islike(param, "/popup.ps3"))
 			{
-				if(param[10] == 0) show_info_popup = true; else is_popup = 1;
+				if(param[10] == NULL) show_info_popup = true; else is_popup = 1;
 
 				goto html_response;
 			}
@@ -1480,7 +1481,7 @@ static void handleclient(u64 conn_s_p)
 
 					htmlenc(url, path2, 1); urlenc(url, path1); htmlenc(title, path1, 0);
 
-					if(isremap && path2[0]!=NULL)
+					if(isremap && *path2 != NULL)
 					{
 						htmlenc(path1, path2, 0);
 						sprintf(param,  "Remap: " HTML_URL "<br>"
@@ -1515,7 +1516,7 @@ static void handleclient(u64 conn_s_p)
 				if(param[10] == '/')
 				{
 					sprintf(param, "%s", param + 10); cellFsRmdir(param);
-					char *p = strrchr(param, '/'); p[0] = NULL;
+					char *p = strrchr(param, '/'); *p = NULL;
 				}
 				else
 					{delete_history(true); sprintf(param, "/dev_hdd0");}
@@ -1556,14 +1557,14 @@ static void handleclient(u64 conn_s_p)
 			if(islike(param, "/rename.ps3"))
 			{
 				char *source = param + 11, *target = strstr(source, "|");
-				if(target) {target[0] = NULL; target++;} else {target = strstr(source, "&to="); if(target) {target[0] = NULL; target+=4;}}
+				if(target) {*target = NULL; target++;} else {target = strstr(source, "&to="); if(target) {target = NULL; target+=4;}}
 
 				if((!islike(target, "/")) && !extcmp(source, ".bak", 4)) {size_t flen = strlen(source); *target = *param + flen; strncpy(target, source, flen - 4);}
 
 				if(islike(target, "/"))
 				{
 					cellFsRename(source, target);
-					char *p = strrchr(target, '/'); p[0] = NULL;
+					char *p = strrchr(target, '/'); *p = NULL;
 					sprintf(param, "%s", target);
 				}
 			}
@@ -1573,7 +1574,7 @@ static void handleclient(u64 conn_s_p)
 				cp_mode = islike(param, "/cut.ps3") ? 2 : 1;
 				sprintf(cp_path, "%s", param + 8);
 				sprintf(param, "%s", cp_path);
-				char *p = strrchr(param, '/'); p[0] = NULL;
+				char *p = strrchr(param, '/'); *p = NULL;
 				if(file_exists(cp_path) == false) cp_mode = 0;
 
 				is_binary = FOLDER_LISTING, small_alloc = false;
@@ -1848,7 +1849,7 @@ static void handleclient(u64 conn_s_p)
 				size_t buffer_size = 0; if(sysmem) sys_memory_free(sysmem);
 
 				for(uint8_t n = MAX_PAGES; n > 0; n--)
-					if(c_len >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0) {buffer_size = n * _64KB_; break;}
+					if(c_len >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; break;}
 
 				//if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
 				if(buffer_size < _64KB_)
@@ -1891,7 +1892,7 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/cpursx.ps3") || show_info_popup)
 			{
-				if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != 0)
+				if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK)
 				{
 					http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
 					goto exit_handleclient;
@@ -1912,7 +1913,7 @@ static void handleclient(u64 conn_s_p)
 					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
 				}
 
-				while((!sysmem) && (BUFFER_SIZE_HTML > 0) && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != 0) BUFFER_SIZE_HTML -= _64KB_;
+				while((!sysmem) && (BUFFER_SIZE_HTML > 0) && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK) BUFFER_SIZE_HTML -= _64KB_;
 
 				if(!sysmem)
 				{
@@ -2110,7 +2111,7 @@ static void handleclient(u64 conn_s_p)
 
 						// show filename link
 						char *p = strrchr(filename, '/');
-						if(p) {strcpy(txt, p); p[0] = NULL; sprintf(tempstr," &nbsp; " HTML_URL HTML_URL2 "</form>", filename, filename, filename, txt, txt); strcat(pbuffer, tempstr);}
+						if(p) {strcpy(txt, p); *p = NULL; sprintf(tempstr," &nbsp; " HTML_URL HTML_URL2 "</form>", filename, filename, filename, txt, txt); strcat(pbuffer, tempstr);}
 
 						is_popup = 0; goto send_response;
 					}
@@ -2221,7 +2222,7 @@ static void handleclient(u64 conn_s_p)
 
 						prx_found = file_exists(templn);
   #ifdef COBRA_ONLY
-						if(templn[0])
+						if(*templn)
 						{
 							slot = get_vsh_plugin_slot_by_name(templn, false);
 							if(islike(param, "/unloadprx.ps3")) prx_found = false;
@@ -2510,7 +2511,7 @@ send_response:
 
 				send(conn_s, buffer, c_len, 0);
 
-				buffer[0] = NULL;
+				*buffer = NULL;
 			}
 		}
 
@@ -2547,7 +2548,7 @@ exit_handleclient:
 
 static void wwwd_thread(uint64_t arg)
 {
-	backup[0] = NULL;
+	*backup = NULL;
 
 	detect_firmware();
 

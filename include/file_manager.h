@@ -16,6 +16,10 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 
 #define FILE_MGR_KEY_LEN	6
 
+#define ext5   name + MAX(flen - 5, 0)
+#define ext8   name + MAX(flen - 8, 0)
+#define ext13  name + MAX(flen - 13, 0)
+
 static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
 {
 	if(plen < 4) sz = 0, is_dir = true; // force folders in root -> fix: host_root, app_home
@@ -31,12 +35,12 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 	}
 
 	// encode file name for html
-	if(plen == 19 && IS(param, WMTMP))
-		flen = strlen(name);
-	else
+	if(is_net)
 		flen = htmlenc(tempstr, name, 1);
+	else
+		flen = strlen(name);
 
-	char *ext = name + MAX(flen - 4, 0); fsize[0] = NULL;
+	char *ext = name + MAX(flen - 4, 0); *fsize = NULL;
 
 #ifndef LITE_EDITION
 	// get title & title ID from PARAM.SFO
@@ -46,9 +50,9 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 
 		//get title & app version from PARAM.SFO
 		getTitleID(templn, version, GET_VERSION);
-		getTitleID(title, titleid, GET_TITLE_AND_ID); char *p = strstr(title, " ["); if(p) p[0] = NULL; //p = strstr(title, "\n"); if(p) p[0] = NULL;
+		getTitleID(title, titleid, GET_TITLE_AND_ID); char *p = strstr(title, " ["); if(p) *p = NULL; //p = strstr(title, "\n"); if(p) *p = NULL;
 		get_cover_from_name(tempstr, strrchr(param, '/') + 1, titleid); // get title id from path (if title ID was not found in PARAM.SFO)
-		if(version[0]>='0') {strcat(title, " v"); strcat(title, version);}
+		if(*version >= '0') {strcat(title, " v"); strcat(title, version);}
 		sprintf(tempstr, "%s%s", HDD0_GAME_DIR, titleid); bool has_updates_dir = file_exists(tempstr);
 
 		sprintf(tempstr, "<label title=\"%s\">%s</label></a>", title, name); strcpy(name, tempstr);
@@ -89,7 +93,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 
 		if(flen == 9 && IS(templn, "/host_root")) strcpy(templn, "/dev_hdd0/packages"); // replace host_root with a shortcut to /dev_hdd0/packages
 
-		if(name[0] == '.')
+		if(*name == '.')
 			sprintf(fsize, HTML_URL, templn, HTML_DIR);
 		else if(flen == 9 && IS(templn, "/dev_blind"))
 			sprintf(fsize, HTML_URL2, templn, "?0", HTML_DIR);
@@ -134,13 +138,13 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 #endif
 	}
 
-	else if(fsize[0]) ;
+	else if(*fsize) ;
 
 	else if(skip_cmd)
 		sprintf(fsize, "%'llu %s", sz, sf);
 
 #ifdef COBRA_ONLY
-	else if( ((flen > 4) && strcasestr(ISO_EXTENSIONS, ext)!=NULL && !islike(templn, HDD0_GAME_DIR)) || (!is_net && ( strstr(name + MAX(flen - 13, 0), ".ntfs[") || !extcmp(name + MAX(flen - 8, 0), ".BIN.ENC", 8) )) )
+	else if( ((flen > 4) && strcasestr(ISO_EXTENSIONS, ext) != NULL && !islike(templn, HDD0_GAME_DIR)) || (!is_net && ( strstr(ext13, ".ntfs[") || IS(ext8, ".BIN.ENC") )) )
 	{
 		if( (strcasestr(name, ".iso.") != NULL) && extcasecmp(name, ".iso.0", 6) )
 			sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
@@ -155,23 +159,26 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 #endif
 
 #ifdef COPY_PS3
-	else if(   IS(ext, ".pkg") || IS(ext, ".p3t") || !extcmp(name, ".edat", 5)
-			|| IS(ext, ".rco") || IS(ext, ".qrc") || !memcmp(name, "coldboot", 8)
-			|| !memcmp(name, "webftp_server", 13) || !memcmp(name, "boot_plugins_", 13)
-			|| show_img
+	else if( IS(ext, ".bak") )
+			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
+	else if(   show_img
+ #ifndef PKG_HANDLER
+			|| IS(ext, ".pkg")
+ #endif
+			|| IS(ext, ".p3t") || IS(ext5, ".edat")
+			|| IS(ext, ".rco") || IS(ext, ".qrc")
 			|| !strcasecmp(ext, ".mp4") || !strcasecmp(ext, ".mkv") || !strcasecmp(ext, ".avi")
 			|| !strcasecmp(ext, ".mp3")
+			|| !memcmp(name, "webftp_server", 13) || !memcmp(name, "boot_plugins_", 13) || !memcmp(name, "coldboot", 8)
  #ifdef SWAP_KERNEL
 			|| !memcmp(name, "lv2_kernel", 10)
  #endif
 			)
 				sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", islike(templn, param) ? templn + plen : templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
-	else if( !extcmp(name, ".bak", 4) )
-			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
 #endif //#ifdef COPY_PS3
 
 #ifdef LOAD_PRX
-	else if(!is_net && ( !extcmp(name, ".sprx", 5)))
+	else if(!is_net && ( IS(ext5, ".sprx")))
 		sprintf(fsize, "<a href=\"/loadprx.ps3?slot=6&prx=%s\">%'llu %s</a>", templn, sz, sf);
 #endif
 #ifndef LITE_EDITION
@@ -224,7 +231,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 
 	flen += concat(tempstr, templn);
 
-	if(flen >= _LINELEN) {flen = 0; tempstr[0] = NULL;} //ignore file if it is still too long
+	if(flen >= _LINELEN) {flen = 0; *tempstr = NULL;} //ignore file if it is still too long
 
 	return flen;
 }
@@ -239,7 +246,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 
 	while((slash = strchr(templn + 1, '/')))
 	{
-		slash[0] = NULL;
+		*slash = NULL;
 		tlen+=strlen(templn) + 1;
 
 		strcpy(swap, param);
@@ -261,7 +268,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	{
 		char label[_MAX_PATH_LEN]; tlen = strlen(param) - 4; if(tlen < 0) tlen = 0;
 
-		urlenc(url, param); if(strstr(templn, ".ntfs[")) strcpy(label, templn); else htmlenc(label, templn, 0);
+		urlenc(url, param); /*if(islike(templn, "/net")) htmlenc(label, templn, 0); else*/ strcpy(label, templn);
 		sprintf(swap, HTML_URL2,
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
@@ -372,7 +379,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				if(open_remote_dir(ns, param + 5, &abort_connection) >= 0)
 				{
 					strcpy(templn, param); while(templn[plen] == '/') templn[plen--] = NULL; plen++;
-					char *p = strrchr(templn, '/'); if(p) templn[p-templn] = NULL; if(strlen(templn) < 6 && strlen(param) < 8) {templn[0]='/'; templn[1] = NULL;}
+					char *p = strrchr(templn, '/'); if(p) templn[p-templn] = NULL; if(strlen(templn) < 6 && strlen(param) < 8) {templn[0] = '/', templn[1] = NULL;}
 
 					urlenc(swap, templn);
 					flen = sprintf(line_entry[idx].path, "!00000"
@@ -574,7 +581,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				bool show_icon = false;
 				if(is_net && jb_games)
 				{
-					char *p = strchr(param + 12, '/'); if(p) p[0] = NULL; sprintf(templn, "%s/PS3_GAME/ICON0.PNG", param); show_icon = true;
+					char *p = strchr(param + 12, '/'); if(p) *p = NULL; sprintf(templn, "%s/PS3_GAME/ICON0.PNG", param); show_icon = true;
 				}
 
 				if(!show_icon)
@@ -583,7 +590,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					if(!show_icon) sprintf(templn, "%s/ICON2.PNG", param); show_icon = file_exists(templn);     // ps3_extra folder
 					if(!show_icon)
 					{
-						char *p = strchr(param + 18, '/'); if(p) p[0] = NULL;
+						char *p = strchr(param + 18, '/'); if(p) *p = NULL;
 						sprintf(templn, "%s/PS3_GAME/ICON0.PNG", param); show_icon = file_exists(templn);       // dev_bdvd or jb folder
 						if(!show_icon) sprintf(templn, "%s/ICON0.PNG", param); show_icon = file_exists(templn); // game dir
 					}
@@ -650,7 +657,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 			///////////
 			char *slash = strchr(param + 1, '/');
-			if(slash) slash[0] = NULL;
+			if(slash) *slash = NULL;
 
 			sprintf(templn, "<hr>"
 							"<b>" HTML_URL ":", param, param);
@@ -718,3 +725,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	}
 	return true;
 }
+
+#undef ext5
+#undef ext8
+#undef ext13

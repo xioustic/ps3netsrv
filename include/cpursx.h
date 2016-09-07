@@ -97,7 +97,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
 			if(file_exists(path)==false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
 
-			getTitleID(path, app_ver, GET_VERSION); if(app_ver[0] == '0') app_ver[0]='v'; if(strstr(_game_Title, app_ver)) app_ver[0] = NULL;
+			getTitleID(path, app_ver, GET_VERSION); if(*app_ver == '0') *app_ver='v'; if(strstr(_game_Title, app_ver)) *app_ver = NULL;
 
 			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); buffer += concat(buffer, templn);
 
@@ -152,7 +152,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-	char max_temp1[128], max_temp2[64]; max_temp2[0] = NULL;
+	char max_temp1[128], max_temp2[64]; *max_temp2 = NULL;
 
 	if(fan_ps2_mode)
 	{
@@ -168,7 +168,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	else
 		sprintf(max_temp1, " <small>[FAN: %i%% %s]</small>", webman_config->manu, STR_MANUAL);
 
-	templn[0] = NULL;
+	*templn = NULL;
 
 #ifndef LITE_EDITION
 	for(u8 d = 1; d < 7; d++)

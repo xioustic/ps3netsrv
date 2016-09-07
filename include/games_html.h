@@ -485,7 +485,7 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 	else
 		get_name(templn, entry_name, NO_EXT);
 
-	return 0;
+	return CELL_OK;
 }
 
 #ifdef COBRA_ONLY
@@ -506,7 +506,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		//if(!strstr(param, "/GAME")) return FAILED;
 	}
 
-	icon[0] = tempID[0] = NULL;
+	*icon = *tempID = NULL;
 
 
 	if(IS_PS3_TYPE) //PS3 games only (0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video")
@@ -566,7 +566,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 
 	if(SHOW_COVERS_OR_ICON0 && (NO_ICON || (webman_config->nocov == SHOW_ICON0))) {get_name(tempstr, data[v3_entry].name, GET_WMTMP); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
 
-	return 0;
+	return CELL_OK;
 }
  #endif //#ifndef LITE_EDITION
 #endif //#ifdef COBRA_ONLY
@@ -639,7 +639,7 @@ static int check_drive(u8 f0)
 	if(IS_NET) return FAILED; // is_net (nonCobra)
 #endif
 
-	return 0;
+	return CELL_OK;
 }
 
 static int check_content(u8 f1)
@@ -651,7 +651,7 @@ static int check_content(u8 f1)
 	if( (webman_config->cmask & PS1) && IS_PSX_FOLDER ) return FAILED;
 	if( (webman_config->cmask & PSP) && IS_PSP_FOLDER ) return FAILED;
 
-	return 0;
+	return CELL_OK;
 }
 
 static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, bool mobile_mode, bool auto_mount)

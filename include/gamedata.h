@@ -80,7 +80,8 @@ static int set_gamedata_status(u8 status, bool do_mount)
 		mount_with_mm(gamei_path, MOUNT_EXT_GDATA);
 #endif
 	}
-	return 0;
+
+	return CELL_OK;
 }
 
 #endif //#ifdef EXT_GDATA

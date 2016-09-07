@@ -61,7 +61,7 @@ static int32_t unregister_ldd_controller(void)
 	return(CELL_PAD_OK);
 }
 
-static void parse_pad_command(char *param, u8 is_combo)
+static void parse_pad_command(const char *param, u8 is_combo)
 {
 	register_ldd_controller();
 

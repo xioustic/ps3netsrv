@@ -95,13 +95,6 @@ static void saveBMP(char *path, bool notify_bmp)
 	int fd;
 	if(IS_INGAME || cellFsOpen(path, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, NULL, 0) != CELL_FS_SUCCEEDED) { BEEP3 ; return;}
 
-	{ BEEP2 }
-
-	rsx_fifo_pause(1);
-
-	// initialize graphic
-	init_graphic();
-
 	// alloc buffers
 	sys_memory_container_t mc_app = (sys_memory_container_t)-1;
 	mc_app = vsh_memory_container_by_id(1);
@@ -112,7 +105,14 @@ static void saveBMP(char *path, bool notify_bmp)
 	// max bmp buffer size = 1920 pixel * 3(byte per pixel) = 5760 byte = 6 KB
 
 	sys_addr_t sys_mem = NULL;
-	sys_memory_allocate_from_container(mem_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem);
+	if(sys_memory_allocate_from_container(mem_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem) != CELL_OK) return;
+
+	{ BEEP2 }
+
+	rsx_fifo_pause(1);
+
+	// initialize graphic
+	init_graphic();
 
 	// calc buffer sizes
 	uint32_t line_frame_size = w * 4;

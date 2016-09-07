@@ -843,7 +843,7 @@ int printf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
 	{
 		int fd;
 
-		if (cellFsOpen("/dev_usb000/debug_log.txt", CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, NULL, 0) == 0)
+		if (cellFsOpen("/dev_usb000/debug_log.txt", CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			debug_fd = fd;
 		}

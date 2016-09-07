@@ -1,3 +1,15 @@
+#ifdef PKG_HANDLER
+typedef struct {
+   u32 magic; // 0x53434500//
+   u32 version;
+   u16 sdk_type;
+   u16 SCE_header_type;
+   u32 meta_offset;
+   u64 size; // size of sce_hdr + sizeof meta_hdr
+   u64 pkg_size;
+ } _pkg_header;
+#endif
+
 static void poll_thread(uint64_t poll)
 {
 	/*u8 d0[157];
@@ -156,6 +168,7 @@ static void poll_thread(uint64_t poll)
 					stall++;
 		}
 
+		// poll combos for 3 seconds
 		#include "combos.h"
 
 		// Overheat control (over 83°C)
@@ -186,10 +199,10 @@ static void poll_thread(uint64_t poll)
 				}
 			}
 		}
-		if(to>40) to=0;
+		if(to > 40) to = 0;
 
 		// detect aprox. time when a game is launched
-		if((sec % 10) == 0) {if(IS_ON_XMB) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);}
+		if((sec % 10) == 0) {if(IS_ON_XMB) gTick = rTick; else if(gTick.tick == rTick.tick) cellRtcGetCurrentTick(&gTick);}
 
 		// USB Polling
 		if(poll == 0 && sec >= 120) // check USB drives each 120 seconds
@@ -199,8 +212,8 @@ static void poll_thread(uint64_t poll)
 
 			for(u8 i = 0; i < 6; i++)
 			{
-				f0 = (u8)val(drives[i] + 8);
-				if(sys_storage_open(((f0 < 6) ? USB_MASS_STORAGE_1(f0) : USB_MASS_STORAGE_2(f0)), 0, &usb_handle, 0)==0)
+				f0 = (u8)val(drives[i + 1] + 8);
+				if(sys_storage_open(((f0 < 6) ? USB_MASS_STORAGE_1(f0) : USB_MASS_STORAGE_2(f0)), 0, &usb_handle, 0) == CELL_OK)
 				{
 					sys_storage_read(usb_handle, 0, to, 1, tmp, &r, 0);
 					sys_storage_close(usb_handle);
@@ -211,9 +224,54 @@ static void poll_thread(uint64_t poll)
 		}
 		sec+=step;
 
+#ifdef PKG_HANDLER
+		// Poll downloaded pkg files
+		if((pkg_dcount > 0) && (sec & 1) && (gTick.tick == rTick.tick))
+		{
+			CellFsDirent entry; u64 read_e; int fd; u16 pkg_count = 0;
+
+			if(cellFsOpendir(TEMP_DOWNLOAD_PATH, &fd) == CELL_FS_SUCCEEDED)
+			{
+				while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+				{
+					if(!extcmp(entry.d_name, ".pkg", 4))
+					{
+						int fdl = 0; char *dlfile = msg; _pkg_header pkg_header;
+						sprintf(dlfile, "%s%s", TEMP_DOWNLOAD_PATH, entry.d_name); pkg_count++;
+						cellFsChmod(dlfile, MODE);
+
+						if(cellFsOpen(dlfile, CELL_FS_O_RDONLY, &fdl, NULL, 0) == CELL_FS_SUCCEEDED)
+						{
+							if(cellFsRead(fdl, (void *)&pkg_header, sizeof(pkg_header), NULL) == CELL_FS_SUCCEEDED)
+							{
+								cellFsClose(fdl);
+
+								struct CellFsStat s;
+								if(cellFsStat(dlfile, &s) == CELL_FS_SUCCEEDED && pkg_header.pkg_size == s.st_size)
+								{
+									char pkgfile[MAX_PATH_LEN];
+									sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dlfile + strlen(TEMP_DOWNLOAD_PATH));
+									cellFsRename(dlfile, pkgfile);
+									pkg_dcount--;
+
+									if(pkg_auto_install) installPKG(pkgfile, msg);
+								}
+							}
+							else
+								cellFsClose(fdl);
+						}
+					}
+				}
+				cellFsClosedir(fd);
+
+				if(pkg_count == 0) pkg_auto_install = pkg_dcount = 0; // disable polling if no pkg files were found (e.g. changed to background download)
+			}
+		}
+#endif
+
 #ifdef WM_REQUEST
 		// Poll requests via local file
-		if((sec & 1) && (gTick.tick>rTick.tick)) continue; // slowdown polling if ingame
+		if((sec & 1) && (gTick.tick > rTick.tick)) continue; // slowdown polling if ingame
 		if(file_exists(WMREQUEST_FILE))
 		{
 			loading_html++;

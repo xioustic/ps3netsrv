@@ -25,7 +25,7 @@ static void add_log(const char *fmt, const char *value1, int value2)
 	//console_write(buffer);
 	int fd;
 
-	if(cellFsOpen("/dev_hdd0/webMAN.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
+	if(cellFsOpen("/dev_hdd0/webMAN.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		int size = strlen(buffer);
 		cellFsWrite(fd, buffer, size, NULL);
@@ -115,7 +115,7 @@ static int concat(char *file1, char *file2)
 
 		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
-		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
 			// append
 			if(cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_RDWR | CELL_FS_O_APPEND, &fd2, 0, 0) == CELL_FS_SUCCEEDED)
@@ -200,7 +200,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 	{
 		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
-		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)==0)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
 			uint64_t size = buf.st_size, part_size = buf.st_size; u8 part = 0;
 			if(maxbytes > 0 && size > maxbytes) size = maxbytes;
@@ -365,7 +365,7 @@ int waitfor(const char *path, uint8_t timeout)
 	struct CellFsStat s;
 	for(uint8_t n = 0; n < (timeout*5); n++)
 	{
-		if(path[0]!=NULL && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return 0;
+		if(*path && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return 0;
 		sys_timer_usleep(200000); if(!working) break;
 	}
 	return FAILED;
@@ -399,7 +399,7 @@ static bool do_custom_combo(const char *filename)
  #if defined(WM_CUSTOM_COMBO)
 	char combo_file[MAX_PATH_LEN];
 
-	if(filename[0] == '/')
+	if(*filename == '/')
 		sprintf(combo_file, "%s", filename);
 	else
 		sprintf(combo_file, "%s%s", WM_CUSTOM_COMBO, filename); // use default path

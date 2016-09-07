@@ -404,7 +404,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 		}
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 int last_index = -1;
@@ -478,7 +478,7 @@ static int process_read_file_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t siz
 		}
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 #ifdef RAWISO_PSX_MULTI
@@ -562,11 +562,11 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 			{
 				if(ret == (int) 0x8001002B) return (int) 0x8001000A; // EBUSY
 
-				return 0;
+				return CELL_OK;
 			}
 			else if(readsize != p)
 			{
-				if((offset + readsize) < discsize) return 0;
+				if((offset + readsize) < discsize) return CELL_OK;
 			}
 		}
 		else
@@ -582,7 +582,7 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 		lba++;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 #endif
 
@@ -622,7 +622,7 @@ static int process_read_cd_2048_cmd_iso(uint8_t *buf, uint32_t start_sector, uin
 		start_sector++;
 	}
 
-	return 0;
+	return CELL_OK;
 }
 
 static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t remaining)
@@ -661,7 +661,7 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 
 				if(remaining == copy_size)
 				{
-					return 0;
+					return CELL_OK;
 				}
 
 				remaining -= copy_size;
@@ -688,7 +688,7 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 		sys_addr_t addr;
 
 		int ret = sys_memory_allocate(_192KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr);
-		if(ret != 0)
+		if(ret != CELL_OK)
 		{
 			//DPRINTF("sys_memory_allocate failed: %x\n", ret);
 			return ret;
@@ -702,7 +702,8 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 
 	memcpy(buf, cd_cache, remaining * CD_SECTOR_SIZE_2352);
 	cached_cd_sector = sector;
-	return 0;
+
+	return CELL_OK;
 }
 
 #ifdef RAWISO_PSX_MULTI
@@ -794,7 +795,7 @@ static int ejected_disc(void)
 				counter = 0;
 
 				ejected = 1;
-				return 0;
+				return CELL_OK;
 			}
 			else
 				return FAILED;
@@ -827,7 +828,7 @@ static int ejected_disc(void)
 		if(!ejected)
 		{
 			ejected = 1;
-			return 0;
+			return CELL_OK;
 		}
 		else
 			return FAILED;

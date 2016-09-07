@@ -319,15 +319,15 @@ static int sys_get_version2(uint16_t *version)
 
 static int is_cobra_based(void)
 {
-    uint32_t version = 0x99999999;
+	uint32_t version = 0x99999999;
 
-    if (sys_get_version(&version) < 0)
-        return 0;
+	if (sys_get_version(&version) < 0)
+		return 0;
 
-    if (version != 0x99999999) // If value changed, it is cobra
-        return 1;
+	if (version != 0x99999999) // If value changed, it is cobra
+		return 1;
 
-    return 0;
+	return 0;
 }
 
 static int lv2_get_platform_info(struct platform_info *info)

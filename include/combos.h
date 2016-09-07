@@ -114,7 +114,7 @@
 #ifdef EXT_GDATA
 									set_gamedata_status(extgd^1, true); // SELECT+SQUARE
 #endif
-									sys_timer_sleep(2);
+									n = 0;
 									break;
 								}
 							}
@@ -162,7 +162,9 @@
 
 							sprintf(msg, "PS2 Classic %s", classic_ps2_enabled ? STR_DISABLED : STR_ENABLED);
 							show_msg(msg);
-							sys_timer_sleep(3);
+
+							n = 0;
+							break;
 						}
 						else
 						if( !(webman_config->combo2 & PS2SWITCH)
@@ -225,7 +227,7 @@
 									show_rec_format(msg);
 								}
 								else
-									{memset(msg, 0, 256); toggle_video_rec(msg); sys_timer_sleep(2);}
+									{memset(msg, 0, 256); toggle_video_rec(msg); n = 0;}
 
 								break;
 							}
@@ -233,7 +235,7 @@
 
 #ifdef XMB_SCREENSHOT
 							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_L2) && IS_ON_XMB)
-								{memset(msg, 0, 256); saveBMP(msg, true); sys_timer_sleep(2);} // L2 + R2 + SELECT + START
+								{memset(msg, 0, 256); saveBMP(msg, true); n = 0; break;} // L2 + R2 + SELECT + START
 							else
 #endif
 							{
@@ -242,18 +244,16 @@
 								if(show_persistent_popup >= PERSIST) {BEEP2; show_persistent_popup = 0;}
 show_persistent_popup:
 								/////////////////////////////
-#ifdef COPY_PS3
-								if(copy_in_progress)
+#if defined(FIX_GAME) || defined(COPY_PS3)
+								if(copy_in_progress || fix_in_progress)
 								{
-									sprintf(msg, "%s %s (%i %s)", STR_COPYING, current_file, copied_count, STR_FILES);
-									show_msg(msg);
-									sys_timer_sleep(2);
-									if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_L2) ) break;
-								}
-								else
-								if(fix_in_progress)
-								{
-									sprintf(msg, "%s %s", STR_FIXING, current_file);
+ #ifdef FIX_GAME
+									if(fix_in_progress)
+										sprintf(msg, "%s %s", STR_FIXING, current_file);
+									else
+ #endif
+										sprintf(msg, "%s %s (%i %s)", STR_COPYING, current_file, copied_count, STR_FILES);
+
 									show_msg(msg);
 									sys_timer_sleep(2);
 									if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_L2) ) break;
@@ -329,7 +329,9 @@ show_popup:
 								{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
 								show_msg(msg);
-								sys_timer_sleep(2);
+
+								n = 0;
+								break;
 							}
 						}
 						else
@@ -360,7 +362,9 @@ show_popup:
 								}
 								save_settings();
 								show_msg(msg);
-								sys_timer_sleep(2);
+
+								n = 0;
+								break;
 							}
 						}
 						else
@@ -390,7 +394,9 @@ show_popup:
 								}
 								save_settings();
 								show_msg(msg);
-								sys_timer_sleep(2);
+
+								n = 0;
+								break;
 							}
 						}
 						else
@@ -408,7 +414,9 @@ show_popup:
 
 								save_settings();
 								show_msg(msg);
-								sys_timer_sleep(2);
+
+								n = 0;
+								break;
 							}
 						}
 						else
@@ -426,7 +434,9 @@ show_popup:
 
 								save_settings();
 								show_msg(msg);
-								sys_timer_sleep(2);
+
+								n = 0;
+								break;
 							}
 						}
 						else
@@ -439,8 +449,11 @@ show_popup:
 							{
 								led(GREEN, BLINK_FAST);
 								mount_with_mm((char*)"_prev", 1);
-								sys_timer_sleep(3);
+								sys_timer_sleep(2);
 								led(GREEN, ON);
+
+								n = 10;
+								break;
 							}
 						}
 						else
@@ -453,8 +466,11 @@ show_popup:
 							{
  								led(GREEN, BLINK_FAST);
 								mount_with_mm((char*)"_next", 1);
-								sys_timer_sleep(3);
+								sys_timer_sleep(2);
 								led(GREEN, ON);
+
+								n = 10;
+								break;
 							}
 						}
 #ifdef PKG_HANDLER
@@ -466,6 +482,9 @@ show_popup:
 							else
 #endif
 							installPKG_combo(msg);
+
+							n = 0;
+							break;
 						}
 #endif
 						else
@@ -476,6 +495,9 @@ show_popup:
 							else
 #endif
 								do_umount(true);
+
+							n = 0;
+							break;
 						}
 #ifdef WM_CUSTOM_COMBO
 						else
@@ -528,7 +550,8 @@ show_popup:
 						else if(!(webman_config->combo & DISABLEFC) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_START) ) // L3+R2+START (enable/disable fancontrol)
 						{
 							enable_fan_control(2, msg);
-							sys_timer_sleep(2);
+
+							n = 0;
 							break;
 						}
 					}
@@ -584,7 +607,7 @@ show_popup:
 #endif
 							}
 						}
-                        else
+						else
 						if((copy_in_progress || fix_in_progress) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_CIRCLE)) // R2+O Abort copy process
 						{
 							fix_aborted = copy_aborted =true;
@@ -638,7 +661,7 @@ show_popup:
 							if(do_custom_combo("l2_r2") == false) continue;
 						}
 #endif
-						sys_timer_sleep(3);
+						n = 0;
 						break;
 					}
 					else
@@ -706,4 +729,4 @@ reboot:
 			}
 		}
 
-		if(n<10) sys_timer_usleep((11-n)*150000);
+		if(n < 10) sys_timer_usleep((12-n) * 150000);

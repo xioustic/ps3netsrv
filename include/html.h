@@ -54,7 +54,8 @@
 
 #define open_browser			vshmain_AE35CF2D
 
-#define IS(a, b)				(strcmp(a, b) == 0)		// compare two strings. returns true if are identical
+#define  IS(a, b)				(strcmp(a, b) == 0)		// compare two strings. returns true if they are identical
+#define _IS(a, b)				(strcasecmp(a, b) == 0)	// compare two strings. returns true if they are identical (case insensitive)
 
 int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
@@ -244,7 +245,7 @@ static size_t add_check_box(const char *name, const char *value, const char *lab
 	char *p = strstr(clabel, AUTOBOOT_PATH);
 	if(p != NULL)
 	{
-		p[0] = NULL;
+		*p = NULL;
 		sprintf(templn, HTML_INPUT("autop", "%s", "255", "40"), webman_config->autoboot_path);
 		strcat(clabel, templn);
 		p = strstr(label, AUTOBOOT_PATH) + strlen(AUTOBOOT_PATH);
@@ -377,7 +378,7 @@ static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 	else
 		{strcat(header, "text/html"); set_base_path = true;}
 
-	if(set_base_path && param[0]=='/' && (param[1] == 'n' || param[1] == 'd' || param[1] == 'a')) {strcpy(html_base_path, param); if((param[1] != 'n') && !isDir(param)) flen = strrchr(html_base_path, '/') - html_base_path; html_base_path[flen] = NULL; }
+	if(set_base_path && param[0] == '/' && (param[1] == 'n' || param[1] == 'd' || param[1] == 'a')) {strcpy(html_base_path, param); if((param[1] != 'n') && !isDir(param)) flen = strrchr(html_base_path, '/') - html_base_path; html_base_path[flen] = NULL; }
 
 	strcat(header, "\r\n");
 

@@ -63,7 +63,7 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 
 		READ_NEXT_SFO_FIELD()
 	}
 
-	if(webman_config->tid && (titleID[8] != NULL) && (titleID[0]=='B' || titleID[0]=='N'))
+	if(webman_config->tid && (titleID[8] != NULL) && (*titleID == 'B' || *titleID == 'N'))
 	{
 		strcat(title, " ["); strcat(title, titleID); strcat(title, "]");
 	}
@@ -203,7 +203,7 @@ static void fix_game_folder(char *path)
 		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(fix_aborted) break;
-			if(dir.d_name[0]=='.') continue;
+			if(dir.d_name[0] == '.') continue;
 
 			sprintf(fix_game_path[plevel], "%s/%s", path, dir.d_name);
 
@@ -431,7 +431,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 			// -- get TitleID from PARAM.SFO
 			char filename[MAX_PATH_LEN]; int fs;
 
-			char *p = strstr(game_path, "/PS3_GAME"); if(!p) p = strstr(game_path, "/USRDIR"); if(p) p[0] = NULL;
+			char *p = strstr(game_path, "/PS3_GAME"); if(!p) p = strstr(game_path, "/USRDIR"); if(p) *p = NULL;
 
 			if(islike(game_path, "/net") || strstr(game_path, ".ntfs["))
 				{get_name(filename, strrchr(game_path, '/') + 1, GET_WMTMP); strcat(filename, ".SFO\0");}

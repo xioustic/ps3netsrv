@@ -20,10 +20,14 @@ static char pkg_path[MAX_PKGPATH_LEN];
 static wchar_t pkg_durl[MAX_URL_LEN];
 static wchar_t pkg_dpath[MAX_DLPATH_LEN];
 
+static u16 pkg_dcount = 0;
+static u8 pkg_auto_install = 0;
+
 static bool wmget = false;
 
 #define INT_HDD_ROOT_PATH		"/dev_hdd0/"
 #define DEFAULT_PKG_PATH		"/dev_hdd0/packages/"
+#define TEMP_DOWNLOAD_PATH		"/dev_hdd0/tmp/downloader/"
 
 static int LoadPluginById(int id, void *handler)
 {
@@ -61,6 +65,19 @@ static void unload_web_plugins(void)
 		UnloadPluginById(0x1B, (void *)unloadSysPluginCallback);
 		sys_timer_usleep(5);
 	}
+
+#ifdef VIRTUAL_PAD
+	if(IS_ON_XMB)
+	{
+		int enter_button = 0;
+		xsetting_0AF1F161()->GetEnterButtonAssign(&enter_button);
+
+		if(enter_button)
+			parse_pad_command("circle", 0);
+		else
+			parse_pad_command("cross", 0);
+	}
+#endif
 }
 
 static void downloadPKG_thread(void)
@@ -83,7 +100,7 @@ static void installPKG_thread(void)
 	game_ext_interface->installPKG(pkg_path);
 }
 
-static int download_file(char *param, char *msg)
+static int download_file(const char *param, char *msg)
 {
 	int ret = FAILED;
 
@@ -116,7 +133,7 @@ static int download_file(char *param, char *msg)
 	sprintf(msg_durl,  "ERROR: Invalid URL");
 	sprintf(msg_dpath, "Download canceled");
 
-	char *param2 = param + 13;
+	char *param2 = param; //(char*)param + 13;
 
 	if(islike(param2, "?to="))  //Use of the optional parameter
 	{
@@ -158,21 +175,24 @@ static int download_file(char *param, char *msg)
 
 	if(conv_num_durl > 0)
 	{
-		if((pdpath_len > 0) && (pdpath_len < MAX_DLPATH_LEN) && (isDir(pdpath) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED))
-		{
-			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)pdpath, pdpath_len + 1);
-			sprintf(msg_dpath, "To: %s", pdpath);
-		}
+		if((pdpath_len > 0) && (pdpath_len < MAX_DLPATH_LEN) && (isDir(pdpath) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)) ;
+
 		else if(isDir(DEFAULT_PKG_PATH) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
 		{
-			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, DEFAULT_PKG_PATH, strlen(DEFAULT_PKG_PATH) + 1);
-			sprintf(msg_dpath, "To: %s", DEFAULT_PKG_PATH);
+			pdpath_len = sprintf(pdpath, DEFAULT_PKG_PATH);
 		}
 		else
 		{
-			conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, INT_HDD_ROOT_PATH, strlen(INT_HDD_ROOT_PATH) + 1);
-			sprintf(msg_dpath, "To: %s", INT_HDD_ROOT_PATH);
+			pdpath_len = sprintf(pdpath, INT_HDD_ROOT_PATH);
 		}
+
+		sprintf(msg_dpath, "To: %s", pdpath, pdpath_len);
+		if(IS(pdpath, DEFAULT_PKG_PATH) && (strstr(pdurl, ".pkg") != NULL))
+		{
+			pdpath_len = sprintf(pdpath, TEMP_DOWNLOAD_PATH); pkg_dcount++;
+		}
+
+		conv_num_dpath = mbstowcs((wchar_t *)pkg_dpath, (const char *)pdpath, pdpath_len + 1);
 
 		if(conv_num_dpath > 0)
 		{
@@ -181,7 +201,7 @@ static int download_file(char *param, char *msg)
 			sprintf(msg_durl, "%s%s", "Downloading ", pdurl);
 
 			LoadPluginById(0x29, (void *)downloadPKG_thread);
-			ret = 0;
+			ret = CELL_OK;
 		}
 		else
 			sprintf(msg_durl, "ERROR: Setting storage location");
@@ -206,7 +226,16 @@ static int installPKG(const char *pkgpath, char *msg)
 	if (pkg_path_len < MAX_PKGPATH_LEN)
 	{
 		if(islike(pkgpath, "/net"))
-			cache_file_to_hdd((char*)pkgpath, pkg_path, "/packages", msg);
+		{
+			cache_file_to_hdd((char*)pkgpath, pkg_path, "/tmp/downloader", msg); pkg_dcount++;
+		}
+		else
+		if(*pkgpath == '?')
+		{
+			pkg_auto_install = 1;
+			download_file(pkgpath, msg);
+			ret = CELL_OK;
+		}
 		else
 			snprintf(pkg_path, MAX_PKGPATH_LEN, "%s", pkgpath);
 
@@ -219,12 +248,12 @@ static int installPKG(const char *pkgpath, char *msg)
 				sprintf(msg, "%s%s", "Installing ", pkg_path);
 
 				LoadPluginById(0x16, (void *)installPKG_thread);
-				ret = 0;
+				ret = CELL_OK;
 			}
 		}
 	}
 
-	if(ret) sprintf(msg, "ERROR: %s", STR_ERROR, pkgpath);
+	if(ret) sprintf(msg, "ERROR: %s", pkgpath);
 	return ret;
 }
 
