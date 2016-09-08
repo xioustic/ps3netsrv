@@ -2162,7 +2162,14 @@ static void handleclient(u64 conn_s_p)
 					if(islike(param, "/refresh.ps3") && refreshing_xml == 0)
 					{
 						refresh_xml(templn);
+ #ifndef ENGLISH_ONLY
+						char STR_XMLRF[280];
 
+						sprintf(STR_XMLRF, "Game list refreshed (<a href=\"%s\">mygames.xml</a>).%s", MY_GAMES_XML, "<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.");
+
+						language("STR_XMLRF", STR_XMLRF);
+						language("/CLOSEFILE", NULL);
+ #endif
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
 					}
 					else

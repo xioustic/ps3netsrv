@@ -824,6 +824,37 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif // #ifdef COPY_PS3
 
 			{
+#ifndef ENGLISH_ONLY
+				char STR_GAMETOM[48];//		= "Game to mount";
+				char STR_GAMELOADED[288];//	= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
+				char STR_PSPLOADED[232]; //	= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr>";
+				char STR_PS2LOADED[240]; //	= "Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr>";
+
+				char STR_MOVIETOM[48];//	= "Movie to mount";
+				char STR_MOVIELOADED[272];//= "Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie.";
+
+				sprintf(STR_PSPLOADED,   "Game %s%s%s</b>.<hr>",
+										 "loaded successfully. Start the ", "game using <b>", "PSP Launcher");
+				sprintf(STR_PS2LOADED,   "Game %s%s%s</b>.<hr>",
+										 "loaded successfully. Start the ", "game using <b>", "PS2 Classic Launcher");
+				sprintf(STR_GAMELOADED,  "Game %s%s%sgame.",
+										 "loaded successfully. Start the ", "game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry", ".</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the ");
+				sprintf(STR_MOVIELOADED, "Movie %s%s%smovie.",
+										 "loaded successfully. Start the ", "movie from the disc icon<br>under the Video column"                , ".</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the ");
+
+				sprintf(STR_GAMETOM,     "Game to mount");
+				sprintf(STR_MOVIETOM,    "Movie to mount");
+
+				language("STR_GAMETOM", STR_GAMETOM);
+				language("STR_GAMELOADED", STR_GAMELOADED);
+				language("STR_PSPLOADED", STR_PSPLOADED);
+				language("STR_PS2LOADED", STR_PS2LOADED);
+
+				language("STR_MOVIETOM", STR_MOVIETOM);
+				language("STR_MOVIELOADED", STR_MOVIELOADED);
+
+				language("/CLOSEFILE", NULL);
+#endif
 				bool is_movie = strstr(param, "/BDISO") || strstr(param, "/DVDISO") || !extcmp(param, ".ntfs[BDISO]", 12) || !extcmp(param, ".ntfs[DVDISO]", 13);
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
 

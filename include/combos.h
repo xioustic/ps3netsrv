@@ -133,6 +133,18 @@
 							(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)) // SELECT+R3+L2+R2
 							)
 						{
+#ifndef ENGLISH_ONLY
+							char STR_RMVWMCFG[96];//		= "webMAN config reset in progress...";
+							char STR_RMVWMCFGOK[112];//	= "Done! Restart within 3 seconds";
+
+							sprintf(STR_RMVWMCFG,   "webMAN config reset in progress...");
+							sprintf(STR_RMVWMCFGOK, "Done! Restart within 3 seconds");
+
+							language("STR_RMVWMCFG", STR_RMVWMCFG);
+							language("STR_RMVWMCFGOK", STR_RMVWMCFGOK);
+
+							language("/CLOSEFILE", NULL);
+#endif
 							cellFsUnlink(WMCONFIG);
 							{ BEEP1 }
 							show_msg((char*)STR_RMVWMCFG);
@@ -309,12 +321,14 @@ show_popup:
 											 "Firmware : %s %s\n"
 											 "IP: %s  %s%s",
 											 t1, t2, (int)(((int)speed*100)/255),
-											 bb?"Play":"Startup", dd, hh, mm, ss, smax,
+											 bb ? "Play":"Startup", dd, hh, mm, ss, smax,
 											 fw_version, cfw_info, ip, net_type, syscalls_removed ? "  [noSC]" : "");
 
-								sprintf(msg, "%s\n%s: %'i %s\n"
-											 "%s: %'i %s\n", tmp,
-											 STR_STORAGE, (int)(get_free_space("/dev_hdd0")>>20), STR_MBFREE,
+								int hdd_free = (int)(get_free_space("/dev_hdd0")>>20);
+
+								sprintf(msg, "%s\n%s: %i %s\n"
+											 "%s: %i %s\n", tmp,
+											 STR_STORAGE, hdd_free, STR_MBFREE,
 											 STR_MEMORY, meminfo.avail>>10, STR_KBFREE);
 
 								if(R2 && (gTick.tick>rTick.tick))
@@ -329,9 +343,7 @@ show_popup:
 								{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
 								show_msg(msg);
-
-								n = 0;
-								break;
+								sys_timer_sleep(2);
 							}
 						}
 						else

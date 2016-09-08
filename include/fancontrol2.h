@@ -180,8 +180,21 @@ static void poll_thread(uint64_t poll)
 
 			if(t1 > (MAX_TEMPERATURE-2) || t2 > (MAX_TEMPERATURE-2))
 			{
+ #ifndef ENGLISH_ONLY
+				char STR_OVERHEAT[80];//		= "System overheat warning!";
+				char STR_OVERHEAT2[120];//	= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
+ #endif
 				if(!webman_config->warn)
 				{
+ #ifndef ENGLISH_ONLY
+					sprintf(STR_OVERHEAT,     "System overheat warning!");
+					sprintf(STR_OVERHEAT2,    "  OVERHEAT DANGER!\nFAN SPEED INCREASED!");
+
+					language("STR_OVERHEAT", STR_OVERHEAT);
+					language("STR_OVERHEAT2", STR_OVERHEAT2);
+
+					language("/CLOSEFILE", NULL);
+ #endif
 					sprintf(msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
 					show_msg(msg);
 					sys_timer_sleep(2);

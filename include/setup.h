@@ -363,6 +363,185 @@ static void setup_parse_settings(char *param)
 
 static void setup_form(char *buffer, char *templn)
 {
+ #ifndef ENGLISH_ONLY
+	char STR_SCAN1[48];//		= "Scan these devices";
+	char STR_PSPL[40];//			= "Show PSP Launcher";
+	char STR_PS2L[48];//			= "Show PS2 Classic Launcher";
+	char STR_RXVID[64];//		= "Show Video sub-folder";
+	char STR_LPG[128];//			= "Load last-played game on startup";
+	char STR_AUTOB[96];//		= "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup";
+	char STR_DELAYAB[168];//		= "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)";
+	char STR_DEVBL[112];//		= "Enable /dev_blind (writable /dev_flash) on startup";
+	char STR_CONTSCAN[120];//	= "Disable content scan on startup";
+	char STR_USBPOLL[88];//		= "Disable USB polling";
+	char STR_FTPSVC[64];//		= "Disable FTP service";
+	char STR_FIXGAME[56];//		= "Disable auto-fix game";
+	char STR_COMBOS[88];//		= "Disable all PAD shortcuts";
+	char STR_MMCOVERS[72];//		= "Disable multiMAN covers";
+	char STR_ACCESS[88];//		= "Disable remote access to FTP/WWW services";
+	char STR_NOSETUP[120];//		= "Disable webMAN Setup entry in \"webMAN Games\"";
+	char STR_NOSPOOF[96];//		= "Disable firmware version spoofing";
+	char STR_NOGRP[104];//		= "Disable grouping of content in \"webMAN Games\"";
+	char STR_NOWMDN[112];//		= "Disable startup notification of WebMAN on the XMB";
+  #ifdef NOSINGSTAR
+	static char STR_NOSINGSTAR[48];//	= "Remove SingStar icon";
+  #endif
+	char STR_AUTO_PLAY[24];//	= "Auto-Play";
+	char STR_RESET_USB[48];//	= "Disable Reset USB Bus";
+	char STR_TITLEID[128];//		= "Include the ID as part of the title of the game";
+	char STR_FANCTRL[96];//		= "Enable dynamic fan control";
+	char STR_NOWARN[96];//		= "Disable temperature warnings";
+	char STR_AUTOAT[32];//		= "Auto at";
+	char STR_LOWEST[24];//		= "Lowest";
+	char STR_FANSPEED[48];//		= "fan speed";
+
+	char STR_PS2EMU[32];//		= "PS2 Emulator";
+	char STR_LANGAMES[96];//		= "Scan for LAN games/videos";
+	char STR_ANYUSB[88];//		= "Wait for any USB device to be ready";
+	char STR_ADDUSB[136];//		= "Wait additionally for each selected USB device to be ready";
+	char STR_SPOOFID[112];//		= "Change idps and psid in lv2 memory at system startup";
+	char STR_DELCFWSYS[144];//	= "Disable CFW syscalls and delete history files at system startup";
+	char STR_MEMUSAGE[80];//		= "Plugin memory usage";
+	char STR_PLANG[40];//		= "Plugin language";
+	char STR_PROFILE[16];//		= "Profile";
+	char STR_DEFAULT[32];//		= "Default";
+	char STR_COMBOS2[80];//		= "XMB/In-Game PAD SHORTCUTS";
+	char STR_FAILSAFE[40];//		= "FAIL SAFE";
+	char STR_SHOWTEMP[56];//		= "SHOW TEMP";
+	char STR_SHOWIDPS[24];//		= "SHOW IDPS";
+	char STR_PREVGAME[64];//		= "PREV GAME";
+	char STR_NEXTGAME[56];//		= "NEXT GAME";
+	char STR_SHUTDOWN2[32];//	= "SHUTDOWN ";
+	char STR_RESTART2[32];//		= "RESTART&nbsp; ";
+#ifdef REMOVE_SYSCALLS
+	char STR_DELCFWSYS2[48];//	= "DEL CFW SYSCALLS";
+#endif
+	char STR_UNLOADWM[64];//		= "UNLOAD WM";
+	char STR_FANCTRL2[48];//		= "CTRL FAN";
+	char STR_FANCTRL4[72];//		= "CTRL DYN FAN";
+	char STR_FANCTRL5[88];//		= "CTRL MIN FAN";
+	char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
+	char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
+
+	sprintf(STR_SCAN1,       "Scan these devices");
+	sprintf(STR_PSPL,        "Show PSP Launcher");
+	sprintf(STR_PS2L,        "Show PS2 Classic Launcher");
+	sprintf(STR_RXVID,       "Show Video sub-folder");
+	sprintf(STR_LPG,         "Load last-played game on startup");
+	sprintf(STR_AUTOB,       "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup");
+	sprintf(STR_DELAYAB,     "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)");
+	sprintf(STR_DEVBL,       "Enable /dev_blind (writable /dev_flash) on startup");
+	sprintf(STR_CONTSCAN,    "Disable content scan on startup");
+	sprintf(STR_USBPOLL,     "Disable USB polling");
+	sprintf(STR_FTPSVC,      "Disable FTP service");
+	sprintf(STR_FIXGAME,     "Disable auto-fix game");
+	sprintf(STR_COMBOS,      "Disable all PAD shortcuts");
+	sprintf(STR_MMCOVERS,    "Disable multiMAN covers");
+	sprintf(STR_ACCESS,      "Disable remote access to FTP/WWW services");
+	sprintf(STR_NOSETUP,     "Disable webMAN Setup entry in \"webMAN Games\"");
+	sprintf(STR_NOSPOOF,     "Disable firmware version spoofing");
+	sprintf(STR_NOGRP,       "Disable grouping of content in \"webMAN Games\"");
+	sprintf(STR_NOWMDN,      "Disable startup notification of WebMAN on the XMB");
+  #ifdef NOSINGSTAR
+	sprintf(STR_NOSINGSTAR,  "Remove SingStar icon");
+  #endif
+	sprintf(STR_AUTO_PLAY,   "Auto-Play");
+	sprintf(STR_RESET_USB,   "Disable Reset USB Bus");
+	sprintf(STR_TITLEID,     "Include the ID as part of the title of the game");
+	sprintf(STR_FANCTRL,     "Enable dynamic fan control");
+	sprintf(STR_NOWARN,      "Disable temperature warnings");
+	sprintf(STR_AUTOAT,      "Auto at");
+	sprintf(STR_LOWEST,      "Lowest");
+	sprintf(STR_FANSPEED,    "fan speed");
+
+	sprintf(STR_PS2EMU,      "PS2 Emulator");
+	sprintf(STR_LANGAMES,    "Scan for LAN games/videos");
+	sprintf(STR_ANYUSB,      "Wait for any USB device to be ready");
+	sprintf(STR_ADDUSB,      "Wait additionally for each selected USB device to be ready");
+	sprintf(STR_SPOOFID,     "Change idps and psid in lv2 memory at system startup");
+	sprintf(STR_DELCFWSYS,   "Disable CFW syscalls and delete history files at system startup");
+	sprintf(STR_MEMUSAGE,    "Plugin memory usage");
+	sprintf(STR_PLANG,       "Plugin language");
+	sprintf(STR_PROFILE,     "Profile");
+	sprintf(STR_DEFAULT,     "Default");
+	sprintf(STR_COMBOS2,     "XMB/In-Game PAD SHORTCUTS");
+	sprintf(STR_FAILSAFE,    "FAIL SAFE");
+	sprintf(STR_SHOWTEMP,    "SHOW TEMP");
+	sprintf(STR_SHOWIDPS,    "SHOW IDPS");
+	sprintf(STR_PREVGAME,    "PREV GAME");
+	sprintf(STR_NEXTGAME,    "NEXT GAME");
+	sprintf(STR_SHUTDOWN2,   "SHUTDOWN ");
+	sprintf(STR_RESTART2,    "RESTART&nbsp; ");
+#ifdef REMOVE_SYSCALLS
+	sprintf(STR_DELCFWSYS2,  "DEL CFW SYSCALLS");
+#endif
+	sprintf(STR_UNLOADWM,    "UNLOAD WM");
+	sprintf(STR_FANCTRL2,    "CTRL FAN");
+	sprintf(STR_FANCTRL4,    "CTRL DYN FAN");
+	sprintf(STR_FANCTRL5,    "CTRL MIN FAN");
+
+	language("STR_SCAN1", STR_SCAN1);
+	language("STR_PSPL", STR_PSPL);
+	language("STR_PS2L", STR_PS2L);
+	language("STR_RXVID", STR_RXVID);
+	language("STR_LPG", STR_LPG);
+	language("STR_AUTOB", STR_AUTOB);
+	language("STR_DELAYAB", STR_DELAYAB);
+	language("STR_DEVBL", STR_DEVBL);
+	language("STR_CONTSCAN", STR_CONTSCAN);
+	language("STR_USBPOLL", STR_USBPOLL);
+	language("STR_FTPSVC", STR_FTPSVC);
+	language("STR_FIXGAME", STR_FIXGAME);
+	language("STR_COMBOS", STR_COMBOS);
+	language("STR_MMCOVERS", STR_MMCOVERS);
+	language("STR_ACCESS", STR_ACCESS);
+	language("STR_NOSETUP", STR_NOSETUP);
+	language("STR_NOSPOOF", STR_NOSPOOF);
+	language("STR_NOGRP", STR_NOGRP);
+	language("STR_NOWMDN", STR_NOWMDN);
+#ifdef NOSINGSTAR
+	language("STR_NOSINGSTAR", STR_NOSINGSTAR);
+#endif
+	language("STR_AUTO_PLAY", STR_AUTO_PLAY);
+	language("STR_RESET_USB", STR_RESET_USB);
+	language("STR_TITLEID", STR_TITLEID);
+	language("STR_FANCTRL", STR_FANCTRL);
+	language("STR_NOWARN", STR_NOWARN);
+	language("STR_AUTOAT", STR_AUTOAT);
+	language("STR_LOWEST", STR_LOWEST);
+	language("STR_FANSPEED", STR_FANSPEED);
+
+	language("STR_PS2EMU", STR_PS2EMU);
+	language("STR_LANGAMES", STR_LANGAMES);
+	language("STR_ANYUSB", STR_ANYUSB);
+	language("STR_ADDUSB", STR_ADDUSB);
+	language("STR_SPOOFID", STR_SPOOFID);
+	language("STR_DELCFWSYS", STR_DELCFWSYS);
+	language("STR_MEMUSAGE", STR_MEMUSAGE);
+	language("STR_PLANG", STR_PLANG);
+	language("STR_PROFILE", STR_PROFILE);
+	language("STR_DEFAULT", STR_DEFAULT);
+	language("STR_COMBOS2", STR_COMBOS2);
+	language("STR_FAILSAFE", STR_FAILSAFE);
+	language("STR_SHOWTEMP", STR_SHOWTEMP);
+	language("STR_SHOWIDPS", STR_SHOWIDPS);
+	language("STR_PREVGAME", STR_PREVGAME);
+	language("STR_NEXTGAME", STR_NEXTGAME);
+	language("STR_SHUTDOWN2", STR_SHUTDOWN2);
+	language("STR_RESTART2", STR_RESTART2);
+#ifdef REMOVE_SYSCALLS
+	language("STR_DELCFWSYS2", STR_DELCFWSYS2);
+#endif
+	language("STR_UNLOADWM", STR_UNLOADWM);
+	language("STR_FANCTRL2", STR_FANCTRL2);
+	language("STR_FANCTRL4", STR_FANCTRL4);
+	language("STR_FANCTRL5", STR_FANCTRL5);
+	//language("STR_UPDN", STR_UPDN);
+	//language("STR_LFRG", STR_LFRG);
+
+	language("/CLOSEFILE", NULL);
+ #endif
+
 	sprintf(templn, "<style>td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"

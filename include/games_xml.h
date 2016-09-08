@@ -207,6 +207,15 @@ static void make_fb_xml(char *myxml, char *templn)
 	else
 		sprintf(templn, XML_PAIR("icon_rsc", "item_tex_ps3util"));
 
+ #ifndef ENGLISH_ONLY
+	char STR_LOADGAMES[72];//	= "Load games with webMAN";
+
+	sprintf(STR_LOADGAMES,   "Load games with webMAN");
+
+	language("STR_LOADGAMES", STR_LOADGAMES);
+	language("/CLOSEFILE", NULL);
+ #endif
+
 	u16 size = sprintf(myxml, "%s"
 							  "<View id=\"seg_fb\">"
 							  "<Attributes><Table key=\"mgames\">%s"
@@ -367,6 +376,57 @@ static bool update_mygames_xml(u64 conn_s_p)
 	}
 #endif
 
+
+#ifndef ENGLISH_ONLY
+	char STR_WMSETUP2[56];//	= "Setup webMAN options";
+
+	char STR_EJECTDISC[32];//	= "Eject Disc";
+
+	char STR_PS3FORMAT[40];//	= "PS3 format games";
+	char STR_PS2FORMAT[48];//	= "PS2 format games";
+	char STR_PS1FORMAT[48];//	= "PSOne format games";
+	char STR_PSPFORMAT[48];//	= "PSP\xE2\x84\xA2 format games";
+
+	char STR_VIDFORMAT[56];//	= "Blu-ray\xE2\x84\xA2 and DVD";
+	char STR_VIDEO[40];//		= "Video content";
+
+	char STR_LAUNCHPSP[144];//	= "Launch PSP ISO mounted through webMAN or mmCM";
+	char STR_LAUNCHPS2[48];//	= "Launch PS2 Classic";
+
+	sprintf(STR_WMSETUP2,    "Setup webMAN options");
+
+	sprintf(STR_EJECTDISC,   "Eject Disc");
+
+	sprintf(STR_PS3FORMAT,   "PS3 format games");
+	sprintf(STR_PS2FORMAT,   "PS2 format games");
+	sprintf(STR_PS1FORMAT,   "PSOne format games");
+	sprintf(STR_PSPFORMAT,   "PSP\xE2\x84\xA2 format games");
+
+	sprintf(STR_VIDFORMAT,   "Blu-ray\xE2\x84\xA2 and DVD");
+	sprintf(STR_VIDEO,       "Video content");
+
+	sprintf(STR_LAUNCHPSP,   "Launch PSP ISO mounted through webMAN or mmCM");
+	sprintf(STR_LAUNCHPS2,   "Launch PS2 Classic");
+
+	language("STR_WMSETUP2", STR_WMSETUP2);
+
+	language("STR_EJECTDISC", STR_EJECTDISC);
+
+	language("STR_PS3FORMAT", STR_PS3FORMAT);
+	language("STR_PS2FORMAT", STR_PS2FORMAT);
+	language("STR_PS1FORMAT", STR_PS1FORMAT);
+	language("STR_PSPFORMAT", STR_PSPFORMAT);
+
+	language("STR_VIDFORMAT", STR_VIDFORMAT);
+	language("STR_VIDEO", STR_VIDEO);
+
+	language("STR_LAUNCHPSP", STR_LAUNCHPSP);
+	language("STR_LAUNCHPS2", STR_LAUNCHPS2);
+
+	language("/CLOSEFILE", NULL);
+#endif
+
+
 	BUFFER_SIZE		= BUFFER_SIZE;
 	BUFFER_SIZE_PSX	= BUFFER_SIZE_PSX;
 	BUFFER_SIZE_PSP	= BUFFER_SIZE_PSP;
@@ -397,7 +457,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	cellFsMkdir("/dev_hdd0/xmlhost", MODE);
 	cellFsMkdir("/dev_hdd0/xmlhost/game_plugin", MODE);
 
-	u32 key=0, max_xmb_items = ((u32)(BUFFER_SIZE_ALL / AVG_ITEM_SIZE));
+	u32 key = 0, max_xmb_items = ((u32)(BUFFER_SIZE_ALL / AVG_ITEM_SIZE));
 
 	char templn[1024];
 

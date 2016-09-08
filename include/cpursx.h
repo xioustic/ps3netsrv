@@ -170,15 +170,20 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	*templn = NULL;
 
+	int hdd_free;
+
 #ifndef LITE_EDITION
 	for(u8 d = 1; d < 7; d++)
 	{
 		if(isDir(drives[d]))
 		{
-			sprintf(param, "<br><a href=\"%s\">USB%c: %'d %s</a>", drives[d], drives[d][10], (int)(get_free_space(drives[d])>>20), STR_MBFREE); strcat(templn, param);
+			hdd_free = (int)(get_free_space(drives[d])>>20);
+			sprintf(param, "<br><a href=\"%s\">USB%i: %'d %s</a>", drives[d], (10 * drives[d][9]) + drives[d][10], hdd_free, STR_MBFREE); strcat(templn, param);
 		}
 	}
 #endif
+
+	hdd_free = (int)(get_free_space("/dev_hdd0")>>20);
 
 	sprintf(param, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
 											"CPU: %i°C%s<br>"
@@ -190,11 +195,11 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 											"MEM: %'d KB</a><br>"
 											"<a href=\"%s\">HDD: %'d %s</a>%s<hr>"
 											"<a class=\"s\" href=\"/cpursx.ps3?mode\">"
-											"FAN SPEED: %i%% (0x%X)</a><br>",
+											"%s %i%% (0x%X)</a><br>",
 					t1, max_temp1, t2,
 					t1f, max_temp2, t2f,
-					(meminfo.avail>>10), drives[0], (int)(get_free_space("/dev_hdd0")>>20), STR_MBFREE, templn,
-					(int)((int)fan_speed*100)/255, fan_speed); buffer += concat(buffer, param);
+					(meminfo.avail>>10), drives[0], hdd_free, STR_MBFREE, templn,
+					STR_FANCH2, (int)((int)fan_speed*100)/255, fan_speed); buffer += concat(buffer, param);
 
 	if( !max_temp && !is_ps3_http)
 		sprintf( templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"self.location='/cpursx.ps3?fan='+this.value\"><hr>", webman_config->manu, DEFAULT_MIN_FANSPEED);
