@@ -25,7 +25,6 @@ enum xmb_groups
 	gDVD = 4,
 };
 
-
 static void refresh_xml(char *msg)
 {
 	refreshing_xml = 1;
@@ -69,8 +68,8 @@ static void add_launchpad_entry(char *tempstr, char *templn, const char *url, ch
 		// fix &
 		if(strstr(templn, "&"))
 		{
-			u32 j = 0, tlen = strlen(templn);
-			for(u32 i = 0; i <= tlen; i++, j++)
+			size_t j = 0;
+			for(size_t i = 0; templn[i]; i++, j++)
 			{
 				tempstr[j] = templn[i];
 
@@ -651,8 +650,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 				}
  #endif
 #endif
-				if(!is_net && file_exists( param) == false) goto continue_reading_folder_xml; //continue;
-				if(!is_net && cellFsOpendir( param, &fd) != CELL_FS_SUCCEEDED) goto continue_reading_folder_xml; //continue;
+				if(!is_net && file_exists(param) == false) goto continue_reading_folder_xml; //continue;
+				if(!is_net && cellFsOpendir(param, &fd) != CELL_FS_SUCCEEDED) goto continue_reading_folder_xml; //continue;
 
 				plen = strlen(param);
 
@@ -920,11 +919,11 @@ continue_reading_folder_xml:
 	}
 	else
 	{
-		xml_len[gDVD] = strlen(myxml_dvd);
+		xml_len[gPS3] = strlen(myxml_ps3);
 		xml_len[gPSX] = strlen(myxml_psx);
 		xml_len[gPS2] = strlen(myxml_ps2);
-		xml_len[gPS3] = strlen(myxml_ps3);
 		xml_len[gPSP] = strlen(myxml_psp);
+		xml_len[gDVD] = strlen(myxml_dvd);
 	}
 
 	// --- add sorted items to xml
@@ -975,12 +974,12 @@ continue_reading_folder_xml:
 			strcat(myxml_dvd + xml_len[gDVD], "</Items></View>");
 			if(webman_config->rxvid)
 			{
-				strcat(myxml_dvd,	"<View id=\"seg_wm_bdvd\">"
-									"<Items>"
-									QUERY_XMB("rx_video1", "xcb://localhost/query?table=MMS_MEDIA_TYPE_SYSTEM&genre=Video&sort=+StorageMedia:StorageMedia.sortOrder+StorageMedia:StorageMedia.timeInserted&cond=Ae+StorageMedia:StorageMedia.stat.mediaStatus %xCB_MEDIA_INSERTED+Ae+StorageMedia:StorageMedia.mediaFormat %xCB_MEDIA_FORMAT_DATA+AGL+StorageMedia:StorageMedia.type %xCB_MEDIA_TYPE_BDROM %xCB_MEDIA_TYPE_WM")
-									QUERY_XMB("rx_video2", "xcb://localhost/query?sort=+Game:Common.titleForSort&cond=AGL+Game:Game.titleId RXMOV0000 RXMOVZZZZ+An+Game:Game.category 2D+An+Game:Game.category BV+An+Game:Game.category HG")
-									"</Items>"
-									"</View>");
+				strcat(myxml_dvd + xml_len[gDVD],	"<View id=\"seg_wm_bdvd\">"
+													"<Items>"
+													QUERY_XMB("rx_video1", "xcb://localhost/query?table=MMS_MEDIA_TYPE_SYSTEM&genre=Video&sort=+StorageMedia:StorageMedia.sortOrder+StorageMedia:StorageMedia.timeInserted&cond=Ae+StorageMedia:StorageMedia.stat.mediaStatus %xCB_MEDIA_INSERTED+Ae+StorageMedia:StorageMedia.mediaFormat %xCB_MEDIA_FORMAT_DATA+AGL+StorageMedia:StorageMedia.type %xCB_MEDIA_TYPE_BDROM %xCB_MEDIA_TYPE_WM")
+													QUERY_XMB("rx_video2", "xcb://localhost/query?sort=+Game:Common.titleForSort&cond=AGL+Game:Game.titleId RXMOV0000 RXMOVZZZZ+An+Game:Game.category 2D+An+Game:Game.category BV+An+Game:Game.category HG")
+													"</Items>"
+													"</View>");
 			}
 		}
 #endif

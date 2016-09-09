@@ -35,6 +35,10 @@ static void get_net_info(char *net_type, char *ip)
 {
 	// returns net_type[8], ip[ip_size]
 
+	int32_t status = 0; xsetting_F48C0548()->GetSettingNet_enable(&status);
+
+	if(status == 0) {strcpy(net_type, "OFFLINE"); *ip = NULL; return;}
+
 	net_info info;
 	memset(&info, 0, sizeof(net_info));
 	xsetting_F48C0548()->sub_44A47C(&info); //info.ipAddress
@@ -95,14 +99,14 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 			sprintf(templn, "<hr><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); buffer += concat(buffer, templn);
 
 			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
-			if(file_exists(path)==false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
+			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
 
 			getTitleID(path, app_ver, GET_VERSION); if(*app_ver == '0') *app_ver='v'; if(strstr(_game_Title, app_ver)) *app_ver = NULL;
 
 			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); buffer += concat(buffer, templn);
 
 			sprintf(path, "%s%s", HDD0_GAME_DIR, _game_TitleID);
-			if(file_exists(path)==false) sprintf(path, "/dev_bdvd/PS3_GAME");
+			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME");
 
 			sprintf(templn, "<a href=\"%s\"><img src=\"%s/ICON0.PNG\" border=0 %s></a>", path, path, "height=\"60\" style=\"position:absolute;top:65px;\""); buffer += concat(buffer, templn);
 

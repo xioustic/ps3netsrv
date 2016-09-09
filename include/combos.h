@@ -297,7 +297,7 @@ show_popup:
 								{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
 
 								// detect aprox. time when a game is launched
-								if(IS_ON_XMB) gTick=rTick; else if(gTick.tick==rTick.tick) cellRtcGetCurrentTick(&gTick);
+								poll_start_play_time();
 
 								bool R2 = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_R2), bb;
 

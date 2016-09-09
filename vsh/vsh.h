@@ -3,7 +3,7 @@
 
 
 // vsh vm
-typedef struct _vsh_vm_info { 
+typedef struct _vsh_vm_info {
 	uint32_t ea;                 // ea (0x70000000)
 	size_t size;                 // size (32 MB)
 	uint8_t flag;                // ?
@@ -11,11 +11,12 @@ typedef struct _vsh_vm_info {
 
 
 
-// vsh_E932A8C0  // reboot_show_min_version
+extern int vsh_E932A8C0(const char *text); // reboot_show_min_version
+#define reboot_show_min_version vsh_E932A8C0
 
 // vsh_ED372406  // Export_vsh_update_manager_if_get_token_seed
 
-// vsh_8E2AF83C  // Write EEPROM: 0x00048C18 (System Language), 
+// vsh_8E2AF83C  // Write EEPROM: 0x00048C18 (System Language),
 // vsh_92A609B2  // Write EEPROM: 0x00048C42 (HDD Copy Mode)
 // vsh_DDB635E1  // Write EEPROM: 0x00048C06 (FSELF Control Flag / toggles release mode)
 // vsh_ACDDC98E  // (void) return 1
@@ -104,7 +105,7 @@ extern int vsh_2C563C92(uint32_t offset, uint8_t *value);  // UpdateManagerIF_Re
 // vsh_7D73E7CD  // ?
 // vsh_4DB8DD87  // ?
 
-// vsh_20215547  // ? 
+// vsh_20215547  // ?
 
 // vsh_1C68CC75  // ?
 
@@ -164,7 +165,7 @@ extern int32_t vsh_F399CA36(int32_t mc_id);              // destroy_vsh_memory_c
 extern int vsh_1714D098(uint32_t *size);                 // sys_fs_get_mount_info_size()
 #define sys_fs_get_mount_info_size vsh_1714D098
 
-// vsh_612496AA  // syscall: sys_fs_get_mount_info(CellFsMountInformation *, u32, u32 *) 
+// vsh_612496AA  // syscall: sys_fs_get_mount_info(CellFsMountInformation *, u32, u32 *)
 // vsh_E413CD78  // syscall: sys_fs_disk_free
 
 extern int vsh_1B8D4287(const char *dir);  // sys_fs_sync, Param: Device Path (e.g. /dev_hdd0)

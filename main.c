@@ -110,7 +110,8 @@ SYS_MODULE_STOP(wwwd_stop);
 #define WMCONFIG			"/dev_hdd0/tmp/wmconfig.bin"		// webMAN config file
 #define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
 #define WM_ICONS_PATH		"/dev_hdd0/tmp/wm_icons/"			// webMAN icons path
-#define WMNOSCAN			"/dev_hdd0/tmp/wm_noscan"			// webMAN config file
+#define WMNOSCAN			"/dev_hdd0/tmp/wm_noscan"			// webMAN config file to skip on boot
+#define WMNET_DISABLED		"/dev_hdd0/tmp/wm_disabled"			// webMAN config file to re-enable network
 #define WMREQUEST_FILE		"/dev_hdd0/tmp/wm_request"			// webMAN request file
 
 #define HDD0_GAME_DIR		"/dev_hdd0/game/"
@@ -353,7 +354,7 @@ static bool show_info_popup = false;
 
 static volatile u8 wm_unload_combo = 0;
 static volatile u8 working = 1;
-static u8 max_mapped=0;
+static u8 max_mapped = 0;
 
 #ifdef COBRA_ONLY
  static const u8 cobra_mode = 1;
@@ -365,6 +366,8 @@ static bool syscalls_removed = false;
 
 static float c_firmware = 0.0f;
 static u8 dex_mode = 0;
+
+static int32_t net_status = -1;
 
 static u64 SYSCALL_TABLE = 0;
 static u64 LV2_OFFSET_ON_LV1; // value is set on detect_firmware -> 0x1000000 on 4.46, 0x8000000 on 4.76/4.78
@@ -468,7 +471,8 @@ typedef struct
 	uint8_t  netd;
 	uint16_t netp;
 	uint8_t  launchpad_xml;
-	char padding[99];
+	char default_restart;
+	char padding[98];
 } __attribute__((packed)) WebmanCfg;
 
 static u8 wmconfig[sizeof(WebmanCfg)];
@@ -532,7 +536,10 @@ static char cp_path[MAX_PATH_LEN]; // cut/copy/paste buffer
 static u8   cp_mode = 0;           // 0 = none / 1 = copy / 2 = cut/move
 #endif
 
-#define AUTOPLAY_TAG		" [auto]"
+#define ONLINE_TAG		"[online]"
+#define OFFLINE_TAG		"[offline]"
+#define AUTOPLAY_TAG	" [auto]"
+
 
 static char wm_icons[12][60] = {WM_ICONS_PATH "icon_wm_album_ps3.png", //024.png  [0]
 								WM_ICONS_PATH "icon_wm_album_psx.png", //026.png  [1]
@@ -892,12 +899,12 @@ static void handleclient(u64 conn_s_p)
 				if(file_exists(param)) continue;
 
 				char *icon = wm_icons[i] + 32;
-				if(i == 0 || i == 5) strcpy(icon, "user/024.png\0"); else // ps3
-				if(i == 1 || i == 6) strcpy(icon, "user/026.png\0"); else // psx
-				if(i == 2 || i == 7) strcpy(icon, "user/025.png\0"); else // ps2
-				if(i == 3 || i == 8) strcpy(icon, "user/022.png\0"); else // psp
-				if(i == 4 || i == 9) strcpy(icon, "user/023.png\0"); else // dvd
-									 strcpy(icon + 5, "icon_home.png\0"); // setup / eject
+				if(i == gPS3 || i == iPS3)	strcpy(icon, "user/024.png\0"); else // ps3
+				if(i == gPSX || i == iPSX)	strcpy(icon, "user/026.png\0"); else // psx
+				if(i == gPS2 || i == iPS2)	strcpy(icon, "user/025.png\0"); else // ps2
+				if(i == gPSP || i == iPSP)	strcpy(icon, "user/022.png\0"); else // psp
+				if(i == gDVD || i == iDVD)	strcpy(icon, "user/023.png\0"); else // dvd
+											strcpy(icon + 5, "icon_home.png\0"); // setup / eject
 			}
 		}
 
@@ -961,6 +968,11 @@ static void handleclient(u64 conn_s_p)
 				block_online_servers(false);
 			}
  #endif
+			if(file_exists(WMNET_DISABLED)) //re-enable network (force offline in game)
+			{
+				net_status = 1;
+				poll_start_play_time();
+			}
 		}
 
 		sys_ppu_thread_exit(0);
@@ -979,10 +991,6 @@ static void handleclient(u64 conn_s_p)
  #ifdef WM_REQUEST
 	struct CellFsStat buf;
 	u8 wm_request = (cellFsStat(WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
-
-	#ifdef PKG_HANDLER
-	wmget = (wm_request > 0);
-	#endif
 
 	if(!wm_request)
  #endif
@@ -1030,9 +1038,9 @@ static void handleclient(u64 conn_s_p)
 	u8 is_cpursx = 0;
 	u8 is_popup = 0, auto_mount = 0;
 
- #ifdef WM_REQUEST
+	#ifdef WM_REQUEST
 	if(!wm_request)
- #endif
+	#endif
 	{
 		struct timeval tv;
 		tv.tv_usec = 0;
@@ -1079,7 +1087,7 @@ static void handleclient(u64 conn_s_p)
 			char *param_original = header; // used in /download.ps3
 
  #ifdef WM_REQUEST
-			if(wm_request) { for(size_t n = strlen(param); n > 0; n--) {if(param[n] == 9) param[n]=' ';} } wm_request = 0;
+			if(wm_request) { for(size_t n = strlen(param); n > 0; n--) {if(param[n] == 9) param[n] = ' ';} } wm_request = 0;
  #endif
 
 			bool allow_retry_response = true, small_alloc = true, mobile_mode = false;
@@ -1173,13 +1181,13 @@ static void handleclient(u64 conn_s_p)
 				int ret = download_file(strchr(param_original, '%') ? (param_original + 13) : (param + 13), msg);
 
 				#ifdef WM_REQUEST
-				if(!wmget)
+				if(!wm_request)
 				#endif
 				{
 					http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_DOWNLOAD_FILE, msg);
 				}
 
-				show_msg((char *)msg);
+				show_msg(msg);
 
 				goto exit_handleclient;
 			}
@@ -1191,13 +1199,13 @@ static void handleclient(u64 conn_s_p)
 				int ret = installPKG(param + 12, msg);
 
 				#ifdef WM_REQUEST
-				if(!wmget)
+				if(!wm_request)
 				#endif
 				{
 					http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_INSTALL_PKG, msg);
 				}
 
-				show_msg((char *)msg);
+				show_msg(msg);
 
 				goto exit_handleclient;
 			}
@@ -1494,6 +1502,29 @@ static void handleclient(u64 conn_s_p)
 
 				goto exit_handleclient;
 			}
+			if(islike(param, "/netstatus.ps3"))
+			{
+				if(param[15] == '0') xsetting_F48C0548()->SetSettingNet_enable(0);
+				if(param[15] == '1') xsetting_F48C0548()->SetSettingNet_enable(1);
+
+				int32_t status = 0;
+				xsetting_F48C0548()->GetSettingNet_enable(&status);
+
+				if(param[14] != '?') {status ^= 1; xsetting_F48C0548()->SetSettingNet_enable(status);}
+
+				sprintf(param, "Network : %s", status ? STR_ENABLED : STR_DISABLED);
+
+				#ifdef WM_REQUEST
+				if(!wm_request)
+				#endif
+				{
+					http_response(conn_s, header, "/netstatus.ps3", CODE_HTTP_OK, param);
+				}
+
+				show_msg(param);
+
+				goto exit_handleclient;
+			}
 			if(islike(param, "/dev_blind"))
 			{
 				is_binary = FOLDER_LISTING, small_alloc = false;
@@ -1659,12 +1690,24 @@ static void handleclient(u64 conn_s_p)
 
 				{ DELETE_TURNOFF } { BEEP2 }
 
-				if(strstr(param, "?v") || (param[3] == 's' && param[12] == NULL) || param[12] == '$') vsh_reboot(); // VSH reboot
-				else
-				if(strstr(param, "?q"))
+				char mode = 0, *param2 = strstr(param, "?");
+ #ifndef LITE_EDITION
+				if(param2) {mode = param2[1]; if(strstr(param, "$")) {webman_config->default_restart = mode; save_settings();}} else mode = webman_config->default_restart;
+ #else
+				if(param2)  mode = param2[1];
+ #endif
+				if(mode == 'q')
 					{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} // (quick reboot) load LPAR id 1
 				else
-				if(strstr(param, "?s"))
+				if(mode == 'v' || (param[3] == 's' && param[12] == NULL))
+					vsh_reboot(); // VSH reboot
+				else
+ #ifndef LITE_EDITION
+				if(mode == 'm')
+					reboot_show_min_version(""); // show min version
+				else
+ #endif
+				if(mode == 's')
 					{system_call_3(SC_SYS_POWER, SYS_SOFT_REBOOT, NULL, 0);} // soft reboot
 				else
 					{system_call_3(SC_SYS_POWER, SYS_HARD_REBOOT, NULL, 0);} // hard reboot
@@ -2274,17 +2317,16 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/extgd.ps3"))
 					{
-						if(param[10] != '?') extgd = extgd ^ 1; else
+						if(param[10] != '?') extgd ^= 1; else
 						if(param[11] == 'e' /*enable */ || param[11] == '1') extgd = 1; else
-						if(param[11] == 'd' /*disable*/ || param[11] == '0') extgd = 0; else
-						if(param[11] == 's' /*status */) ;      else         extgd = extgd ^ 1;
+						if(param[11] == 'd' /*disable*/ || param[11] == '0') extgd = 0;
 
 						strcat(pbuffer, "External Game DATA: ");
 
 						if(set_gamedata_status(extgd, true))
 							strcat(pbuffer, STR_ERROR);
 						else
-							strcat(pbuffer, extgd?STR_ENABLED:STR_DISABLED);
+							strcat(pbuffer, extgd ? STR_ENABLED : STR_DISABLED);
 					}
  #endif
 

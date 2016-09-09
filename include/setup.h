@@ -211,6 +211,7 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "spp=1"))  webman_config->spp|=1;  //remove syscalls & history
 	#endif
 	if(strstr(param, "shh=1"))  webman_config->spp|=2;  //remove history & block psn servers (offline mode)
+	if(strstr(param, "shh=2"))  webman_config->spp|=4;  //offline mode in game
 #endif
 
 #ifdef SPOOF_CONSOLEID
@@ -737,7 +738,14 @@ static void setup_form(char *buffer, char *templn)
 	#ifdef REMOVE_SYSCALLS
 	add_check_box("spp", "1", STR_DELCFWSYS, " ", (webman_config->spp & 1), buffer);
 	#endif
-	add_check_box("shh", "1", "Offline [Lock PSN]", _BR_, (webman_config->spp & 2), buffer);
+
+	//add_check_box("shh", "1", "Offline [Lock PSN]", _BR_, (webman_config->spp & 2), buffer);
+	strcat(buffer, " • Offline  : <select name=\"shh\">");
+	add_option_item("0", STR_DISABLED, !(webman_config->spp & 6), buffer);
+	add_option_item("1", "Lock PSN",    (webman_config->spp & 2), buffer);
+	add_option_item("2", STR_GAMES,     (webman_config->spp & 4), buffer);
+	strcat(buffer, "</select>");
+
 #endif
 	strcat(buffer, HTML_BLU_SEPARATOR);
 

@@ -104,7 +104,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	}
 
 	sprintf(ip_address, "%s", inet_ntoa(conn_info.local_adr));
-	for(u8 n = 0; ip_address[n] != NULL; n++) if(ip_address[n] == '.') ip_address[n] = ',';
+	for(u8 n = 0; ip_address[n]; n++) if(ip_address[n] == '.') ip_address[n] = ',';
 
 	sprintf(buffer, "%i webMAN ftpd " WM_VERSION "\r\n", 220); ssend(conn_s_ftp, buffer);
 

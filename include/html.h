@@ -74,7 +74,7 @@ static size_t concat(char *dest, const char *src)
 
 static char *to_upper(char *text)
 {
-	for(size_t i = 0; text[i] != NULL; i++) if(text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
+	for(size_t i = 0; text[i]; i++) if(text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
 	return text;
 }
 
@@ -160,7 +160,7 @@ static size_t htmlenc(char *dst, char *src, u8 cpy2src)
 {
 	size_t j = 0;
 	char tmp[8]; u8 t, c;
-	for(size_t i = 0; src[i] != NULL; i++)
+	for(size_t i = 0; src[i]; i++)
 	{
 		if(src[i] & 0x80)
 		{
@@ -182,7 +182,7 @@ static size_t htmlenc(char *dst, char *src, u8 cpy2src)
 static size_t utf8enc(char *dst, char *src, u8 cpy2src)
 {
 	size_t j = 0; u16 c;
-	for(size_t i = 0; src[i] != NULL; i++)
+	for(size_t i = 0; src[i]; i++)
 	{
 		c = (src[i] & 0xFFFF);
 

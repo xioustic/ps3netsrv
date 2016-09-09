@@ -2,10 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-int extcmp(const char *s1, const char *s2, size_t n);
-int extcasecmp(const char *s1, const char *s2, size_t n);
-char *strcasestr(const char *s1, const char *s2);
-
 void *memset(void *m, int c, size_t n)
 {
 	char *s = (char *) m;
@@ -57,17 +53,18 @@ char *strchr(const char *s, int c)
 	while (*s != (char)c)
 		if (!*s++)
 			return 0;
+
 	return (char *)s;
 }
 
 char *strrchr(const char *s, int c)
 {
 	char *ret = NULL;
-	char cc=(char)c;
+	char cc = (char)c;
 
 	do
 	{
-		if( *s == cc ) ret=(char*)s;
+		if( *s == cc ) ret = (char*)s;
 	}
 	while(*s++);
 
@@ -77,16 +74,18 @@ char *strrchr(const char *s, int c)
 char *strstr(const char *s1, const char *s2)
 {
 	size_t n = strlen(s2); if(n == 0) return 0;
+
 	while(*s1)
-		if(!memcmp(s1++,s2,n))
-			return (char*)(s1-1);
+		if(!memcmp(s1++, s2, n))
+			return (char*)(s1 - 1);
+
 	return 0;
 }
 
 int strncasecmp (__const char *s1, __const char *s2, size_t n)
 {
-	if(n == 0) return 0;
 	int c1, c2;
+
 	while(n--)
 	{
 		c1 = *((unsigned char *)(s1++));
@@ -96,13 +95,14 @@ int strncasecmp (__const char *s1, __const char *s2, size_t n)
 		if (c1 != c2)   return (c1 - c2);
 		if (c1 == '\0') return 0;
 	}
+
 	return 0;
 }
 
 int strcasecmp (__const char *s1, __const char *s2)
 {
 	int c1, c2, n = strlen(s1);
-	if(n == 0) return 0;
+
 	while(n--)
 	{
 		c1 = *((unsigned char *)(s1++));
@@ -112,31 +112,36 @@ int strcasecmp (__const char *s1, __const char *s2)
 		if (c1 != c2)   return (c1 - c2);
 		if (c1 == '\0') return 0;
 	}
+
 	return 0;
 }
 
+char *strcasestr(const char *s1, const char *s2);
 char *strcasestr(const char *s1, const char *s2)
 {
 	size_t n = strlen(s2); if(n == 0) return 0;
+
 	while(*s1)
-		if(!strncasecmp(s1++,s2,n))
-			return (char*)(s1-1);
+		if(!strncasecmp(s1++, s2, n))
+			return (char*)(s1 - 1);
+
 	return 0;
 }
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
 	if(n == 0) return 0;
-	while((n>0) && *s1 && (*s1==*s2))
-		s1++,s2++,n--;
+
+	while((n > 0) && *s1 && (*s1==*s2)) s1++, s2++, n--;
+
 	return *(const unsigned char*)s1-*(const unsigned char*)s2;
 }
 
 int strcmp(const char *s1, const char *s2)
 {
-	while(*s1 && (*s1==*s2))
-		s1++, s2++;
-	return *(const unsigned char*)s1-*(const unsigned char*)s2;
+	while(*s1 && (*s1==*s2)) s1++, s2++;
+
+	return *(const unsigned char*)s1 - *(const unsigned char*)s2;
 }
 
 
@@ -159,8 +164,8 @@ char *strncpy(char *dest, const char *src, size_t n)
 	}
 	while ((*dest++ = *src++));
 
-	while (n--)
-		*dest++ = 0;
+	while (n--) *dest++ = 0;
+
 	return ret;
 }
 
@@ -177,51 +182,53 @@ char *strcat(char *dest, const char *src)
 
 char *strtok(char *str, const char *delim)
 {
-	static char* p=0;
+	static char* p = 0;
 
-	if(str) p=str;
+	if(str) p = str;
 	else
 	if(!p) return 0;
 
-	str=p+strspn(p,delim);
-	p=str+strcspn(str,delim);
+	str = p + strspn(p, delim);
+	p = str + strcspn(str, delim);
 
-	if(p==str) return p=0;
+	if(p == str) return p = 0;
 
-	p = *p ? *p=0,p+1 : 0;
+	p = *p ? *p = 0, p + 1 : 0;
 	return str;
 }
 
 size_t strcspn(const char *s1, const char *s2)
 {
-	size_t ret=0;
+	size_t ret = 0;
 	while(*s1)
 		if(strchr(s2,*s1))
 			return ret;
 		else
-			s1++,ret++;
+			s1++, ret++;
 
 	return ret;
 }
 
 size_t strspn(const char *s1, const char *s2)
 {
-	size_t ret=0;
-	while(*s1 && strchr(s2,*s1++))
+	size_t ret = 0;
+	while(*s1 && strchr(s2, *s1++))
 		ret++;
 	return ret;
 }
 
+int extcmp(const char *s1, const char *s2, size_t n);
 int extcmp(const char *s1, const char *s2, size_t n)
 {
-	size_t s=strlen(s1);
-	if(n>s) return -1;
-	return memcmp(s1+(s-n), s2, n);
+	size_t s = strlen(s1);
+	if(n > s) return -1;
+	return memcmp(s1 + (s - n), s2, n);
 }
 
+int extcasecmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n)
 {
-	size_t s=strlen(s1);
-	if(n>s) return -1;
-	return strncasecmp(s1+(s-n), s2, n);
+	size_t s = strlen(s1);
+	if(n > s) return -1;
+	return strncasecmp(s1 + (s - n), s2, n);
 }

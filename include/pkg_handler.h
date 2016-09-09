@@ -23,11 +23,19 @@ static wchar_t pkg_dpath[MAX_DLPATH_LEN];
 static u16 pkg_dcount = 0;
 static u8 pkg_auto_install = 0;
 
-static bool wmget = false;
-
 #define INT_HDD_ROOT_PATH		"/dev_hdd0/"
 #define DEFAULT_PKG_PATH		"/dev_hdd0/packages/"
 #define TEMP_DOWNLOAD_PATH		"/dev_hdd0/tmp/downloader/"
+
+typedef struct {
+   u32 magic; // 0x53434500//
+   u32 version;
+   u16 sdk_type;
+   u16 SCE_header_type;
+   u32 meta_offset;
+   u64 size; // size of sce_hdr + sizeof meta_hdr
+   u64 pkg_size;
+ } _pkg_header;
 
 static int LoadPluginById(int id, void *handler)
 {
@@ -173,6 +181,8 @@ static int download_file(const char *param, char *msg)
 
 	if(conv_num_durl > 0)
 	{
+		mkdir_tree(pdpath);
+
 		if((pdpath_len > 0) && (pdpath_len < MAX_DLPATH_LEN) && (isDir(pdpath) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)) ;
 
 		else if(isDir(DEFAULT_PKG_PATH) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
@@ -285,4 +295,51 @@ static int installPKG_combo(char *msg)
 	return ret;
 }
 
+static void poll_downloaded_pkg_files(char *msg)
+{
+	if(pkg_dcount)
+	{
+		CellFsDirent entry; u64 read_e; int fd; u16 pkg_count = 0;
+
+		if(cellFsOpendir(TEMP_DOWNLOAD_PATH, &fd) == CELL_FS_SUCCEEDED)
+		{
+			while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+			{
+				if(!extcmp(entry.d_name, ".pkg", 4))
+				{
+					int fdl = 0; char *dlfile = msg; _pkg_header pkg_header;
+					sprintf(dlfile, "%s%s", TEMP_DOWNLOAD_PATH, entry.d_name); pkg_count++;
+					cellFsChmod(dlfile, MODE);
+
+					if(cellFsOpen(dlfile, CELL_FS_O_RDONLY, &fdl, NULL, 0) == CELL_FS_SUCCEEDED)
+					{
+						if(cellFsRead(fdl, (void *)&pkg_header, sizeof(pkg_header), NULL) == CELL_FS_SUCCEEDED)
+						{
+							cellFsClose(fdl);
+
+							struct CellFsStat s;
+							if(cellFsStat(dlfile, &s) == CELL_FS_SUCCEEDED && pkg_header.pkg_size == s.st_size)
+							{
+								char pkgfile[MAX_PATH_LEN]; u16 pkg_len, retry = 0;
+								pkg_len = sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dlfile + strlen(TEMP_DOWNLOAD_PATH));
+								while(cellFsRename(dlfile, pkgfile) != CELL_FS_SUCCEEDED && retry < 100)
+								{
+									sprintf(pkgfile + pkg_len - 4, " (%i).pkg", retry); retry++;
+								}
+								pkg_dcount--;
+
+								if(pkg_auto_install) installPKG(pkgfile, msg);
+							}
+						}
+						else
+							cellFsClose(fdl);
+					}
+				}
+			}
+			cellFsClosedir(fd);
+
+			if(pkg_count == 0) pkg_auto_install = pkg_dcount = 0; // disable polling if no pkg files were found (e.g. changed to background download)
+		}
+	}
+}
 #endif // #ifdef PKG_HANDLER

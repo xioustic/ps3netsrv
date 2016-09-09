@@ -1913,7 +1913,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 			cellFsRead(fd, header, sizeof(header), &read);
 			if (read == sizeof(header))
 			{
-				if (header[0] == 0x7E505350)
+				if (header[0] == 0x7E505350) /* "~PSP" */
 				{
 					unsigned int i;
 
@@ -1994,8 +1994,8 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 /*
 		if (emu == EMU_400)
 		{
-//			if (check_lambda() < 0)
-//				return ECANCELED;
+			if (check_lambda() < 0)
+				return ECANCELED;
 
 			sys_storage_ext_mount_encrypted_image((char*)PSPL_LAMBDA, (char*)"/dev_moo", (char*)"CELL_FS_FAT", PSPL_LAMBDA_NONCE);
 			sys_psp_change_emu_path("/dev_moo/pspemu");

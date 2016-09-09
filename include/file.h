@@ -63,6 +63,15 @@ static bool file_exists(const char* path)
 	return (cellFsStat(path, &s) == CELL_FS_SUCCEEDED);
 }
 
+#ifndef LITE_EDITION
+static void mkdir_tree(char *path)
+{
+	size_t path_len = strlen(path);
+	for(u16 p = 12; p < path_len; p++)
+		if(path[p] == '/') {path[p] = NULL; cellFsMkdir((char*)path, MODE); path[p] = '/';}
+}
+#endif
+
 static int savefile(const char *file, const char *mem, u64 size)
 {
 	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;

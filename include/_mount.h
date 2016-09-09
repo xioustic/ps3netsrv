@@ -3,11 +3,12 @@
 #define LAST_GAMES_UPPER_BOUND	(4)
 
 // File name TAGS:
-// [auto]   Auto-play
-// [online] Auto-disable syscalls
-// [gd]     Auto-enable external gameDATA
-// [raw]    Use raw_iso.sprx to mount the ISO (ntfs)
-// [PS2]    PS2 extracted folders in /PS2DISC (needs PS2_DISC compilation flag)
+// [auto]    Auto-play
+// [online]  Auto-disable syscalls
+// [offline] Auto-disable network
+// [gd]      Auto-enable external gameDATA
+// [raw]     Use raw_iso.sprx to mount the ISO (ntfs)
+// [PS2]     PS2 extracted folders in /PS2DISC (needs PS2_DISC compilation flag)
 
 
 typedef struct
@@ -417,6 +418,9 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			purl--; *purl = NULL;
 		}
 
+		purl = strstr(param, "offline=");
+		if(purl) net_status = (*(purl + 8) == '0') ? 1 : 0;
+
 		purl = strstr(param, "?random=");
 		if(purl) *purl = NULL;
 
@@ -462,6 +466,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// auto-play
 		if(mount_ps3)
 		{
+			if(mounted && (strstr(param, OFFLINE_TAG) != NULL)) net_status = 0;
+
 #ifndef LITE_EDITION
 			if(mounted && IS_ON_XMB && strstr(param, "/PSPISO") == NULL && extcmp(param, ".BIN.ENC", 8) != 0)
 			{
@@ -924,8 +930,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				copy_in_progress = true, copied_count = 0;
 
 				// make target dir tree
-				for(u16 p = 12; p < strlen(target); p++)
-					if(target[p]=='/') {target[p] = NULL; cellFsMkdir((char*)target, MODE); target[p]='/';}
+				mkdir_tree(target);
 
 				// copy folder to target
 				if(strstr(source,"/exdata"))
@@ -2300,6 +2305,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 							}
 						}
 					}
+					else
+						ret = false;
 				}
 				goto patch;
 				//return;
@@ -2356,7 +2363,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					}
 					else
 					{
-						sys_memory_free(sysmem);
+						sys_memory_free(sysmem); ret = false;
 						goto patch;
 					}
 
@@ -2411,10 +2418,12 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			{
 				cellFsUnlink(WMNOSCAN); // remove wm_noscan if PS2ISO was already mounted
 
+				ret = file_exists(cobra_iso_list[0]);
+
 				if(strstr(_path, "/PS3ISO") || mount_unk == EMU_PS3)
 				{
  #ifdef FIX_GAME
-					if(webman_config->fixgame!=FIX_GAME_DISABLED)
+					if(webman_config->fixgame != FIX_GAME_DISABLED)
 					{
 						fix_in_progress=true; fix_aborted = false;
 						fix_iso(_path, 0x100000UL, true);
@@ -2622,7 +2631,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				cobra_send_fake_disc_insert_event();
 			}
 		}
-		else
+		else if(isDir(_path))
 		{
 			int special_mode = 0;
 
@@ -2661,6 +2670,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			else
 				cobra_map_game(_path, "TEST00000", &special_mode);
 		}
+		else
+			ret = false;
 		//return;
 	}
 #endif //#ifdef COBRA_ONLY
@@ -2978,7 +2989,7 @@ exit_mount:
 	else
 	{
 		CellPadData pad_data = pad_read();
-		bool otag = (strcasestr(_path, "[online]")!=NULL);
+		bool otag = (strcasestr(_path, ONLINE_TAG)!=NULL);
 		bool r2 = (pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2));
 		if((!r2 && otag) || (r2 && !otag)) disable_cfw_syscalls(webman_config->keep_ccapi);
 	}

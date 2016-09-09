@@ -4,6 +4,7 @@
 
 #define IS_ISO_FOLDER ((f1>1) && (f1<10))
 #define IS_PS3_TYPE   ((f1<3) || (f1>=10))
+#define IS_BLU_TYPE   ((f1<4) || (f1>=10))
 #define IS_VID_FOLDER ((f1==3) || (f1==4))
 
 #define IS_JB_FOLDER  (f1<2)
@@ -40,6 +41,15 @@ enum nocov_options
 	SHOW_ICON0    = 1,
 	SHOW_DISC     = 2,
 	ONLINE_COVERS = 3,
+};
+
+enum icon_groups
+{
+	iPS3 = 5,
+	iPSX = 6,
+	iPS2 = 7,
+	iPSP = 8,
+	iDVD = 9,
 };
 
 #define HAS_TITLE_ID  (*tempID > '@')
@@ -325,6 +335,7 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 		if(ns < 0) {*icon = NULL; return;}
 
 		char tempstr[_4KB_];
+		int tlen = 0, icon_len = 0;
 
 		if(isdir)
 		{
@@ -334,9 +345,9 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 		else
 		{
 			get_name(icon, file, NO_EXT);
-			sprintf(tempstr, "%s/%s.jpg", param, icon);
+			tlen = sprintf(tempstr, "%s/%s.jpg", param, icon);
 
-			get_name(icon, file, GET_WMTMP); strcat(icon, ".jpg"); //wmtmp
+			icon_len = get_name(icon, file, GET_WMTMP); strcat(icon, ".jpg"); //wmtmp
 			if(file_exists(icon)) return;
 		}
 
@@ -344,17 +355,18 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 		copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
 		if(file_exists(icon)) return;
 
-		for(u8 e = 1; e < 4; e++)
-		{
-			icon[strlen(icon) - 4] = NULL; strcat(icon, ext[e]);
-			if(file_exists(icon)) return;
+		if(tlen > 4)
+			for(u8 e = 1; e < 4; e++)
+			{
+				icon[icon_len] = NULL; strcat(icon + icon_len, ext[e]);
+				if(file_exists(icon)) return;
 
-			tempstr[strlen(tempstr)-4] = NULL; strcat(tempstr, ext[e]);
+				tempstr[tlen - 4] = NULL; strcat(tempstr + tlen, ext[e]);
 
-			//Copy remote icon locally
-			copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
-			if(file_exists(icon)) return;
-		}
+				//Copy remote icon locally
+				copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
+				if(file_exists(icon)) return;
+			}
 
 #endif //#ifndef LITE_EDITION
 
@@ -388,19 +400,19 @@ no_icon0:
 
 	if((webman_config->nocov == SHOW_ICON0) && get_cover_from_name(icon, file, tempID)) return; // show mm cover as last option (if it's disabled)
 
-	if(f1 < 4 || f1 == 10) sprintf(icon, "%s/%s", param, file);
+	if(IS_BLU_TYPE) sprintf(icon, "%s/%s", param, file);
 
 	//show the default icon by type
 		 if(IS_PSX_FOLDER || (strstr(icon, "PSX") != NULL)) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
-		strcpy(icon, wm_icons[6]);
+		strcpy(icon, wm_icons[iPSX]);
 	else if(IS_PS2_FOLDER || (strstr(icon, "PS2") != NULL)) //if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
-		strcpy(icon, wm_icons[7]);
+		strcpy(icon, wm_icons[iPS2]);
 	else if(IS_PSP_FOLDER || (strstr(icon, "PSP") != NULL)) //if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
-		strcpy(icon, wm_icons[8]);
+		strcpy(icon, wm_icons[iPSP]);
 	else if(IS_DVD_FOLDER || (strstr(icon, "DVD") != NULL)) //if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
-		strcpy(icon, wm_icons[9]);
+		strcpy(icon, wm_icons[iDVD]);
 	else                                                    //if(strstr(param, "/BDISO") || !extcmp(file, ".ntfs[BDISO]", 12) || || !extcmp(file, ".ntfs[BDFILE]", 13))
-		strcpy(icon, wm_icons[5]);
+		strcpy(icon, wm_icons[iPS3]);
 }
 
 static int get_title_and_id_from_sfo(char *templn, char *tempID, const char *entry_name, char *icon, char *data, u8 f0)
@@ -927,7 +939,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 						if(mobile_mode)
 						{
 							if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
-							for(size_t c = 0; templn[c] != NULL; c++) {if(templn[c] == '"' || templn[c] < ' ') templn[c] = ' ';} // replace invalid chars
+
+							for(size_t c = 0; templn[c]; c++) {if(templn[c] == '"' || templn[c] < ' ') templn[c] = ' ';} // replace invalid chars
 
 							int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320; h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280; h = 280;}
 
