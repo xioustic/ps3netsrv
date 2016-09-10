@@ -272,6 +272,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 		urlenc(url, param); if(islike(param, "/net")) htmlenc(label, templn, 0); else strcpy(label, templn);
 
 		sprintf(swap, HTML_URL2,
+						strstr(pbuffer, "To: ") ? "" :
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
 #endif

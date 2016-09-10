@@ -694,10 +694,20 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		else if(islike(msg, "http"))
 			sprintf(templn, "<a style=\"%s\" href=\"%s\">%s</a>", "color:#ccc;text-decoration:none;", msg, msg);
 #ifdef PKG_HANDLER
-		else if(code == CODE_INSTALL_PKG)
-			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", "Installing "); add_breadcrumb_trail(templn, (char*)msg + 11);}
-		else if(code == CODE_DOWNLOAD_FILE)
-			{code = CODE_HTTP_OK; sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", msg); char *p = strstr(templn, "To: "); if(p) strcpy(p, "<p>To: \0"); p = strstr((char*)msg, "To: "); if(p) add_breadcrumb_trail(templn, p + 4);}
+		else if(code == CODE_INSTALL_PKG || code == CODE_DOWNLOAD_FILE)
+		{
+			sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", (code == CODE_INSTALL_PKG) ? "Installing " : "");
+			char *p = strstr((char *)msg, "To: ");
+			if(p)
+			{
+				*p = NULL;
+				if(code == CODE_INSTALL_PKG) add_breadcrumb_trail(templn, (char *)msg + 11); else strcat(templn, msg);
+				strcat(templn, "<p>To: \0"); add_breadcrumb_trail(templn, p + 4);
+			}
+			else
+				strcat(templn, msg);
+			code = CODE_HTTP_OK;
+		}
 #endif
 		else
 			sprintf(templn, "%s", msg);
@@ -1191,8 +1201,23 @@ static void handleclient(u64 conn_s_p)
 				goto exit_handleclient;
 			}
 
-			if(islike(param, "/install.ps3"))
+			if(islike(param, "/install.ps3") || islike(param, "/install_ps3"))
 			{
+				size_t last_char = strlen(param) - 1;
+				if(param[last_char] == '?')
+				{
+					param[last_char] = NULL;
+					get_pkg_size_and_install_time(param + 12);
+					if(isDir(install_path))
+					{
+						strcpy(param, install_path);
+						is_binary = FOLDER_LISTING, small_alloc = false;
+						goto html_response;
+					}
+				}
+
+				pkg_delete_after_install = (param[8] == '.');
+
 				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
 
 				int ret = installPKG(param + 12, msg);
@@ -1205,6 +1230,15 @@ static void handleclient(u64 conn_s_p)
 				}
 
 				show_msg(msg);
+
+				if(pkg_delete_after_install)
+				{
+					if(loading_html) loading_html--;
+
+					wait_for_pkg_install();
+
+					sys_ppu_thread_exit(0);
+				}
 
 				goto exit_handleclient;
 			}
@@ -2566,6 +2600,7 @@ exit_handleclient:
 	sclose(&conn_s);
 	if(sysmem) sys_memory_free(sysmem);
 	if(loading_html) loading_html--;
+
 	sys_ppu_thread_exit(0);
 }
 

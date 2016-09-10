@@ -20,8 +20,11 @@ static char pkg_path[MAX_PKGPATH_LEN];
 static wchar_t pkg_durl[MAX_URL_LEN];
 static wchar_t pkg_dpath[MAX_DLPATH_LEN];
 
-static u16 pkg_dcount = 0;
+static u8 pkg_dcount = 0;
 static u8 pkg_auto_install = 0;
+static bool pkg_delete_after_install = true;
+static char install_path[64];
+static time_t pkg_install_time = 0;
 
 #define INT_HDD_ROOT_PATH		"/dev_hdd0/"
 #define DEFAULT_PKG_PATH		"/dev_hdd0/packages/"
@@ -35,7 +38,51 @@ typedef struct {
    u32 meta_offset;
    u64 size; // size of sce_hdr + sizeof meta_hdr
    u64 pkg_size;
- } _pkg_header;
+   u64 unk1;
+   u64 data_size;
+   char publisher[6]; // ??
+   char sep;
+   char title_id[9];
+} _pkg_header;
+
+static u64 get_pkg_size_and_install_time(char *pkgfile)
+{
+	_pkg_header pkg_header;
+
+	int fd; *install_path = pkg_header.pkg_size = pkg_install_time = 0;
+
+	if(cellFsOpen(pkgfile, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+	{
+		if(cellFsRead(fd, (void *)&pkg_header, sizeof(pkg_header), NULL) == CELL_FS_SUCCEEDED)
+		{
+			char titleID[10];
+			strncpy(titleID, pkg_header.title_id, 9); titleID[9] = NULL;
+			sprintf(install_path, "%s/%s%s", "/dev_hdd0/game", titleID, "/PS3LOGO.DAT");
+
+			struct CellFsStat s;
+			if(cellFsStat(install_path, &s) == CELL_FS_SUCCEEDED) pkg_install_time = s.st_mtime; // prevents pkg deletion if user cancels install
+
+			install_path[24] = NULL;
+		}
+		cellFsClose(fd);
+	}
+
+	return pkg_header.pkg_size; // also returns module variableS: pkg_install_time & install_path
+}
+
+static void wait_for_pkg_install(void)
+{
+	sys_timer_sleep(5);
+	while (IS_INGAME) sys_timer_sleep(2);
+
+	if(pkg_delete_after_install)
+	{
+		time_t install_time = pkg_install_time;  // set time before install
+		get_pkg_size_and_install_time(pkg_path); // get time after install
+
+		if(pkg_install_time != install_time) cellFsUnlink(pkg_path);
+	}
+}
 
 static int LoadPluginById(int id, void *handler)
 {
@@ -63,15 +110,18 @@ static void unloadSysPluginCallback(void)
 
 static void unload_web_plugins(void)
 {
-	if (View_Find("webrender_plugin"))
+	u8 retry = 0;
+
+	while(View_Find("webrender_plugin"))
 	{
 		UnloadPluginById(0x1C, (void *)unloadSysPluginCallback);
-		sys_timer_usleep(5);
+		sys_timer_usleep(500000); retry++; if(retry > 20) break;
 	}
-	if (View_Find("webbrowser_plugin"))
+
+	while(View_Find("webbrowser_plugin"))
 	{
 		UnloadPluginById(0x1B, (void *)unloadSysPluginCallback);
-		sys_timer_usleep(5);
+		sys_timer_usleep(500000); retry++; if(retry > 20) break;
 	}
 
 #ifdef VIRTUAL_PAD
@@ -225,8 +275,13 @@ static int installPKG(const char *pkgpath, char *msg)
 	int ret = FAILED;
 	if(IS_INGAME)
 	{
-		sprintf(msg, "ERROR: install from XMB");
-		return ret;
+		unload_web_plugins();
+
+		if(IS_INGAME)
+		{
+			sprintf(msg, "ERROR: install from XMB");
+			return ret;
+		}
 	}
 
 	size_t pkg_path_len = strlen(pkgpath);
@@ -240,9 +295,8 @@ static int installPKG(const char *pkgpath, char *msg)
 		else
 		if(*pkgpath == '?')
 		{
-			pkg_auto_install = 1;
-			download_file(pkgpath, msg);
-			ret = CELL_OK;
+			pkg_auto_install++;
+			return download_file(pkgpath, msg);
 		}
 		else
 			snprintf(pkg_path, MAX_PKGPATH_LEN, "%s", pkgpath);
@@ -253,10 +307,12 @@ static int installPKG(const char *pkgpath, char *msg)
 			{
 				unload_web_plugins();
 
-				sprintf(msg, "%s%s", "Installing ", pkg_path);
-
 				LoadPluginById(0x16, (void *)installPKG_thread);
 				ret = CELL_OK;
+
+				get_pkg_size_and_install_time(pkg_path); // set original pkg_install_time
+
+				sprintf(msg, "%s%s\nTo: %s", "Installing ", pkg_path, install_path);
 			}
 		}
 	}
@@ -307,32 +363,26 @@ static void poll_downloaded_pkg_files(char *msg)
 			{
 				if(!extcmp(entry.d_name, ".pkg", 4))
 				{
-					int fdl = 0; char *dlfile = msg; _pkg_header pkg_header;
+					char *dlfile = msg; u64 pkg_size;
 					sprintf(dlfile, "%s%s", TEMP_DOWNLOAD_PATH, entry.d_name); pkg_count++;
 					cellFsChmod(dlfile, MODE);
 
-					if(cellFsOpen(dlfile, CELL_FS_O_RDONLY, &fdl, NULL, 0) == CELL_FS_SUCCEEDED)
+					pkg_size = get_pkg_size_and_install_time(dlfile); if(pkg_size == 0) continue;
+
+					struct CellFsStat s;
+					if(cellFsStat(dlfile, &s) == CELL_FS_SUCCEEDED && pkg_size == s.st_size)
 					{
-						if(cellFsRead(fdl, (void *)&pkg_header, sizeof(pkg_header), NULL) == CELL_FS_SUCCEEDED)
+						char pkgfile[MAX_PATH_LEN]; u16 pkg_len;
+						pkg_len = sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dlfile + strlen(TEMP_DOWNLOAD_PATH));
+						for(u8 retry = 1; retry < 255; retry++)
 						{
-							cellFsClose(fdl);
-
-							struct CellFsStat s;
-							if(cellFsStat(dlfile, &s) == CELL_FS_SUCCEEDED && pkg_header.pkg_size == s.st_size)
-							{
-								char pkgfile[MAX_PATH_LEN]; u16 pkg_len, retry = 0;
-								pkg_len = sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dlfile + strlen(TEMP_DOWNLOAD_PATH));
-								while(cellFsRename(dlfile, pkgfile) != CELL_FS_SUCCEEDED && retry < 100)
-								{
-									sprintf(pkgfile + pkg_len - 4, " (%i).pkg", retry); retry++;
-								}
-								pkg_dcount--;
-
-								if(pkg_auto_install) installPKG(pkgfile, msg);
-							}
+							if(cellFsRename(dlfile, pkgfile) == CELL_FS_SUCCEEDED) break;
+							sprintf(pkgfile + pkg_len - 4, " (%i).pkg", retry);
 						}
-						else
-							cellFsClose(fdl);
+
+						if(pkg_dcount) pkg_dcount--;
+
+						if(pkg_auto_install) {pkg_auto_install--; installPKG(pkgfile, msg);}
 					}
 				}
 			}
