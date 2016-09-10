@@ -108,15 +108,14 @@ static void urldec(char *url, char *original)
 				url[pos] = url[i];
 			else
 			{
-				i++;
-				if(url[i]>='0' && url[i]<='9') url[pos]=(url[i]-0x30)*0x10; else
-				if(url[i]>='A' && url[i]<='F') url[pos]=(url[i]-0x37)*0x10; else
-				if(url[i]>='a' && url[i]<='f') url[pos]=(url[i]-0x57)*0x10;
-
-				i++;
-				if(url[i]>='0' && url[i]<='9') url[pos]+=url[i]-0x30; else
-				if(url[i]>='A' && url[i]<='F') url[pos]+=url[i]-0x37; else
-				if(url[i]>='a' && url[i]<='f') url[pos]+=url[i]-0x57;
+				url[pos] = 0; u8 n = 2;
+				while(n--)
+				{
+					url[pos] <<= 4, i++;
+					if(url[i]>='0' && url[i]<='9') url[pos] += url[i] -'0';      else
+					if(url[i]>='A' && url[i]<='F') url[pos] += url[i] -'A' + 10; else
+					if(url[i]>='a' && url[i]<='f') url[pos] += url[i] -'a' + 10;
+				}
 			}
 		}
 		url[pos] = NULL;

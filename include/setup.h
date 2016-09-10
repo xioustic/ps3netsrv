@@ -180,32 +180,32 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "lx=1")) webman_config->launchpad_xml = 1;
 #endif
 
-	webman_config->temp0=0;
+	webman_config->temp0   = 0;
 
 	webman_config->temp1   = get_valuen(param, "step=", 40, MAX_TEMPERATURE); //°C
 	webman_config->ps2temp = get_valuen(param, "fsp0=", 20, 99); // %
 	webman_config->manu    = get_valuen(param, "manu=", 20, 95); // %
 
 	if(strstr(param, "temp=1"))
-		webman_config->temp0= (u8)(((float)(webman_config->manu+1) * 255.f)/100.f); // manual fan speed
+		webman_config->temp0 = (u8)(((float)(webman_config->manu+1) * 255.f)/100.f); // manual fan speed
 	else
-		webman_config->temp0=0; // dynamic fan control mode
+		webman_config->temp0 = 0; // dynamic fan control mode
 
-	max_temp=0;
+	max_temp = 0;
 	if(webman_config->fanc)
 	{
-		if(webman_config->temp0==0) max_temp=webman_config->temp1; // dynamic fan max temperature in °C
+		if(webman_config->temp0 == 0) max_temp = webman_config->temp1; // dynamic fan max temperature in °C
 		fan_control(webman_config->temp0, 0);
 	}
 	else
 		restore_fan(0); //restore syscon fan control mode
 
-	webman_config->warn=0;
+	webman_config->warn = 0;
 	if(strstr(param, "warn=1")) webman_config->warn = 1;
 
 	webman_config->foot=get_valuen(param, "fp=", 0, 6);
 
-	webman_config->spp=0;
+	webman_config->spp = 0;
 #ifdef COBRA_ONLY
 	#ifdef REMOVE_SYSCALLS
 	if(strstr(param, "spp=1"))  webman_config->spp|=1;  //remove syscalls & history
@@ -384,9 +384,9 @@ static void setup_form(char *buffer, char *templn)
 	char STR_NOSPOOF[96];//		= "Disable firmware version spoofing";
 	char STR_NOGRP[104];//		= "Disable grouping of content in \"webMAN Games\"";
 	char STR_NOWMDN[112];//		= "Disable startup notification of WebMAN on the XMB";
-  #ifdef NOSINGSTAR
+	#ifdef NOSINGSTAR
 	static char STR_NOSINGSTAR[48];//	= "Remove SingStar icon";
-  #endif
+	#endif
 	char STR_AUTO_PLAY[24];//	= "Auto-Play";
 	char STR_RESET_USB[48];//	= "Disable Reset USB Bus";
 	char STR_TITLEID[128];//		= "Include the ID as part of the title of the game";
@@ -414,9 +414,9 @@ static void setup_form(char *buffer, char *templn)
 	char STR_NEXTGAME[56];//		= "NEXT GAME";
 	char STR_SHUTDOWN2[32];//	= "SHUTDOWN ";
 	char STR_RESTART2[32];//		= "RESTART&nbsp; ";
-#ifdef REMOVE_SYSCALLS
+	#ifdef REMOVE_SYSCALLS
 	char STR_DELCFWSYS2[48];//	= "DEL CFW SYSCALLS";
-#endif
+	#endif
 	char STR_UNLOADWM[64];//		= "UNLOAD WM";
 	char STR_FANCTRL2[48];//		= "CTRL FAN";
 	char STR_FANCTRL4[72];//		= "CTRL DYN FAN";
@@ -443,9 +443,9 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(STR_NOSPOOF,     "Disable firmware version spoofing");
 	sprintf(STR_NOGRP,       "Disable grouping of content in \"webMAN Games\"");
 	sprintf(STR_NOWMDN,      "Disable startup notification of WebMAN on the XMB");
-  #ifdef NOSINGSTAR
+	#ifdef NOSINGSTAR
 	sprintf(STR_NOSINGSTAR,  "Remove SingStar icon");
-  #endif
+	#endif
 	sprintf(STR_AUTO_PLAY,   "Auto-Play");
 	sprintf(STR_RESET_USB,   "Disable Reset USB Bus");
 	sprintf(STR_TITLEID,     "Include the ID as part of the title of the game");
@@ -473,9 +473,9 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(STR_NEXTGAME,    "NEXT GAME");
 	sprintf(STR_SHUTDOWN2,   "SHUTDOWN ");
 	sprintf(STR_RESTART2,    "RESTART&nbsp; ");
-#ifdef REMOVE_SYSCALLS
+	#ifdef REMOVE_SYSCALLS
 	sprintf(STR_DELCFWSYS2,  "DEL CFW SYSCALLS");
-#endif
+	#endif
 	sprintf(STR_UNLOADWM,    "UNLOAD WM");
 	sprintf(STR_FANCTRL2,    "CTRL FAN");
 	sprintf(STR_FANCTRL4,    "CTRL DYN FAN");
@@ -530,9 +530,9 @@ static void setup_form(char *buffer, char *templn)
 	language("STR_NEXTGAME", STR_NEXTGAME);
 	language("STR_SHUTDOWN2", STR_SHUTDOWN2);
 	language("STR_RESTART2", STR_RESTART2);
-#ifdef REMOVE_SYSCALLS
+	#ifdef REMOVE_SYSCALLS
 	language("STR_DELCFWSYS2", STR_DELCFWSYS2);
-#endif
+	#endif
 	language("STR_UNLOADWM", STR_UNLOADWM);
 	language("STR_FANCTRL2", STR_FANCTRL2);
 	language("STR_FANCTRL4", STR_FANCTRL4);
@@ -761,7 +761,9 @@ static void setup_form(char *buffer, char *templn)
 	int fd;
 
 	//default user account
-	strcat(buffer, "</select> : hdd0/home/<select name=\"uacc\">");
+	if(!webman_config->uaccount[0]) sprintf(webman_config->uaccount, "%08i", xsetting_CC56EB2D()->GetCurrentUserNumber());
+
+	sprintf(templn, "</select> : <a href=\"%s\">%s/</a><select name=\"uacc\">", "/dev_hdd0/home", "/dev_hdd0/home" + 5); strcat(buffer, templn);
 	{
 		if(cellFsOpendir("/dev_hdd0/home", &fd) == CELL_FS_SUCCEEDED)
 		{
@@ -1102,14 +1104,8 @@ static void reset_settings()
 	//webman_config->rec_video_format = CELL_REC_PARAM_VIDEO_FMT_MPEG4_SMALL_512K_30FPS;
 	//webman_config->rec_audio_format = CELL_REC_PARAM_AUDIO_FMT_AAC_96K;
 
-	// default first user account
-	char upath[24];
-	sprintf(webman_config->uaccount, "%08i", 1);
-	for(u8 acc = 1; acc < 100; acc++)
-	{
-		sprintf(upath, "%s/%08i", "/dev_hdd0/home", acc);
-		if(file_exists(upath)) {sprintf(webman_config->uaccount, "%08i", acc); break;}
-	}
+	// default user account
+	//memset(webman_config->uaccount, 0, 8);
 
 	// set default language
 #ifndef ENGLISH_ONLY

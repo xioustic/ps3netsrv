@@ -539,7 +539,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		get_title_and_id_from_sfo(templn, tempID, data[v3_entry].name, icon, tempstr, 0);
 	}
 	else
-		{get_name(enc_dir_name, data[v3_entry].name, NO_EXT); utf8enc(templn, enc_dir_name, 1);}
+		{get_name(enc_dir_name, data[v3_entry].name, NO_EXT); htmlenc(templn, enc_dir_name, 1);}
 
 	if(data[v3_entry].is_directory && IS_ISO_FOLDER)
 	{
@@ -1173,6 +1173,7 @@ next_html_entry:
 		else
 			for(u16 m = 0; m < idx; m++)
 			{
+				if(!strstr((line_entry[m].path) + HTML_KEY_LEN + 60, "\"gn\"")) continue;
 				tlen += concat(buffer + tlen, GAME_DIV_PREFIX);
 				tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
 				tlen += concat(buffer + tlen, GAME_DIV_SUFIX);

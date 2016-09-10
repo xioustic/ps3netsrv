@@ -121,7 +121,7 @@ static void enable_fan_control(u8 enable, char *msg)
 	if(enable <  2) webman_config->fanc = enable;	else
 					webman_config->fanc = (webman_config->fanc ? 0 : 1);
 
-	max_temp=0;
+	max_temp = 0;
 	if(webman_config->fanc)
 	{
 		if(webman_config->temp0 == FAN_AUTO) max_temp=webman_config->temp1;

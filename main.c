@@ -574,10 +574,10 @@ static bool file_exists(const char* path);
 static int isDir(const char* path);
 static int savefile(const char *file, const char *mem, u64 size);
 
+#include "include/html.h"
 #include "include/peek_poke.h"
 #include "include/led.h"
 #include "include/socket.h"
-#include "include/html.h"
 #include "include/language.h"
 
 #include "include/vpad.h"
@@ -614,9 +614,6 @@ static size_t get_name(char *name, const char *filename, u8 cache);
 
 #ifdef COBRA_ONLY
 static void do_umount_iso(void);
-#else
-static u16 string_to_lv2(char* path, uint64_t addr);
-static void add_to_map(const char *path1, const char *path2);
 #endif
 
 static bool from_reboot = false;
@@ -1034,9 +1031,9 @@ static void handleclient(u64 conn_s_p)
 	u8 served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	u64 c_len = 0;
 
-	u8 is_ps3_http = 0;
 	u8 is_cpursx = 0;
 	u8 is_popup = 0, auto_mount = 0;
+	u8 is_ps3_http = 0;
 
 	#ifdef WM_REQUEST
 	if(!wm_request)
@@ -1119,11 +1116,11 @@ static void handleclient(u64 conn_s_p)
  #ifdef VIRTUAL_PAD
 			if(is_pad || islike(param, "/combo.ps3") || islike(param, "/play.ps3"))
 			{
-				u8 is_combo = (param[2] == 'a') ? 0 : (param[1] == 'c') ? 2 : 1; // 0 = /pad.ps3   1 = /play.ps3   2 = /combo.ps3
+				u8 ret = 0, is_combo = (param[2] == 'a') ? 0 : (param[1] == 'c') ? 2 : 1; // 0 = /pad.ps3   1 = /play.ps3   2 = /combo.ps3
 
 				char *buttons = param + 9 + is_combo;
 
-				if(is_combo != 1) {if(!webman_config->nopad) parse_pad_command(buttons, is_combo);}
+				if(is_combo != 1) {if(!webman_config->nopad) ret = parse_pad_command(buttons, is_combo);}
 				else
 				{   // default: play.ps3?col=game&seg=seg_device
 					char *pos, col[16], seg[80], *param2 = buttons; *col = *seg = NULL;
@@ -1135,6 +1132,8 @@ static void handleclient(u64 conn_s_p)
 				if(is_combo == 1 && param[10] != '?') sprintf(param, "/cpursx.ps3");
 				else
 				{
+					if((ret == 'X') && IS_ON_XMB) goto reboot;
+
 					http_response(conn_s, header, param, CODE_VIRTUALPAD, buttons);
 
 					goto exit_handleclient;
@@ -2357,7 +2356,7 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/delete.ps3") || islike(param, "/delete_ps3"))
 					{
-						bool is_reset = false; char name[MAX_PATH_LEN], *param2 = param + 11;
+						bool is_reset = false; char *param2 = param + 11; int ret = 0;
 						if(strstr(param, "?wmreset")) is_reset=true;
 						if(is_reset || strstr(param, "?wmconfig")) {cellFsUnlink(WMCONFIG); reset_settings(); sprintf(param, "/delete_ps3%s", WMCONFIG);}
 						if(is_reset || strstr(param, "?wmtmp")) sprintf(param, "/delete_ps3%s", WMTMP);
@@ -2401,21 +2400,17 @@ static void handleclient(u64 conn_s_p)
 							del("/dev_hdd0/plugins/images", true);
 							goto reboot;
 						}
-						else if(del(param2, islike(param, "/delete.ps3")))
-						{
-							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
-							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr); htmlenc(templn, tempstr, 0);
-							sprintf(tempstr, "%s %s : " HTML_URL "%s<br>", STR_DELETE, STR_ERROR, param, templn, name);
-						}
 						else
 						{
-							sprintf(tempstr, "%s", param2); if(strchr(tempstr, '/')) tempstr[strrchr(tempstr, '/')-tempstr] = NULL;
-							htmlenc(name, param2 + strlen(tempstr), 0); urlenc(param, tempstr); htmlenc(templn, tempstr, 0);
-							sprintf(tempstr, "%s : " HTML_URL "%s<br>", STR_DELETE, param, templn, name);
+							ret = del(param2, islike(param, "/delete.ps3"));
+
+							sprintf(tempstr, "%s %s : ", STR_DELETE, ret ? STR_ERROR : ""); strcat(pbuffer, tempstr);
+							add_breadcrumb_trail(pbuffer, param2); sprintf(tempstr, "<br>");
+							char *pos = strrchr(param2, '/'); if(pos) *pos = NULL;
 						}
 
 						strcat(pbuffer, tempstr);
-						sprintf(tempstr, HTML_REDIRECT_TO_URL, param, is_dir ? HTML_REDIRECT_WAIT : 0); strcat(pbuffer, tempstr);
+						sprintf(tempstr, HTML_REDIRECT_TO_URL, param2, (is_dir | ret) ? HTML_REDIRECT_WAIT : 0); strcat(pbuffer, tempstr);
 					}
  #endif
 

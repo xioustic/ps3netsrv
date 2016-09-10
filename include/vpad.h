@@ -61,7 +61,7 @@ static int32_t unregister_ldd_controller(void)
 	return(CELL_PAD_OK);
 }
 
-static void parse_pad_command(const char *param, u8 is_combo)
+static u8 parse_pad_command(const char *param, u8 is_combo)
 {
 	register_ldd_controller();
 
@@ -81,7 +81,7 @@ static void parse_pad_command(const char *param, u8 is_combo)
 	data.button[CELL_PAD_BTN_OFFSET_SENSOR_Z] = // 0x0200;
 	data.button[CELL_PAD_BTN_OFFSET_SENSOR_G] =    0x0200;
 
-	if(strcasestr(param, "off")) unregister_ldd_controller(); else
+	if(IS(param, "off")) unregister_ldd_controller(); else
 	{
 		u32 delay = 70000;
 
@@ -130,7 +130,17 @@ static void parse_pad_command(const char *param, u8 is_combo)
 		if(strcasestr(param, "l3")) {data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] |= CELL_PAD_CTRL_L3;}
 		if(strcasestr(param, "r3")) {data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] |= CELL_PAD_CTRL_R3;}
 
-		if(is_combo) {vcombo = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] << 8) | (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1]); return;}
+		if(is_combo) {vcombo = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] << 8) | (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1]); return CELL_OK;}
+
+		if((data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_CROSS | CELL_PAD_CTRL_CIRCLE)) && ((param[5] == '=') || (param[6] == '=')))
+		{
+			int enter_button = 1;
+			if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_CROSS) enter_button = 1; else enter_button = 0;
+			if(strcasestr(param, "swap")) {xsetting_0AF1F161()->GetEnterButtonAssign(&enter_button); enter_button ^= 1;}
+
+			xsetting_0AF1F161()->SetEnterButtonAssign(enter_button);
+			return 'X';
+		}
 
 		// send pad data to virtual pad
 		cellPadLddDataInsert(vpad_handle, &data);
@@ -158,6 +168,8 @@ static void parse_pad_command(const char *param, u8 is_combo)
 			cellPadLddDataInsert(vpad_handle, &data);
 		}
 	}
+
+	return CELL_OK;
 }
 #endif
 

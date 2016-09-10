@@ -1,25 +1,35 @@
+#ifdef GET_KLICENSEE
+
+static char *hex_dump(char *buffer, int offset, int size)
+{
+	for (int k = 0; k < size ; k++)
+	{
+		sprintf(&buffer[2 * k],"%02X", (unsigned int)(((unsigned char*)offset)[k]));
+	}
+	return buffer;
+}
+
+#endif
+
 #ifdef DEBUG_MEM
 
 #define LV1_UPPER_MEMORY	0x8000000010000000ULL
 #define LV2_UPPER_MEMORY	0x8000000000800000ULL
 
-static void dump_mem(char *file, uint64_t start, uint32_t size_mb);
-
-static void peek_chunk(uint64_t start, uint64_t size, uint8_t* buf) // read from lv1
+static void peek_chunk(uint64_t start, uint64_t size, uint8_t *buffer) // read from lv1
 {
 	for(uint64_t t, i = 0; i < size; i += 8)
 	{
-		t = peek_lv1(start + i); memcpy(buf + i, &t, 8);
+		t = peek_lv1(start + i); memcpy(buffer + i, &t, 8);
 	}
 }
 
-static void dump_mem(char *file, uint64_t start, uint32_t size_mb)
+static void dump_mem(char *file, uint64_t start, uint32_t dump_size)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-	int fp;
-	uint64_t sw;
-	uint32_t mem_size = (_128KB_), i;
+	int fd;
+	uint32_t mem_size = _128KB_, addr;
 	sys_addr_t sys_mem = NULL;
 
 	if(start < 0x0000028080000000ULL) start |= 0x8000000000000000ULL;
@@ -28,19 +38,20 @@ static void dump_mem(char *file, uint64_t start, uint32_t size_mb)
 	{
 		uint8_t *mem_buf = (uint8_t*)sys_mem;
 
-		if(cellFsOpen(file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fp, NULL, 0) == CELL_FS_SUCCEEDED)
+		if(cellFsOpen(file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
-			for(i = 0; i < size_mb * 8UL; i++)
+			for(addr = 0; addr < dump_size; addr += mem_size)
 			{
-				peek_chunk(start + (i * mem_size), mem_size, mem_buf);
-				cellFsWrite(fp, mem_buf, mem_size, &sw);
+				peek_chunk(start + addr, mem_size, mem_buf);
+				cellFsWrite(fd, mem_buf, mem_size, NULL);
 			}
-			cellFsClose(fp);
+			cellFsClose(fd);
 		}
 		sys_memory_free((sys_addr_t)sys_mem);
 		show_msg((char*)"Memory dump completed!");
-		{ BEEP2 }
 	}
+
+	{ BEEP2 }
 
 	{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 }
@@ -59,15 +70,15 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 		if(param[10] == 'f' /*full */) {size=(dex_mode==1) ? 512 : 256;} else
 		if(param[10] == 'm' /*mem  */) {size=(dex_mode==1) ? 512 : 256;} else
 		{
-			start = convertH(param+10);
-			if(start>=LV1_UPPER_MEMORY-((uint64_t)(size*_1MB_))) start=LV1_UPPER_MEMORY-((uint64_t)(size*_1MB_));
+			start = convertH(param + 10);
+			if(start >= LV1_UPPER_MEMORY - ((uint64_t)(size * _1MB_))) start = LV1_UPPER_MEMORY - ((uint64_t)(size * _1MB_));
 		}
 
 		char *pos = strstr(param, "&size=");
 		if(pos) size = convertH(pos + 6);
 
 		sprintf(dump_file, "/dev_hdd0/dump_%s.bin", param+10);
-		dump_mem(dump_file, start, size);
+		dump_mem(dump_file, start, (size * _1MB_));
 		sprintf(templn, "<p>Dumped: " HTML_URL " [" HTML_URL2 "]", dump_file, dump_file+10, "/delete.ps3", dump_file, STR_DELETE); strcat(buffer, templn);
 	}
 }
@@ -210,9 +221,9 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		sprintf(templn, "%02X ", byte); buffer += concat(buffer, templn);
 		if(found && byte_addr >= found_address && byte_addr < (found_address + flen)) buffer += concat(buffer, "</b></font>");
 
-		if(p==0x7) buffer += concat(buffer, " ");
+		if(p == 0x7) buffer += concat(buffer, " ");
 
-		if(p==0xF)
+		if(p == 0xF)
 		{
 			buffer += concat(buffer, " ");
 			for(u8 c = 0; c < 0x10; c++, addr++)
@@ -254,3 +265,4 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 }
 
 #endif
+

@@ -186,7 +186,7 @@ static bool toggle_cobra(void)
 
 		return true; // vsh reboot
 	}
-	else if(file_exists(SYS_COBRA_PATH "stage2_disabled.zbin"))
+	else if(file_exists(SYS_COBRA_PATH "stage2_disabled.bin"))
 	{
 		show_msg((char*)"COBRA is inactive!\n"
 						"Activating COBRA...");

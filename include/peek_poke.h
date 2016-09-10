@@ -118,6 +118,54 @@ static u32 lv2peek32(u64 addr)
 }
 */
 
+#ifndef COBRA_ONLY
+
+typedef struct
+{
+	char src[384];
+	char dst[384];
+} redir_files_struct;
+
+static redir_files_struct file_to_map[10];
+
+static void add_to_map(const char *path1, const char *path2)
+{
+	if(max_mapped == 0) pokeq(MAP_BASE + 0x00, 0x0000000000000000ULL);
+
+	if(max_mapped < 10)
+	{
+		for(u8 n = 0; n < max_mapped; n++)
+		{
+			if(IS(file_to_map[n].src, path1)) return;
+		}
+
+		sprintf(file_to_map[max_mapped].src, "%s", path1);
+		sprintf(file_to_map[max_mapped].dst, "%s", path2);
+		max_mapped++;
+	}
+}
+
+static u16 string_to_lv2(char* path, uint64_t addr)
+{
+	u16 len  = (strlen(path) + 8) & 0x7f8;
+	len = RANGE(len, 8, 384);
+	u16 len2 = strlen(path); if(len2 > len) len2 = len;
+
+	u8 data2[384];
+	u8* data = data2;
+	memset(data, 0, 384);
+	memcpy(data, path, len2);
+
+	uint64_t val = 0x0000000000000000ULL;
+	for(uint64_t n = 0; n < len; n += 8)
+	{
+		memcpy(&val, &data[n], 8);
+		pokeq(addr + n, val);
+	}
+	return len2;
+}
+#endif
+
 #if defined(PS3MAPI) || defined(DEBUG_MEM) || defined(SPOOF_CONSOLEID)
 
 static uint64_t convertH(char *val)
@@ -128,9 +176,9 @@ static uint64_t convertH(char *val)
 	{
 		if(val[i]==' ') {n++; continue;}
 
-		if(val[i]>='0' && val[i]<='9') buff = (     val[i]-'0'); else
-		if(val[i]>='A' && val[i]<='F') buff = (10 + val[i]-'A'); else
-		if(val[i]>='a' && val[i]<='f') buff = (10 + val[i]-'a'); else
+		if(val[i]>='0' && val[i]<='9') buff = (val[i] - '0');      else
+		if(val[i]>='A' && val[i]<='F') buff = (val[i] - 'A' + 10); else
+		if(val[i]>='a' && val[i]<='f') buff = (val[i] - 'a' + 10); else
 		return ret;
 
 		ret = (ret << 4) | buff;
@@ -151,19 +199,6 @@ static void Hex2Bin(const char* src, char* target)
 		*(target++) = (u8)convertH(value);
 		src += 2;
 	}
-}
-
-#endif
-
-#ifdef GET_KLICENSEE
-
-static char *hex_dump(char *buffer, int offset, int size)
-{
-	for (int k = 0; k < size ; k++)
-	{
-		sprintf(&buffer[2 * k],"%02X", (unsigned int)(((unsigned char*)offset)[k]));
-	}
-	return buffer;
 }
 
 #endif

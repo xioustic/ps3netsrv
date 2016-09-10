@@ -20,11 +20,11 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 #define ext8   name + MAX(flen - 8, 0)
 #define ext13  name + MAX(flen - 13, 0)
 
-static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, u16 flen, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
+static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
 {
 	if(plen < 4) sz = 0, is_dir = true; // force folders in root -> fix: host_root, app_home
 
-	unsigned long long sbytes = sz; bool is_root = false;
+	unsigned long long sbytes = sz; bool is_root = false; u16 flen;
 
 	if(!is_dir)
 	{
@@ -264,11 +264,13 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	}
 
 	if(!param[1]) sprintf(swap, "/");
+	else if(param[1] != 'n' && file_exists(param) == false) strcpy(swap, strrchr(param, '/') + 1);
 	else
 	{
 		char label[_MAX_PATH_LEN]; tlen = strlen(param) - 4; if(tlen < 0) tlen = 0;
 
-		urlenc(url, param); /*if(islike(templn, "/net")) htmlenc(label, templn, 0); else*/ strcpy(label, templn);
+		urlenc(url, param); if(islike(param, "/net")) htmlenc(label, templn, 0); else strcpy(label, templn);
+
 		sprintf(swap, HTML_URL2,
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
@@ -351,7 +353,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		// breadcrumb trail //
 		add_breadcrumb_trail(buffer, param);
 
-		if((param[7] == 'v' || param[7] == 'm') && IS_ON_XMB && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF") || isDir("/dev_bdvd/BDMV") || isDir("/dev_bdvd/VIDEO_TS") || isDir("/dev_bdvd/AVCHD")))
+		if((param[7] == 'v' || param[1] == 'a') && IS_ON_XMB && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF") || isDir("/dev_bdvd/BDMV") || isDir("/dev_bdvd/VIDEO_TS") || isDir("/dev_bdvd/AVCHD")))
 			strcat(buffer, ": <a href=\"/play.ps3\">&lt;Play>&nbsp;</a><br>");
 		else
 			strcat(buffer, ":<br>");
@@ -369,9 +371,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
   #ifndef LITE_EDITION
 		if(is_net)
 		{
-			int ns = FAILED, abort_connection = 0;
+			int ns = FAILED, abort_connection = 0; char netid = param[4];
 
-			if(param[4] >= '0' && param[4] <= '4') ns = connect_to_remote_server((param[4]  & 0xFF) - '0');
+			if(netid >= '0' && netid <= '4') ns = connect_to_remote_server((netid  & 0xFF) - '0');
 
 			if(ns >= 0)
 			{
@@ -379,7 +381,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				if(open_remote_dir(ns, param + 5, &abort_connection) >= 0)
 				{
 					strcpy(templn, param); while(templn[plen] == '/') templn[plen--] = NULL; plen++;
-					char *p = strrchr(templn, '/'); if(p) templn[p-templn] = NULL; if(strlen(templn) < 6 && strlen(param) < 8) {templn[0] = '/', templn[1] = NULL;}
+					char *p = strrchr(templn, '/'); if(p) *p = NULL; if(strlen(templn) < 6 && strlen(param) < 8) {templn[0] = '/', templn[1] = NULL;}
 
 					urlenc(swap, templn);
 					flen = sprintf(line_entry[idx].path, "!00000"
@@ -406,12 +408,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 							if(idx >= (max_entries-3)) break;
 
 							if(param[1] == 0)
-								sprintf(templn, "/%s", dir_items[n].name);
+								flen = sprintf(templn, "/%s", dir_items[n].name);
 							else
 							{
-								sprintf(templn, "%s%s", param, dir_items[n].name);
+								flen = sprintf(templn, "%s%s", param, dir_items[n].name);
 							}
-							flen = strlen(templn) - 1; if(templn[flen] == '/') templn[flen] = NULL;
+							if(templn[flen - 1] == '/') templn[flen--] = NULL;
 
 							cellRtcSetTime_t(&rDate, dir_items[n].mtime);
 
@@ -419,7 +421,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 							is_dir = dir_items[n].is_directory; if(is_dir) dirs++;
 
-							flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, flen, sz, sf, true, show_icon0, is_ps3_http, skip_cmd);
+							flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, sz, sf, true, show_icon0, is_ps3_http, skip_cmd);
 
 							if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
 							strcpy(line_entry[idx].path, tempstr); idx++;
@@ -483,12 +485,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				if(idx >= (max_entries-3)) break;
 
 				if(plen < 4)
-					sprintf(templn, "/%s", entry.d_name);
+					flen = sprintf(templn, "/%s", entry.d_name);
 				else
 				{
-					sprintf(templn, "%s/%s", param, entry.d_name);
+					flen = sprintf(templn, "%s/%s", param, entry.d_name);
 				}
-				flen = plen + entry.d_namlen; if(templn[flen] == '/') templn[flen] = NULL;
+				if(templn[flen - 1] == '/') templn[flen--] = NULL;
 
 				cellFsStat(templn, &buf);
 				cellRtcSetTime_t(&rDate, buf.st_mtime);
@@ -497,7 +499,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				is_dir = (buf.st_mode & S_IFDIR); if(is_dir) dirs++;
 
-				flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, flen, sz, sf, false, show_icon0, is_ps3_http, skip_cmd);
+				flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, sz, sf, false, show_icon0, is_ps3_http, skip_cmd);
 
 				if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
 				strcpy(line_entry[idx].path, tempstr); idx++;
@@ -701,12 +703,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				u8 n, m;
 				for(n = 0; n < MAX_LAST_GAMES; n++)
 				{
-					if(file_exists(lastgames.game[n]) == false) lastgames.game[n][0] = NULL;
+					if(file_exists(lastgames.game[n]) == false) *lastgames.game[n] = NULL;
 				}
 
 				for(n = 0; n < (MAX_LAST_GAMES - 1); n++)
 					for(m = (n + 1); m < MAX_LAST_GAMES; m++)
-						if(lastgames.game[n][0] == '/' && lastgames.game[m][0] == '/' && (strcasecmp(strrchr(lastgames.game[n], '/'), strrchr(lastgames.game[m], '/')) > 0))
+						if(*lastgames.game[n] == '/' && *lastgames.game[m] == '/' && (strcasecmp(strrchr(lastgames.game[n], '/'), strrchr(lastgames.game[m], '/')) > 0))
 						{
 							strncpy(swap, lastgames.game[n], MAX_PATH_LEN);
 							strncpy(lastgames.game[n], lastgames.game[m], MAX_PATH_LEN);
@@ -715,7 +717,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				for(n = 0; n < MAX_LAST_GAMES; n++)
 				{
-					if(lastgames.game[n][0]) {sprintf(tempstr, "<a class=\"%c\" href=\"/mount.ps3%s\">%s</a><br>", isDir(lastgames.game[n]) ? 'd' : 'w', lastgames.game[n], strrchr(lastgames.game[n], '/') + 1); buffer += concat(buffer, tempstr);}
+					if(*lastgames.game[n]) {sprintf(tempstr, "<a class=\"%c\" href=\"/mount.ps3%s\">%s</a><br>", isDir(lastgames.game[n]) ? 'd' : 'w', lastgames.game[n], strrchr(lastgames.game[n], '/') + 1); buffer += concat(buffer, tempstr);}
 				}
 
 				strcat(buffer, "</div>");
