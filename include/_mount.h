@@ -2013,7 +2013,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// ----------------
 	// open url & exit
 	// ----------------
-	if(islike(_path0, "http") || !extcmp(_path0, ".htm", 4))
+	if(islike(_path0 + 1, "http") || islike(_path0, "http") || !extcmp(_path0, ".htm", 4))
 	{
 		char *p = strstr(_path0, "http");
 

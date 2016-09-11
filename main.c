@@ -1804,14 +1804,15 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/restart.ps3") || islike(param, "/reboot.ps3"))
 			{
-				// reboot.ps3           Hard reboot
-				// restart.ps3          Reboot using default mode (VSH reboot is the default)
-				// restart.ps3?quick    Quick reboot (load LPAR id 1)
-				// restart.ps3?vsh      VSH Reboot
-				// restart.ps3?soft     Soft reboot
-				// restart.ps3?hard     Hard reboot
-				// restart.ps3?<mode>$  Sets the default restart mode for /restart.ps3
-				// restart.ps3?min      Reboot & show min version
+				// /reboot.ps3           Hard reboot
+				// /restart.ps3          Reboot using default mode (VSH reboot is the default); skip content scan on reboot
+				// /restart.ps3?0        Allow scan content on restart
+				// /restart.ps3?quick    Quick reboot (load LPAR id 1)
+				// /restart.ps3?vsh      VSH Reboot
+				// /restart.ps3?soft     Soft reboot
+				// /restart.ps3?hard     Hard reboot
+				// /restart.ps3?<mode>$  Sets the default restart mode for /restart.ps3
+				// /restart.ps3?min      Reboot & show min version
  reboot:
 				#ifndef EMBED_JS
 				css_exists = common_js_exists = false;
@@ -1821,6 +1822,9 @@ static void handleclient(u64 conn_s_p)
 				working = 0;
 
 				{ DELETE_TURNOFF } { BEEP2 }
+
+				char *allow_scan = strstr(param,"?0");
+				if(allow_scan) *allow_scan = NULL; else savefile(WMNOSCAN, NULL, 0);
 
 				bool is_restart = IS(param, "/restart.ps3");
 
@@ -1868,7 +1872,7 @@ static void handleclient(u64 conn_s_p)
 			{
 				// /mount.ps3?<query>  search game & mount if only 1 match is found
 
-				param[1] = 'i', param[2] = 'n', param[3] = 'd', param[4] = 'e', param[5] = 'x', auto_mount = true;
+				if(!islike(param, "/mount.ps3?http")) {param[1] = 'i', param[2] = 'n', param[3] = 'd', param[4] = 'e', param[5] = 'x', auto_mount = true;}
 			}
  #endif
 
@@ -2719,9 +2723,9 @@ static void handleclient(u64 conn_s_p)
 						// /index.ps3                  show game list in HTML (refresh if cache file is not found)
 						// /index.ps3?html             refresh game list in HTML
 						// /index.ps3?mobile           show game list in slider mode
-						// /index.ps3?<query>          search folder game by device name, path or name of game
-						// /index.ps3?<device>?<name>  search folder game by device name and name
-						// /index.ps3?<query>&mobile   search folder game by device name, path or name of game in slider mode
+						// /index.ps3?<query>          search game by device name, path or name of game
+						// /index.ps3?<device>?<name>  search game by device name and name
+						// /index.ps3?<query>&mobile   search game by device name, path or name of game in slider mode
 
 						mobile_mode|=(strstr(param, "?mob")!=NULL || strstr(param, "&mob")!=NULL);
 
