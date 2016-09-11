@@ -24,7 +24,7 @@ static void poll_start_play_time(void)
 				int32_t status = 0; xsetting_F48C0548()->GetSettingNet_enable(&status);
 				xsetting_F48C0548()->SetSettingNet_enable(net_status < 0 ? 0 : net_status);
 				if(status && (net_status <= 0)) savefile(WMNET_DISABLED, NULL, 0);
-				net_status = status; BEEP3; // notify network setting changed with 3 beeps
+				net_status = status; show_msg((char*)OFFLINE_TAG);
 			}
 		}
 	}

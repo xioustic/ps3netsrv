@@ -1,4 +1,15 @@
 #ifdef VIRTUAL_PAD
+
+// /pad.ps3?off           turns off virtual pad
+// /pad.ps3?<buttons>     press the specified buttons
+// /pad.ps3?hold<buttons> keeps the specified buttons pressed
+// /pad.ps3?release       release all the buttons
+
+// /pad.ps3?cross=enter   Sets X as enter, O as cancel  (PS3 is rebooted)
+// /pad.ps3?cross=swap    Swaps the behavior of X and O (PS3 is rebooted)
+// /pad.ps3?circle=enter  Sets O as enter, X as cancel  (PS3 is rebooted)
+// /pad.ps3?circle=swap   Swaps the behavior of X and O (PS3 is rebooted)
+
 #include <cell/pad/libpad_dbg.h>
 
 #define SC_PAD_SET_DATA_INSERT_MODE		(573)

@@ -1,8 +1,13 @@
 #ifdef PKG_HANDLER
 
-// /install.ps3<pkg-path>
-// /download.ps3?url=<url>
-// /download.ps3?to=<path>&url=<url>
+// /install_ps3<pkg-path>             Keeps pkg after installation
+// /install.ps3<pkg-path>             Deletes pkg after installation
+// /install.ps3<pkg-path>?            Installs only if it's a new game, othewise navigates to the installation folder
+// /install.ps3?url=<url>             Downloads pkg to /dev_hdd0/packages & installs the pkg after download
+// /install.ps3?to=<path>&url=<url>   Same as /download.ps3
+
+// /download.ps3?url=<url>            Downloads file to /dev_hdd0/packages. pkg files are downloaded to /dev_hdd0/tmp/downloader then moved to /dev_hdd0/packages
+// /download.ps3?to=<path>&url=<url>  Downloads file to <path>
 
 #include <cell/http.h>
 

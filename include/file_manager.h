@@ -295,8 +295,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 	if(islike(param, "/dev_blind?"))
 	{
-		if(strstr(param, "?1")) enable_dev_blind(NO_MSG);
-		if(strstr(param, "?0")) disable_dev_blind();
+		if(param[11] == '1' || param[11] == 'e') enable_dev_blind(NO_MSG);
+		if(param[11] == '0' || param[11] == 'd') disable_dev_blind();
 
 		sprintf(templn, "/dev_blind: %s", isDir("/dev_blind")?STR_ENABLED:STR_DISABLED); strcat(buffer, templn); return true; //goto send_response;
 	}

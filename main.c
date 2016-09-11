@@ -1126,6 +1126,11 @@ static void handleclient(u64 conn_s_p)
  #ifdef VIRTUAL_PAD
 			if(is_pad || islike(param, "/combo.ps3") || islike(param, "/play.ps3"))
 			{
+				// /pad.ps3                      (see vpad.h for details)
+				// /combo.ps3                    simulates a combo without actually send the buttons
+				// /play.ps3                     start game from disc icon
+				// play.ps3?col=<col>&seg=<seg>  click item on XMB
+
 				u8 ret = 0, is_combo = (param[2] == 'a') ? 0 : (param[1] == 'c') ? 2 : 1; // 0 = /pad.ps3   1 = /play.ps3   2 = /combo.ps3
 
 				char *buttons = param + 9 + is_combo;
@@ -1185,6 +1190,9 @@ static void handleclient(u64 conn_s_p)
  #ifdef PKG_HANDLER
 			if(islike(param, "/download.ps3"))
 			{
+				// /download.ps3?url=<url>            (see pkg_handler.h for details)
+				// /download.ps3?to=<path>&url=<url>
+
 				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
 
 				int ret = download_file(strchr(param_original, '%') ? (param_original + 13) : (param + 13), msg);
@@ -1203,6 +1211,10 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/install.ps3") || islike(param, "/install_ps3"))
 			{
+				// /install.ps3<pkg-path>  (see pkg_handler.h for details)
+				// /install_ps3<pkg-path>  install & keep pkg
+				// /install.ps3?url=<url>  download & auto-install pkg
+
 				size_t last_char = strlen(param) - 1;
 				if(param[last_char] == '?')
 				{
@@ -1247,6 +1259,26 @@ static void handleclient(u64 conn_s_p)
  #ifdef PS3_BROWSER
 			if(islike(param, "/browser.ps3"))
 			{
+				// /browser.ps3$rsx_pause                  pause rsx processor
+				// /browser.ps3$rsx_continue               continue rsx processor
+				// /browser.ps3$block_servers              block url of PSN servers in lv2
+				// /browser.ps3$restore_servers            restore url of PSN servers in lv2
+				// /browser.ps3$show_idps                  show idps/psid (same as R2+O)
+				// /browser.ps3$ingame_screenshot          enable screenshot in-game on CFW without the feature (same as R2+O)
+				// /browser.ps3$disable_syscalls           disable CFW syscalls
+				// /browser.ps3$toggle_rebug_mode          toggle rebug mode (swap VSH REX/DEX)
+				// /browser.ps3$toggle_normal_mode         toggle normal mode (swap VSH REX/CEX)
+				// /browser.ps3$toggle_debug_menu          toggle debug menu (DEX/CEX)
+				// /browser.ps3$toggle_cobra               toggle Cobra (swap stage2)
+				// /browser.ps3$toggle_ps2emu              toggle ps2emu
+				// /browser.ps3$enable_classic_ps2_mode    creates 'classic_ps2_mode' to enable PS2 classic in PS2 Launcher (old rebug)
+				// /browser.ps3$disable_classic_ps2_mode   deletes 'classic_ps2_mode' to enable PS2 ISO in PS2 Launcher (old rebug)
+				// /browser.ps3$screenshot_xmb<path>       capture XMB screen
+				// /browser.ps3?<url>                      open url on PS3 browser
+				// /browser.ps3/<webman_cmd>               execute webMAN command on PS3 browser
+				// /browser.ps3$<explore_plugin_command>   execute explore_plugin command on XMB (http://www.psdevwiki.com/ps3/Explore_plugin#Example_XMB_Commands)
+				// /browser.ps3*<xmb_plugin_command>       execute xmb_plugin commands on XMB (http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23_Examples)
+
 				char *param2 = param + 12, *url = param + 13;
 
 				if(islike(param2, "$rsx"))
@@ -1358,8 +1390,8 @@ static void handleclient(u64 conn_s_p)
 						if(*param2 == NULL) sprintf(param2, "/");
 						if(*param2 == '/' ) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param2); open_browser(header, 0);} else
 						if(*param2 == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->ExecXMBcommand(url,0,0);}} else
-						if(*param2 == '?' ) {do_umount(false); open_browser(url, 0);} else
-											  {					 open_browser(url, 1);} // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
+						if(*param2 == '?' ) {do_umount(false);  open_browser(url, 0);} else
+											{					open_browser(url, 1);} // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
 
 						show_msg(url);
 					}
@@ -1376,6 +1408,9 @@ static void handleclient(u64 conn_s_p)
  #if defined(FIX_GAME) || defined(COPY_PS3)
 			if(strstr(param, ".ps3$abort"))
 			{
+				// /copy.ps3$abort
+				// /fixgame.ps3$abort
+
 				if(copy_in_progress) {copy_aborted = true; show_msg((char*)STR_CPYABORT);}   // /copy.ps3$abort
 				else
 				if(fix_in_progress)  {fix_aborted = true;  show_msg((char*)"Fix aborted!");} // /fixgame.ps3$abort
@@ -1387,6 +1422,12 @@ static void handleclient(u64 conn_s_p)
  #ifdef GET_KLICENSEE
 			if(islike(param, "/klic.ps3"))
 			{
+				// /klic.ps3           Show status of auto log klicensees
+				// /klic.ps3?log       Toggle auto log of klicensees
+				// /klic.ps3?auto      Auto-Log: Started
+				// /klic.ps3?off       Auto-Log: Stopped
+				// /dev_hdd0/klic.log  Log file
+
 				if(npklic_struct_offset == 0)
 				{
 					// get klicensee struct
@@ -1479,18 +1520,28 @@ static void handleclient(u64 conn_s_p)
 			#ifdef WEB_CHAT
 			if(islike(param, "/chat.ps3"))
 			{
+				// /chat.ps3    webchat
+
 				is_popup = 1;
 				goto html_response;
 			}
 			#endif
 			if(islike(param, "/popup.ps3"))
 			{
+				// /popup.ps3
+				// /popup.ps3<msg>
+
 				if(param[10] == NULL) show_info_popup = true; else is_popup = 1;
 
 				goto html_response;
 			}
 			if(islike(param, "/remap.ps3") || islike(param, "/unmap.ps3"))
 			{
+				// /remap.ps3<path1>&to=<path2>       files on path1 is accessed from path2
+				// /remap.ps3?src=<path1>&to=<path2>
+				// /unmap.ps3<path>
+				// /unmap.ps3?src=<path>
+
 				char *pos, *path1 = header, *path2 = header + MAX_PATH_LEN, *url = header + 2 * MAX_PATH_LEN, *title = header + 2 * MAX_PATH_LEN;
 
 				memset(header, 0, HTML_RECV_SIZE);
@@ -1529,7 +1580,7 @@ static void handleclient(u64 conn_s_p)
 					}
 				}
 				else
-					sprintf(param, STR_ERROR);
+					sprintf(param, "%s", STR_ERROR);
 
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 
@@ -1537,8 +1588,14 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/netstatus.ps3"))
 			{
-				if(param[15] == '0') xsetting_F48C0548()->SetSettingNet_enable(0);
-				if(param[15] == '1') xsetting_F48C0548()->SetSettingNet_enable(1);
+				// /netstatus.ps3          toggle network access in registry
+				// /netstatus.ps3?1        enable network access in registry
+				// /netstatus.ps3?enable   enable network access in registry
+				// /netstatus.ps3?0        disable network access in registry
+				// /netstatus.ps3?disable  disable network access in registry
+
+				if(param[15] == '0' || param[15] == 'e') xsetting_F48C0548()->SetSettingNet_enable(0);
+				if(param[15] == '1' || param[15] == 'd') xsetting_F48C0548()->SetSettingNet_enable(1);
 
 				int32_t status = 0;
 				xsetting_F48C0548()->GetSettingNet_enable(&status);
@@ -1560,17 +1617,30 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/dev_blind"))
 			{
+				// /dev_blind          auto-enable & access /dev_blind
+				// /dev_blind?         shows status of /dev_blind
+				// /dev_blind?0        mounts /dev_blind
+				// /dev_blind?enable   mounts /dev_blind
+				// /dev_blind?1        unmounts /dev_blind
+				// /dev_blind?disable  unmounts /dev_blind
+
 				is_binary = FOLDER_LISTING, small_alloc = false;
 				goto html_response;
 			}
 			if(islike(param, "/edit.ps3"))
 			{
+				// /edit.ps3<file>              open text file (up to 2000 bytes)
+				// /edit.ps3?f=<file>&t=<txt>   saves text to file
+
 				is_popup = 1;
 				goto html_response;
 			}
    #ifdef COPY_PS3
 			if(islike(param, "/rmdir.ps3"))
 			{
+				// /rmdir.ps3        deletes history files & remove empty ISO folders
+				// /rmdir.ps3<path>  removes empty folder
+
 				if(param[10] == '/')
 				{
 					sprintf(param, "%s", param + 10); cellFsRmdir(param);
@@ -1584,9 +1654,15 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/mkdir.ps3"))
 			{
+				// /mkdir.ps3        creates ISO folders in hdd0
+				// /mkdir.ps3<path>  creates a folder & parent folders
+
 				if(param[10] == '/')
 				{
-					sprintf(param, "%s", param + 10); cellFsMkdir(param, DMODE);
+					sprintf(param, "%s", param + 10);
+
+					mkdir_tree(param);
+					cellFsMkdir(param, DMODE);
 				}
 				else
 				{
@@ -1614,6 +1690,10 @@ static void handleclient(u64 conn_s_p)
 			else
 			if(islike(param, "/rename.ps3"))
 			{
+				// /rename.ps3<path>|<target>     rename <path> to <target>
+				// /rename.ps3<path>&to=<target>  rename <path> to <target>
+				// /rename.ps3<path>.bak          removes .bak extension
+
 				char *source = param + 11, *target = strstr(source, "|");
 				if(target) {*target = NULL; target++;} else {target = strstr(source, "&to="); if(target) {target = NULL; target+=4;}}
 
@@ -1629,6 +1709,9 @@ static void handleclient(u64 conn_s_p)
 			else
 			if(islike(param, "/cpy.ps3") || islike(param, "/cut.ps3"))
 			{
+				// /cpy.ps3<path>  stores <path> in <cp_path clipboard> buffer for copy with /paste.ps3 (cp_mode = 1)
+				// /cut.ps3<path>  stores <path> in <cp_path clipboard> buffer for move with /paste.ps3 (cp_mode = 2)
+
 				cp_mode = islike(param, "/cut.ps3") ? 2 : 1;
 				sprintf(cp_path, "%s", param + 8);
 				sprintf(param, "%s", cp_path);
@@ -1641,6 +1724,8 @@ static void handleclient(u64 conn_s_p)
 			else
 			if(islike(param, "/paste.ps3"))
 			{
+				// /paste.ps3<path>  performs a copy or move of path stored in <cp_path clipboard> to <path> indicated in url
+
 				char *source = header, *target = cp_path;
 				sprintf(source, "/copy.ps3%s", cp_path);
 				sprintf(target, "%s", param + 10);
@@ -1655,6 +1740,9 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/quit.ps3"))
 			{
+				// quit.ps3        Stops webMAN and sets fan to fixed speed specified in PS2 mode
+				// quit.ps3?0      Stops webMAN and sets fan to syscon mode
+
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
  #ifdef LOAD_PRX
  quit:
@@ -1676,6 +1764,9 @@ static void handleclient(u64 conn_s_p)
 
 			if(islike(param, "/shutdown.ps3"))
 			{
+				// /shutdown.ps3        Shutsdown
+				// /shutdown.ps3?vsh    Shutsdown using VSH
+
 				#ifndef EMBED_JS
 				css_exists = common_js_exists = false;
 				#endif
@@ -1693,12 +1784,16 @@ static void handleclient(u64 conn_s_p)
 			}
 			if(islike(param, "/rebuild.ps3"))
 			{
+				// /rebuild.ps3  reboots & start rebuilding file system
+
 				cmd[0] = cmd[1] = 0; cmd[2] = 0x03; cmd[3] = 0xE9; // 00 00 03 E9
 				savefile("/dev_hdd0/mms/db.err", cmd, 4);
 				goto reboot; // hard reboot
 			}
 			if(islike(param, "/recovery.ps3"))
 			{
+				// /recovery.ps3  reboots in pseudo-recovery mode
+
 				#define SC_UPDATE_MANAGER_IF				863
 				#define UPDATE_MGR_PACKET_ID_READ_EPROM		0x600B
 				#define UPDATE_MGR_PACKET_ID_WRITE_EPROM	0x600C
@@ -1707,12 +1802,16 @@ static void handleclient(u64 conn_s_p)
 				{system_call_7(SC_UPDATE_MANAGER_IF, UPDATE_MGR_PACKET_ID_WRITE_EPROM, RECOVER_MODE_FLAG_OFFSET, 0x00, 0, 0, 0, 0);} // set recovery mode
 				goto reboot; // hard reboot
 			}
-			if(islike(param, "/restart.ps3"))
+			if(islike(param, "/restart.ps3") || islike(param, "/reboot.ps3"))
 			{
-				goto reboot; // VSH reboot
-			}
-			if(islike(param, "/reboot.ps3"))
-			{
+				// reboot.ps3           Hard reboot
+				// restart.ps3          Reboot using default mode (VSH reboot is the default)
+				// restart.ps3?quick    Quick reboot (load LPAR id 1)
+				// restart.ps3?vsh      VSH Reboot
+				// restart.ps3?soft     Soft reboot
+				// restart.ps3?hard     Hard reboot
+				// restart.ps3?<mode>$  Sets the default restart mode for /restart.ps3
+				// restart.ps3?min      Reboot & show min version
  reboot:
 				#ifndef EMBED_JS
 				css_exists = common_js_exists = false;
@@ -1723,34 +1822,38 @@ static void handleclient(u64 conn_s_p)
 
 				{ DELETE_TURNOFF } { BEEP2 }
 
-				char mode = 0, *param2 = strstr(param, "?");
+				bool is_restart = IS(param, "/restart.ps3");
+
+				char mode = 'h', *param2 = strstr(param, "?");
  #ifndef LITE_EDITION
-				if(param2) {mode = param2[1]; if(strstr(param, "$")) {webman_config->default_restart = mode; save_settings();}} else mode = webman_config->default_restart;
+				if(param2) {mode = param2[1]; if(strstr(param, "$")) {webman_config->default_restart = mode; save_settings();}} else if(is_restart) mode = webman_config->default_restart;
  #else
 				if(param2)  mode = param2[1];
  #endif
 				if(mode == 'q')
 					{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} // (quick reboot) load LPAR id 1
 				else
-				if(mode == 'v' || (param[3] == 's' && param[12] == NULL))
+				if(mode == 's')
+					{system_call_3(SC_SYS_POWER, SYS_SOFT_REBOOT, NULL, 0);} // soft reboot
+				else
+				if(mode == 'h')
+					{system_call_3(SC_SYS_POWER, SYS_HARD_REBOOT, NULL, 0);} // hard reboot
+				else
+				if(mode == 'v' || is_restart)
 					vsh_reboot(); // VSH reboot
 				else
  #ifndef LITE_EDITION
 				if(mode == 'm')
 					reboot_show_min_version(""); // show min version
-				else
  #endif
-				if(mode == 's')
-					{system_call_3(SC_SYS_POWER, SYS_SOFT_REBOOT, NULL, 0);} // soft reboot
-				else
-					{system_call_3(SC_SYS_POWER, SYS_HARD_REBOOT, NULL, 0);} // hard reboot
-
 				goto exit_handleclient;
 			}
 
  #ifdef FIX_GAME
 			if(islike(param, "/fixgame.ps3"))
 			{
+				// /fixgame.ps3<path>  fix PARAM.SFO and EBOOT.BIN / SELF / SPRX in ISO or folder
+
 				// fix game folder
 				char *game_path = param + 12, titleID[10];
 				fix_game(game_path, titleID, FIX_GAME_FORCED);
@@ -1763,12 +1866,18 @@ static void handleclient(u64 conn_s_p)
  #ifndef LITE_EDITION
 			if(islike(param, "/mount.ps3?"))
 			{
+				// /mount.ps3?<query>  search game & mount if only 1 match is found
+
 				param[1] = 'i', param[2] = 'n', param[3] = 'd', param[4] = 'e', param[5] = 'x', auto_mount = true;
 			}
  #endif
 
 			if(islike(param, "/games.ps3"))
 			{
+				// /games.ps3
+				// /index.ps3?mobile
+				// /dev_hdd0/xmlhost/game_plugin/mobile.html
+
  mobile_response:
 				mobile_mode = true; char *param2 = param + 10;
 
@@ -1867,7 +1976,7 @@ static void handleclient(u64 conn_s_p)
 
 				if(!is_binary)
 				{
-					if(islike(param, "/favicon.ico")) {sprintf(param, "%s", wm_icons[5]);} else
+					if(islike(param, "/favicon.ico")) {sprintf(param, "%s", wm_icons[iPS3]);} else
 					{strcpy(header, param); sprintf(param, "%s/%s", html_base_path, header);} // use html path (if path is omitted)
 
 					is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
@@ -1901,12 +2010,13 @@ static void handleclient(u64 conn_s_p)
 
 				for(u8 i = 0; i < 5; i++)
 				{
-					sprintf(url, "?%i", i); if(strstr(param, url)) {profile = i; break;}
+					sprintf(url, "?%i",    i); if(strstr(param, url)) {profile = i; break;}
 					sprintf(url, "usr=%i", i); if(strstr(param, url)) {profile = i; break;}
+
 					if(is_index_ps3) {sprintf(url, "_%i", i); if(strstr(param, url)) {profile = i; break;}}
 				}
 
-				if(uprofile != profile) {webman_config->profile = profile; save_settings();}
+				if (uprofile != profile) {webman_config->profile = profile; save_settings();}
 				if((uprofile != profile) || is_index_ps3) {DELETE_CACHED_GAMES}
 			}
 			//--
@@ -2144,6 +2254,9 @@ static void handleclient(u64 conn_s_p)
 				{
 					if(islike(param, "/edit.ps3"))
 					{
+						// /edit.ps3<file>              open text file (up to 2000 bytes)
+						// /edit.ps3?f=<file>&t=<txt>   saves text to file
+
 						char *filename = templn, *txt = buffer + BUFFER_SIZE_HTML - _6KB_, *backup = txt; memset(txt, 0, _2KB_);
 
 						// get file name
@@ -2189,6 +2302,8 @@ static void handleclient(u64 conn_s_p)
   #ifdef WEB_CHAT
 					if(islike(param, "/chat.ps3"))
 					{
+						// /chat.ps3    webchat
+
 						webchat(buffer, templn, param, tempstr, conn_info_main);
 					}
 					else
@@ -2197,6 +2312,8 @@ static void handleclient(u64 conn_s_p)
   #ifdef FIX_GAME
 					if(islike(param, "/fixgame.ps3"))
 					{
+						// /fixgame.ps3<path>  fix PARAM.SFO and EBOOT.BIN / SELF / SPRX in ISO or folder
+
 						char *game_path = param + 12;
 						sprintf(templn, "Fixed: %s", game_path);
 						show_msg(templn);
@@ -2237,6 +2354,8 @@ static void handleclient(u64 conn_s_p)
 
 					if(islike(param, "/refresh.ps3") && refreshing_xml == 0)
 					{
+						// /refresh.ps3   refresh XML
+
 						refresh_xml(templn);
  #ifndef ENGLISH_ONLY
 						char STR_XMLRF[280];
@@ -2251,6 +2370,9 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/setup.ps3?"))
 					{
+						// /setup.ps3?          reset webman settings
+						// /setup.ps3?<params>  save settings
+
 						if(strstr(param, "&") == NULL)
 						{
 							cellFsUnlink(WMCONFIG);
@@ -2266,17 +2388,23 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/setup.ps3"))
 					{
+						// /setup.ps3    setup form with webman settings
+
 						setup_form(pbuffer, templn);
 					}
 					else
 					if(islike(param, "/eject.ps3"))
 					{
+						// /eject.ps3   eject physical disc from bd drive
+
 						eject_insert(1, 0);
 						strcat(pbuffer, STR_EJECTED);
 					}
 					else
 					if(islike(param, "/insert.ps3"))
 					{
+						// /insert.ps3   insert physical disc into bd drive
+
 						eject_insert(0, 1);
 						strcat(pbuffer, STR_LOADED);
 					}
@@ -2284,6 +2412,12 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/loadprx.ps3") || islike(param, "/unloadprx.ps3"))
 					{
+						// /loadprx.ps3<path-sprx>
+						// /loadprx.ps3?prx=<path-sprx>
+						// /loadprx.ps3?prx=<path-sprx>&slot=<slot>
+						// /unloadprx.ps3?prx=<path-sprx>
+						// /unloadprx.ps3?slot=<slot>
+
 						char *pos; unsigned int slot=7; bool prx_found;
 
 						if(param[12] == '/') sprintf(templn, "%s", param + 12); else
@@ -2337,6 +2471,11 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/videorec.ps3"))
 					{
+						// /videorec.ps3
+						// /videorec.ps3<path>
+						// /videorec.ps3?<video-rec-params> {mp4, jpeg, psp, hd, avc, aac, pcm, 64, 128, 384, 512, 768, 1024, 1536, 2048}
+						// /videorec.ps3?<path>&video=<format>&audio=<format>
+
 						toggle_video_rec(param + 13);
 						strcat(pbuffer,	"<a class=\"f\" href=\"/dev_hdd0\">/dev_hdd0/</a><a href=\"/dev_hdd0/VIDEO\">VIDEO</a>:<p>"
 										"Video recording: <a href=\"/videorec.ps3\">");
@@ -2350,6 +2489,13 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/extgd.ps3"))
 					{
+						// /extgd.ps3          toggle external GAME DATA
+						// /extgd.ps3?         show status of external GAME DATA
+						// /extgd.ps3?1        enable external GAME DATA
+						// /extgd.ps3?enable   enable external GAME DATA
+						// /extgd.ps3?0        disable external GAME DATA
+						// /extgd.ps3?disable  disable external GAME DATA
+
 						if(param[10] != '?') extgd ^= 1; else
 						if(param[11] == 'e' /*enable */ || param[11] == '1') extgd = 1; else
 						if(param[11] == 'd' /*disable*/ || param[11] == '0') extgd = 0;
@@ -2367,6 +2513,13 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/sysbgm.ps3"))
 					{
+						// /sysbgm.ps3          toggle in-game background music flag
+						// /sysbgm.ps3?         show status of in-game background music flag
+						// /sysbgm.ps3?1        enable in-game background music flag
+						// /sysbgm.ps3?enable   enable in-game background music flag
+						// /sysbgm.ps3?0        disable in-game background music flag
+						// /sysbgm.ps3?disable  disable in-game background music flag
+
 						if(param[11] == '?')
 						{
 							if((param[12] == '1') || (param[12] == 'e')) system_bgm = 0; //enable
@@ -2390,6 +2543,14 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/delete.ps3") || islike(param, "/delete_ps3"))
 					{
+						// /delete_ps3<path>      deletes <path>
+						// /delete.ps3<path>      deletes <path> and recursively delete subfolders
+						// /delete.ps3?wmreset    deletes wmconfig & clear /dev_hdd0/tmp/wmtmp
+						// /delete.ps3?wmconfig   deletes wmconfig
+						// /delete.ps3?wmtmp      clear /dev_hdd0/tmp/wmtmp
+						// /delete.ps3?history    deletes history files & remove empty ISO folders
+						// /delete.ps3?uninstall  uninstall webMAN MOD & delete files installed by updater
+
 						bool is_reset = false; char *param2 = param + 11; int ret = 0;
 						if(strstr(param, "?wmreset")) is_reset=true;
 						if(is_reset || strstr(param, "?wmconfig")) {cellFsUnlink(WMCONFIG); reset_settings(); sprintf(param, "/delete_ps3%s", WMCONFIG);}
@@ -2510,11 +2671,28 @@ static void handleclient(u64 conn_s_p)
 					else
 					if(islike(param, "/dump.ps3"))
 					{
+						// /dump.ps3?lv1
+						// /dump.ps3?lv2
+						// /dump.ps3?rsx
+						// /dump.ps3?mem
+						// /dump.ps3?full
+						// /dump.ps3?<start-address>
+						// /dump.ps3?<start-address>&size=<mb>
+
 						ps3mapi_mem_dump(pbuffer, templn, param);
 					}
 					else
 					if(islike(param, "/peek.lv") || islike(param, "/poke.lv") || islike(param, "/find.lv"))
 					{
+						// /peek.lv1?<address>
+						// /poke.lv1?<address>=<value>
+						// /find.lv1?<value>
+						// /find.lv1?<start-address>=<value>
+						// /peek.lv2?<address>
+						// /poke.lv2?<address>=<value>
+						// /find.lv2?<value>
+						// /find.lv2?<start-address>=<value>
+
 						ps3mapi_find_peek_poke(pbuffer, templn, param);
 					}
  #endif
@@ -2526,11 +2704,25 @@ static void handleclient(u64 conn_s_p)
 					if(mount_ps3 || forced_mount || islike(param, "/mount.ps3") || islike(param, "/copy.ps3"))
  #endif
 					{
+						// /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
+						// /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
+						// /mount.ps3/unmount
+						// /mount.ps2/<path>[?random=<x>]
+						// /mount.ps2/unmount
+						// /copy.ps3/<path>[&to=<destination>]
+
 						game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount);
 					}
 
 					else
 					{
+						// /index.ps3                  show game list in HTML (refresh if cache file is not found)
+						// /index.ps3?html             refresh game list in HTML
+						// /index.ps3?mobile           show game list in slider mode
+						// /index.ps3?<query>          search folder game by device name, path or name of game
+						// /index.ps3?<device>?<name>  search folder game by device name and name
+						// /index.ps3?<query>&mobile   search folder game by device name, path or name of game in slider mode
+
 						mobile_mode|=(strstr(param, "?mob")!=NULL || strstr(param, "&mob")!=NULL);
 
 						if(game_listing(buffer, templn, param, tempstr, mobile_mode, auto_mount) == false)

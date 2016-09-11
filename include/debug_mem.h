@@ -77,7 +77,7 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 		char *pos = strstr(param, "&size=");
 		if(pos) size = convertH(pos + 6);
 
-		sprintf(dump_file, "/dev_hdd0/dump_%s.bin", param+10);
+		sprintf(dump_file, "/dev_hdd0/dump_%s.bin", param + 10);
 		dump_mem(dump_file, start, (size * _1MB_));
 		sprintf(templn, "<p>Dumped: " HTML_URL " [" HTML_URL2 "]", dump_file, dump_file+10, "/delete.ps3", dump_file, STR_DELETE); strcat(buffer, templn);
 	}
@@ -92,9 +92,9 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 	char *v;
 
 	v = strstr(param + 10, "&");
-	if(v) v = NULL;
+	if(v) *v = NULL;
 
-	address = convertH(param+10);
+	address = convertH(param + 10);
 
 	v = strstr(param + 10, "=");
 	if(v)
