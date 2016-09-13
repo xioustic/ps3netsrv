@@ -1,4 +1,3 @@
-#define MAX_ISO_PARTS			(16)
 #define MAX_LAST_GAMES			(5)
 #define LAST_GAMES_UPPER_BOUND	(4)
 
@@ -21,1090 +20,6 @@ typedef struct
 
 #define PLAYSTATION      "PLAYSTATION "
 
-#ifndef COBRA_ONLY
-static uint64_t base_addr = 0;
-static uint64_t open_hook = 0;
-
-static uint64_t sc_600 = 0;
-static uint64_t sc_604 = 0;
-static uint64_t sc_142 = 0;
-#endif
-
-static void detect_firmware(void)
-{
-	if((c_firmware > 3.40f) || SYSCALL_TABLE || syscalls_removed) return;
-
-	const uint64_t CEX = 0x4345580000000000ULL;
-
-#ifdef DEX_SUPPORT
-	const uint64_t DEX = 0x4445580000000000ULL;
-#endif
-#ifdef DECR_SUPPORT
-	const uint64_t DEH = 0x4445480000000000ULL;
-#endif
-
-	dex_mode = 0;
-
-	for(uint8_t lv2_offset = 1; lv2_offset < 0x10; lv2_offset++)
-	{
-		if(SYSCALL_TABLE) break;
-
-		LV2_OFFSET_ON_LV1 = (uint64_t)lv2_offset * 0x1000000ULL;
-
-		if(peekq(0x80000000002ED808ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_480;  c_firmware = 4.80f;}				else
-		if(peekq(0x80000000002ED818ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_475;  c_firmware = (peekq(0x80000000002FCB68ULL) == 0x323031352F31322FULL)?4.78f:(peekq(0x80000000002FCB68ULL) == 0x323031352F30382FULL)?4.76f:4.75f;} else
-		if(peekq(0x80000000002ED778ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_470;  c_firmware = 4.70f;}				else
-		if(peekq(0x80000000002ED860ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_465;  c_firmware = (peekq(0x80000000002FC938ULL) == 0x323031342F31312FULL)?4.66f:4.65f;} else
-		if(peekq(0x80000000002ED850ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_460;  c_firmware = 4.60f;}				else
-		if(peekq(0x80000000002EC5E0ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_455;  c_firmware = 4.55f;}				else
-		if(peekq(0x80000000002E9D70ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_453;  c_firmware = 4.53f;}				else
-		if(peekq(0x80000000002E9BE0ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_450;  c_firmware = 4.50f;}				else
-		if(peekq(0x80000000002EA9B8ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_446;  c_firmware = 4.46f;}				else
-		if(peekq(0x80000000002E8610ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_421;  c_firmware = 4.21f;}				else
-		if(peekq(0x80000000002D83D0ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_355;  c_firmware = 3.55f;}				else
-
- //No cobra cfw but as mamba compatibility
-		if(peekq(0x80000000002EA498ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_441;  c_firmware = 4.41f;}				else
-		if(peekq(0x80000000002EA488ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_440;  c_firmware = 4.40f;}				else
-		if(peekq(0x80000000002E9F18ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_431;  c_firmware = 4.31f;}				else
-		if(peekq(0x80000000002E9F08ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_430;  c_firmware = 4.30f;}				else
-
-#ifdef DEX_SUPPORT
-		if(peekq(0x800000000030F3A0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_480D; c_firmware = 4.80f; dex_mode = 2;}	else
-		if(peekq(0x800000000030F2D0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_475D; c_firmware = (peekq(0x800000000031EF48ULL) == 0x323031352F31322FULL)?4.78f:(peekq(0x800000000031EF48ULL) == 0x323031352F30382FULL)?4.76f:4.75f; dex_mode = 2;}	else
-		if(peekq(0x800000000030F240ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_470D; c_firmware = 4.70f; dex_mode = 2;}	else
-		if(peekq(0x800000000030F1A8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_465D; c_firmware = (peekq(0x800000000031EBA8ULL) == 0x323031342F31312FULL)?4.66f:4.65f; dex_mode = 2;} else
-		if(peekq(0x800000000030F198ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_460D; c_firmware = 4.60f; dex_mode = 2;}	else
-		if(peekq(0x800000000030D6A8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_455D; c_firmware = 4.55f; dex_mode = 2;}	else
-		if(peekq(0x800000000030AEA8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_453D; c_firmware = 4.53f; dex_mode = 2;}	else
-		if(peekq(0x8000000000309698ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_450D; c_firmware = 4.50f; dex_mode = 2;}	else
-		if(peekq(0x8000000000305410ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_446D; c_firmware = 4.46f; dex_mode = 2;}	else
-		if(peekq(0x8000000000304EF0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_441D; c_firmware = 4.41f; dex_mode = 2;}	else
-		if(peekq(0x8000000000304EE0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_440D; c_firmware = 4.40f; dex_mode = 2;}	else
-		if(peekq(0x8000000000304640ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_431D; c_firmware = 4.31f; dex_mode = 2;}	else
-		if(peekq(0x8000000000304630ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_430D; c_firmware = 4.30f; dex_mode = 2;}	else
-		if(peekq(0x8000000000302D88ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_421D; c_firmware = 4.21f; dex_mode = 2;}	else
-		if(peekq(0x80000000002EFE20ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_355D; c_firmware = 3.55f; dex_mode = 2;}	else
-#endif
-
-#ifdef DECR_SUPPORT
-		if(peekq(0x8000000000319F78ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_355H; c_firmware = 3.55f; dex_mode = 1;}	else
-	  //if(peekq(0x800000000032B270ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_450H; c_firmware = 4.50f; dex_mode = 1;}	else
-		if(peekq(0x800000000032EDC8ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_460H; c_firmware = 4.60f; dex_mode = 1;}	else
-		if(peekq(0x800000000032EB60ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_475H; c_firmware = (peekq(0x8000000000344B70ULL) == 0x323031352F31322FULL)?4.78f:(peekq(0x8000000000344B70ULL) == 0x323031352F30382FULL)?4.76f:4.75f; dex_mode = 1;}	else
-		if(peekq(0x800000000032EB60ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_480H; c_firmware = 4.80f; dex_mode = 1;}	else
-#endif
-
-#ifndef COBRA_ONLY
-		if(peekq(0x80000000002CFF98ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_341;  c_firmware = 3.41f;} else
-		//if(peekq(0x80000000002E79C8ULL) == DEX) {c_firmware = 3.41f; dex_mode = 2;}	else
-#endif
-		if(SYSCALL_TABLE) break;
-	}
-
-	if(!SYSCALL_TABLE) {c_firmware = 0.00f; return;}
-
-	sprintf(fw_version, "%i.%02i", (int)c_firmware, ((u32)(c_firmware * 1000.0f) % 1000) / 10);
-
-	// get payload type & version
-	{system_call_1(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_GET_MAMBA); is_mamba = ((int)p1 == 0x666);}
-	sys_get_version2(&cobra_version);
-
-#ifndef COBRA_ONLY
-	if(!dex_mode)
-	{   // CEX
-		if(c_firmware == 3.41f) {base_addr = 0x2B5D30; open_hook = 0x2AAFC8;} else
-		if(c_firmware == 3.55f) {base_addr = 0x2BE0D0; open_hook = 0x2B3274;} else
-		if(c_firmware == 4.21f) {base_addr = 0x2D0C98; open_hook = 0x2C2558;} else
-		if(c_firmware == 4.30f) {base_addr = 0x2D2418; open_hook = 0x2C3CD4;} else
-		if(c_firmware == 4.31f) {base_addr = 0x2D2428; open_hook = 0x2C3CE0;} else
-		if(c_firmware == 4.40f) {base_addr = 0x2D29A8; open_hook = 0x2C4284;} else
-		if(c_firmware == 4.41f) {base_addr = 0x2D29B8; open_hook = 0x2C4290;} else
-		if(c_firmware == 4.46f) {base_addr = 0x2D2ED8; open_hook = 0x2C47B0;} else
-		if(c_firmware == 4.50f) {base_addr = 0x2D4CB8; open_hook = 0x29DD20;} else
-		if(c_firmware == 4.53f) {base_addr = 0x2D4E48; open_hook = 0x29DEF8;} else
-		if(c_firmware == 4.55f) {base_addr = 0x2D7660; open_hook = 0x29F748;} else
-		if(c_firmware == 4.60f) {base_addr = 0x2D88D0; open_hook = 0x2A02BC;} else
-		if(c_firmware == 4.65f) {base_addr = 0x2D88E0; open_hook = 0x2A02C8;} else
-		if(c_firmware == 4.66f) {base_addr = 0x2D88E0; open_hook = 0x2A02C8;} else
-		if(c_firmware == 4.70f) {base_addr = 0x2D8A70; open_hook = 0x2975C0;} else
-		if(c_firmware >= 4.75f &&
-		   c_firmware <= 4.78f) {base_addr = 0x2D8AF0; open_hook = 0x297638;} else
-		if(c_firmware == 4.80f) {base_addr = 0x2D8AE0; open_hook = 0x29762C;}
-	}
- #ifdef DECR_SUPPORT
-	else if(dex_mode == 1)
-	{   // DECR
-		if(c_firmware == 3.55f) {base_addr = 0x2F5320; open_hook = 0x2E31F4;} else
-	  //if(c_firmware == 4.50f) {base_addr = 0x30D2C0; open_hook = 0x2CEF08;} else
-		if(c_firmware == 4.60f) {base_addr = 0x310EE0; open_hook = 0x2D1464;} else
-		if(c_firmware == 4.78f) {base_addr = 0x3110F0; open_hook = 0x2C87E0;} else
-		if(c_firmware == 4.80f) {base_addr = 0x3110F0; open_hook = 0x2C87D4;}
-	}
- #endif
- #ifdef DEX_SUPPORT
-	else if(dex_mode == 2)
-	{   // DEX
-		if(c_firmware == 3.55f) {base_addr = 0x2D5B20; open_hook = 0x2C8A94;} else
-		if(c_firmware == 4.21f) {base_addr = 0x2EB418; open_hook = 0x2D9718;} else
-		if(c_firmware == 4.30f) {base_addr = 0x2ECB48; open_hook = 0x2DAE4C;} else
-		if(c_firmware == 4.31f) {base_addr = 0x2ECB58; open_hook = 0x2DAE58;} else
-		if(c_firmware == 4.40f) {base_addr = 0x2ED408; open_hook = 0x2DB730;} else
-		if(c_firmware == 4.41f) {base_addr = 0x2ED418; open_hook = 0x2DB73C;} else
-		if(c_firmware == 4.46f) {base_addr = 0x2ED938; open_hook = 0x2DBC5C;} else
-		if(c_firmware == 4.50f) {base_addr = 0x2F4778; open_hook = 0x2B81E8;} else
-		if(c_firmware == 4.53f) {base_addr = 0x2F5F88; open_hook = 0x2B83C0;} else
-		if(c_firmware == 4.55f) {base_addr = 0x2F8730; open_hook = 0x2B9C14;} else
-		if(c_firmware == 4.60f) {base_addr = 0x2FA220; open_hook = 0x2BB004;} else
-		if(c_firmware == 4.65f) {base_addr = 0x2FA230; open_hook = 0x2BB010;} else
-		if(c_firmware == 4.66f) {base_addr = 0x2FA230; open_hook = 0x2BB010;} else
-		if(c_firmware == 4.70f) {base_addr = 0x2FA540; open_hook = 0x2B2480;} else
-		if(c_firmware >= 4.75f &&
-		   c_firmware <= 4.78f) {base_addr = 0x2FA5B0; open_hook = 0x2B24F8;}
-		if(c_firmware == 4.80f) {base_addr = 0x2FA680; open_hook = 0x2B25C4;}
-	}
- #endif
-
-	base_addr |= 0x8000000000000000ULL;
-	open_hook |= 0x8000000000000000ULL;
-#endif
-
-	if(!dex_mode)
-	{ // CEX
-		if(c_firmware >= 4.55f && c_firmware <= 4.80f)
-		{
-			get_fan_policy_offset = 0x8000000000009E38ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
-			set_fan_policy_offset = 0x800000000000A334ULL; // sys 389 set_fan_policy
-
-			// idps / psid cex
-			if(c_firmware == 4.55f)
-			{
-				idps_offset1 = 0x80000000003E17B0ULL;
-				idps_offset2 = 0x8000000000474F1CULL;
-			}
-			else if(c_firmware >= 4.60f && c_firmware <= 4.66f)
-			{
-				idps_offset1 = 0x80000000003E2BB0ULL;
-				idps_offset2 = 0x8000000000474F1CULL;
-			}
-			else if(c_firmware == 4.70f)
-			{
-				idps_offset1 = 0x80000000003E2DB0ULL;
-				idps_offset2 = 0x8000000000474AF4ULL;
-			}
-			else if(c_firmware >= 4.75f && c_firmware <= 4.80f)
-			{
-				idps_offset1 = 0x80000000003E2E30ULL;
-				idps_offset2 = 0x8000000000474AF4ULL;
-			}
-
-			if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
-		}
-		else if(c_firmware >= 4.21f && c_firmware <= 4.53f)
-		{
-			get_fan_policy_offset = 0x8000000000009E28ULL; // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
-			set_fan_policy_offset = 0x800000000000A324ULL; // sys 389 set_fan_policy
-		}
-		else if(c_firmware == 3.55f)
-		{
-			get_fan_policy_offset = 0x8000000000008CBCULL; // sys 409 get_fan_policy
-			set_fan_policy_offset = 0x80000000000091B8ULL; // sys 389 set_fan_policy
-		}
-#ifndef COBRA_ONLY
-		else if(c_firmware == 3.41f)
-		{
-			get_fan_policy_offset = 0x8000000000008644ULL; // sys 409 get_fan_policy
-			set_fan_policy_offset = 0x8000000000008B40ULL; // sys 389 set_fan_policy
-		}
-#endif
-	}
-#if defined(DEX_SUPPORT) || defined(DECR_SUPPORT)
-	else if(dex_mode)
-	{ // DEX & DEH
-		if(c_firmware >= 4.55f && c_firmware <= 4.80f)
-		{
-				get_fan_policy_offset = 0x8000000000009EB8ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
-				set_fan_policy_offset = 0x800000000000A3B4ULL; // sys 389 set_fan_policy
-
-			// idps / psid dex
-#ifdef DECR_SUPPORT
-			if(dex_mode == 1)
-			{ // DEH
-				if(c_firmware >= 4.60f && c_firmware <= 4.66f)
-				{
-					idps_offset1 = 0x8000000000432430ULL;
-					idps_offset2 = 0x80000000004C4F1CULL;
-				}
-				else if(c_firmware >= 4.75f && c_firmware <= 4.80f)
-				{
-					idps_offset1 = 0x80000000004326B0ULL;
-					idps_offset2 = 0x80000000004C4AF4ULL;
-				}
-			}
-			else
-#endif
-			if(c_firmware == 4.55f)
-			{
-				idps_offset1 = 0x8000000000407930ULL;
-				idps_offset2 = 0x8000000000494F1CULL;
-			}
-			else if(c_firmware >= 4.60f && c_firmware <= 4.66f)
-			{
-				idps_offset1 = 0x80000000004095B0ULL;
-				idps_offset2 = 0x800000000049CF1CULL;
-			}
-			else if(c_firmware == 4.70f)
-			{
-				idps_offset1 = 0x80000000004098B0ULL;
-				idps_offset2 = 0x800000000049CAF4ULL;
-			}
-			else if(c_firmware >= 4.75f && c_firmware <= 4.78f)
-			{
-				idps_offset1 = 0x8000000000409930ULL;
-				idps_offset2 = 0x800000000049CAF4ULL;
-			}
-			else if(c_firmware == 4.80f)
-			{
-				idps_offset1 = 0x8000000000409A30ULL;
-				idps_offset2 = 0x800000000049CAF4ULL;
-			}
-
-			if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
-		}
-		else if(c_firmware >= 4.21f && c_firmware <= 4.53f)
-		{
-				get_fan_policy_offset = 0x8000000000009EA8ULL; // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
-				set_fan_policy_offset = 0x800000000000A3A4ULL; // sys 389 set_fan_policy
-		}
-		else if(c_firmware == 3.55f)
-		{
-				get_fan_policy_offset = 0x8000000000008D3CULL; // sys 409 get_fan_policy
-				set_fan_policy_offset = 0x8000000000009238ULL; // sys 389 set_fan_policy
-		}
-	}
-#endif
-
-#ifndef COBRA_ONLY
-	install_peek_poke();
-#endif
-}
-
-static void patch_lv2(void)
-{
-	if(!dex_mode)
-	{ // CEX
-		if(c_firmware == 3.55f)
-		{
-			pokeq(0x80000000002909B0ULL, 0x4E80002038600000ULL );
-			pokeq(0x80000000002909B8ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000055EA0ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000055F64ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000055F10ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000055F18ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000007AF64ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000007AF78ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x325B50;
-			sc_604 = 0x325C58;
-			sc_142 = 0x2E8FF8;
-#endif
-		}
-		else
-		if(c_firmware == 4.21f)
-		{
-			pokeq(0x8000000000296264ULL, 0x4E80002038600000ULL );
-			pokeq(0x800000000029626CULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000057020ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x80000000000570E4ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000057090ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000057098ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005AA54ULL, 0x2F83000060000000ULL ); // fix 80010009 error
-			pokeq(0x800000000005AA68ULL, 0x2F83000060000000ULL ); // fix 80010019 error
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33B2E0;
-			sc_604 = 0x33B448;
-			sc_142 = 0x2FD810;
-#endif
-		}
-		else
-		if(c_firmware == 4.30f)
-		{
-			pokeq(0x80000000002979D8ULL, 0x4E80002038600000ULL );
-			pokeq(0x80000000002979E0ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000057170ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000057234ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-			pokeq(0x8000000000057238ULL, 0x3BE000004BFFFF0CULL ); // introduced by me bug
-
-			pokeq(0x80000000000571E0ULL, 0x419E00D860000000ULL );
-			pokeq(0x80000000000571E8ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005ABA4ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005ABB8ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33D158; //35EEA0
-			sc_604 = 0x33D2C0; //35EEC0
-			sc_142 = 0x2FF460; //35E050
-#endif
-		}
-		else
-		if(c_firmware == 4.31f)
-		{
-			pokeq(0x80000000002979E0ULL, 0x4E80002038600000ULL );
-			pokeq(0x80000000002979E8ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000057174ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005723CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x80000000000571E8ULL, 0x600000002F840004ULL );
-			pokeq(0x80000000000571F0ULL, 0x48000098E8629870ULL );
-			pokeq(0x800000000005ABACULL, 0x60000000E8610188ULL );
-			pokeq(0x800000000005ABA0ULL, 0x600000005463063EULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33D168;
-			sc_604 = 0x33D2D0;
-			sc_142 = 0x2FF470;
-#endif
-		}
-		else
-		if(c_firmware == 4.40f)
-		{
-			pokeq(0x8000000000296DE8ULL, 0x4E80002038600000ULL );
-			pokeq(0x8000000000296DF0ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000560BCULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000056180ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error +C4
-
-			pokeq(0x800000000005612CULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000056134ULL, 0x2F84000448000098ULL );
-			pokeq(0x8000000000059AF0ULL, 0x2F83000060000000ULL );
-			pokeq(0x8000000000059B04ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33D720;
-			sc_604 = 0x33D888;
-			sc_142 = 0x2FF9E0;
-#endif
-		}
-		else
-		if(c_firmware == 4.41f)
-		{
-			pokeq(0x8000000000296DF0ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x8000000000296DF8ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000560C0ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000056184ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000056130ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000056138ULL, 0x2F84000448000098ULL );
-			pokeq(0x8000000000059AF4ULL, 0x2F83000060000000ULL );
-			pokeq(0x8000000000059B08ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33D730;
-			sc_604 = 0x33D898;
-			sc_142 = 0x2FF9F0;
-#endif
-		}
-		else
-		if(c_firmware == 4.46f)
-		{
-			pokeq(0x8000000000297310ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x8000000000297318ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000560C0ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000056184ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000056130ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000056138ULL, 0x2F84000448000098ULL );
-			pokeq(0x8000000000059AF4ULL, 0x2F83000060000000ULL );
-			pokeq(0x8000000000059B08ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33DD40;
-			sc_604 = 0x33DEA8;
-			sc_142 = 0x2FFF58;
-#endif
-		}
-		else
-		if(c_firmware == 4.50f)
-		{
-			pokeq(0x800000000026F61CULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x800000000026F624ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000560BCULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000056180ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x800000000005612CULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000056134ULL, 0x2F84000448000098ULL );
-			pokeq(0x8000000000059AF0ULL, 0x2F83000060000000ULL );
-			pokeq(0x8000000000059B04ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33C180;
-			sc_604 = 0x33C2E8;
-			sc_142 = 0x302100;
-#endif
-		}
-		else
-		if(c_firmware == 4.53f)
-		{
-			pokeq(0x800000000026F7F0ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x800000000026F7F8ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000560C0ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000056184ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000056130ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000056138ULL, 0x2F84000448000098ULL );
-			pokeq(0x8000000000059AF4ULL, 0x2F83000060000000ULL );
-			pokeq(0x8000000000059B08ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33C308;
-			sc_604 = 0x33C470;
-			sc_142 = 0x302108;
-#endif
-		}
-		else
-		if(c_firmware == 4.55f)
-		{
-			pokeq(0x800000000027103CULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x8000000000271044ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000056380ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000056444ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x80000000000563F0ULL, 0x419E00D860000000ULL );
-			pokeq(0x80000000000563F8ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005A2ECULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005A300ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33F5C8;
-			sc_604 = 0x33F730;
-			sc_142 = 0x3051D0;
-#endif
-		}
-		else
-		if(c_firmware == 4.60f)
-		{
-			pokeq(0x80000000002925D8ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x80000000002925E0ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000056588ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005664CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x80000000000565F8ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000056600ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005A654ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005A668ULL, 0x2F83000060000000ULL );
-
-			pokeq(0x80000000002A1054ULL, 0x386000014E800020ULL); // fix 0x80010017 error   Original: 0xFBC1FFF0EBC225B0ULL
-			pokeq(0x8000000000055C58ULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
-
-			//lv2poke32(0x8000000000058DACULL, 0x60000000);      // fix 0x80010017 error (found by @smhabib)
-
-			// Booting of game discs and backups speed increased
-			//lv2poke32(0x8000000000058DA0ULL, 0x38600001);
-			//lv2poke32(0x800000000005A96CULL, 0x38600000);
-
-			// enable new habib patches
-			pokeq(0x8000000000058DACULL + 0x00, 0x60000000E8610098ULL);
-			pokeq(0x8000000000058DACULL + 0x08, 0x2FA30000419E000CULL);
-			pokeq(0x8000000000058DACULL + 0x10, 0x388000334800BE15ULL);
-			pokeq(0x8000000000058DACULL + 0x18, 0xE80100F07FE307B4ULL);
-
-			pokeq(0x8000000000055C5CULL + 0x00, 0x386000004E800020ULL);
-			pokeq(0x8000000000055C5CULL + 0x08, 0xFBC10160FBE10168ULL);
-			pokeq(0x8000000000055C5CULL + 0x10, 0xFB610148FB810150ULL);
-			pokeq(0x8000000000055C5CULL + 0x18, 0xFBA10158F8010180ULL);
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x340630; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 30
-			sc_604 = 0x340798; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 98
-			sc_142 = 0x306478; //0x363A18 + 142*8 = 00363E88 -> 80 00 00 00 00 30 64 78
-#endif
-		}
-		else
-		if(c_firmware == 4.65f || c_firmware == 4.66f)
-		{
-			//patches by deank
-			pokeq(0x800000000026FDDCULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x800000000026FDE4ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D6000463D201B43ULL
-			pokeq(0x800000000005658CULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x8000000000056650ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x80000000000565FCULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000056604ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005A658ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005A66CULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x8000000000056230ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x80000000002302F0ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (2015-01-03)
-
-			pokeq(0x8000000000055C5CULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x8000000000058DB0ULL, 0x419E0038E8610098ULL ); // just restore the original
-
-		 /*
-			//anti-ode patches by deank
-			if(!is_rebug)
-			{
-				//pokeq(0x8000000000055C5CULL, 0xF821FE917C0802A6ULL ); //replaced by deank's patch (2015-01-03)
-				pokeq(0x8000000000055C84ULL, 0x6000000060000000ULL );
-				pokeq(0x8000000000055C8CULL, 0x600000003BA00000ULL );
-			}
-
-			//pokeq(0x80000000002A1060ULL, 0x386000014E800020ULL); // fix 0x80010017 error   Original: 0xFBC1FFF0EBC225B0ULL
-			//pokeq(0x8000000000055C5CULL, 0x386000004E800020ULL); // fix 0x8001002B error   Original: 0xF821FE917C0802A6ULL
-
-			// Booting of game discs and backups speed increased
-			//lv2poke32(0x8000000000058DA4ULL, 0x38600001);
-			//lv2poke32(0x800000000005A970ULL, 0x38600000);
-
-			// habib patches (newest ones)
-			pokeq(0x8000000000055C98ULL, 0x38600000EB610148ULL); //Original: 0x7FA307B4EB610148EB8101507C0803A6
-			pokeq(0x8000000000058DCCULL, 0x38600000EBA100C8ULL); //Original: 0x7FE307B4EBA100C8EBC100D07C0803A6
-
-			// enable new habib patches (now obsolete) //replaced by deank's patch (2015-01-03)
-			pokeq(0x8000000000058DB0ULL + 0x00, 0x60000000E8610098ULL);
-			pokeq(0x8000000000058DB0ULL + 0x08, 0x2FA30000419E000CULL);
-			pokeq(0x8000000000058DB0ULL + 0x10, 0x388000334800BE15ULL);
-			pokeq(0x8000000000058DB0ULL + 0x18, 0xE80100F07FE307B4ULL);
-
-			pokeq(0x8000000000055C5CULL + 0x00, 0x386000004E800020ULL);
-			pokeq(0x8000000000055C5CULL + 0x08, 0xFBC10160FBE10168ULL);
-			pokeq(0x8000000000055C5CULL + 0x10, 0xFB610148FB810150ULL);
-			pokeq(0x8000000000055C5CULL + 0x18, 0xFBA10158F8010180ULL);
-
-			//patch to prevent blackscreen on usb games in jb format
-			pokeq(0x8000000000055C84ULL, 0x386000002F830001ULL); //Original: 0x481DA6692F830001ULL
-			pokeq(0x8000000000055C8CULL, 0x419E00303BA00000ULL); //Original: 0x419E00303BA00000ULL
-		 */
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x340640; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 40
-			sc_604 = 0x3407A8; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 A8
-			sc_142 = 0x306488; //0x363A18 + 142*8 = 00363E88 -> 80 00 00 00 00 30 64 88
-#endif
-		}
-		else
-		if(c_firmware == 4.70f)
-		{
-			//patches by deank
-			pokeq(0x80000000002670D8ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL //0x80000000002898DCULL??
-			pokeq(0x80000000002670E0ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D6000463D201B43ULL //0x80000000002898E4ULL??
-			pokeq(0x8000000000056588ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x800000000005664CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x80000000000565F8ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000056600ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005A6DCULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005A6F0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x800000000005622CULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x80000000002275ECULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (2015-01-03)
-
-			pokeq(0x8000000000055C58ULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x8000000000058E18ULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33FE88;
-			sc_604 = 0x33FFF0;
-			sc_142 = 0x306618;
-#endif
-		}
-		else
-		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
-		{
-			//patches by deank
-			pokeq(0x800000000026714CULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x8000000000267154ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D6000473D201B43ULL
-			pokeq(0x800000000005658CULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x8000000000056650ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x80000000000565FCULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000056604ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005A6E0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005A6F4ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x8000000000056230ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x80000000002275F4ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (2015-01-03)
-
-			pokeq(0x8000000000055C5CULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x8000000000058E1CULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33FF28;
-			sc_604 = 0x340090;
-			sc_142 = 0x3066B8;
-#endif
-		}
-		else
-		if(c_firmware == 4.80f)
-		{
-			//patches by deank
-			pokeq(0x8000000000267144ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x800000000026714CULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
-			pokeq(0x800000000005688CULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x800000000005664CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x80000000000565F8ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000056600ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005A6DCULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005A6F0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x800000000005622CULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x80000000002275ECULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors
-
-			pokeq(0x8000000000055C58ULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x8000000000058E18ULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x33FF18;
-			sc_604 = 0x340080;
-			sc_142 = 0x3066A8;
-#endif
-		}
-	}
-
-#ifdef DECR_SUPPORT
-	else if(dex_mode == 1)
-	{ // DEH
-		if(c_firmware == 3.55f)
-		{
-			pokeq(0x8000000000291794ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x800000000029179CULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D6000353D201B43ULL
-			pokeq(0x8000000000059C58ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059D1CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059CC8ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059CD0ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000007F6D0ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000007F6E4ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x371138;
-			sc_604 = 0x371228;
-			sc_142 = 0x32FE88;
-#endif
-		}
-		else
-/*
-		if(c_firmware == 4.50f)
-		{
-			pokeq(0x8000000000276A00ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x8000000000276A08ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000059E74ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059F38ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059EE4ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059EECULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005D8A8ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005D8BCULL, 0x2F83000060000000ULL );
-
-			pokeq(0x8000000000059B40ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x800000000023705CULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-01-03)		}
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x360208;
-			sc_604 = 0x388E10;
-			sc_142 = 0x34CA38;
-#endif
-		}
-		else
-*/
-		if(c_firmware == 4.60f)
-		{
-			pokeq(0x80000000002771B8ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x80000000002771C0ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x800000000005A340ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005A404ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x800000000005A3B0ULL, 0x419E00D860000000ULL );
-			pokeq(0x800000000005A3B8ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005E408ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005E420ULL, 0x2F83000060000000ULL );
-
-			pokeq(0x8000000000059FE4ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x800000000023740CULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-01-03)		}
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x364628;
-			sc_604 = 0x38D2C0;
-			sc_142 = 0x350ED0;
-#endif
-		}
-		else
-		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
-		{
-			pokeq(0x800000000026E530ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x800000000026E538ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x800000000005A344ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005A408ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x800000000005A3B4ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x800000000005A3BCULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005E498ULL, 0x2F83000060000000ULL ); // fix 80010009 error
-			pokeq(0x800000000005E4ACULL, 0x2F83000060000000ULL ); // fix 80010009 error
-
-			pokeq(0x8000000000059FE8ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x800000000022E718ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 ERROR FIX
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x38CB60; //003B28F8 + 600*8 = 003B3BB8 -> 80 00 00 00 00 38 CB 60
-			sc_604 = 0x38CC50; //003B28F8 + 604*8 = 003B3BD8 -> 80 00 00 00 00 38 CC 50
-			sc_142 = 0x34ED30; //003B28F8 + 142*8 = 003B2D68 -> 80 00 00 00 00 34 ED 30
-#endif
-		}
-		else
-		if(c_firmware == 4.80f)
-		{
-			//patches by deank
-			pokeq(0x800000000026E528ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x800000000026E530ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
-			pokeq(0x800000000005A340ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x800000000005A020ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x800000000005A3B0ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x800000000005A3B8ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005E494ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005E4A8ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x8000000000059FE4ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x800000000022E710ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-08-14)
-
-			pokeq(0x8000000000059A10ULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x800000000005CBD0ULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x38CB60; //0x3B28F8 + 600*8 = 003B3BB8 -> 80 00 00 00 00 38 CB 60
-			sc_604 = 0x38CC50; //0x3B28F8 + 604*8 = 003B3BD8 -> 80 00 00 00 00 38 CC 50
-			sc_142 = 0x34ED30; //0x3B28F8 + 142*8 = 003B2D68 -> 80 00 00 00 00 34 ED 30
-#endif
-		}
-	}
-#endif
-#ifdef DEX_SUPPORT
-	else if(dex_mode == 2)
-	{ // DEX
-		if(c_firmware == 3.55f)
-		{
-			pokeq(0x8000000000298790ULL, 0x4E80002038600000ULL );
-			pokeq(0x8000000000298798ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x800000000005978CULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059850ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x80000000000597FCULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059804ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000007EF5CULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000007EF70ULL, 0x2F83000060000000ULL );
-#ifndef COBRA_ONLY
-			sc_600 = 0x33FAC8;
-			sc_604 = 0x33FC30;
-			sc_142 = 0x3010E0;
-#endif
-		}
-		else
-		if(c_firmware == 4.21f)
-		{
-			pokeq(0x800000000029C8C0ULL, 0x4E80002038600000ULL );
-			pokeq(0x800000000029C8C8ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x800000000005A938ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005A9FCULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x800000000005A9A8ULL, 0x419E00D860000000ULL );
-			pokeq(0x800000000005A9B0ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005E36CULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005E380ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x3583F8;
-			sc_604 = 0x3584D0;
-			sc_142 = 0x318BA0;
-#endif
-		}
-		else
-		if(c_firmware == 4.30f)
-		{
-			pokeq(0x800000000029E034ULL, 0x4E80002038600000ULL );
-			pokeq(0x800000000029E03CULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x800000000005AA88ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005AB4CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x800000000005AAF8ULL, 0x419E00D860000000ULL );
-			pokeq(0x800000000005AB00ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005E4BCULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005E4D0ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x35A220;
-			sc_604 = 0x35A2F8;
-			sc_142 = 0x31A7A0;
-#endif
-		}
-		else
-		if(c_firmware == 4.31f)
-		{
-			pokeq(0x800000000029E03CULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x800000000029E044ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x800000000005AA8CULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005AB50ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x800000000005AAFCULL, 0x419E00D860000000ULL );
-			pokeq(0x800000000005AB04ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005E4C0ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005E4D4ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x35A230;
-			sc_604 = 0x35A308;
-			sc_142 = 0x31A7B0;
-#endif
-		}
-		else
-		if(c_firmware == 4.40f)
-		{
-			pokeq(0x800000000029D444ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x800000000029D44CULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000599D4ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059A98ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059A44ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059A4CULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005D408ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005D41CULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x35AB30;
-			sc_604 = 0x35AC08;
-			sc_142 = 0x31B050;
-#endif
-		}
-		else
-		if(c_firmware == 4.41f)
-		{
-			pokeq(0x800000000029D44CULL, 0x4E80002038600000ULL );
-			pokeq(0x800000000029D454ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000599D8ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059A9CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059A48ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059A50ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005D40CULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005D420ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x35AB40;
-			sc_604 = 0x35AC18;
-			sc_142 = 0x31B060;
-#endif
-		}
-		else
-		if(c_firmware == 4.46f)
-		{
-			pokeq(0x800000000029D96CULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x800000000029D974ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x80000000000599D8ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059A9CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059A48ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059A50ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005D40CULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005D420ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x35B150;
-			sc_604 = 0x35B228;
-			sc_142 = 0x31B5C8;
-#endif
-		}
-		else
-		if(c_firmware == 4.50f)
-		{
-			pokeq(0x8000000000275D38ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x8000000000275D40ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000059A8CULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059B50ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059AFCULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059B04ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005D4C0ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005D4D4ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x35EA90;
-			sc_604 = 0x35EB68;
-			sc_142 = 0x322B38;
-#endif
-		}
-		else
-		if(c_firmware == 4.53f)
-		{
-			pokeq(0x8000000000275F0CULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x8000000000275F14ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000059A90ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059B54ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059B00ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059B08ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005D4C4ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005D4D8ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x3602A8; //0x385108 + 600*8 = 003863C8 -> 80 00 00 00 00 36 02 A8
-			sc_604 = 0x360380; //0x385108 + 604*8 = 003863E8 -> 80 00 00 00 00 36 03 80
-			sc_142 = 0x3242F0; //0x385108 + 142*8 = 00385578 -> 80 00 00 00 00 32 42 F0
-#endif
-		}
-		else
-		if(c_firmware == 4.55f)
-		{
-			pokeq(0x8000000000277758ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x8000000000277760ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000059D50ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x8000000000059E14ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059DC0ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059DC8ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005DCB8ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005DCD0ULL, 0x2F83000060000000ULL );
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x3634F8; //0x388488 + 600*8 = 00389748 -> 80 00 00 00 00 36 34 F8
-			sc_604 = 0x3635D0; //0x388488 + 604*8 = 00389768 -> 80 00 00 00 00 36 35 D0
-			sc_142 = 0x327348; //0x388488 + 142*8 = 003888F8 -> 80 00 00 00 00 32 73 48
-#endif
-		}
-		else
-		if(c_firmware == 4.60f)
-		{
-			pokeq(0x80000000002764F0ULL, 0x4E80002038600000ULL ); // fix 8001003C error
-			pokeq(0x80000000002764F8ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error
-			pokeq(0x8000000000059F58ULL, 0x63FF003D60000000ULL ); // fix 8001003D error
-			pokeq(0x800000000005A01CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error
-
-			pokeq(0x8000000000059FC8ULL, 0x419E00D860000000ULL );
-			pokeq(0x8000000000059FD0ULL, 0x2F84000448000098ULL );
-			pokeq(0x800000000005E020ULL, 0x2F83000060000000ULL );
-			pokeq(0x800000000005E038ULL, 0x2F83000060000000ULL );
-
-			pokeq(0x8000000000059BFCULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x80000000002367C4ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-01-03)
-
-			pokeq(0x8000000000059628ULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x800000000005C77CULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x364DE0; //0x38A120 + 600*8 = 0038B3E0 -> 80 00 00 00 00 36 4D E0
-			sc_604 = 0x364EB8; //0x38A120 + 604*8 = 0038B400 -> 80 00 00 00 00 36 4E B8
-			sc_142 = 0x328E70; //0x38A120 + 142*8 = 0038A590 -> 80 00 00 00 00 32 8E 70
-#endif
-		}
-		else
-		if(c_firmware == 4.65f || c_firmware == 4.66f)
-		{
-			//patches by deank
-			pokeq(0x80000000002764F8ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x8000000000276500ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D6000463D201B43ULL
-			pokeq(0x8000000000059F5CULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x800000000005A020ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x8000000000059FCCULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000059FD4ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005E028ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005E03CULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x8000000000059C00ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x80000000002367CCULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-01-03)
-
-			pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x800000000005C780ULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x364DF0; //0x38A120 + 600*8 = 0038B3E0 -> 80 00 00 00 00 36 4D F0
-			sc_604 = 0x364EC8; //0x38A120 + 604*8 = 0038B400 -> 80 00 00 00 00 36 4E C8
-			sc_142 = 0x328E80; //0x38A120 + 142*8 = 0038A590 -> 80 00 00 00 00 32 8E 80
-#endif
-		}
-		else
-		if(c_firmware == 4.70f)
-		{
-			//patches by deank
-			pokeq(0x800000000026D7F4ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x800000000026D7FCULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
-			pokeq(0x8000000000059F58ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x800000000005A01CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x8000000000059FC8ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000059FD0ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005E0ACULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005E0C0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x8000000000059BFCULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x800000000022DAC8ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-04)
-
-			pokeq(0x8000000000059628ULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x800000000005C7E8ULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x3647B8; //0x38A368 + 600*8 = 0038B628 -> 80 00 00 00 00 36 47 B8
-			sc_604 = 0x364890; //0x38A368 + 604*8 = 0038B648 -> 80 00 00 00 00 36 48 90
-			sc_142 = 0x329190; //0x38A368 + 142*8 = 0038A7D8 -> 80 00 00 00 00 32 91 90
-#endif
-		}
-		else
-		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
-		{
-			//patches by deank
-			pokeq(0x800000000026D868ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x800000000026D870ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D6000473D201B43ULL
-			pokeq(0x8000000000059F5CULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x800000000005A020ULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x8000000000059FCCULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000059FD4ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005E0B0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005E0C4ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x8000000000059C00ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x800000000022DAD0ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-08-14)
-
-			pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x800000000005C7ECULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x364848; //0x38A3E8 + 600*8 = 0038B6A8 -> 80 00 00 00 00 36 48 48
-			sc_604 = 0x364920; //0x38A3E8 + 604*8 = 0038B6C8 -> 80 00 00 00 00 36 49 20
-			sc_142 = 0x329220; //0x38A3E8 + 142*8 = 0038A858 -> 80 00 00 00 00 32 92 20
-#endif
-		}
-		else
-		if(c_firmware == 4.80f)
-		{
-			//patches by deank
-			pokeq(0x800000000026D860ULL, 0x4E80002038600000ULL ); // fix 8001003C error  Original: 0x4E8000208003026CULL
-			pokeq(0x800000000026D868ULL, 0x7C6307B44E800020ULL ); // fix 8001003C error  Original: 0x3D201B433C608001ULL
-			pokeq(0x8000000000059F58ULL, 0x63FF003D60000000ULL ); // fix 8001003D error  Original: 0x63FF003D419EFFD4ULL
-			pokeq(0x800000000005A01CULL, 0x3FE080013BE00000ULL ); // fix 8001003E error  Original: 0x3FE0800163FF003EULL
-
-			pokeq(0x8000000000059FC8ULL, 0x419E00D860000000ULL ); // Original: 0x419E00D8419D00C0ULL
-			pokeq(0x8000000000059FD0ULL, 0x2F84000448000098ULL ); // Original: 0x2F840004409C0048ULL //PATCH_JUMP
-			pokeq(0x800000000005E0ACULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-			pokeq(0x800000000005E0C0ULL, 0x2F83000060000000ULL ); // fix 80010009 error  Original: 0x2F830000419E00ACULL
-
-			pokeq(0x8000000000059BFCULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
-			pokeq(0x800000000022DAC8ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-08-14)
-
-			pokeq(0x8000000000059628ULL, 0xF821FE917C0802A6ULL ); // just restore the original
-			pokeq(0x800000000005C7E8ULL, 0x419E0038E8610098ULL ); // just restore the original
-
-#ifndef COBRA_ONLY
-			sc_600 = 0x364918; //0x38A4E8 + 600*8 = 0038B7A8 -> 80 00 00 00 00 36 49 18
-			sc_604 = 0x3649F0; //0x38A4E8 + 604*8 = 0038B7C8 -> 80 00 00 00 00 36 49 F0
-			sc_142 = 0x3292F0; //0x38A4E8 + 142*8 = 0038A958 -> 80 00 00 00 00 32 92 F0
-#endif
-		}
-	}
-#endif
-
-}
 
 // /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
 // /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
@@ -1250,7 +165,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 							sys_timer_usleep(200000);
 							explore_interface->ExecXMBcommand("focus_index 0",0,0);
 
-							if(!autoplay || strcasestr(param, ".mkv")) {is_busy=false; return;}
+							if(!autoplay || strcasestr(param, ".mkv")) {is_busy = false; return;}
 
 							sys_timer_sleep(2);
 							explore_interface->ExecXMBcommand("exec_push",0,0);
@@ -1272,7 +187,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			}
 #endif // #ifndef LITE_EDITION
 
-			is_busy=false;
+			is_busy = false;
 			return;
 		}
 
@@ -1282,6 +197,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		else if(*source == '/')
 		{
 			char _path[MAX_PATH_LEN];
+			size_t slen = 0;
 
 			// ----------------
 			// set mount label
@@ -1290,10 +206,11 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			if(islike(templn, "/net"))
 			{
 				utf8enc(_path, source, 0);
+				slen = strlen(source);
 			}
 			else
 			{
-				sprintf(_path, "%s", source);
+				slen = sprintf(_path, "%s", source);
 			}
 
 			// -----------------
@@ -1346,232 +263,234 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				else
 				if(*target) {if(!isDir(source) && isDir(target)) strcat(target, filename);} // &to=<destination>
 				else
+				{
+					char *ext4 = source + slen - 4;
  #ifdef SWAP_KERNEL
-				if(strstr(source, "/lv2_kernel"))
-				{
-					struct CellFsStat buf;
-					if(cellFsStat(source, &buf) != CELL_FS_SUCCEEDED)
-						sprintf(target, "%s", STR_ERROR);
-					else
+					if(strstr(source, "/lv2_kernel"))
 					{
-						uint64_t size = buf.st_size;
-
-						enable_dev_blind(source);
-
-						// for cobra req: /dev_flash/sys/stage2.bin & /dev_flash/sys/lv2_self
-						sprintf(target, SYS_COBRA_PATH "stage2.bin");
-						if(isDir("/dev_flash/rebug/cobra"))
+						struct CellFsStat buf;
+						if(cellFsStat(source, &buf) != CELL_FS_SUCCEEDED)
+							sprintf(target, "%s", STR_ERROR);
+						else
 						{
-							if(!extcmp(source, ".dex", 4))
-								sprintf(target, "%s/stage2.dex", "/dev_flash/rebug/cobra");
-							else if(!extcmp(source, ".cex", 4))
-								sprintf(target, "%s/stage2.cex", "/dev_flash/rebug/cobra");
-						}
+							uint64_t size = buf.st_size;
 
-						if(file_exists(target) == false)
-						{
-							sprintf(tempstr, "%s", source);
-							strcpy(strrchr(tempstr, '/'), "/stage2.bin");
-							if(file_exists(tempstr)) file_copy(tempstr, target, COPY_WHOLE_FILE);
-						}
+							enable_dev_blind(source);
 
-						// copy: /dev_flash/sys/lv2_self
-						sprintf(target, "/dev_blind/sys/lv2_self");
-						if((cellFsStat(target, &buf) != CELL_FS_SUCCEEDED) || (buf.st_size != size))
-							file_copy(source, target, COPY_WHOLE_FILE);
-
-						if((cellFsStat(target, &buf) == CELL_FS_SUCCEEDED) && (buf.st_size == size))
-						{
-							uint64_t lv2_offset = 0x15DE78; // 4.xx CFW LV1 memory location for: /flh/os/lv2_kernel.self
-							if(peek_lv1(lv2_offset) != 0x2F666C682F6F732FULL)
-								for(uint64_t addr = 0x100000ULL; addr<0xFFFFF8ULL; addr+=4) // Find in 16MB
-									if(peek_lv1(addr) == 0x2F6F732F6C76325FULL)           // /os/lv2_
-									{
-										lv2_offset=addr-4; break; // 0x12A2C0 on 3.55
-									}
-
-							if(peek_lv1(lv2_offset) == 0x2F666C682F6F732FULL)  // Original: /flh/os/lv2_kernel.self
+							// for cobra req: /dev_flash/sys/stage2.bin & /dev_flash/sys/lv2_self
+							sprintf(target, SYS_COBRA_PATH "stage2.bin");
+							if(isDir("/dev_flash/rebug/cobra"))
 							{
-								poke_lv1(lv2_offset + 0x00, 0x2F6C6F63616C5F73ULL); // replace:	/flh/os/lv2_kernel.self -> /local_sys0/sys/lv2_self
-								poke_lv1(lv2_offset + 0x08, 0x7973302F7379732FULL);
-								poke_lv1(lv2_offset + 0x10, 0x6C76325F73656C66ULL);
+								if(IS(ext4, ".dex"))
+									sprintf(target, "%s/stage2.dex", "/dev_flash/rebug/cobra");
+								else if(IS(ext4, ".cex"))
+									sprintf(target, "%s/stage2.cex", "/dev_flash/rebug/cobra");
+							}
 
-								working = 0;
-								{ DELETE_TURNOFF }
-								savefile(WMNOSCAN, NULL, 0);
-								{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} /*load LPAR id 1*/
-								sys_ppu_thread_exit(0);
+							if(file_exists(target) == false)
+							{
+								sprintf(tempstr, "%s", source);
+								strcpy(strrchr(tempstr, '/'), "/stage2.bin");
+								if(file_exists(tempstr)) file_copy(tempstr, target, COPY_WHOLE_FILE);
+							}
+
+							// copy: /dev_flash/sys/lv2_self
+							sprintf(target, "/dev_blind/sys/lv2_self");
+							if((cellFsStat(target, &buf) != CELL_FS_SUCCEEDED) || (buf.st_size != size))
+								file_copy(source, target, COPY_WHOLE_FILE);
+
+							if((cellFsStat(target, &buf) == CELL_FS_SUCCEEDED) && (buf.st_size == size))
+							{
+								uint64_t lv2_offset = 0x15DE78; // 4.xx CFW LV1 memory location for: /flh/os/lv2_kernel.self
+								if(peek_lv1(lv2_offset) != 0x2F666C682F6F732FULL)
+									for(uint64_t addr = 0x100000ULL; addr<0xFFFFF8ULL; addr+=4) // Find in 16MB
+										if(peek_lv1(addr) == 0x2F6F732F6C76325FULL)           // /os/lv2_
+										{
+											lv2_offset=addr-4; break; // 0x12A2C0 on 3.55
+										}
+
+								if(peek_lv1(lv2_offset) == 0x2F666C682F6F732FULL)  // Original: /flh/os/lv2_kernel.self
+								{
+									poke_lv1(lv2_offset + 0x00, 0x2F6C6F63616C5F73ULL); // replace:	/flh/os/lv2_kernel.self -> /local_sys0/sys/lv2_self
+									poke_lv1(lv2_offset + 0x08, 0x7973302F7379732FULL);
+									poke_lv1(lv2_offset + 0x10, 0x6C76325F73656C66ULL);
+
+									working = 0;
+									{ DELETE_TURNOFF }
+									savefile(WMNOSCAN, NULL, 0);
+									{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} /*load LPAR id 1*/
+									sys_ppu_thread_exit(0);
+								}
 							}
 						}
+						plen = 0; //do not copy
 					}
-					plen = 0; //do not copy
-				}
-				else
+					else
  #endif // #ifdef SWAP_KERNEL
-				if(!extcmp(source, ".pkg", 4))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/Packages");
-					else
-						sprintf(target, "/dev_hdd0/packages");
-
-					strcat(target, filename);
-				}
-				else if(!extcmp(source, ".bmp", 4))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "%s/PICTURE", "/dev_usb000");
-					else
-						sprintf(target, "%s/PICTURE", "/dev_hdd0");
-
-					strcat(target, filename);
-				}
-				else if(strcasestr(source, ".JPG") || strcasestr(source, ".PNG"))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "%s/PICTURE", "/dev_usb000");
-					else if(strstr(source, "BL") || strstr(param, "BC") || strstr(source, "NP"))
-						sprintf(target, "/dev_hdd0/GAMES/covers");
-					else
-						sprintf(target, "%s/PICTURE", "/dev_hdd0");
-
-					strcat(target, filename);
-				}
-				else if(strcasestr(source, "/covers"))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/COVERS");
-					else
-						sprintf(target, "/dev_hdd0/GAMES/covers");
-				}
-				else if(strcasestr(source, ".mp4") || strcasestr(source, ".mkv") || strcasestr(source, ".avi"))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/VIDEO");
-					else
-						sprintf(target, "/dev_hdd0/VIDEO");
-
-					strcat(target, filename);
-				}
-				else if(strcasestr(source, ".mp3"))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "%s/MUSIC", "/dev_usb000");
-					else
-						sprintf(target, "%s/MUSIC", "/dev_hdd0");
-
-					strcat(target, filename);
-				}
-				else if(!extcmp(source, ".p3t", 4))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/PS3/THEME");
-					else
-						sprintf(target, "/dev_hdd0/theme");
-
-					strcat(target, filename);
-				}
-				else if(!extcmp(source, ".edat", 5))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/exdata");
-					else
-						sprintf(target, "%s/%s/exdata", "/dev_hdd0/home", webman_config->uaccount);
-
-					strcat(target, filename);
-				}
-				else if(!extcmp(source, ".rco", 4) || strstr(param, "/coldboot"))
-				{
-					enable_dev_blind(NO_MSG);
-					sprintf(target, "/dev_blind/vsh/resource");
-
-					if(!extcmp(param, ".raf", 4))
-						strcat(target, "/coldboot.raf");
-					else
-						strcat(target, filename);
-				}
-				else if(!extcmp(source, ".qrc", 4))
-				{
-					enable_dev_blind(NO_MSG);
-					sprintf(target, "%s/qgl", "/dev_blind/vsh/resource");
-
-					if(strstr(param, "/lines"))
-						strcat(target, "/lines.qrc");
-					else
-						strcat(target, filename);
-				}
-				else if(strstr(source, "/exdata"))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/exdata");
-					else
-						sprintf(target, "%s/%s/exdata", "/dev_hdd0/home", webman_config->uaccount);
-				}
-				else if(strstr(source, "/PS3/THEME"))
-					sprintf(target, "/dev_hdd0/theme");
-				else if(strcasestr(source, "/savedata/"))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/PS3/SAVEDATA");
-					else
-						sprintf(target, "%s/%s/savedata", "/dev_hdd0/home", webman_config->uaccount);
-
-					strcat(target, filename);
-				}
-				else if(strcasestr(source, "/trophy/"))
-				{
-					if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000/PS3/TROPHY");
-					else
-						sprintf(target, "%s/%s/trophy", "/dev_hdd0/home", webman_config->uaccount);
-
-					strcat(target, filename);
-				}
-				else if(strstr(source, "/webftp_server"))
-				{
-					sprintf(target, "%s/webftp_server.sprx", "/dev_hdd0/plugins");
-					if(file_exists(target) == false) sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0/plugins");
-					if(file_exists(target) == false) sprintf(target, "%s/webftp_server.sprx", "/dev_hdd0");
-					if(file_exists(target) == false) sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0");
-				}
-				else if(strstr(source, "/boot_plugins_"))
-					sprintf(target, "/dev_hdd0/boot_plugins.txt");
-				else if(is_copying_from_hdd)
-					sprintf(target, "/dev_usb000%s", source + 9);
-				else if(islike(source, "/dev_usb"))
-					sprintf(target, "/dev_hdd0%s", source + 11);
-				else if(islike(source, "/net"))
-					sprintf(target, "/dev_hdd0%s", source + 5);
-				else
-				{
-					if(islike(source, "/dev_bdvd"))
+					if(IS(ext4, ".pkg"))
 					{
-						{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/Packages");
+						else
+							sprintf(target, "/dev_hdd0/packages");
 
-						sprintf(target, "%s/%s", "/dev_hdd0/GAMES", "My Disc Backup");
+						strcat(target, filename);
+					}
+					else if(_IS(ext4, ".bmp") || _IS(ext4, ".gif"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "%s/PICTURE", "/dev_usb000");
+						else
+							sprintf(target, "%s/PICTURE", "/dev_hdd0");
 
-						char title[64];
-						sprintf(title, "/dev_bdvd/PS3_GAME/PARAM.SFO");
-						if(file_exists(title))
+						strcat(target, filename);
+					}
+					else if(_IS(ext4, ".jpg") || _IS(ext4, ".png"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "%s/PICTURE", "/dev_usb000");
+						else if(strstr(source, "BL") || strstr(param, "BC") || strstr(source, "NP"))
+							sprintf(target, "/dev_hdd0/GAMES/covers");
+						else
+							sprintf(target, "%s/PICTURE", "/dev_hdd0");
+
+						strcat(target, filename);
+					}
+					else if(strcasestr(source, "/covers"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/COVERS");
+						else
+							sprintf(target, "/dev_hdd0/GAMES/covers");
+					}
+					else if(_IS(ext4, ".mp4") || _IS(ext4, ".mkv") || _IS(ext4, ".avi"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/VIDEO");
+						else
+							sprintf(target, "/dev_hdd0/VIDEO");
+
+						strcat(target, filename);
+					}
+					else if(_IS(ext4, ".mp3"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "%s/MUSIC", "/dev_usb000");
+						else
+							sprintf(target, "%s/MUSIC", "/dev_hdd0");
+
+						strcat(target, filename);
+					}
+					else if(IS(ext4, ".p3t"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/PS3/THEME");
+						else
+							sprintf(target, "/dev_hdd0/theme");
+
+						strcat(target, filename);
+					}
+					else if(!extcmp(source, ".edat", 5))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/exdata");
+						else
+							sprintf(target, "%s/%s/exdata", "/dev_hdd0/home", webman_config->uaccount);
+
+						strcat(target, filename);
+					}
+					else if(IS(ext4, ".rco") || strstr(source, "/coldboot"))
+					{
+						enable_dev_blind(NO_MSG);
+						sprintf(target, "/dev_blind/vsh/resource");
+
+						if(IS(ext4, ".raf"))
+							strcat(target, "/coldboot.raf");
+						else
+							strcat(target, filename);
+					}
+					else if(IS(ext4, ".qrc"))
+					{
+						enable_dev_blind(NO_MSG);
+						sprintf(target, "%s/qgl", "/dev_blind/vsh/resource");
+
+						if(strstr(param, "/lines"))
+							strcat(target, "/lines.qrc");
+						else
+							strcat(target, filename);
+					}
+					else if(strstr(source, "/exdata"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/exdata");
+						else
+							sprintf(target, "%s/%s/exdata", "/dev_hdd0/home", webman_config->uaccount);
+					}
+					else if(strstr(source, "/PS3/THEME"))
+						sprintf(target, "/dev_hdd0/theme");
+					else if(strcasestr(source, "/savedata/"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/PS3/SAVEDATA");
+						else
+							sprintf(target, "%s/%s/savedata", "/dev_hdd0/home", webman_config->uaccount);
+
+						strcat(target, filename);
+					}
+					else if(strcasestr(source, "/trophy/"))
+					{
+						if(is_copying_from_hdd)
+							sprintf(target, "/dev_usb000/PS3/TROPHY");
+						else
+							sprintf(target, "%s/%s/trophy", "/dev_hdd0/home", webman_config->uaccount);
+
+						strcat(target, filename);
+					}
+					else if(strstr(source, "/webftp_server"))
+					{
+						sprintf(target, "%s/webftp_server.sprx", "/dev_hdd0/plugins");
+						if(file_exists(target) == false) sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0/plugins");
+						if(file_exists(target) == false) sprintf(target, "%s/webftp_server.sprx", "/dev_hdd0");
+						if(file_exists(target) == false) sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0");
+					}
+					else if(strstr(source, "/boot_plugins_"))
+						sprintf(target, "/dev_hdd0/boot_plugins.txt");
+					else if(is_copying_from_hdd)
+						sprintf(target, "/dev_usb000%s", source + 9);
+					else if(islike(source, "/dev_usb"))
+						sprintf(target, "/dev_hdd0%s", source + 11);
+					else if(islike(source, "/net"))
+						sprintf(target, "/dev_hdd0%s", source + 5);
+					else
+					{
+						if(islike(source, "/dev_bdvd"))
 						{
-							char titleid[10];
-							getTitleID(title, titleid, GET_TITLE_AND_ID);
-							if(*titleid && (titleid[8] >= '0'))
+							{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+
+							sprintf(target, "%s/%s", "/dev_hdd0/GAMES", "My Disc Backup");
+
+							char title[80];
+							sprintf(title, "/dev_bdvd/PS3_GAME/PARAM.SFO");
+							if(file_exists(title))
 							{
-								if(strstr(title, " ["))
-									sprintf(target, "%s/%s", "/dev_hdd0/GAMES", title);
-								else
-									sprintf(target, "%s/%s [%s]", "/dev_hdd0/GAMES", title, titleid);
+								char titleid[10];
+								getTitleID(title, titleid, GET_TITLE_AND_ID);
+								if(*titleid && (titleid[8] >= '0'))
+								{
+									if(strstr(title, " ["))
+										sprintf(target, "%s/%s", "/dev_hdd0/GAMES", title);
+									else
+										sprintf(target, "%s/%s [%s]", "/dev_hdd0/GAMES", title, titleid);
+								}
 							}
 						}
+						else
+							sprintf(target, "/dev_hdd0");
+
+						char *p = strstr(source + 9, "/");
+						if(p) strcat(target, p);
 					}
-					else
-						sprintf(target, "/dev_hdd0");
-
-					char *p = strstr(source + 9, "/");
-					if(p) strcat(target, p);
 				}
-
 
 				// ------------------
 				// show copying file
@@ -1763,12 +682,7 @@ static void do_umount_iso(void)
 	if(real_disctype != DISC_TYPE_NONE)
 	{
 		cobra_send_fake_disc_insert_event();
-		for(u8 m = 0; m < 250; m++)
-		{
-			sys_timer_usleep(4000);
-
-			if(isDir("/dev_bdvd")) break;
-		}
+		waitfor("/dev_bdvd", 1);
 		cobra_disc_auth();
 	}
 }
@@ -1794,23 +708,24 @@ static void do_umount(bool clean)
 		cobra_unload_vsh_plugin(0); // unload rawseciso / netiso plugins
 		cobra_unset_psp_umd();
 
-		{sys_map_path("/dev_bdvd", NULL);}
-		{sys_map_path("/app_home", isDir("/dev_hdd0/packages") ? (char*)"/dev_hdd0/packages" : NULL);}
+		sys_map_path("/dev_bdvd", NULL);
+		sys_map_path("//dev_bdvd", NULL);
 
-		{sys_map_path("//dev_bdvd", NULL);}
+		sys_map_path("/app_home", isDir("/dev_hdd0/packages") ? (char*)"/dev_hdd0/packages" : NULL);
 		//{sys_map_path("//app_home", NULL);}
 
-		{sys_map_path("/dev_bdvd/PS3/UPDATE", NULL);}
+		sys_map_path("/dev_bdvd/PS3/UPDATE", NULL);
 
 		{
-			sys_ppu_thread_t t;
+			sys_ppu_thread_t t_id;
 			uint64_t exit_code;
+
  #ifndef LITE_EDITION
-			sys_ppu_thread_create(&t, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
-			sys_ppu_thread_join(t, &exit_code);
+			sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+			sys_ppu_thread_join(t_id, &exit_code);
  #endif
-			sys_ppu_thread_create(&t, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
-			sys_ppu_thread_join(t, &exit_code);
+			sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+			sys_ppu_thread_join(t_id, &exit_code);
 		}
 
  #ifndef LITE_EDITION
@@ -2015,16 +930,16 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// ----------------
 	if(islike(_path0 + 1, "http") || islike(_path0, "http") || !extcmp(_path0, ".htm", 4))
 	{
-		char *p = strstr(_path0, "http");
+		char *url = strstr(_path0, "http");
 
-		if(p) sprintf(_path, "%s", p); else sprintf(_path, "http://%s%s", local_ip, _path0);
+		if(!url) {url = _path; sprintf(url, "http://%s%s", local_ip, _path0);}
 
 		if(IS_ON_XMB)
 		{
 			while(View_Find("explore_plugin") == 0) sys_timer_sleep(1); // wait for explore_plugin
 
 			do_umount(false);
-			open_browser(_path, 0);
+			open_browser(url, 0);
 		}
 		else
 			ret = false;
@@ -2442,14 +1357,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					netiso_args *_netiso_args = (netiso_args*)sysmem;
 					memset(_netiso_args, 0, _64KB_);
 
-					if( (netid == '0' && webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0 > 0)
-					||	(netid == '1' && webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1 > 0)
-					||	(netid == '2' && webman_config->netd2 && webman_config->neth2[0] && webman_config->netp2 > 0)
-				#ifdef NET3NET4
-					||	(netid == '3' && webman_config->netd3 && webman_config->neth3[0] && webman_config->netp3 > 0)
-					||	(netid == '4' && webman_config->netd4 && webman_config->neth4[0] && webman_config->netp4 > 0)
-				#endif
-					  )
+					if( is_netsrv_enabled(netid) )
 					{
 						if(netid == '1')
 						{
@@ -3094,16 +2002,18 @@ exit_mount:
 
 	if(ret && *_path == '/')
 	{
-		// show loaded path
 		char msg[MAX_PATH_LEN], *pos;
 
+		// get file name (without path)
 		pos = strrchr(_path, '/');
 		sprintf(msg, "\"%s", pos + 1);
 
+		// remove file extension
 		pos = strstr(msg, ".ntfs["); if(pos) *pos = NULL;
 		pos = strrchr(msg, '.'); if(pos) *pos = NULL;
 		if(msg[1] == NULL) sprintf(msg, "\"%s", _path);
 
+		// show loaded path
 		strcat(msg, "\" "); strcat(msg, STR_LOADED2);
 		show_msg(msg);
 	}
@@ -3163,7 +2073,7 @@ exit_mount:
 			sys_map_path("/app_home", (char*)"/dev_bdvd/PKG"); //redirect net_host/PKG to app_home
 		}
 
-		{sys_map_path("/dev_bdvd/PS3_UPDATE", (char*)SYSMAP_PS3_UPDATE);} //redirect firmware update to empty folder
+		{sys_map_path("/dev_bdvd/PS3_UPDATE", (char*)SYSMAP_PS3_UPDATE);} // redirect firmware update on BD disc to empty folder
 
 		is_mounting = false;
 

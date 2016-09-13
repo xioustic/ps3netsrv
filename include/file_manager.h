@@ -20,7 +20,7 @@ u32 _MAX_LINE_LEN = MAX_LINE_LEN;
 #define ext8   name + MAX(flen - 8, 0)
 #define ext13  name + MAX(flen - 13, 0)
 
-static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd)
+static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd, u8 sort_by)
 {
 	if(plen < 4) sz = 0, is_dir = true; // force folders in root -> fix: host_root, app_home
 
@@ -82,12 +82,13 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 	u8 show_img = !is_ps3_http && (!is_dir && (!strcasecmp(ext, ".png") || !strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".bmp")));
 #endif
 
-	char dclass = 'w'; // file class
+	char sclass = ' ', dclass = 'w'; // file class
 
 	// build size column
 	if(is_dir)
 	{
 		dclass = 'd'; // dir class
+		sbytes = 0;
 
 		bool show_play = ((flen == 8) && IS(templn, "/dev_bdvd") && IS_ON_XMB);
 
@@ -190,14 +191,30 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 	else
 		sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 
-	snprintf(ename, FILE_MGR_KEY_LEN, "%s     ", name);
-	if(flen > 4) {char c = name[flen - 1]; if(ISDIGIT(c)) ename[4] = c;} to_upper(ename);
+	if(sort_by == 's')
+	{	// convert sbyte to base 255 to avoid nulls that would break strncmp in sort
+		memset(ename, 1, 5); u8 index = 4;
+		while (sbytes > 0)
+		{
+			ename[index] = 1 + (sbytes % 255);
+			sbytes = sbytes / 255ULL;
+			if(index == 0) break; else index--;
+		}
+	}
+	else if(sort_by == 'd')
+		sprintf(ename, "%c%c%c%c%c", ((rDate.year - 1968) % 223) + 0x20, rDate.month+0x20, rDate.day+0x20, rDate.hour+0x20, rDate.minute+0x20);
+	else
+	{
+		snprintf(ename, FILE_MGR_KEY_LEN, "%s     ", name); sclass = dclass;
+		if(flen > 4) {char c = name[flen - 1]; if(ISDIGIT(c)) ename[4] = c;}
+	}
 
-	if((plen > 1) && memcmp(templn, param, plen) == 0) sprintf(templn, "%s", templn + plen + 1);
+	if((plen > 1) && memcmp(templn, param, plen) == 0) sprintf(templn, "%s", templn + plen + 1); // remove path from templn (use relative path)
 
-	flen = sprintf(tempstr, "%c%c%c%c%c%c"
+	*tempstr = sclass; memcpy(tempstr + 1, ename, 5);
+
+	flen = sprintf(tempstr + FILE_MGR_KEY_LEN,
 							 "%c\" href=\"%s\"%s>%s</a></td>",
-							dclass, ename[0], ename[1], ename[2], ename[3], ename[4],
 							dclass, templn,
 #ifndef LITE_EDITION
 							show_img ? " onmouseover=\"s(this,0);\"" : (is_dir && show_icon0) ? " onmouseover=\"s(this,1);\"" :
@@ -208,18 +225,16 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 	{
 		if(is_dir) sprintf(fsize, HTML_DIR); else sprintf(fsize, "%llu %s", sz, sf);
 
-		flen = sprintf(tempstr, "%c%c%c%c%c%c"
+		flen = sprintf(tempstr + FILE_MGR_KEY_LEN,
 								 "%c\" href=\"%s\">%s</a></td>",
-						 		dclass, ename[0], ename[1], ename[2], ename[3], ename[4],
 						 		dclass, templn, name);
 
 		if(flen >= _LINELEN)
 		{
 			if(is_dir) sprintf(fsize, HTML_DIR); else sprintf(fsize, "%llu %s", sz, sf);
 
-			flen = sprintf(tempstr, "%c%c%c%c%c%c"
+			flen = sprintf(tempstr + FILE_MGR_KEY_LEN,
 									 "%c\">%s</a></td>",
-									dclass, ename[0], ename[1], ename[2], ename[3], ename[4],
 									dclass, name);
 		}
 	}
@@ -229,7 +244,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 					fsize, is_root ? "" : " &nbsp; ",
 					rDate.day, smonth[rDate.month-1], rDate.year, rDate.hour, rDate.minute);
 
-	flen += concat(tempstr, templn);
+	flen += concat(tempstr + FILE_MGR_KEY_LEN + flen, templn);
 
 	if(flen >= _LINELEN) {flen = 0; *tempstr = NULL;} //ignore file if it is still too long
 
@@ -286,7 +301,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	strcat(buffer, swap);
 }
 
-static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http)
+static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, u8 sort_by, u8 sort_order, char *file_query)
 {
 	struct CellFsStat buf;
 	int fd;
@@ -408,6 +423,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 							if(tlen > BUFFER_SIZE_HTML) break;
 							if(idx >= (max_entries-3)) break;
 
+							if(*file_query && (strcasestr(dir_items[n].name, file_query) == NULL)) continue;
+
 							if(param[1] == 0)
 								flen = sprintf(templn, "/%s", dir_items[n].name);
 							else
@@ -422,10 +439,10 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 							is_dir = dir_items[n].is_directory; if(is_dir) dirs++;
 
-							flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, sz, sf, true, show_icon0, is_ps3_http, skip_cmd);
+							flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, dir_items[n].name, fsize, rDate, sz, sf, true, show_icon0, is_ps3_http, skip_cmd, sort_by);
 
-							if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
-							strcpy(line_entry[idx].path, tempstr); idx++;
+							if((flen == 0) || (flen >= _MAX_LINE_LEN)) continue; //ignore lines too long
+							memcpy(line_entry[idx].path, tempstr, FILE_MGR_KEY_LEN + flen + 1); idx++;
 							tlen += (flen + TABLE_ITEM_SIZE);
 
 							if(!working) break;
@@ -485,6 +502,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				if(tlen > BUFFER_SIZE_HTML) break;
 				if(idx >= (max_entries-3)) break;
 
+				if(*file_query && (strcasestr(entry.d_name, file_query) == NULL)) continue;
+
 				if(plen < 4)
 					flen = sprintf(templn, "/%s", entry.d_name);
 				else
@@ -500,10 +519,10 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				is_dir = (buf.st_mode & S_IFDIR); if(is_dir) dirs++;
 
-				flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, sz, sf, false, show_icon0, is_ps3_http, skip_cmd);
+				flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, sz, sf, false, show_icon0, is_ps3_http, skip_cmd, sort_by);
 
-				if((flen == 0) || (flen > _MAX_LINE_LEN)) continue; //ignore lines too long
-				strcpy(line_entry[idx].path, tempstr); idx++;
+				if((flen == 0) || (flen >= _MAX_LINE_LEN)) continue; //ignore lines too long
+				memcpy(line_entry[idx].path, tempstr, FILE_MGR_KEY_LEN + flen + 1); idx++;
 				tlen += (flen + TABLE_ITEM_SIZE);
 
 				if(!working) break;
@@ -551,7 +570,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			u16 n, m;
 			for(n = 0; n < (idx - 1); n++)
 				for(m = (n + 1); m < idx; m++)
-					if(strncmp(line_entry[n].path, line_entry[m].path, FILE_MGR_KEY_LEN) > 0)
+					if(sort_order * strncmp(line_entry[n].path, line_entry[m].path, FILE_MGR_KEY_LEN) > 0)
 					{
 						strcpy(swap, line_entry[n].path);
 						strcpy(line_entry[n].path, line_entry[m].path);

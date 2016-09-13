@@ -33,8 +33,8 @@ static void refresh_xml(char *msg)
 	sprintf(msg, "%s XML%s: %s", STR_REFRESH, SUFIX2(profile), STR_SCAN2);
 	show_msg(msg);
 
-	sys_ppu_thread_t id3;
-	sys_ppu_thread_create(&id3, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+	sys_ppu_thread_t t_id;
+	sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
 	while(refreshing_xml && working) sys_timer_usleep(300000);
 
@@ -58,42 +58,35 @@ static void add_launchpad_header(void)
 
 static void add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID)
 {
-	int fd;
+	// add entry
+	if(*tempID == NULL) sprintf(tempID, "NOID");
 
-	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_RDWR | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
+	// fix &
+	if(strstr(templn, "&"))
 	{
-		// add entry
-		if(*tempID == NULL) sprintf(tempID, "NOID");
-
-		// fix &
-		if(strstr(templn, "&"))
+		size_t j = 0;
+		for(size_t i = 0; templn[i]; i++, j++)
 		{
-			size_t j = 0;
-			for(size_t i = 0; templn[i]; i++, j++)
+			tempstr[j] = templn[i];
+
+			if(templn[i] == '&')
 			{
-				tempstr[j] = templn[i];
-
-				if(templn[i] == '&')
-				{
-					sprintf(&tempstr[j], "&amp;"); j += 4;
-				}
+				sprintf(&tempstr[j], "&amp;"); j += 4;
 			}
-			strncpy(templn, tempstr, j);
 		}
-
-		u16 size = sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
-									"<desc>%s</desc>\n"
-									"<url type=\"2\">%s/%s%s</url>\n"
-									"<target type=\"u\">%s</target>\n"
-									"<cntry agelmt=\"0\">all</cntry>\n"
-									"<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
-
-		cellFsWrite(fd, tempstr, size, NULL);
-
-		cellFsClose(fd);
-
-		mtrl_items++; *tempstr = NULL;
+		strncpy(templn, tempstr, j);
 	}
+
+	u16 size = sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
+								"<desc>%s</desc>\n"
+								"<url type=\"2\">%s/%s%s</url>\n"
+								"<target type=\"u\">%s</target>\n"
+								"<cntry agelmt=\"0\">all</cntry>\n"
+								"<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
+
+	savefile(LAUNCHPAD_FILE_XML, tempstr, -size);
+
+	mtrl_items++; *tempstr = NULL;
 }
 
 static void add_launchpad_extras(char *tempstr, char *url)
@@ -120,23 +113,16 @@ static void add_launchpad_extras(char *tempstr, char *url)
 
 static void add_launchpad_footer(char *tempstr)
 {
-	int fd;
+	// --- add scroller placeholder
+	u16 size = sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
+								"<desc></desc>\n"
+								"<url type=\"2\"></url>\n"
+								"<target type=\"u\"></target>\n"
+								"<cntry agelmt=\"0\">all</cntry>\n"
+								"<lang>all</lang></mtrl>\n\n"
+								"</spc></nsx>");
 
-	if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_RDWR | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
-	{
-		// --- add scroller placeholder
-		u16 size = sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
-									"<desc></desc>\n"
-									"<url type=\"2\"></url>\n"
-									"<target type=\"u\"></target>\n"
-									"<cntry agelmt=\"0\">all</cntry>\n"
-									"<lang>all</lang></mtrl>\n\n"
-									"</spc></nsx>");
-
-		cellFsWrite(fd, tempstr, size, NULL);
-
-		cellFsClose(fd);
-	}
+	savefile(LAUNCHPAD_FILE_XML, tempstr, -size);
 }
 #endif //#ifdef LAUNCHPAD
 
@@ -343,8 +329,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 		// start a new thread for refresh xml content at start up
 		if(!webman_config->refr || file_exists(xml) == false)
 		{
-			sys_ppu_thread_t id3;
-			sys_ppu_thread_create(&id3, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+			sys_ppu_thread_t t_id;
+			sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 		}
 
 		return true; // mount autoboot & refresh xml

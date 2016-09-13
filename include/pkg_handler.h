@@ -31,12 +31,18 @@ static bool pkg_delete_after_install = true;
 static char install_path[64];
 static time_t pkg_install_time = 0;
 
+static void unload_web_plugins(void);
+
 #define INT_HDD_ROOT_PATH		"/dev_hdd0/"
 #define DEFAULT_PKG_PATH		"/dev_hdd0/packages/"
 #define TEMP_DOWNLOAD_PATH		"/dev_hdd0/tmp/downloader/"
 
+#define PKG_MAGIC				0x7F504B47
+
+#define IS_INSTALLING	(View_Find("game_plugin") != 0)
+
 typedef struct {
-   u32 magic; // 0x53434500//
+   u32 magic; // 0x7F504B47 //
    u32 version;
    u16 sdk_type;
    u16 SCE_header_type;
@@ -58,11 +64,9 @@ static u64 get_pkg_size_and_install_time(char *pkgfile)
 
 	if(cellFsOpen(pkgfile, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		if(cellFsRead(fd, (void *)&pkg_header, sizeof(pkg_header), NULL) == CELL_FS_SUCCEEDED)
+		if(cellFsRead(fd, (void *)&pkg_header, sizeof(pkg_header), NULL) == CELL_FS_SUCCEEDED && pkg_header.magic == PKG_MAGIC)
 		{
-			char titleID[10];
-			strncpy(titleID, pkg_header.title_id, 9); titleID[9] = NULL;
-			sprintf(install_path, "%s/%s%s", "/dev_hdd0/game", titleID, "/PS3LOGO.DAT");
+			sprintf(install_path, "%s/%s%s", "/dev_hdd0/game", pkg_header.title_id, "/PS3LOGO.DAT");
 
 			struct CellFsStat s;
 			if(cellFsStat(install_path, &s) == CELL_FS_SUCCEEDED) pkg_install_time = s.st_mtime; // prevents pkg deletion if user cancels install
@@ -75,10 +79,30 @@ static u64 get_pkg_size_and_install_time(char *pkgfile)
 	return pkg_header.pkg_size; // also returns module variableS: pkg_install_time & install_path
 }
 
+static void wait_for_xml_download(char *filename, char *param)
+{
+	char *xml = strstr(filename, ".xm!");
+	if(xml)
+	{
+		sys_timer_sleep(5); xml[4] = '\0';
+
+		if(file_exists(filename) == false) sys_timer_sleep(5); // wait a bit more
+		if(file_exists(filename) == false) return;
+
+		strcpy(param, filename); xml[3] = 'l';
+		cellFsUnlink(filename);
+		cellFsRename(param, filename);
+
+#ifdef VIRTUAL_PAD
+		if(View_Find("download_plugin") != 0) press_cancel_button();
+#endif
+	}
+}
+
 static void wait_for_pkg_install(void)
 {
 	sys_timer_sleep(5);
-	while (IS_INGAME) sys_timer_sleep(2);
+	while (IS_INSTALLING) sys_timer_sleep(2);
 
 	if(pkg_delete_after_install)
 	{
@@ -132,13 +156,7 @@ static void unload_web_plugins(void)
 #ifdef VIRTUAL_PAD
 	if(IS_ON_XMB)
 	{
-		int enter_button = 0;
-		xsetting_0AF1F161()->GetEnterButtonAssign(&enter_button);
-
-		if(enter_button)
-			parse_pad_command("circle", 0);
-		else
-			parse_pad_command("cross", 0);
+		press_cancel_button();
 	}
 #endif
 }
@@ -336,7 +354,8 @@ static int installPKG_combo(char *msg)
 
 		CellFsDirent dir; u64 read_e;
 
-		if(file_exists(pkg_path)) {sprintf(pkgfile, "%s.bak", pkg_path); cellFsRename(pkg_path, pkgfile); pkg_path[0] = NULL;}
+		pkg_delete_after_install = true;
+		//if(file_exists(pkg_path)) {sprintf(pkgfile, "%s.bak", pkg_path); cellFsRename(pkg_path, pkgfile); pkg_path[0] = NULL;}
 
 		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
@@ -345,7 +364,8 @@ static int installPKG_combo(char *msg)
 				sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dir.d_name); ret = 0; { BEEP1 }
 
 				installPKG(pkgfile, msg); show_msg(msg);
-				break;
+				wait_for_pkg_install();
+				//break;
 			}
 		}
 		cellFsClosedir(fd);

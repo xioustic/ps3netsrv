@@ -88,9 +88,9 @@ static size_t get_name(char *name, const char *filename, u8 cache)
 
 	// remove title id from file name
 	if(name[4] == '_' && name[8] == '.' && (*name == 'B' || *name == 'N' || *name == 'S' || *name == 'U') && ISDIGIT(name[9]) && ISDIGIT(name[10])) {flen = sprintf(name, "%s", &name[12]);}// SLES_000.00-Name
-	if(name[9] == '-' && name[10]== '[') {flen = sprintf(name, "%s", &name[11]) - 1; name[flen] = NULL;} // BLES00000-[Name]
-	if(name[10]== '-' && name[11]== '[') {flen = sprintf(name, "%s", &name[12]) - 1; name[flen] = NULL;} // BLES-00000-[Name]
-	if(!webman_config->tid) {char *p = strstr(name, " ["); if(p) *p = NULL; flen = strlen(name);}    // Name [BLES00000]
+	if(name[9] == '-' && name[10]== '[') {flen = sprintf(name, "%s", name + 11) - 1; name[flen] = NULL;} // BLES00000-[Name]
+	if(name[10]== '-' && name[11]== '[') {flen = sprintf(name, "%s", name + 12) - 1; name[flen] = NULL;} // BLES-00000-[Name]
+	if(!webman_config->tid) {char *p = strstr(name, " ["); if(p) *p = NULL; flen = strlen(name);}        // Name [BLES00000]
 
 	return (size_t) flen;
 }

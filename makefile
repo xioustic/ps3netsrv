@@ -49,7 +49,3 @@ all:
 	
 
 include $(CELL_MK_DIR)/sdk.target.mk
-
-
-
-

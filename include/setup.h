@@ -281,35 +281,35 @@ static void setup_parse_settings(char *param)
 		if(pos)
 		{
 			get_value(webman_config->neth0, pos + 6, 16);
-			webman_config->netp0=get_valuen16(param, "netp0=");
+			webman_config->netp0 = get_valuen16(param, "netp0=");
 		}
 
 		pos = strstr(param, "neth1=");
 		if(pos)
 		{
 			get_value(webman_config->neth1, pos + 6, 16);
-			webman_config->netp1=get_valuen16(param, "netp1=");
+			webman_config->netp1 = get_valuen16(param, "netp1=");
 		}
 
 		pos = strstr(param, "neth2=");
 		if(pos)
 		{
 			get_value(webman_config->neth2, pos + 6, 16);
-			webman_config->netp2=get_valuen16(param, "netp2=");
+			webman_config->netp2 = get_valuen16(param, "netp2=");
 		}
 #ifdef NET3NET4
 		pos = strstr(param, "neth3=");
 		if(pos)
 		{
 			get_value(webman_config->neth3, pos + 6, 16);
-			webman_config->netp3=get_valuen16(param, "netp3=");
+			webman_config->netp3 = get_valuen16(param, "netp3=");
 		}
 
 		pos = strstr(param, "neth4=");
 		if(pos)
 		{
 			get_value(webman_config->neth4, pos + 6, 16);
-			webman_config->netp4=get_valuen16(param, "netp4=");
+			webman_config->netp4 = get_valuen16(param, "netp4=");
 		}
 #endif
 		pos = strstr(param, "aip=");
@@ -543,6 +543,8 @@ static void setup_form(char *buffer, char *templn)
 	language("/CLOSEFILE", NULL);
  #endif
 
+	uint8_t value;
+
 	sprintf(templn, "<style>td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
@@ -627,14 +629,16 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, HTML_BLU_SEPARATOR);
 	add_check_box("ng" , "1", STR_NOGRP,     _BR_, (webman_config->nogrp  ), buffer);
 	add_check_box("ns" , "1", STR_NOSETUP,   _BR_, (webman_config->nosetup), buffer);
-	add_check_box("nc" , "1\" onclick=\"if(nc.checked)ic.value=1; else ic.value=0;", STR_MMCOVERS, " : ", (webman_config->nocov == SHOW_ICON0), buffer);
+
+	value = webman_config->nocov;
+	add_check_box("nc" , "1\" onclick=\"if(nc.checked)ic.value=1; else ic.value=0;", STR_MMCOVERS, " : ", (value == SHOW_ICON0), buffer);
 
 	// icon type
 	strcat(buffer, "<select name=\"ic\" onchange=\"nc.checked=(ic.value==1);\" accesskey=\"C\">");
-	add_option_item("0" , "MM COVERS",     (webman_config->nocov == SHOW_MMCOVERS), buffer);
-	add_option_item("1" , "ICON0.PNG",     (webman_config->nocov == SHOW_ICON0),    buffer);
-	add_option_item("2" , "No ICON0.PNG",  (webman_config->nocov == SHOW_DISC),     buffer);
-	add_option_item("3" , "ONLINE COVERS", (webman_config->nocov == ONLINE_COVERS), buffer);
+	add_option_item("0" , "MM COVERS",     (value == SHOW_MMCOVERS), buffer);
+	add_option_item("1" , "ICON0.PNG",     (value == SHOW_ICON0),    buffer);
+	add_option_item("2" , "No ICON0.PNG",  (value == SHOW_DISC),     buffer);
+	add_option_item("3" , "ONLINE COVERS", (value == ONLINE_COVERS), buffer);
 	strcat(buffer, "</select><br>");
 
 	add_check_box("tid", "1", STR_TITLEID, " • ", (webman_config->tid),  buffer);
@@ -649,10 +653,11 @@ static void setup_form(char *buffer, char *templn)
 #ifdef FIX_GAME
 	if(c_firmware>=4.20f && c_firmware<=4.78f)
 	{
-		add_check_box("nf", "3", STR_FIXGAME,  " : <select name=\"fm\">", (webman_config->fixgame==FIX_GAME_DISABLED), buffer);
-		add_option_item("0", "Auto"  , (webman_config->fixgame==FIX_GAME_AUTO), buffer);
-		add_option_item("1", "Quick" , (webman_config->fixgame==FIX_GAME_QUICK), buffer);
-		add_option_item("2", "Forced", (webman_config->fixgame==FIX_GAME_FORCED), buffer);
+		value = webman_config->fixgame;
+		add_check_box("nf", "3", STR_FIXGAME,  " : <select name=\"fm\">", (value == FIX_GAME_DISABLED), buffer);
+		add_option_item("0", "Auto"  , (value == FIX_GAME_AUTO), buffer);
+		add_option_item("1", "Quick" , (value == FIX_GAME_QUICK), buffer);
+		add_option_item("2", "Forced", (value == FIX_GAME_FORCED), buffer);
 		strcat(buffer, "</select><br>");
 	}
 #endif
@@ -674,17 +679,18 @@ static void setup_form(char *buffer, char *templn)
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 	//ps3netsvr settings
+	char PS3NETSRV[24] = " &nbsp; PS3NETSRV#1 IP:";
 	strcat(buffer, HTML_BLU_SEPARATOR);
-	add_check_box("nd0", "1", STR_LANGAMES,  " &nbsp; PS3NETSRV#1 IP:", (webman_config->netd0), buffer);
+	add_check_box("nd0", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd0), buffer); ++PS3NETSRV[18];
 	sprintf(templn, HTML_INPUT("neth0", "%s", "15", "16") ":" HTML_NUMBER("netp0", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth0, webman_config->netp0); strcat(buffer, templn);
-	add_check_box("nd1", "1", STR_LANGAMES,  " &nbsp; PS3NETSRV#2 IP:", (webman_config->netd1), buffer);
+	add_check_box("nd1", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd1), buffer); ++PS3NETSRV[18];
 	sprintf(templn, HTML_INPUT("neth1", "%s", "15", "16") ":" HTML_NUMBER("netp1", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth1, webman_config->netp1); strcat(buffer, templn);
-	add_check_box("nd2", "1", STR_LANGAMES,  " &nbsp; PS3NETSRV#3 IP:", (webman_config->netd2), buffer);
+	add_check_box("nd2", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd2), buffer); ++PS3NETSRV[18];
 	sprintf(templn, HTML_INPUT("neth2", "%s", "15", "16") ":" HTML_NUMBER("netp2", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth2, webman_config->netp2); strcat(buffer, templn);
   #ifdef NET3NET4
-	add_check_box("nd3", "1", STR_LANGAMES,  " &nbsp; PS3NETSRV#4 IP:", (webman_config->netd3), buffer);
+	add_check_box("nd3", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd3), buffer); ++PS3NETSRV[18];
 	sprintf(templn, HTML_INPUT("neth3", "%s", "15", "16") ":" HTML_NUMBER("netp3", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth3, webman_config->netp3); strcat(buffer, templn);
-	add_check_box("nd4", "1", STR_LANGAMES,  " &nbsp; PS3NETSRV#5 IP:", (webman_config->netd4), buffer);
+	add_check_box("nd4", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd4), buffer);
 	sprintf(templn, HTML_INPUT("neth4", "%s", "15", "16") ":" HTML_NUMBER("netp4", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth4, webman_config->netp4); strcat(buffer, templn);
   #endif
  #endif
@@ -693,19 +699,21 @@ static void setup_form(char *buffer, char *templn)
 	//Wait for any USB device to be ready
 	sprintf(templn, HTML_BLU_SEPARATOR "<u> %s:</u><br>", STR_ANYUSB); strcat(buffer, templn);
 
-	add_radio_button("b", "0",  "b_0", "0 sec" , _BR_, (webman_config->bootd==0), buffer);
-	add_radio_button("b", "5",  "b_1", "5 sec" , _BR_, (webman_config->bootd==5), buffer);
-	add_radio_button("b", "9",  "b_2", "10 sec", _BR_, (webman_config->bootd==9), buffer);
-	add_radio_button("b", "15", "b_3", "15 sec", _BR_, (webman_config->bootd==15), buffer);
+	value = webman_config->bootd;
+	add_radio_button("b", "0",  "b_0", "0 sec" , _BR_, (value == 0),  buffer);
+	add_radio_button("b", "5",  "b_1", "5 sec" , _BR_, (value == 5),  buffer);
+	add_radio_button("b", "9",  "b_2", "10 sec", _BR_, (value == 9),  buffer);
+	add_radio_button("b", "15", "b_3", "15 sec", _BR_, (value == 15), buffer);
 
 	//Wait additionally for each selected USB device to be ready
 	sprintf(templn, HTML_BLU_SEPARATOR "<u> %s:</u><br>", STR_ADDUSB); strcat(buffer, templn);
 
-	add_radio_button("s", "0",  "s_0", "0 sec" , _BR_, (webman_config->boots==0), buffer);
-	add_radio_button("s", "3",  "s_1", "3 sec" , _BR_, (webman_config->boots==3), buffer);
-	add_radio_button("s", "5",  "s_2", "5 sec" , _BR_, (webman_config->boots==5), buffer);
-	add_radio_button("s", "10", "s_3", "10 sec", _BR_, (webman_config->boots==10), buffer);
-	add_radio_button("s", "15", "s_4", "15 sec", _BR_, (webman_config->boots==15), buffer);
+	value = webman_config->boots;
+	add_radio_button("s", "0",  "s_0", "0 sec" , _BR_, (value == 0),  buffer);
+	add_radio_button("s", "3",  "s_1", "3 sec" , _BR_, (value == 3),  buffer);
+	add_radio_button("s", "5",  "s_2", "5 sec" , _BR_, (value == 5),  buffer);
+	add_radio_button("s", "10", "s_3", "10 sec", _BR_, (value == 10), buffer);
+	add_radio_button("s", "15", "s_4", "15 sec", _BR_, (value == 15), buffer);
 
 #ifdef SPOOF_CONSOLEID
 	//Change idps and psid in lv2 memory at system startup
@@ -752,11 +760,11 @@ static void setup_form(char *buffer, char *templn)
 #ifndef LITE_EDITION
 	//default content profile
 	sprintf(templn, "%s : <select name=\"usr\">", STR_PROFILE); strcat(buffer, templn);
-	add_option_item("0" , STR_DEFAULT, (profile==0) , buffer);
-	add_option_item("1", "1", (profile==1) , buffer);
-	add_option_item("2", "2", (profile==2) , buffer);
-	add_option_item("3", "3", (profile==3) , buffer);
-	add_option_item("4", "4", (profile==4) , buffer);
+	add_option_item("0" , STR_DEFAULT, (profile == 0) , buffer);
+	add_option_item("1", "1", (profile == 1) , buffer);
+	add_option_item("2", "2", (profile == 2) , buffer);
+	add_option_item("3", "3", (profile == 3) , buffer);
+	add_option_item("4", "4", (profile == 4) , buffer);
 
 	int fd;
 
@@ -785,44 +793,46 @@ static void setup_form(char *buffer, char *templn)
 	//memory usage
 	sprintf(templn, " %s [%iKB]: <select name=\"fp\" accesskey=\"M\">", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); strcat(buffer, templn);
 
-	add_option_item("0", "Standard (896KB)"                , (webman_config->foot==0), buffer);
-	add_option_item("1", "Min (320KB)"                     , (webman_config->foot==1), buffer);
-	add_option_item("3", "Min+ (512KB)"                    , (webman_config->foot==3), buffer);
-	add_option_item("2", "Max (1280KB)"                    , (webman_config->foot==2), buffer);
-	add_option_item("4", "Max PS3+ (1088K PS3)"            , (webman_config->foot==4), buffer);
-	add_option_item("5", "Max PSX+ ( 368K PS3 + 720K PSX)" , (webman_config->foot==5), buffer);
-	add_option_item("6", "Max BLU+ ( 368K PS3 + 720K BLU)" , (webman_config->foot==6), buffer);
+	value = webman_config->foot;
+	add_option_item("0", "Standard (896KB)"                , (value == 0), buffer);
+	add_option_item("1", "Min (320KB)"                     , (value == 1), buffer);
+	add_option_item("3", "Min+ (512KB)"                    , (value == 3), buffer);
+	add_option_item("2", "Max (1280KB)"                    , (value == 2), buffer);
+	add_option_item("4", "Max PS3+ (1088K PS3)"            , (value == 4), buffer);
+	add_option_item("5", "Max PSX+ ( 368K PS3 + 720K PSX)" , (value == 5), buffer);
+	add_option_item("6", "Max BLU+ ( 368K PS3 + 720K BLU)" , (value == 6), buffer);
 	strcat(buffer, "</select><p>");
 
 #ifndef ENGLISH_ONLY
 	//language
 	sprintf(templn, " %s: <select name=\"l\">", STR_PLANG); strcat(buffer, templn);
 
-	add_option_item("0" , "English"													, (webman_config->lang==0) , buffer);
-	add_option_item("1" , "Fran&ccedil;ais"											, (webman_config->lang==1) , buffer);
-	add_option_item("2" , "Italiano"												, (webman_config->lang==2) , buffer);
-	add_option_item("3" , "Espa&ntilde;ol"											, (webman_config->lang==3) , buffer);
-	add_option_item("4" , "Deutsch"													, (webman_config->lang==4) , buffer);
-	add_option_item("5" , "Nederlands"												, (webman_config->lang==5) , buffer);
-	add_option_item("6" , "Portugu&ecirc;s"											, (webman_config->lang==6) , buffer);
-	add_option_item("7" , "&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081"		, (webman_config->lang==7) , buffer);
-	add_option_item("8" , "Magyar"													, (webman_config->lang==8) , buffer);
-	add_option_item("9" , "Polski"													, (webman_config->lang==9) , buffer);
-	add_option_item("10", "&Epsilon;&lambda;&lambda;&eta;&nu;&iota;&kappa;&alpha;"	, (webman_config->lang==10), buffer);
-	add_option_item("11", "Hrvatski"												, (webman_config->lang==11), buffer);
-	add_option_item("12", "&#1041;&#1098;&#1083;&#1075;&#1072;&#1088;&#1089;&#1082;&#1080;", (webman_config->lang==12), buffer);
-	add_option_item("20", "Dansk"													, (webman_config->lang==20), buffer);
-	add_option_item("21", "&#268;e&scaron;tina"										, (webman_config->lang==21), buffer);
-	add_option_item("22", "Sloven&#269;ina"											, (webman_config->lang==22), buffer);
+	value = webman_config->lang;
+	add_option_item("0" , "English"													, (value == 0) , buffer);
+	add_option_item("1" , "Fran&ccedil;ais"											, (value == 1) , buffer);
+	add_option_item("2" , "Italiano"												, (value == 2) , buffer);
+	add_option_item("3" , "Espa&ntilde;ol"											, (value == 3) , buffer);
+	add_option_item("4" , "Deutsch"													, (value == 4) , buffer);
+	add_option_item("5" , "Nederlands"												, (value == 5) , buffer);
+	add_option_item("6" , "Portugu&ecirc;s"											, (value == 6) , buffer);
+	add_option_item("7" , "&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081"		, (value == 7) , buffer);
+	add_option_item("8" , "Magyar"													, (value == 8) , buffer);
+	add_option_item("9" , "Polski"													, (value == 9) , buffer);
+	add_option_item("10", "&Epsilon;&lambda;&lambda;&eta;&nu;&iota;&kappa;&alpha;"	, (value == 10), buffer);
+	add_option_item("11", "Hrvatski"												, (value == 11), buffer);
+	add_option_item("12", "&#1041;&#1098;&#1083;&#1075;&#1072;&#1088;&#1089;&#1082;&#1080;", (value == 12), buffer);
+	add_option_item("20", "Dansk"													, (value == 20), buffer);
+	add_option_item("21", "&#268;e&scaron;tina"										, (value == 21), buffer);
+	add_option_item("22", "Sloven&#269;ina"											, (value == 22), buffer);
 
-	add_option_item("13", "Indonesian"												, (webman_config->lang==13), buffer);
-	add_option_item("14", "T&uuml;rk&ccedil;e"										, (webman_config->lang==14), buffer);
-	add_option_item("15", "&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;"		, (webman_config->lang==15), buffer);
-	add_option_item("16", "&#20013;&#25991;"										, (webman_config->lang==16), buffer);
-	add_option_item("19", "&#32321;&#39636;&#20013;&#25991;"						, (webman_config->lang==19), buffer);
-	add_option_item("17", "&#54620;&#44397;&#50612;"								, (webman_config->lang==17), buffer);
-	add_option_item("18", "&#26085;&#26412;&#35486;"								, (webman_config->lang==18), buffer);
-	add_option_item("99", "Unknown"													, (webman_config->lang==99), buffer);
+	add_option_item("13", "Indonesian"												, (value == 13), buffer);
+	add_option_item("14", "T&uuml;rk&ccedil;e"										, (value == 14), buffer);
+	add_option_item("15", "&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;"		, (value == 15), buffer);
+	add_option_item("16", "&#20013;&#25991;"										, (value == 16), buffer);
+	add_option_item("19", "&#32321;&#39636;&#20013;&#25991;"						, (value == 19), buffer);
+	add_option_item("17", "&#54620;&#44397;&#50612;"								, (value == 17), buffer);
+	add_option_item("18", "&#26085;&#26412;&#35486;"								, (value == 18), buffer);
+	add_option_item("99", "Unknown"													, (value == 99), buffer);
 
 	strcat(buffer, "</select> ");
 #endif
@@ -836,20 +846,22 @@ static void setup_form(char *buffer, char *templn)
 
 	//BD Region
 	strcat(buffer, " • BD Region: <select name=\"bdr\">");
-	add_option_item("0" , STR_DEFAULT , (cobra_config->bd_video_region==0) , buffer);
-	add_option_item("1" , "A- America", (cobra_config->bd_video_region==1) , buffer);
-	add_option_item("2" , "B- Europe" , (cobra_config->bd_video_region==2) , buffer);
-	add_option_item("4" , "C- Asia"   , (cobra_config->bd_video_region==4) , buffer);
+	value = cobra_config->bd_video_region;
+	add_option_item("0" , STR_DEFAULT , (value == 0) , buffer);
+	add_option_item("1" , "A- America", (value == 1) , buffer);
+	add_option_item("2" , "B- Europe" , (value == 2) , buffer);
+	add_option_item("4" , "C- Asia"   , (value == 4) , buffer);
 
 	//DVD Region
 	strcat(buffer, "</select> • DVD Region: <select name=\"dvr\">");
-	add_option_item("0"  , STR_DEFAULT          , (cobra_config->dvd_video_region==0)  , buffer);
-	add_option_item("1"  , "1- US/Canada"       , (cobra_config->dvd_video_region==1)  , buffer);
-	add_option_item("2"  , "2- Europe/Japan"    , (cobra_config->dvd_video_region==2)  , buffer);
-	add_option_item("4"  , "3- Korea/HK"        , (cobra_config->dvd_video_region==4)  , buffer);
-	add_option_item("8"  , "4- Latino/Australia", (cobra_config->dvd_video_region==8)  , buffer);
-	add_option_item("16" , "5- Asia"            , (cobra_config->dvd_video_region==16) , buffer);
-	add_option_item("32" , "6- China"           , (cobra_config->dvd_video_region==32) , buffer);
+	value = cobra_config->dvd_video_region;
+	add_option_item("0"  , STR_DEFAULT          , (value == 0)  , buffer);
+	add_option_item("1"  , "1- US/Canada"       , (value == 1)  , buffer);
+	add_option_item("2"  , "2- Europe/Japan"    , (value == 2)  , buffer);
+	add_option_item("4"  , "3- Korea/HK"        , (value == 4)  , buffer);
+	add_option_item("8"  , "4- Latino/Australia", (value == 8)  , buffer);
+	add_option_item("16" , "5- Asia"            , (value == 16) , buffer);
+	add_option_item("32" , "6- China"           , (value == 32) , buffer);
 	strcat(buffer, "</select>");
 #endif
 #endif
@@ -1020,12 +1032,12 @@ static void setup_form(char *buffer, char *templn)
 */
 }
 
-static int save_settings()
+static int save_settings(void)
 {
 	return savefile(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
 }
 
-static void reset_settings()
+static void reset_settings(void)
 {
 	memset(webman_config, 0, sizeof(WebmanCfg));
 

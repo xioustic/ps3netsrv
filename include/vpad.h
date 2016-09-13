@@ -182,6 +182,20 @@ static u8 parse_pad_command(const char *param, u8 is_combo)
 
 	return CELL_OK;
 }
+
+#ifdef PKG_HANDLER
+static void press_cancel_button(void)
+{
+	int enter_button = 0;
+	xsetting_0AF1F161()->GetEnterButtonAssign(&enter_button);
+
+	if(enter_button)
+		parse_pad_command("circle", 0);
+	else
+		parse_pad_command("cross", 0);
+}
+#endif
+
 #endif
 
 static CellPadData pad_read(void)

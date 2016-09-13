@@ -50,6 +50,8 @@ size_t strlen(const char *s)
 
 char *strchr(const char *s, int c)
 {
+	if(!s) return 0;
+
 	while (*s != (char)c)
 		if (!*s++)
 			return 0;
@@ -59,7 +61,9 @@ char *strchr(const char *s, int c)
 
 char *strrchr(const char *s, int c)
 {
-	char *ret = NULL;
+	if(!s) return 0;
+
+	char *ret = 0;
 	char cc = (char)c;
 
 	do
@@ -73,6 +77,8 @@ char *strrchr(const char *s, int c)
 
 char *strstr(const char *s1, const char *s2)
 {
+	if(!s1) return 0;
+
 	size_t n = strlen(s2); if(n == 0) return 0;
 
 	while(*s1)
@@ -119,6 +125,8 @@ int strcasecmp (__const char *s1, __const char *s2)
 char *strcasestr(const char *s1, const char *s2);
 char *strcasestr(const char *s1, const char *s2)
 {
+	if(!s1) return 0;
+
 	size_t n = strlen(s2); if(n == 0) return 0;
 
 	while(*s1)

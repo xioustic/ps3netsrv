@@ -398,7 +398,7 @@ show_popup:
 								else
 								{
 									if(webman_config->manu>20) {if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) webman_config->manu-=5; else webman_config->manu-=1;}
-									webman_config->temp0= (u8)(((float)(webman_config->manu+1) * 255.f)/100.f);
+									webman_config->temp0 = (u8)(((float)(webman_config->manu+1) * 255.f)/100.f);
 									if(webman_config->temp0<0x33) webman_config->temp0=0x33;
 									if(webman_config->temp0>MAX_FANSPEED) webman_config->temp0=MAX_FANSPEED;
 									fan_control(webman_config->temp0, 0);

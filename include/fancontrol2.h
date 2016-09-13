@@ -32,52 +32,6 @@ static void poll_start_play_time(void)
 
 static void poll_thread(uint64_t poll)
 {
-	/*u8 d0[157];
-	u8 d1[157];
-	u8 d0t[157];
-	u8 d1t[157];
-	int u0=0, u1=0;
-	char un[128];
-
-	while(working)
-	{
-		if(u0<128)
-		{
-			int fd;
-			bool toupd0, toupd1;
-			cellFsOpen("/dev_hdd0/vsh/task/00000001/d0.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
-			cellFsRead(fd, (void *)&d0, 157, NULL); cellFsClose(fd);
-			cellFsOpen("/dev_hdd0/vsh/task/00000001/d1.pdb", CELL_FS_O_RDONLY, &fd, NULL, 0);
-			cellFsRead(fd, (void *)&d1, 157, NULL); cellFsClose(fd);
-			toupd0=0;
-			toupd1=0;
-			for(u8 b=0;b<157;b++)
-			{
-				if(d0[b]!=d0t[b]) toupd0=1;
-				if(d1[b]!=d1t[b]) toupd1=1;
-				d0t[b]=d0[b];
-				d1t[b]=d1[b];
-			}
-			if(toupd0)
-			{
-				u0++;
-				sprintf(un, "/dev_hdd0/tmp/d0-%03i.bin", u0);
-				cellFsOpen(un, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0);
-				cellFsWrite(fd, (void *)d0, 157, NULL);
-				cellFsClose(fd);
-			}
-			if(toupd1)
-			{
-				u1++;
-				sprintf(un, "/dev_hdd0/tmp/d1-%03i.bin", u1);
-				cellFsOpen(un, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0);
-				cellFsWrite(fd, (void *)d1, 157, NULL);
-				cellFsClose(fd);
-			}
-		}
-	}
-	*/
-
 	u8 to = 0;
 	u8 sec = 0;
 	u32 t1 = 0, t2 = 0;
@@ -143,27 +97,26 @@ static void poll_thread(uint64_t poll)
 					if(smoothstep>1)
 					{
 						fan_speed--;
-						if(t1<=(max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // 66%
-						if(t1<=(max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // 50%
+						if(t1<=(max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // decrease fan speed faster if > 66% & cpu is cool
+						if(t1<=(max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // decrease fan speed faster if > 50% & cpu is very cool
 						smoothstep=0;
 					}
 				}
 				//if(delta==0 && t1>=(max_temp-1)) fan_speed++;
-				if(delta> 0)
+				if(delta > 0)
 				{
 					//smoothstep++;
 					//if(smoothstep)
 					{
 						fan_speed--;
-						if(t1 <= (max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // 66%
-						if(t1 <= (max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // 50%
+						if(t1 <= (max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // decrease fan speed faster if > 66% & cpu is cool
+						if(t1 <= (max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // decrease fan speed faster if > 50% & cpu is very cool
 						smoothstep=0;
 					}
 				}
 			}
 
-			if(t1 > 76 && old_fan < 0x43) fan_speed++; // <26%
-			if(t1 >= MAX_FANSPEED && fan_speed < 0xB0) {old_fan = 0, fan_speed = 0xB0;} // <69%
+			if(t1 > 76 && old_fan < 0x66) fan_speed+=step_up; // increase fan speed faster if < 40% and cpu is too hot
 
 			if(fan_speed < ((webman_config->minfan*255)/100)) fan_speed = (webman_config->minfan*255)/100;
 			if(fan_speed > MAX_FANSPEED) fan_speed = MAX_FANSPEED;
@@ -264,16 +217,18 @@ static void poll_thread(uint64_t poll)
 		if((sec & 1) && (gTick.tick == rTick.tick)) poll_downloaded_pkg_files(msg);
 #endif
 
-#ifdef WM_REQUEST
+#ifdef DO_WM_REQUEST_POLLING
 		// Poll requests via local file
-		if((sec & 1) && (gTick.tick > rTick.tick)) continue; // slowdown polling if ingame
+		if((webman_config->combo2 & CUSTOMCMB) || ((sec & 1) && (gTick.tick > rTick.tick))) continue; // slowdown polling if ingame
+
 		if(file_exists(WMREQUEST_FILE))
 		{
 			loading_html++;
-			sys_ppu_thread_t id;
-			if(working) sys_ppu_thread_create(&id, handleclient, WM_FILE_REQUEST, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+			sys_ppu_thread_t t_id;
+			if(working) sys_ppu_thread_create(&t_id, handleclient, WM_FILE_REQUEST, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 		}
 #endif
+
 	}
 
 	sys_ppu_thread_exit(0);

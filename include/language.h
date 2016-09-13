@@ -401,7 +401,7 @@ static uint32_t get_system_language(uint8_t *lang)
 
 static bool language(const char *key_name, char *default_str)
 {
-	if(*key_name == '/') {if(fh) cellFsClose(fh); fh = 0; return false;}
+	if(*key_name == '/') {if(fh) cellFsClose(fh); fh = 0; return false;} // /CLOSEFILE
 
 	uint8_t c, i, key_len = strlen(key_name);
 	uint64_t bytes_read = 0;

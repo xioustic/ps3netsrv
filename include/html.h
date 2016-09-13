@@ -4,6 +4,8 @@
 #define HTML_URL				"<a href=\"%s\">%s</a>"
 #define HTML_URL2				"<a href=\"%s%s\">%s</a>"
 
+#define HTML_URL_STYLE			"color:#ccc;text-decoration:none;"
+
 #define HTML_DIR				"&lt;dir&gt;"
 #define HTML_BUTTON_FMT			"%s%s\" %s'%s';\">"
 #define HTML_BUTTON				" <input type=\"button\" value=\""
@@ -54,12 +56,28 @@
 
 #define open_browser			vshmain_AE35CF2D
 
-#define  IS(a, b)				(strcmp(a, b) == 0)		// compare two strings. returns true if they are identical
-#define _IS(a, b)				(strcasecmp(a, b) == 0)	// compare two strings. returns true if they are identical (case insensitive)
+
+#define MAX(a, b)		((a) >= (b) ? (a) : (b))
+#define MIN(a, b)		((a) <= (b) ? (a) : (b))
+#define ABS(a)			(((a) < 0) ? -(a) : (a))
+#define RANGE(a, b, c)	((a) <= (b) ? (b) : (a) >= (c) ? (c) : (a))
+#define ISDIGIT(a)		('0' <= (unsigned char)(a) && (unsigned char)(a) <= '9')
+
+static bool gmobile_mode = false;
 
 int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
 char *strcasestr(const char *s1, const char *s2);
+
+static bool IS(const char *a, const char *b)
+{
+	return (strcmp(a, b) == 0);		// compare two strings. returns true if they are identical
+}
+
+static bool _IS(const char *a, const char *b)
+{
+	return (strcasecmp(a, b) == 0);	// compare two strings. returns true if they are identical (case insensitive)
+}
 
 static size_t concat(char *dest, const char *src)
 {
@@ -93,13 +111,13 @@ static char h2a(const char hex)
 	return c;
 }
 
-static void urldec(char *url, char *original)
+static inline void urldec(char *url, char *original)
 {
 	if(strchr(url, '%'))
 	{
 		strcpy(original, url); // return original url
 
-		u16 pos = 0;
+		u16 pos = 0; char c;
 		for(u16 i = 0; url[i] >= ' '; i++, pos++)
 		{
 			if(url[i] == '+')
@@ -111,10 +129,9 @@ static void urldec(char *url, char *original)
 				url[pos] = 0; u8 n = 2;
 				while(n--)
 				{
-					url[pos] <<= 4, i++;
-					if(url[i]>='0' && url[i]<='9') url[pos] += url[i] -'0';      else
-					if(url[i]>='A' && url[i]<='F') url[pos] += url[i] -'A' + 10; else
-					if(url[i]>='a' && url[i]<='f') url[pos] += url[i] -'a' + 10;
+					url[pos] <<= 4, i++, c = (url[i] | 0x20);
+					if(c >= '0' && c <= '9') url[pos] += c -'0';      else
+					if(c >= 'a' && c <= 'f') url[pos] += c -'a' + 10;
 				}
 			}
 		}
@@ -142,7 +159,7 @@ static bool urlenc(char *dst, const char *src)
 			dst[j++] = '3';
 			dst[j] = (src[i] & 0xf) + 7;
 		}
-		else if(src[i]==' ' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == 0x27))
+		else if(src[i]==' ' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
 		{
 			dst[j++] = '%';
 			dst[j++] = '2';

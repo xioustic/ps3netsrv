@@ -16,7 +16,7 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 
 		if(buf.st_size > _32KB_)
 		{
-			if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDONLY, &fd, NULL, 0)==CELL_FS_SUCCEEDED)
+			if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
 				u64 pos;
 				cellFsLseek(fd, (buf.st_size - 4080), CELL_FS_SEEK_SET, &pos);
@@ -25,23 +25,21 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 			}
 		}
 
-		cellFsUnlink(WMCHATFILE);
-
-		if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
+		if(cellFsOpen(WMCHATFILE, CELL_FS_O_WRONLY | CELL_FS_O_TRUNC | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			size = sprintf(templn,	"<meta http-equiv=\"refresh\" content=\"10\">"
 									"<body bgcolor=\"#101010\" text=\"#c0c0c0\">"
 									"<script>window.onload=toBottom;function toBottom(){window.scrollTo(0, document.body.scrollHeight);}</script>\0");
-			if(tempstr[0]) {strcat(templn, "<!--"); size += 4;}
+			if(*tempstr) {strcat(templn, "<!--"); size += 4;}
 
 			cellFsWrite(fd, templn, size, NULL);
 			cellFsWrite(fd, tempstr, size, NULL);
+			cellFsClose(fd);
 		}
-		cellFsClose(fd);
 	}
 
 	// append msg
-	char msg[200]="", user[20]="guest\0"; char *pos;
+	char msg[200], user[20]="guest\0", *pos; *msg = NULL;
 	if(conn_info_main.remote_adr.s_addr==0x7F000001) strcpy(user,"console\0");
 	if(islike(param, "/chat.ps3?"))
 	{

@@ -184,11 +184,11 @@ static void block_online_servers(bool notify)
 		{
 			led(YELLOW, BLINK_FAST);
 
-			u64 mem=0; u8 pcount = 0;
+			u64 mem = 0; u8 pcount = 0;
 
 			// LV1
 
-			for(u64 addr = 0x880000; addr < 0xE1FFFFULL; addr+=4)//16MB
+			for(u64 addr = 0x880000; addr < 0xE1FFFFULL; addr += 4)//16MB
 			{
 				mem = peek_lv1(addr);
 
@@ -205,7 +205,7 @@ static void block_online_servers(bool notify)
 			// LV2
 			u64 start_addr = 0x300000ULL + LV2_OFFSET_ON_LV1, stop_addr = 0x7FFFF8ULL + LV2_OFFSET_ON_LV1;
 
-			for(u64 addr = start_addr; addr < stop_addr; addr+=4)//8MB
+			for(u64 addr = start_addr; addr < stop_addr; addr += 4)//8MB
 			{
 				mem = peek_lv1(addr);
 				if(     mem == 0x733A2F2F6E73782EULL)   // s://nsx.

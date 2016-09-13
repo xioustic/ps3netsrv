@@ -6,7 +6,7 @@
 #define SYSCALL8_OPCODE_PS3MAPI			0x7777
 #define PS3MAPI_OPCODE_LV1_POKE			0x1009
 
-static uint64_t peek_lv1(uint64_t addr)
+static inline uint64_t peek_lv1(uint64_t addr)
 {
 	system_call_1(SC_PEEK_LV1, (uint64_t) addr);
 	return (uint64_t) p1;
@@ -27,8 +27,6 @@ static inline uint64_t peekq(uint64_t addr) //lv2
 	system_call_1(SC_PEEK_LV1, addr + LV2_OFFSET_ON_LV1); //old: {system_call_1(SC_PEEK_LV2, addr);}
 	return (uint64_t) p1;
 }
-
-void add_log2(const char *fmt, uint64_t addr, uint64_t value);
 
 static void pokeq(uint64_t addr, uint64_t value) //lv2
 {
@@ -170,15 +168,15 @@ static u16 string_to_lv2(char* path, uint64_t addr)
 
 static uint64_t convertH(char *val)
 {
-	uint64_t ret = 0;
+	uint64_t ret = 0; char c;
 
 	for(uint8_t buff, i = 0, n = 0; i < 16 + n; i++)
 	{
 		if(val[i]==' ') {n++; continue;}
 
-		if(val[i]>='0' && val[i]<='9') buff = (val[i] - '0');      else
-		if(val[i]>='A' && val[i]<='F') buff = (val[i] - 'A' + 10); else
-		if(val[i]>='a' && val[i]<='f') buff = (val[i] - 'a' + 10); else
+		c = (val[i] | 0x20);
+		if(c >= '0' && c <= '9') buff = (c - '0');      else
+		if(c >= 'a' && c <= 'f') buff = (c - 'a' + 10); else
 		return ret;
 
 		ret = (ret << 4) | buff;

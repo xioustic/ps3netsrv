@@ -558,7 +558,7 @@ static void netiso_stop_thread(uint64_t arg)
 		}
 	}
 
-	if(thread_id_net != (sys_ppu_thread_t)-1)
+	if(thread_id_net != SYS_PPU_THREAD_NONE)
 	{
 		sys_ppu_thread_join(thread_id_net, &exit_code);
 	}
@@ -566,18 +566,23 @@ static void netiso_stop_thread(uint64_t arg)
 	sys_ppu_thread_exit(0);
 }
 
+static bool is_netsrv_enabled(u8 server_id)
+{
+	return( (server_id == 0 && (webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0))
+		||	(server_id == 1 && (webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1))
+		||	(server_id == 2 && (webman_config->netd2 && webman_config->neth2[0] && webman_config->netp2))
+#ifdef NET3NET4
+		||	(server_id == 3 && (webman_config->netd3 && webman_config->neth3[0] && webman_config->netp3))
+		||	(server_id == 4 && (webman_config->netd4 && webman_config->neth4[0] && webman_config->netp4))
+#endif
+		  );
+}
+
 static int connect_to_remote_server(u8 server_id)
 {
 	int ns = FAILED;
 
-	if( (server_id == 0 && (webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0))
-	||	(server_id == 1 && (webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1))
-	||	(server_id == 2 && (webman_config->netd2 && webman_config->neth2[0] && webman_config->netp2))
-#ifdef NET3NET4
-	||	(server_id == 3 && (webman_config->netd3 && webman_config->neth3[0] && webman_config->netp3))
-	||	(server_id == 4 && (webman_config->netd4 && webman_config->neth4[0] && webman_config->netp4))
-#endif
-	  )
+	if( is_netsrv_enabled(server_id) )
 	{
 		// check duplicated connections
 		if(server_id == 1 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth1) && webman_config->netp0 == webman_config->netp1) return FAILED;
@@ -742,7 +747,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 	{
 		char *chunk = (char*)sysmem;
 
-		if(cellFsOpen(local_file, CELL_FS_O_CREAT|CELL_FS_O_RDWR|CELL_FS_O_TRUNC, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
+		if(cellFsOpen(local_file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			open_remote_file(ns, remote_file, &abort_connection);
 

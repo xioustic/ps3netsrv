@@ -14,25 +14,8 @@ static u32 copied_count = 0;
 
 #define COPY_WHOLE_FILE		0
 #define SAVE_ALL			0
+#define APPEND_TEXT			(-0xADD0ADD0ADD000ALL)
 
-/*
-static void add_log(const char *fmt, const char *value1, int value2)
-{
-	char buffer[2048];
-
-	sprintf(buffer, fmt, value1, value2);
-
-	//console_write(buffer);
-	int fd;
-
-	if(cellFsOpen("/dev_hdd0/webMAN.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-	{
-		int size = strlen(buffer);
-		cellFsWrite(fd, buffer, size, NULL);
-		cellFsClose(fd);
-	}
-}
-*/
 
 static int sysLv2FsLink(const char *oldpath, const char *newpath)
 {
@@ -72,16 +55,17 @@ static void mkdir_tree(char *path)
 }
 #endif
 
-static int savefile(const char *file, const char *mem, u64 size)
+int savefile(const char *file, const char *mem, int64_t size)
 {
 	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
 	cellFsChmod(file, MODE);
 
+	if( size < 0 )  {flags = CELL_FS_O_APPEND | CELL_FS_O_CREAT | CELL_FS_O_WRONLY; size = (size == APPEND_TEXT) ? 0 : -size;} else
 	if(!extcmp(file, "/PARAM.SFO", 10)) flags = CELL_FS_O_CREAT | CELL_FS_O_WRONLY;
 
 	if(cellFsOpen(file, flags, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		if((size == SAVE_ALL) && mem) size = strlen(mem);
+		if((size <= SAVE_ALL) && mem) size = strlen(mem);
 
 		if(size) cellFsWrite(fd, (void *)mem, size, NULL);
 		cellFsClose(fd);
@@ -93,21 +77,9 @@ static int savefile(const char *file, const char *mem, u64 size)
 
 	return FAILED;
 }
-/*
-static int appendfile(char *file, char *mem, u64 size)
-{
-	int fd = 0;
-	if(cellFsOpen(file, CELL_FS_O_CREAT | CELL_FS_O_APPEND | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-	{
-		if(size) cellFsWrite(fd, (void *)mem, size, NULL);
-		cellFsClose(fd);
-		return CELL_FS_SUCCEEDED;
-	}
-	else
-		return FAILED;
-}
 
-static int concat(char *file1, char *file2)
+/*
+static int file_concat(char *file1, char *file2)
 {
 	struct CellFsStat buf;
 	int fd1, fd2;
@@ -310,7 +282,7 @@ static int folder_copy(const char *path1, const char *path2)
 
 			if(isDir(source))
 			{
-				if(IS(source, "/dev_bdvd/PS3_UPDATE")) continue;
+				if(IS(source, "/dev_bdvd/PS3_UPDATE")) {cellFsMkdir(target, DMODE); continue;} // just create /PS3_UPDATE without its content
 				folder_copy(source, target);
 			}
 			else
@@ -347,7 +319,7 @@ static int del(const char *path, bool recursive)
 		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(copy_aborted) break;
-			if(dir.d_name[0]=='.' && (dir.d_name[1]=='.' || dir.d_name[1]==0)) continue;
+			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == NULL)) continue;
 
 			sprintf(entry, "%s/%s", path, dir.d_name);
 
@@ -372,9 +344,9 @@ static int del(const char *path, bool recursive)
 int waitfor(const char *path, uint8_t timeout)
 {
 	struct CellFsStat s;
-	for(uint8_t n = 0; n < (timeout*5); n++)
+	for(uint8_t n = 0; n < (timeout * 5); n++)
 	{
-		if(*path && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return 0;
+		if(*path && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return CELL_FS_SUCCEEDED;
 		sys_timer_usleep(200000); if(!working) break;
 	}
 	return FAILED;
@@ -418,7 +390,13 @@ static bool do_custom_combo(const char *filename)
 
 	if(file_exists(combo_file))
 	{
-		file_copy(combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE); return true;
+		file_copy(combo_file, (char*)WMREQUEST_FILE, COPY_WHOLE_FILE);
+
+		loading_html++;
+		sys_ppu_thread_t t_id;
+		if(working) sys_ppu_thread_create(&t_id, handleclient, WM_FILE_REQUEST, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+
+		return true;
 	}
 	return false;
 }
@@ -460,8 +438,7 @@ static void import_edats(const char *path1, const char *path2)
 {
 	cellFsMkdir(path2, DMODE);
 
-	struct CellFsStat buf;
-	if(cellFsStat(path2, &buf) != CELL_FS_SUCCEEDED) return;
+	if(!isDir(path2)) return;
 
 	int fd; bool from_usb;
 
@@ -478,15 +455,15 @@ static void import_edats(const char *path1, const char *path2)
 		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(copy_aborted) break;
-			if(strstr(dir.d_name, ".edat")==NULL || !extcmp(dir.d_name, ".bak", 4)) continue;
+			if((strstr(dir.d_name, ".edat") == NULL) || !extcmp(dir.d_name, ".bak", 4)) continue;
 
 			sprintf(source, "%s/%s", path1, dir.d_name);
 			sprintf(target, "%s/%s", path2, dir.d_name);
 
-			if(cellFsStat(target, &buf) != CELL_FS_SUCCEEDED)
+			if(file_exists(target) == false)
 				file_copy(source, target, COPY_WHOLE_FILE);
 
-			if(from_usb && cellFsStat(target, &buf) == CELL_FS_SUCCEEDED)
+			if(from_usb && file_exists(target))
 				{sprintf(target, "%s.bak", source); cellFsRename(source, target);}
 		}
 		cellFsClosedir(fd);

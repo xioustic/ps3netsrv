@@ -136,7 +136,6 @@ static void launch_disc(char *category, char *seg_name)
 	}
 }
 
-
 /*
 #include "vsh/xmb_plugin.h"
 

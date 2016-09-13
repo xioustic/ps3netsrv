@@ -24,7 +24,7 @@
 #define REMOVE_SYSCALLS	1	// remove syscalls on startup and using R2+TRIANGLE
 //#define SPOOF_CONSOLEID	1	// spoof idps/psid (thanks to M@tumot0 & zar)
 //#define VIRTUAL_PAD	1	// virtual pad (thanks to OsiriX)
-//#define WM_REQUEST	1	// accept commands via local file /dev_hdd0/tmp/wm_request  (required by VSH Menu for webMAN)  (required by VSH Menu for webMAN)
+//#define WM_REQUEST	1	// accept commands via local file /dev_hdd0/tmp/wm_request
 //#define GET_KLICENSEE	1	// /klic.ps3
 //#define PS3_BROWSER	1	// /browser.ps3 / open browser combos
 //#define EMBED_JS		1	// use embedded javascript instead of external js files
@@ -45,4 +45,5 @@
 //#define USE_DEBUG			1	// debug using telnet
 //#define WEB_CHAT			1	// /chat.ps3
 //#define AUTO_EJECT_DISC	1	// eject disc holding SELECT on mount
-//#define RAWISO_PSX_MULTI	// support for multi PSX from Iris Manager (it's incomplete - only rawseciso.h code is complete) (thanks to Estwald)
+//#define RAWISO_PSX_MULTI		// support for multi PSX from Iris Manager (it's incomplete - only rawseciso.h code is complete) (thanks to Estwald)
+//#define DO_WM_REQUEST_POLLING	// poll file /dev_hdd0/tmp/wm_request (can be used by external apps)

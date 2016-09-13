@@ -126,7 +126,7 @@ static sys_device_info_t disc_info;
 static uint64_t usb_device = 0ULL;
 
 #ifdef RAWISO_PSX_MULTI
-static sys_ppu_thread_t thread_id_eject = -1;
+static sys_ppu_thread_t thread_id_eject = SYS_PPU_THREAD_NONE;
 #endif
 
 static int ntfs_running = 0;
@@ -1263,7 +1263,7 @@ static void rawseciso_stop_thread(uint64_t arg)
 		}
 	}
 
-	if(thread_id_ntfs != (sys_ppu_thread_t)-1)
+	if(thread_id_ntfs != SYS_PPU_THREAD_NONE)
 	{
 		sys_ppu_thread_join(thread_id_ntfs, &exit_code);
 	}
@@ -1271,7 +1271,7 @@ static void rawseciso_stop_thread(uint64_t arg)
 #ifdef RAWISO_PSX_MULTI
 	eject_running = 0;
 
-	if(thread_id_eject != (sys_ppu_thread_t)-1)
+	if(thread_id_eject != SYS_PPU_THREAD_NONE)
 	{
 		sys_ppu_thread_join(thread_id_eject, &exit_code);
 	}

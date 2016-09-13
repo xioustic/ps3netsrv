@@ -1051,9 +1051,11 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 
 #define PS3MAPI_RECV_SIZE  2048
 
+#define PS3MAPI_MAX_LEN    383
+
 static u32 BUFFER_SIZE_PS3MAPI = (_64KB_);
 
-static sys_ppu_thread_t thread_id_ps3mapi = -1;
+static sys_ppu_thread_t thread_id_ps3mapi = SYS_PPU_THREAD_NONE;
 
 static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 {
@@ -1065,7 +1067,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 	int dataactive = 0;							// prevent the data connection from being closed at the end of the loop
 
 	char buffer[PS3MAPI_RECV_SIZE];
-	char cmd[20], param1[384], param2[384];
+	char cmd[20], param1[PS3MAPI_MAX_LEN + 1], param2[PS3MAPI_MAX_LEN + 1];
 
 	int p1x = 0;
 	int p2x = 0;
@@ -1076,11 +1078,9 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 	#define PS3MAPI_OK_221    "221 OK: Service closing control connection.\r\n"
 	#define PS3MAPI_OK_226    "226 OK: Closing data connection. Requested binary action successful.\r\n"
 	#define PS3MAPI_OK_230    "230 OK: Connected to PS3 Manager API Server.\r\n"
-	#define PS3MAPI_OK_250    "250 OK: Requested binary action okay, completed.\r\n"
 
 	#define PS3MAPI_ERROR_425 "425 Error: Can't open data connection.\r\n"
 	#define PS3MAPI_ERROR_451 "451 Error: Requested action aborted. Local error in processing.\r\n"
-	#define PS3MAPI_ERROR_500 "500 Error: Syntax error, command unrecognized and the requested action did not take place.\r\n"
 	#define PS3MAPI_ERROR_501 "501 Error: Syntax error in parameters or arguments.\r\n"
 	#define PS3MAPI_ERROR_550 "550 Error: Requested action not taken.\r\n"
 	#define PS3MAPI_ERROR_502 "502 Error: Command not implemented.\r\n"
@@ -1113,7 +1113,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			buffer[strcspn(buffer, "\n")] = '\0';
 			buffer[strcspn(buffer, "\r")] = '\0';
 
-			int split = ssplit(buffer, cmd, 19, param1, 383);
+			int split = ssplit(buffer, cmd, 19, param1, PS3MAPI_MAX_LEN);
 			if(_IS(cmd, "DISCONNECT"))
 			{
 				ssend(conn_s_ps3mapi, PS3MAPI_OK_221);
@@ -1123,7 +1123,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			{
 				if(split == 1)
 				{
-					split = ssplit(param1, cmd, 19, param2, 383);
+					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETVERSION"))
 					{
 						sprintf(buffer, "200 %i\r\n", PS3MAPI_SERVER_VERSION);
@@ -1145,7 +1145,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			{
 				if(split == 1)
 				{
-					split = ssplit(param1, cmd, 19, param2, 383);
+					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETVERSION"))
 					{
 						int version = 0;
@@ -1171,7 +1171,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			{
 				if(split == 1)
 				{
-					split = ssplit(param1, cmd, 19, param2, 383);
+					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "SHUTDOWN"))
 					{
 						ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
@@ -1246,7 +1246,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								u64 color = val(param1);
@@ -1332,7 +1332,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								u64 part1 = convertH(param1);
@@ -1355,7 +1355,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								u64 part1 = convertH(param1);
@@ -1378,7 +1378,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			{
 				if(split == 1)
 				{
-					split = ssplit(param1, cmd, 19, param2, 383);
+					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETNAME"))
 					{
 						if(split == 1)
@@ -1415,18 +1415,18 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			{
 				if(split == 1)
 				{
-					split = ssplit(param1, cmd, 19, param2, 383);
+					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GET"))
 					{
 						if(data_s > 0)
 						{
 							if(split == 1)
 							{
-								split = ssplit(param2, param1, 383, param2, 383);
+								split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 								if(split == 1)
 								{
 									u32 attached_pid = val(param1);
-									split = ssplit(param2, param1, 383, param2, 383);
+									split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 									if(split == 1)
 									{
 										u64 offset = convertH(param1);
@@ -1483,7 +1483,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 						{
 							if(split == 1)
 							{
-								split = ssplit(param2, param1, 383, param2, 383);
+								split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 								if(split == 1)
 								{
 									u32 attached_pid = val(param1);
@@ -1530,12 +1530,12 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			{
 				if(split == 1)
 				{
-					split = ssplit(param1, cmd, 19, param2, 383);
+					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETNAME"))
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								u32 pid = val(param1);
@@ -1553,7 +1553,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								u32 pid = val(param1);
@@ -1589,7 +1589,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								u32 pid = val(param1);
@@ -1604,7 +1604,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								u32 pid = val(param1);
@@ -1620,7 +1620,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					{
 						if(split == 1)
 						{
-							split = ssplit(param2, param1, 383, param2, 383);
+							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
 							if(split == 1)
 							{
 								unsigned int slot = val(param1);
@@ -1765,8 +1765,8 @@ static void ps3mapi_thread(u64 arg)
 				else
 				if(working && (conn_s_ps3mapi = accept(list_s, NULL, NULL)) > 0)
 				{
-					sys_ppu_thread_t id;
-					if(working) sys_ppu_thread_create(&id, handleclient_ps3mapi, (u64)conn_s_ps3mapi, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD02_NAME_PS3MAPI);
+					sys_ppu_thread_t t_id;
+					if(working) sys_ppu_thread_create(&t_id, handleclient_ps3mapi, (u64)conn_s_ps3mapi, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD02_NAME_PS3MAPI);
 					else {sclose(&conn_s_ps3mapi); break;}
 				}
 				else

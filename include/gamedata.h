@@ -27,9 +27,9 @@ static int set_gamedata_status(u8 status, bool do_mount)
 		{
 			for(n = 1; n < 7; n++) {sprintf(gamei_path, "%s/GAMEI", drives[n]); if(isDir(gamei_path)) break;} // find first USB HDD with /GAMEI
 
-			if(n > 7)
+			if(n >= 7)
 			{
-				for(n = 1; n < 7; n++) {if(isDir(drives[n])) break;} // find first USB HDD
+				for(n = 1; n < 7; n++) {if(isDir(drives[n])) break;} // find first USB HDD, then create /GAMEI folder
 
 				if(n < 7) {sprintf(gamei_path, "%s/GAMEI", drives[n]); if(cellFsMkdir(gamei_path, MODE) != CELL_FS_SUCCEEDED) n = 99;}
 			}

@@ -288,6 +288,7 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define FAILED		-1
 
 #define HTML_RECV_SIZE	2048
+#define HTML_RECV_LAST	2047
 #define ip_size			0x10
 
 
@@ -299,28 +300,25 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define CODE_DOWNLOAD_FILE  1202
 #define CODE_RETURN_TO_ROOT 1203
 
-#define IS_ON_XMB	(View_Find("game_plugin") == 0)
-#define IS_INGAME	(View_Find("game_plugin") != 0)
+#define IS_ON_XMB		(View_Find("game_plugin") == 0)
+#define IS_INGAME		(View_Find("game_plugin") != 0)
 
 ////////////
+#define SYS_PPU_THREAD_NONE (sys_ppu_thread_t)-1
+
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
- static sys_ppu_thread_t thread_id_net	= -1;
+ static sys_ppu_thread_t thread_id_net	= SYS_PPU_THREAD_NONE;
  #endif
- static sys_ppu_thread_t thread_id_ntfs	= -1;
+ static sys_ppu_thread_t thread_id_ntfs	= SYS_PPU_THREAD_NONE;
+ #ifdef PS3NET_SERVER
+ static sys_ppu_thread_t thread_id_netsvr = SYS_PPU_THREAD_NONE;
+ #endif
 #endif
-static sys_ppu_thread_t thread_id_poll	= -1;
-static sys_ppu_thread_t thread_id_ftp	= -1;
-static sys_ppu_thread_t thread_id		= -1;
-#ifdef PS3NET_SERVER
-static sys_ppu_thread_t thread_id_netsvr = -1;
-#endif
+static sys_ppu_thread_t thread_id_wwwd	= SYS_PPU_THREAD_NONE;
+static sys_ppu_thread_t thread_id_ftpd	= SYS_PPU_THREAD_NONE;
+static sys_ppu_thread_t thread_id_poll	= SYS_PPU_THREAD_NONE;
 
-#define MAX(a, b)		((a) >= (b) ? (a) : (b))
-#define MIN(a, b)		((a) <= (b) ? (a) : (b))
-#define ABS(a)			(((a) < 0) ? -(a) : (a))
-#define RANGE(a, b, c)	((a) <= (b) ? (b) : (a) >= (c) ? (c) : (a))
-#define ISDIGIT(a)		('0' <= (unsigned char)(a) && (unsigned char)(a) <= '9')
 
 #define START_DAEMON		(0xC0FEBABE)
 #define REFRESH_CONTENT		(0xC0FEBAB0)
@@ -478,26 +476,23 @@ typedef struct
 static u8 wmconfig[sizeof(WebmanCfg)];
 static WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
 
-static void reset_settings(void);
 static int save_settings(void);
-
 ////////////////////////////////
 
 
-#define AUTOBOOT_PATH            "/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
+#define AUTOBOOT_PATH				"/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
 
 #ifdef COBRA_ONLY
- #define DEFAULT_AUTOBOOT_PATH   "/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
+ #define DEFAULT_AUTOBOOT_PATH		"/dev_hdd0/PS3ISO/AUTOBOOT.ISO"
 #else
- #define DEFAULT_AUTOBOOT_PATH   "/dev_hdd0/GAMES/AUTOBOOT"
+ #define DEFAULT_AUTOBOOT_PATH		"/dev_hdd0/GAMES/AUTOBOOT"
 #endif
 
-#define ISO_EXTENSIONS           ".iso.0|.cue|.img|.mdf|.bin"
+#define MAX_ISO_PARTS				(16)
+#define ISO_EXTENSIONS				".iso.0|.cue|.img|.mdf|.bin"
 
 static CellRtcTick rTick, gTick;
 
-static void enable_fan_control(u8 enable, char *msg);
-static void set_buffer_sizes(int footprint);
 static void show_msg(char* msg);
 int waitfor(const char *path, uint8_t timeout);
 
@@ -516,8 +511,6 @@ static uint16_t cobra_version = 0;
 
 static bool is_mounting = false;
 static bool copy_aborted = false;
-
-static bool gmobile_mode = false;
 
 #ifndef EMBED_JS
 static bool css_exists = false;
@@ -539,7 +532,6 @@ static u8   cp_mode = 0;           // 0 = none / 1 = copy / 2 = cut/move
 #define ONLINE_TAG		"[online]"
 #define OFFLINE_TAG		"[offline]"
 #define AUTOPLAY_TAG	" [auto]"
-
 
 static char wm_icons[12][60] = {WM_ICONS_PATH "icon_wm_album_ps3.png", //024.png  [0]
 								WM_ICONS_PATH "icon_wm_album_psx.png", //026.png  [1]
@@ -566,30 +558,24 @@ static bool covers_exist[7];
 static char fw_version[8] = "4.xx";
 static char local_ip[16] = "127.0.0.1";
 
-//uint64_t find_syscall();
-//uint64_t search64(uint64_t val);
-//uint64_t find_syscall_table();
-
 static bool file_exists(const char* path);
 static int isDir(const char* path);
-static int savefile(const char *file, const char *mem, u64 size);
+int savefile(const char *file, const char *mem, int64_t size);
 
 #include "include/html.h"
 #include "include/peek_poke.h"
+#include "include/idps.h"
 #include "include/led.h"
+#include "include/vpad.h"
 #include "include/socket.h"
 #include "include/language.h"
-
-#include "include/vpad.h"
-#include "include/idps.h"
-#include "include/singstar.h"
+#include "include/fancontrol.h"
+#include "include/firmware.h"
 
 int wwwd_start(uint64_t arg);
 int wwwd_stop(void);
 static void stop_prx_module(void);
 static void unload_prx_module(void);
-
-static void detect_firmware(void);
 
 #ifdef REMOVE_SYSCALLS
 static void remove_cfw_syscalls(bool keep_ccapi);
@@ -600,7 +586,6 @@ static void restore_cfw_syscalls(void);
 
 #ifdef PKG_HANDLER
 static int installPKG(const char *pkgpath, char *msg);
-static int installPKG_combo(char *msg);
 #endif
 
 static void handleclient(u64 conn_s_p);
@@ -608,13 +593,13 @@ static void handleclient(u64 conn_s_p);
 static void do_umount(bool clean);
 static void mount_autoboot(void);
 static bool mount_with_mm(const char *_path, u8 do_eject);
-static void add_breadcrumb_trail(char *buffer, char *param);
-static void get_cpursx(char *cpursx);
-static size_t get_name(char *name, const char *filename, u8 cache);
-
 #ifdef COBRA_ONLY
 static void do_umount_iso(void);
 #endif
+
+static size_t get_name(char *name, const char *filename, u8 cache);
+static void add_breadcrumb_trail(char *buffer, char *param);
+static void get_cpursx(char *cpursx);
 
 static bool from_reboot = false;
 static bool is_busy = false;
@@ -629,6 +614,7 @@ static char current_file[MAX_PATH_LEN];
 
 #include "include/rawseciso.h"
 #include "include/netclient.h"
+#include "include/netserver.h"
 
 #endif //#ifdef COBRA_ONLY
 
@@ -638,18 +624,7 @@ static char current_file[MAX_PATH_LEN];
 #include "include/ps2_disc.h"
 #include "include/ps2_classic.h"
 #include "include/xmb_savebmp.h"
-
-
-static inline void _sys_ppu_thread_exit(uint64_t val)
-{
-	system_call_1(SC_PPU_THREAD_EXIT, val); // prxloader = mandatory; cobra = optional; ccapi = don't use !!!
-}
-
-static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
-{
-	system_call_1(SC_GET_PRX_MODULE_BY_ADDRESS, (uint64_t)(uint32_t)addr);
-	return (int)p1;
-}
+#include "include/singstar.h"
 
 #include "include/gamedata.h"
 #include "include/psxemu.h"
@@ -657,7 +632,6 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 #include "include/debug_mem.h"
 #include "include/fix_game.h"
 #include "include/ftp.h"
-#include "include/fancontrol.h"
 #include "include/ps3mapi.h"
 #include "include/stealth.h"
 #include "include/video_rec.h"
@@ -671,10 +645,20 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 
 #include "include/_mount.h"
 #include "include/file_manager.h"
-#include "include/netserver.h"
 
 #include "include/pkg_handler.h"
 #include "include/fancontrol2.h"
+
+static inline void _sys_ppu_thread_exit(uint64_t val)
+{
+	system_call_1(SC_PPU_THREAD_EXIT, val); // prxloader = mandatory; cobra = optional; ccapi = don't use !!!
+}
+
+static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
+{
+	system_call_1(SC_GET_PRX_MODULE_BY_ADDRESS, (uint64_t)(uint32_t)addr);
+	return (int)p1;
+}
 
 static void http_response(int conn_s, char *header, const char *url, int code, const char *msg)
 {
@@ -692,17 +676,17 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		if(*msg == '/')
 			{sprintf(templn, "%s : OK", msg+1); show_msg(templn);}
 		else if(islike(msg, "http"))
-			sprintf(templn, "<a style=\"%s\" href=\"%s\">%s</a>", "color:#ccc;text-decoration:none;", msg, msg);
+			sprintf(templn, "<a style=\"%s\" href=\"%s\">%s</a>", HTML_URL_STYLE, msg, msg);
 #ifdef PKG_HANDLER
 		else if(code == CODE_INSTALL_PKG || code == CODE_DOWNLOAD_FILE)
 		{
-			sprintf(templn, "<style>a{%s}</style>%s", "color:#ccc;text-decoration:none;", (code == CODE_INSTALL_PKG) ? "Installing " : "");
-			char *p = strstr((char *)msg, "To: ");
+			sprintf(templn, "<style>a{%s}</style>%s", HTML_URL_STYLE, (code == CODE_INSTALL_PKG) ? "Installing " : "");
+			char *p = strchr((char*)msg, '\n');
 			if(p)
 			{
 				*p = NULL;
 				if(code == CODE_INSTALL_PKG) add_breadcrumb_trail(templn, (char *)msg + 11); else strcat(templn, msg);
-				strcat(templn, "<p>To: \0"); add_breadcrumb_trail(templn, p + 4);
+				strcat(templn, "<p>To: \0"); add_breadcrumb_trail(templn, p + 5);
 			}
 			else
 				strcat(templn, msg);
@@ -746,7 +730,7 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 	buffer += concat(buffer,
 								"<head><title>webMAN MOD</title>"
 								"<style>"
-								"a{color:#ccc;text-decoration:none;}"
+								"a{" HTML_URL_STYLE "}"
 								"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
 								"</style>"); // fallback style if external css fails
 
@@ -853,6 +837,8 @@ static void handleclient(u64 conn_s_p)
 	char param[HTML_RECV_SIZE];
 	int fd;
 
+	char *file_query = param + HTML_RECV_LAST; *file_query = NULL;
+
 	if(conn_s_p == START_DAEMON || conn_s_p == REFRESH_CONTENT)
 	{
 		if(conn_s_p == START_DAEMON)
@@ -924,8 +910,8 @@ static void handleclient(u64 conn_s_p)
 		if(webman_config->noss) no_singstar_icon();
 #endif
 
-		sys_ppu_thread_t id4;
-		sys_ppu_thread_create(&id4, update_xml_thread, conn_s_p, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+		sys_ppu_thread_t t_id;
+		sys_ppu_thread_create(&t_id, update_xml_thread, conn_s_p, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
 		if(conn_s_p == START_DAEMON)
 		{
@@ -1039,6 +1025,7 @@ static void handleclient(u64 conn_s_p)
 	}
 
 	u8 served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
+	int8_t sort_order = 1, sort_by = 0;
 	u64 c_len = 0;
 
 	u8 is_cpursx = 0;
@@ -1088,13 +1075,13 @@ static void handleclient(u64 conn_s_p)
 			header[strcspn(header, "\n")] = NULL;
 			header[strcspn(header, "\r")] = NULL;
 
-			ssplit(header, cmd, 15, header, (HTML_RECV_SIZE-1));
-			ssplit(header, param, (HTML_RECV_SIZE-1), cmd, 15);
+			ssplit(header, cmd, 15, header, HTML_RECV_LAST);
+			ssplit(header, param, HTML_RECV_LAST, cmd, 15);
 
 			char *param_original = header; // used in /download.ps3
 
  #ifdef WM_REQUEST
-			if(wm_request) { for(size_t n = strlen(param); n > 0; n--) {if(param[n] == 9) param[n] = ' ';} } wm_request = 0;
+			if(wm_request) { for(size_t n = 0; param[n]; n++) {if(param[n] == 9) param[n] = ' ';} } wm_request = 0;
  #endif
 
 			bool allow_retry_response = true, small_alloc = true, mobile_mode = false;
@@ -1108,6 +1095,7 @@ static void handleclient(u64 conn_s_p)
 			bool is_pad = islike(param, "/pad.ps3");
 
 			if(!is_pad)
+ #endif
 			{
 	redirect_url:
 
@@ -1115,13 +1103,6 @@ static void handleclient(u64 conn_s_p)
 
 				if(islike(param, "/setup.ps3")) goto html_response;
 			}
- #else
-	redirect_url:
-
-			urldec(param, param_original);
-
-			if(islike(param, "/setup.ps3")) goto html_response;
- #endif
 
  #ifdef VIRTUAL_PAD
 			if(is_pad || islike(param, "/combo.ps3") || islike(param, "/play.ps3"))
@@ -1193,9 +1174,21 @@ static void handleclient(u64 conn_s_p)
 				// /download.ps3?url=<url>            (see pkg_handler.h for details)
 				// /download.ps3?to=<path>&url=<url>
 
-				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
+				char msg[MAX_LINE_LEN], filename[MAX_PATH_LEN]; memset(msg, 0, MAX_LINE_LEN); *filename = NULL;
 
 				int ret = download_file(strchr(param_original, '%') ? (param_original + 13) : (param + 13), msg);
+
+				char *dlpath = strchr(msg, '\n'); // get path in "...\nTo: /path/"
+
+				if(dlpath)
+				{
+					*dlpath = NULL; // limit string to url in "Downloading http://blah..."
+
+					char *dlfile = strrchr(msg, '/');
+					if(dlfile) sprintf(filename, "%s%s", dlpath + 5, dlfile);
+
+					*dlpath = '\n'; // restore line break
+				}
 
 				#ifdef WM_REQUEST
 				if(!wm_request)
@@ -1206,12 +1199,15 @@ static void handleclient(u64 conn_s_p)
 
 				show_msg(msg);
 
+				wait_for_xml_download(filename, param);
+
 				goto exit_handleclient;
 			}
 
 			if(islike(param, "/install.ps3") || islike(param, "/install_ps3"))
 			{
 				// /install.ps3<pkg-path>  (see pkg_handler.h for details)
+				// /install.ps3<pkg-path>? conditional install
 				// /install_ps3<pkg-path>  install & keep pkg
 				// /install.ps3?url=<url>  download & auto-install pkg
 
@@ -1436,11 +1432,15 @@ static void handleclient(u64 conn_s_p)
 					npklic_struct_offset = (((*func_start) & 0x0000FFFF) << 16) + ((*(func_start+5)) & 0x0000FFFF) + 0xC;//8;
 				}
 
+				#define KL_OFF     0
+				#define KL_GET     1
+				#define KL_AUTO    2
+
 				u8 klic_polling_status = klic_polling;
 
-				if(strstr(param, "auto")) klic_polling = 2; else
-				if(strstr(param, "off"))  klic_polling = 0; else
-				if(strstr(param, "?log")) klic_polling = klic_polling ? 0 : 1;
+				if(strstr(param, "off"))  klic_polling = KL_OFF;  else
+				if(strstr(param, "auto")) klic_polling = KL_AUTO; else
+				if(strstr(param, "?log")) klic_polling = klic_polling ? KL_OFF : KL_GET; // toggle
 
 				if((klic_polling_status == 0) && (klic_polling == 2))
 				{
@@ -1465,46 +1465,43 @@ static void handleclient(u64 conn_s_p)
 													 "File: ", (char*)(KLIC_PATH_OFFSET));
 				}
 				else
-					{sprintf(buffer, "ERROR: <a href=\"play.ps3\"><font color=#ccc>%s</font></a><p>", "KLIC: Not in-game!"); klic_polling = false; show_msg((char*)"KLIC: Not in-game!");}
+					{sprintf(buffer, "ERROR: <a style=\"%s\" href=\"play.ps3\">%s</a><p>", HTML_URL_STYLE, "KLIC: Not in-game!"); klic_polling = KL_OFF; show_msg((char*)"KLIC: Not in-game!");}
 
-				sprintf(prev, "%s", ((klic_polling_status) ? (klic_polling ? "Auto-Log: Running" : "Auto-Log: Stopped") : ((klic_polling == 1)? "Added to Log" : (klic_polling == 2)? "Auto-Log: Started" : "Enable Auto-Log")));
+				sprintf(prev, "%s", ((klic_polling_status) ? (klic_polling ? "Auto-Log: Running" : "Auto-Log: Stopped") :
+															((klic_polling == KL_GET)  ? "Added to Log" :
+															 (klic_polling == KL_AUTO) ? "Auto-Log: Started" : "Enable Auto-Log")));
 
-				sprintf(header, "<a href=\"/%s\"><font color=#ccc>%s</font></a>",
-							(klic_polling_status>0 && klic_polling>0) ? "klic.ps3?off" :
-							((klic_polling_status | klic_polling) == 0) ? "klic.ps3?auto" : "dev_hdd0/klic.log", prev); strcat(buffer, header);
+				sprintf(header, "<a style=\"%s\" href=\"%s\">%s</a>", HTML_URL_STYLE,
+							(klic_polling_status > 0 && klic_polling > 0) ? "klic.ps3?off"  :
+							( (klic_polling_status | klic_polling)  == 0) ? "klic.ps3?auto" : "dev_hdd0/klic.log", prev); strcat(buffer, header);
 
 				http_response(conn_s, header, param, CODE_HTTP_OK, buffer);
 
-				if(*kl && (klic_polling > 0))
+				if(*kl && (klic_polling != KL_OFF))
 				{
 					get_game_info(); sprintf(header, "%s [%s]", _game_Title, _game_TitleID);
 
 					sprintf(buffer, "%s\n\n%s", header, (char*)(KLIC_PATH_OFFSET));
 					show_msg(buffer);
 
-					if(klic_polling == 1)
+					if(klic_polling == KL_GET)
 					{
 						sprintf(buffer, "%s%s\n%s%s", "KLicensee: ", kl, "Content ID: ", (char*)(KLIC_CONTENT_ID_OFFSET));
 						show_msg(buffer);
 					}
 
-					if(klic_polling_status == 0)
+					if(klic_polling_status == KL_OFF)
 					{
-						while((klic_polling>0) && IS_INGAME && working)
+						while((klic_polling != KL_OFF) && IS_INGAME && working)
 						{
 							hex_dump(kl, (int)KLICENSEE_OFFSET, KLICENSEE_SIZE);
 							sprintf(buffer, "%s %s %s %s\r\n", kl, (char*)(KLIC_CONTENT_ID_OFFSET), header, (char*)(KLIC_PATH_OFFSET));
 
-							if(klic_polling == 2 && !strcmp(buffer, prev)) {sys_timer_usleep(10000); continue;}
+							if(klic_polling == KL_AUTO && !strcmp(buffer, prev)) {sys_timer_usleep(10000); continue;}
 
-							if(cellFsOpen("/dev_hdd0/klic.log", CELL_FS_O_RDWR|CELL_FS_O_CREAT|CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_OK)
-							{
-								int size = strlen(buffer);
-								cellFsWrite(fd, buffer, size, NULL);
-								cellFsClose(fd);
-							}
+							savefile("/dev_hdd0/klic.log", buffer, APPEND_TEXT);
 
-							if(klic_polling == 1) break; strcpy(prev, buffer);
+							if(klic_polling == KL_GET) break; strcpy(prev, buffer);
 						}
 
 						klic_polling = 0;
@@ -1978,10 +1975,26 @@ static void handleclient(u64 conn_s_p)
 				struct CellFsStat buf;
 				is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 
-				if(!is_binary)
+				if(!is_binary && *param)
 				{
+					char *sort = strstr(param, "?sort=");
+					if(sort) {sort_by = sort[6]; if(strstr(sort, "desc")) sort_order = -1; *sort = NULL;}
+
+					sort = strchr(param, '?');
+					if(sort)
+					{
+						file_query = sort + 1;
+						*sort = NULL;
+					}
+
+					if(file_exists(param) == false)
+					{
+						sort = strchr(param, '#');
+						if(sort) *sort = NULL;
+					}
+
 					if(islike(param, "/favicon.ico")) {sprintf(param, "%s", wm_icons[iPS3]);} else
-					{strcpy(header, param); sprintf(param, "%s/%s", html_base_path, header);} // use html path (if path is omitted)
+					if(file_exists(param) == false)   {strcpy(header, param); sprintf(param, "%s/%s", html_base_path, header);} // use html path (if path is omitted)
 
 					is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 				}
@@ -2004,7 +2017,7 @@ static void handleclient(u64 conn_s_p)
 			header_len = prepare_header(header, param, is_binary);
 
 			char templn[1024];
-			{u16 ulen = strlen(param); if((ulen > 1) && (param[ulen - 1] == '/')) param[ulen - 1] = NULL;}
+			{u16 ulen = strlen(param); if((ulen > 1) && (param[ulen - 1] == '/')) ulen--, param[ulen] = NULL;}
 			//sprintf(templn, "X-PS3-Info: %llu [%s]\r\n", (unsigned long long)c_len, param); strcat(header, templn);
 
 			//-- select content profile
@@ -2204,9 +2217,9 @@ static void handleclient(u64 conn_s_p)
 						if(file_exists(FM_SCRIPT_JS))
 	#endif
 						{
-							sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"tg(this,'/delete.ps3','%s','red');\">", HTML_BUTTON, STR_DELETE, STR_DELETE); pbuffer += concat(pbuffer, templn);
-							sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"tg(this,'/cut.ps3','%s','magenta');\">", HTML_BUTTON, "Cut", "Cut"); pbuffer += concat(pbuffer, templn);
-							sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"tg(this,'/cpy.ps3','%s','blue');\">", HTML_BUTTON, "Copy", "Copy"); pbuffer += concat(pbuffer, templn);
+							sprintf(templn, "%s%s\" id=\"bDel\" onclick=\"tg(this,'%s','%s','red');\">", HTML_BUTTON, STR_DELETE, "/delete.ps3", STR_DELETE); pbuffer += concat(pbuffer, templn);
+							sprintf(templn, "%s%s\" id=\"bCut\" onclick=\"tg(this,'%s','%s','magenta');\">", HTML_BUTTON, "Cut", "/cut.ps3", "Cut"); pbuffer += concat(pbuffer, templn);
+							sprintf(templn, "%s%s\" id=\"bCpy\" onclick=\"tg(this,'%s','%s','blue');\">", HTML_BUTTON, "Copy", "/cpy.ps3", "Copy"); pbuffer += concat(pbuffer, templn);
 
 							if(cp_mode) {char *url = tempstr, *title = tempstr + MAX_PATH_LEN; urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); pbuffer += concat(pbuffer, templn);}
 						}
@@ -2225,7 +2238,9 @@ static void handleclient(u64 conn_s_p)
 									 HTML_BUTTON, STR_RESTART, HTML_ONCLICK, "/restart.ps3"); pbuffer += concat(pbuffer, templn);
 
  #ifndef LITE_EDITION
-					if(!strstr(param, "$nobypass")) { PS3MAPI_REENABLE_SYSCALL8 }
+					char *nobypass = strstr(param, "$nobypass");
+					if(!nobypass) { PS3MAPI_REENABLE_SYSCALL8 } else *nobypass = NULL;
+
 					// game list resizer
 					if(!is_ps3_http && islike(param, "/index.ps3"))
 						sprintf( templn, "<script>function rz(z){document.cookie=z;var i,el=document.getElementsByClassName('gc');for(i=0;i<el.length;++i)el[i].style.zoom=z/100;}</script>"
@@ -2244,7 +2259,7 @@ static void handleclient(u64 conn_s_p)
 					}
 					else if(fix_in_progress)
 					{
-						sprintf(templn, "%s%s %s", "<div id=\"cps\"><font size=2>", STR_FIXING, current_file);
+						sprintf(templn, "%s%s %s (%i %s)", "<div id=\"cps\"><font size=2>", STR_FIXING, current_file, fixed_count, STR_FILES);
 					}
 					if((copy_in_progress || fix_in_progress) && file_exists(current_file))
 					{
@@ -2343,7 +2358,7 @@ static void handleclient(u64 conn_s_p)
 
 				if(is_binary == FOLDER_LISTING) // folder listing
 				{
-					if(folder_listing(buffer, BUFFER_SIZE_HTML, templn, param, conn_s, tempstr, header, is_ps3_http) == false)
+					if(folder_listing(buffer, BUFFER_SIZE_HTML, templn, param, conn_s, tempstr, header, is_ps3_http, sort_by, sort_order, file_query) == false)
 					{
 						goto exit_handleclient;
 					}
@@ -2858,17 +2873,16 @@ static void wwwd_thread(uint64_t arg)
 
 #ifdef COBRA_ONLY
 	{sys_map_path("/app_home", NULL);}
-	{sys_map_path("/dev_bdvd/PS3_UPDATE", SYSMAP_PS3_UPDATE);} //redirect firmware update to empty folder
+	{sys_map_path("/dev_bdvd/PS3_UPDATE", SYSMAP_PS3_UPDATE);} // redirect firmware update on BD disc to empty folder
 #endif
 
 	set_buffer_sizes(webman_config->foot);
 
-	sys_ppu_thread_t id2;
-
 	if(!webman_config->ftpd)
-		sys_ppu_thread_create(&thread_id_ftp, ftpd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTP); // start ftp daemon immediately
+		sys_ppu_thread_create(&thread_id_ftpd, ftpd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTP); // start ftp daemon immediately
 
-	sys_ppu_thread_create(&id2, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_64KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
+	sys_ppu_thread_t t_id;
+	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_64KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
 
 #ifdef PS3NET_SERVER
 	if(!webman_config->netd)
@@ -2898,17 +2912,13 @@ again_debug:
 
 	if(webman_config->fanc)
 	{
-		if(webman_config->temp0 == FAN_AUTO) max_temp=webman_config->temp1;
+		if(webman_config->temp0 == FAN_AUTO) max_temp = webman_config->temp1;
 		fan_control(webman_config->temp0, 0);
 	}
 
 	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
 
-	// while(refreshing_xml && working) sys_timer_usleep(100000);
-
 	led(GREEN, ON);
-
-//	{ DELETE_TURNOFF }
 
 	int list_s = FAILED;
 
@@ -2960,8 +2970,8 @@ relisten:
 				ssend(debug_s, "*** Incoming connection... ");
 				#endif
 
-				sys_ppu_thread_t id;
-				if(working) sys_ppu_thread_create(&id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+				sys_ppu_thread_t t_id;
+				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 				else {sclose(&conn_s); break;}
 			}
 			else
@@ -2984,7 +2994,7 @@ int wwwd_start(uint64_t arg)
 {
 	cellRtcGetCurrentTick(&rTick); gTick = rTick;
 
-	sys_ppu_thread_create(&thread_id, wwwd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_SVR);
+	sys_ppu_thread_create(&thread_id_wwwd, wwwd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_SVR);
 #ifndef CCAPI
 	_sys_ppu_thread_exit(0); // remove for ccapi compatibility
 #endif
@@ -2995,48 +3005,55 @@ static void wwwd_stop_thread(uint64_t arg)
 {
 	working = 0;
 
-	while(refreshing_xml) sys_timer_usleep(500000); //Prevent unload too fast
+	while(refreshing_xml) sys_timer_usleep(500000); // Prevent unload too fast
 
-	restore_fan(1); //restore & set static fan speed for ps2
+	restore_fan(1); // restore & set static fan speed for ps2
 
 	sys_timer_usleep(500000);
 
 	uint64_t exit_code;
 
 /*
-	sys_ppu_thread_t t;
- #ifndef LITE_EDITION
-	sys_ppu_thread_create(&t, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
-	sys_ppu_thread_join(t, &exit_code);
- #endif
-	sys_ppu_thread_create(&t, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
-	sys_ppu_thread_join(t, &exit_code);
+	sys_ppu_thread_t t_id;
+
+	#ifndef LITE_EDITION
+	sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+	sys_ppu_thread_join(t_id, &exit_code);
+	#endif
+
+	sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+	sys_ppu_thread_join(t_id, &exit_code);
 
 	while(netiso_loaded || rawseciso_loaded) {sys_timer_usleep(100000);}
 */
 
-	//if(thread_id != (sys_ppu_thread_t)-1)
-		sys_ppu_thread_join(thread_id, &exit_code);
+	sys_ppu_thread_join(thread_id_wwwd, &exit_code);
 
 #ifdef PS3NET_SERVER
-	if(thread_id_netsvr != (sys_ppu_thread_t)-1)
+	if(thread_id_netsvr != SYS_PPU_THREAD_NONE)
+	{
 		sys_ppu_thread_join(thread_id_netsvr, &exit_code);
+	}
 #endif
 
-	if(thread_id_ftp != (sys_ppu_thread_t)-1)
-		sys_ppu_thread_join(thread_id_ftp, &exit_code);
+	if(thread_id_ftpd != SYS_PPU_THREAD_NONE)
+	{
+		sys_ppu_thread_join(thread_id_ftpd, &exit_code);
+	}
 
 #ifdef PS3MAPI
-	///////////// PS3MAPI BEGIN //////////////
-	if(thread_id_ps3mapi != (sys_ppu_thread_t)-1)
+	if(thread_id_ps3mapi != SYS_PPU_THREAD_NONE)
+	{
 		sys_ppu_thread_join(thread_id_ps3mapi, &exit_code);
-	///////////// PS3MAPI END //////////////
+	}
 #endif
 
-	if(wm_unload_combo !=1)
+	if(wm_unload_combo != 1)
 	{
-		if(thread_id_poll != (sys_ppu_thread_t)-1)
+		if(thread_id_poll != SYS_PPU_THREAD_NONE)
+		{
 			sys_ppu_thread_join(thread_id_poll, &exit_code);
+		}
 	}
 
 	sys_ppu_thread_exit(0);
@@ -3076,11 +3093,11 @@ static void unload_prx_module(void)
 
 int wwwd_stop(void)
 {
-	sys_ppu_thread_t t;
-	uint64_t exit_code;
+	sys_ppu_thread_t t_id;
+	int ret = sys_ppu_thread_create(&t_id, wwwd_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 
-	int ret = sys_ppu_thread_create(&t, wwwd_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
-	if (ret == 0) sys_ppu_thread_join(t, &exit_code);
+	uint64_t exit_code;
+	if (ret == 0) sys_ppu_thread_join(t_id, &exit_code);
 
 	sys_timer_usleep(500000);
 
