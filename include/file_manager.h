@@ -72,7 +72,10 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			sprintf(fsize, "%s", title);
 
 		// show title id & link to updates
-		sprintf(tempstr, "<div class='sfo'>%s [<a href=\"%s/%s/%s-ver.xml\">%s</a>]</div>", fsize, "https://a0.ww.np.dl.playstation.net/tpl/np", titleid, titleid, titleid);
+		if(*titleid)
+			sprintf(tempstr, "<div class='sfo'>%s [<a href=\"%s/%s/%s-ver.xml\">%s</a>]</div>", fsize, "https://a0.ww.np.dl.playstation.net/tpl/np", titleid, titleid, titleid);
+		else
+			sprintf(tempstr, "<div class='sfo'>%s</div>", fsize);
 
 		sprintf(fsize, "%'llu %s%s", sz, sf, tempstr);
 
@@ -151,6 +154,23 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 #else
 			sprintf(fsize, "<a href=\"/mount.ps3%s\">%s</a>", templn, HTML_DIR);
 #endif
+
+		// links to home folders
+		if((plen == 18 || plen == 26) && islike(templn, "/dev_bdvd/PS3_GAME"))
+		{
+			*tempstr = NULL;
+
+			if(IS(name, "LICDIR"))
+			{
+				sprintf(tempstr, "%s/%08i/savedata", "/dev_hdd0/home", xsetting_CC56EB2D()->GetCurrentUserNumber());
+			}
+			else if(islike(name, "NPWR"))
+			{
+				sprintf(tempstr, "%s/%08i/trophy/%s", "/dev_hdd0/home", xsetting_CC56EB2D()->GetCurrentUserNumber(), name);
+			}
+
+			if(isDir(tempstr)) sprintf(fsize, "<a href=\"%s\">%s</a>", tempstr, HTML_DIR);
+		}
 	}
 
 	else if(*fsize) ;
@@ -223,7 +243,10 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 		sprintf(ename, "%c%c%c%c%c", ((rDate.year - 1968) % 223) + 0x20, rDate.month+0x20, rDate.day+0x20, rDate.hour+0x20, rDate.minute+0x20);
 	else
 	{
-		snprintf(ename, FILE_MGR_KEY_LEN, "%s     ", name); sclass = dclass;
+		if(*name == '0' && flen == 8 && IS(param, "/dev_hdd0/home"))
+			snprintf(ename, FILE_MGR_KEY_LEN, "%s", name + 3);
+		else
+			snprintf(ename, FILE_MGR_KEY_LEN, "%s     ", name); sclass = dclass;
 		if(flen > 4) {char c = name[flen - 1]; if(ISDIGIT(c)) ename[4] = c;}
 	}
 
@@ -326,6 +349,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 
 		sprintf(swap, HTML_URL2,
 						strstr(pbuffer, "To: ") ? "" :
+						islike(param + 23, "/trophy/NPWR") ? "/delete.ps3" :
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
 #endif
@@ -727,7 +751,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					cellFsRead(fd, (void *)templn, _MAX_PATH_LEN, &bytes_read);
 					cellFsClose(fd);
 
-					if(bytes_read > 10) {sprintf(tempstr, "<span style=\"position:absolute;right:8px\"><font size=2>"); add_breadcrumb_trail(tempstr, templn); strcat(tempstr, "</font></span>");}
+					if(bytes_read > 10) {sprintf(tempstr, HTML_SHOW_LAST_GAME); add_breadcrumb_trail(tempstr, templn); strcat(tempstr, HTML_SHOW_LAST_GAME_END);}
 				}
 			}
 

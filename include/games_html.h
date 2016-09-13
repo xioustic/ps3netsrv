@@ -1180,7 +1180,7 @@ next_html_entry:
 			}
 
 #ifndef LITE_EDITION
-		if(sortable) tlen += concat(buffer + tlen, "</div>");
+		if(sortable) strcat(buffer + tlen, "</div>");
 #endif
 
 		loading_games = 0;
@@ -1197,7 +1197,7 @@ next_html_entry:
 		}
 		else
 		{
-			savefile(WMTMP "/games.html", (buffer + buf_len), tlen - buf_len);
+			savefile(WMTMP "/games.html", (buffer + buf_len), strlen(buffer + buf_len));
 		}
 	}
 	return true;

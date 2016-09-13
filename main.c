@@ -807,8 +807,7 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 	if(is_ps3_http == 1)
 		{sprintf(templn, "<style>%s</style>", ".gi{height:210px;width:267px"); buffer += concat(buffer, templn);}
 
-	sprintf(templn, "</head>%s"
-					"<div style=\"position:fixed;right:20px;bottom:10px;opacity:0.2\"><a href=\"#Top\">&#9650;</a></div><b>", HTML_BODY); buffer += concat(buffer, templn);
+	sprintf(templn, "</head>%s", HTML_BODY); buffer += concat(buffer, templn);
 
 #ifdef PS3MAPI
 	#ifdef WEB_CHAT
@@ -2778,6 +2777,11 @@ send_response:
 					{http_response(conn_s, header, param, CODE_HTTP_OK, param + 11); break;}
 				else
 				{
+					// add bdvd & go to top links to the footer
+					sprintf(templn, "<div style=\"position:fixed;right:20px;bottom:10px;opacity:0.2\">"); strcat(pbuffer, templn);
+					if(isDir("/dev_bdvd")) {sprintf(templn, "<a href=\"%s\"><img src=\"%s\" height=\"12\"></a> ", "/dev_bdvd", wm_icons[iPS3]); strcat(pbuffer, templn);}
+					strcat(pbuffer, "<a href=\"#Top\">&#9650;</a></div><b>");
+
 	#ifndef EMBED_JS
 					// extend web content using custom javascript
 					if(common_js_exists)

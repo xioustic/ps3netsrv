@@ -54,6 +54,9 @@
 #define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){self.location=\"%s\"},%i);</script>"
 #define HTML_REDIRECT_WAIT		3000
 
+#define HTML_SHOW_LAST_GAME		"<span style=\"position:absolute;right:8px\"><font size=2>"
+#define HTML_SHOW_LAST_GAME_END	"</font></span>"
+
 #define open_browser			vshmain_AE35CF2D
 
 
