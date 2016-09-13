@@ -71,7 +71,7 @@ window.addEventListener('contextmenu',function(e){
 		m8.href='/copy.ps3'+p; m8.text = 'Copy to ' + ((p.indexOf('/dev_hdd')==0) ? "usb0" : "hdd0");
 		ms.href='http://google.com/search?q='+t.text;ms.style.display=(t.parentNode.className=='gn')?b:n;
 		y=p.indexOf('.ps3');if(y>0)p=p.substring(y+4);url=window.location.href;
-		ml.href=p.substring(0,p.lastIndexOf("/"));if(url.indexOf('?sort=name')<0)ml.href+='?sort=name&desc';
+		ml.href=p.substring(0,p.lastIndexOf("/"));if(url.indexOf('?sort=name&desc')<0)ml.href+='?sort=name&desc';
 		ss.href=p.substring(0,p.lastIndexOf("/"))+'?sort=size';if(url.indexOf('?sort=size')>0 && url.indexOf('&desc')<0)ss.href+='&desc';
 		sd.href=p.substring(0,p.lastIndexOf("/"))+'?sort=date';if(url.indexOf('?sort=date')>0 && url.indexOf('&desc')<0)sd.href+='&desc';
 	}
