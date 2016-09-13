@@ -301,7 +301,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	strcat(buffer, swap);
 }
 
-static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, u8 sort_by, u8 sort_order, char *file_query)
+static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, int8_t sort_by, int8_t sort_order, char *file_query)
 {
 	struct CellFsStat buf;
 	int fd;
