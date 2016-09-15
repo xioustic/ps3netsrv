@@ -45,13 +45,13 @@ enum nocov_options
 	ONLINE_COVERS = 3,
 };
 
-enum icon_groups
+enum icon_type
 {
-	iPS3 = 5,
-	iPSX = 6,
-	iPS2 = 7,
-	iPSP = 8,
-	iDVD = 9,
+	iPS3  = 5,
+	iPSX  = 6,
+	iPS2  = 7,
+	iPSP  = 8,
+	iDVD  = 9,
 	iBDVD = 5,
 };
 
@@ -382,7 +382,7 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 	}
 }
 
-static u8 get_default_icon_by_type(u8 f1)
+static enum icon_type get_default_icon_by_type(u8 f1)
 {
 	return  IS_PS3_TYPE   ? iPS3 :
 			IS_PSX_FOLDER ? iPSX :
@@ -391,14 +391,16 @@ static u8 get_default_icon_by_type(u8 f1)
 			IS_DVD_FOLDER ? iDVD : iBDVD;
 }
 
-static u8 get_default_icon(char *icon, const char *param, char *file, int is_dir, char *tempID, int ns, int abort_connection, u8 f0, u8 f1)
+static enum icon_type get_default_icon(char *icon, const char *param, char *file, int is_dir, char *tempID, int ns, int abort_connection, u8 f0, u8 f1)
 {
-	u8 default_icon = get_default_icon_by_type(f1);
-
 	char filename[MAX_PATH_LEN];
 
 	if(ns == FROM_MOUNT)
 		sprintf(filename, "%s", file);
+	else
+		*filename = NULL;
+
+	enum icon_type default_icon = get_default_icon_by_type(f1);
 
 	if(webman_config->nocov == SHOW_DISC) {if(get_cover_from_name(icon, file, tempID)) return default_icon; goto no_icon0;}
 
@@ -426,7 +428,7 @@ no_icon0:
 	//show the default icon by type
 	if(default_icon == iPS3)
 	{
-		sprintf(icon, "%s/%s", param + 6, (ns == FROM_MOUNT) ? filename : file);
+		sprintf(icon, "%s/%s", param + 6, filename);
 
 			 if(strstr(icon, "PSX")) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
 			default_icon = iPSX;
@@ -826,7 +828,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #endif
 		if(strstr(param, "?")!=NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html")==NULL && strstr(param, "mobile")==NULL) strcpy(filter_name, strrchr(param, '?')+1);
 
-		int ns = -2; u8 uprofile = profile, default_icon = 0;
+		int ns = -2; u8 uprofile = profile; enum icon_type default_icon;
 
 		for(u8 f0 = filter0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
 		{
@@ -841,7 +843,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
  #endif
 #endif
-			ns = -2; uprofile = profile; default_icon = 0;
+			ns = -2; uprofile = profile;
 			for(u8 f1 = filter1; f1 < 11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
 			{
 #ifndef COBRA_ONLY

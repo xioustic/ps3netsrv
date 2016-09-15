@@ -605,7 +605,7 @@ int cobra_map_paths(char *paths[], char *new_paths[], unsigned int num);
  * Upon success, the file in icon_save_path will have the psp icon and the icon of psp launcher is mapped to it.
  * This function allocates temporally a 512 KB buffer, so at least that memory should be available
  */
-//int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path);
+int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path);
 
 /*
  * Sets the umd iso for psp emulation and sets the apropiated emulation parameters.
@@ -632,7 +632,7 @@ int cobra_map_paths(char *paths[], char *new_paths[], unsigned int num);
  * Upon success, the file in icon_save_path will have the psp icon and the icon of psp launcher is mapped to it.
  * This function allocates temporally a 512 KB buffer, so at least that memory should be available
  */
-int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_t options);
+//int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_t options);
 
 
 /*

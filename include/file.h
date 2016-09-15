@@ -55,7 +55,7 @@ static void mkdir_tree(char *path)
 }
 #endif
 
-static size_t read_file(const char *file, char *data, size_t size, int32_t offset)
+size_t read_file(const char *file, char *data, size_t size, int32_t offset)
 {
 	int fd = 0; uint64_t pos, read_e = 0;
 

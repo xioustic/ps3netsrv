@@ -1,3 +1,15 @@
+#if defined(EXT_GDATA) || defined(COPY_PS3)
+static u8 get_default_usb_drive(const char *folder)
+{
+	char usb_path[32]; u8 n;
+	for(n = 1; n < 7; n++) {sprintf(usb_path, "%s%s", drives[n], folder ? folder : ""); if(isDir(usb_path)) break;}
+
+	if((n < 7) || folder) return n;
+
+	return 1; // 1 = usb000
+}
+#endif
+
 #ifdef EXT_GDATA
 
 #define MOUNT_EXT_GDATA		2
@@ -20,19 +32,20 @@ static int set_gamedata_status(u8 status, bool do_mount)
 	{
 		if(status == 2)
 		{
-			sprintf(gamei_path, "/dev_bdvd/GAMEI");
+			sprintf(gamei_path, "/dev_bdvd/GAMEI"); // auto-enable external gameDATA (if GAMEI exists on /bdvd)
 			status = 1;
 		}
 		else
 		{
-			for(n = 1; n < 7; n++) {sprintf(gamei_path, "%s/GAMEI", drives[n]); if(isDir(gamei_path)) break;} // find first USB HDD with /GAMEI
+			n = get_default_usb_drive("/GAMEI"); // find first USB HDD with /GAMEI
 
 			if(n >= 7)
 			{
-				for(n = 1; n < 7; n++) {if(isDir(drives[n])) break;} // find first USB HDD, then create /GAMEI folder
-
-				if(n < 7) {sprintf(gamei_path, "%s/GAMEI", drives[n]); if(cellFsMkdir(gamei_path, MODE) != CELL_FS_SUCCEEDED) n = 99;}
+				n = get_default_usb_drive(0); // find first USB HDD, then create /GAMEI folder
 			}
+
+			sprintf(gamei_path, "%s/GAMEI", drives[n]);
+			cellFsMkdir(gamei_path, MODE); if(!isDir(gamei_path)) n = 99;
 		}
 
 		if(n < 7)

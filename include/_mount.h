@@ -20,13 +20,16 @@ typedef struct
 
 #define PLAYSTATION      "PLAYSTATION "
 
-
 // /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
 // /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
 // /mount.ps3/unmount
 // /mount.ps2/<path>[?random=<x>]
 // /mount.ps2/unmount
 // /copy.ps3/<path>[&to=<destination>]
+
+#ifdef COPY_PS3
+u8 usb = 1; // first connected usb drive [used by /copy.ps3 & in the tooltips for /copy.ps3 links in the file manager]. 1 = /dev_usb000
+#endif
 
 static void game_mount(char *buffer, char *templn, char *param, char *tempstr, bool mount_ps3, bool forced_mount)
 {
@@ -62,7 +65,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// init variables
 		// ---------------
 		uint8_t plen = 10; // /mount.ps3
-		uint8_t default_icon = iPS3;
+		enum icon_type default_icon = iPS3;
 
 #ifdef COPY_PS3
 		char target[MAX_PATH_LEN], *pos; *target = NULL;
@@ -71,7 +74,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif
 		char enc_dir_name[1024], *source = param + plen;
 		bool mounted = false; max_mapped = 0;
-		/* if(file_exists(source) == false) {sprintf(templn, "%s/%s", html_base_path, source + 1); if(file_exists(templn)) sprintf(source, "%s", templn);} */
+		if(file_exists(source) == false) {sprintf(templn, "%s/%s", html_base_path, source + 1); if(file_exists(templn)) sprintf(source, "%s", templn);}
 
 		// ----------------------------
 		// remove url query parameters
@@ -255,7 +258,12 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			{
 				bool is_copying_from_hdd = islike(source, "/dev_hdd0");
 
-				if(!webman_config->uaccount[0]) sprintf(webman_config->uaccount, "%08i", xsetting_CC56EB2D()->GetCurrentUserNumber());
+				usb = get_default_usb_drive(0);
+
+				#ifdef USE_UACCOUNT
+				if(!webman_config->uaccount[0])
+				#endif
+					sprintf(webman_config->uaccount, "%08i", xsetting_CC56EB2D()->GetCurrentUserNumber());
 
 				if(cp_mode)
 				{
@@ -331,7 +339,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					if(IS(ext4, ".pkg"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/Packages");
+							sprintf(target, "%s/Packages", drives[usb]);
 						else
 							sprintf(target, "/dev_hdd0/packages");
 
@@ -340,7 +348,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(_IS(ext4, ".bmp") || _IS(ext4, ".gif"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "%s/PICTURE", "/dev_usb000");
+							sprintf(target, "%s/PICTURE", drives[usb]);
 						else
 							sprintf(target, "%s/PICTURE", "/dev_hdd0");
 
@@ -349,7 +357,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(_IS(ext4, ".jpg") || _IS(ext4, ".png"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "%s/PICTURE", "/dev_usb000");
+							sprintf(target, "%s/PICTURE", drives[usb]);
 						else if(strstr(source, "BL") || strstr(param, "BC") || strstr(source, "NP"))
 							sprintf(target, "/dev_hdd0/GAMES/covers");
 						else
@@ -360,14 +368,14 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(strcasestr(source, "/covers"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/COVERS");
+							sprintf(target, "%s/COVERS", drives[usb]);
 						else
 							sprintf(target, "/dev_hdd0/GAMES/covers");
 					}
 					else if(_IS(ext4, ".mp4") || _IS(ext4, ".mkv") || _IS(ext4, ".avi"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/VIDEO");
+							sprintf(target, "%s/VIDEO", drives[usb]);
 						else
 							sprintf(target, "/dev_hdd0/VIDEO");
 
@@ -376,7 +384,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(_IS(ext4, ".mp3"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "%s/MUSIC", "/dev_usb000");
+							sprintf(target, "%s/MUSIC", drives[usb]);
 						else
 							sprintf(target, "%s/MUSIC", "/dev_hdd0");
 
@@ -385,7 +393,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(IS(ext4, ".p3t"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/PS3/THEME");
+							sprintf(target, "%s/PS3/THEME", drives[usb]);
 						else
 							sprintf(target, "/dev_hdd0/theme");
 
@@ -394,7 +402,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(!extcmp(source, ".edat", 5))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/exdata");
+							sprintf(target, "%s/exdata", drives[usb]);
 						else
 							sprintf(target, "%s/%s/exdata", "/dev_hdd0/home", webman_config->uaccount);
 
@@ -423,7 +431,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(strstr(source, "/exdata"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/exdata");
+							sprintf(target, "%s/exdata", drives[usb]);
 						else
 							sprintf(target, "%s/%s/exdata", "/dev_hdd0/home", webman_config->uaccount);
 					}
@@ -432,7 +440,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(strcasestr(source, "/savedata/"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/PS3/SAVEDATA");
+							sprintf(target, "%s/PS3/SAVEDATA", drives[usb]);
 						else
 							sprintf(target, "%s/%s/savedata", "/dev_hdd0/home", webman_config->uaccount);
 
@@ -441,7 +449,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					else if(strcasestr(source, "/trophy/"))
 					{
 						if(is_copying_from_hdd)
-							sprintf(target, "/dev_usb000/PS3/TROPHY");
+							sprintf(target, "%s/PS3/TROPHY", drives[usb]);
 						else
 							sprintf(target, "%s/%s/trophy", "/dev_hdd0/home", webman_config->uaccount);
 
@@ -449,19 +457,19 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					}
 					else if(strstr(source, "/webftp_server"))
 					{
-						sprintf(target, "%s/webftp_server.sprx", "/dev_hdd0/plugins");
-						if(file_exists(target) == false) sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0/plugins");
-						if(file_exists(target) == false) sprintf(target, "%s/webftp_server.sprx", "/dev_hdd0");
-						if(file_exists(target) == false) sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0");
+						sprintf(target, "%s/webftp_server.sprx",         "/dev_hdd0/plugins"); if(file_exists(target) == false)
+						sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0/plugins"); if(file_exists(target) == false)
+						sprintf(target, "%s/webftp_server.sprx",         "/dev_hdd0");         if(file_exists(target) == false)
+						sprintf(target, "%s/webftp_server_ps3mapi.sprx", "/dev_hdd0");
 					}
 					else if(strstr(source, "/boot_plugins_"))
 						sprintf(target, "/dev_hdd0/boot_plugins.txt");
 					else if(is_copying_from_hdd)
-						sprintf(target, "/dev_usb000%s", source + 9);
+						sprintf(target, "%s%s", drives[usb], source + 9);
 					else if(islike(source, "/dev_usb"))
-						sprintf(target, "/dev_hdd0%s", source + 11);
+						sprintf(target, "%s%s", "/dev_hdd0", source + 11);
 					else if(islike(source, "/net"))
-						sprintf(target, "/dev_hdd0%s", source + 5);
+						sprintf(target, "%s%s", "/dev_hdd0", source + 5);
 					else
 					{
 						if(islike(source, "/dev_bdvd"))
@@ -496,7 +504,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				// ------------------
 				// show copying file
 				// ------------------
-				bool is_error = ((islike(target, "/dev_usb000") && file_exists("/dev_usb000") == false)) || islike(target, source);
+				bool is_error = ((islike(target, drives[usb]) && isDir(drives[usb]) == false)) || islike(target, source);
 
 				// show source path
 				sprintf(tempstr, "%s ", STR_COPYING); strcat(buffer, tempstr);
@@ -623,7 +631,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		if(is_copy)
 		{
 			if(islike(target, source) || ((!islike(source, "/net")) && file_exists(source) == false) )
-				sprintf(templn, "%s", STR_ERROR);
+				{sprintf(templn, "<hr>%s", STR_ERROR); strcat(buffer, templn);}
 			else
 			{
 				// show msg begin
@@ -1299,10 +1307,12 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 						if(is_psp || is_ps2)
 						{
-							CellFsDirent entry; u64 read_e; int fd;
+							int fd;
 
 							if(cellFsOpendir("/dev_bdvd", &fd) == CELL_FS_SUCCEEDED)
 							{
+								CellFsDirent entry; u64 read_e;
+
 								while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 								{
 									if(entry.d_name[0] != '.') break;
@@ -1484,7 +1494,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(file_exists(iso_list[0]))
 					{
-						int result = cobra_set_psp_umd2(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/psp_icon.png", EMU_400);
+						int result = cobra_set_psp_umd(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/psp_icon.png");
 
 						if(result) ret = false;
 					}

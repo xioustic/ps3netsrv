@@ -494,9 +494,6 @@ static int save_settings(void);
 
 static CellRtcTick rTick, gTick;
 
-static void show_msg(char* msg);
-int waitfor(const char *path, uint8_t timeout);
-
 #ifdef GET_KLICENSEE
 int npklic_struct_offset = 0; u8 klic_polling = 0;
 
@@ -559,9 +556,14 @@ static bool covers_exist[7];
 static char fw_version[8] = "4.xx";
 static char local_ip[16] = "127.0.0.1";
 
+static void show_msg(char* msg);
+
 static bool file_exists(const char* path);
 static int isDir(const char* path);
+
+size_t read_file(const char *file, char *data, size_t size, int32_t offset);
 int save_file(const char *file, const char *mem, int64_t size);
+int waitfor(const char *path, uint8_t timeout);
 
 #include "include/html.h"
 #include "include/peek_poke.h"

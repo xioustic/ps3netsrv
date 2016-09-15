@@ -129,7 +129,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 #endif
 #ifdef COPY_PS3
 		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") ))
-			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", templn, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", HTML_DIR);
+			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", islike(templn, param) ? templn + plen : templn, islike(templn, "/dev_hdd0") ? drives[usb] : "/dev_hdd0", HTML_DIR);
 #endif
 #ifndef LITE_EDITION
 		else
@@ -209,7 +209,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			|| !memcmp(name, "lv2_kernel", 10)
  #endif
 			)
-				sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", islike(templn, param) ? templn + plen : templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", sz, sf);
+				sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", islike(templn, param) ? templn + plen : templn, sbytes, STR_BYTE, islike(templn, "/dev_hdd0") ? drives[usb] : "/dev_hdd0", sz, sf);
 #endif //#ifdef COPY_PS3
 
 #ifdef LOAD_PRX
@@ -442,6 +442,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 #ifdef COPY_PS3
 		if(cp_mode) {sprintf(tempstr, "<font size=2><a href=\"/paste.ps3%s\">&#128203;</a> ", is_net ? "/dev_hdd0/packages" : param); add_breadcrumb_trail(tempstr, cp_path); strcat(buffer, tempstr); strcat(buffer, "</font><p>"); }
+
+		usb = get_default_usb_drive(0);
 #endif
 		tlen = strlen(buffer);
 
@@ -472,7 +474,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 												  "<td>11-Nov-2006 11:11"
 												, swap, swap, HTML_DIR);
 
-					if(flen >= _MAX_LINE_LEN) return false; //ignore lines too long
+					if(flen >= _MAX_LINE_LEN) return false; //ignore lines are too long
+
 					idx++, dirs++;
 					tlen += flen;
 
@@ -548,7 +551,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 								open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
 								shutdown(ns, SHUT_RDWR); socketclose(ns);
 								sclose(&conn_s);
-								return false;
+
+								return false; // net file
 							}
 						}
 					}
