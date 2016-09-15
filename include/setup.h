@@ -356,9 +356,9 @@ static void setup_parse_settings(char *param)
 	if(pos) cmdlen = get_value(command, pos + 5, 255);
 
  #ifdef WM_CUSTOM_COMBO
-	if(savefile(WM_CUSTOM_COMBO "r2_square", command, cmdlen) != CELL_FS_SUCCEEDED)
+	if(save_file(WM_CUSTOM_COMBO "r2_square", command, cmdlen) != CELL_FS_SUCCEEDED)
  #endif
-	savefile("/dev_hdd0/tmp/wm_custom_combo", command, cmdlen);
+	save_file("/dev_hdd0/tmp/wm_custom_combo", command, cmdlen);
 #endif
 }
 
@@ -679,17 +679,21 @@ static void setup_form(char *buffer, char *templn)
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 	//ps3netsvr settings
-	char PS3NETSRV[24] = " &nbsp; PS3NETSRV#1 IP:";
+	char PS3NETSRV[88]; sprintf(PS3NETSRV, " &nbsp; <a href=\"/net0\" style=\"%s\">PS3NETSRV#1 IP:</a>", HTML_URL_STYLE);
 	strcat(buffer, HTML_BLU_SEPARATOR);
-	add_check_box("nd0", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd0), buffer); ++PS3NETSRV[18];
+	add_check_box("nd0", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd0), buffer);
 	sprintf(templn, HTML_INPUT("neth0", "%s", "15", "16") ":" HTML_NUMBER("netp0", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth0, webman_config->netp0); strcat(buffer, templn);
-	add_check_box("nd1", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd1), buffer); ++PS3NETSRV[18];
+	++PS3NETSRV[21], ++PS3NETSRV[75];
+	add_check_box("nd1", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd1), buffer);
 	sprintf(templn, HTML_INPUT("neth1", "%s", "15", "16") ":" HTML_NUMBER("netp1", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth1, webman_config->netp1); strcat(buffer, templn);
-	add_check_box("nd2", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd2), buffer); ++PS3NETSRV[18];
+	++PS3NETSRV[21], ++PS3NETSRV[75];
+	add_check_box("nd2", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd2), buffer);
 	sprintf(templn, HTML_INPUT("neth2", "%s", "15", "16") ":" HTML_NUMBER("netp2", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth2, webman_config->netp2); strcat(buffer, templn);
   #ifdef NET3NET4
-	add_check_box("nd3", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd3), buffer); ++PS3NETSRV[18];
+	++PS3NETSRV[21], ++PS3NETSRV[75];
+	add_check_box("nd3", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd3), buffer);
 	sprintf(templn, HTML_INPUT("neth3", "%s", "15", "16") ":" HTML_NUMBER("netp3", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth3, webman_config->netp3); strcat(buffer, templn);
+	++PS3NETSRV[21], ++PS3NETSRV[75];
 	add_check_box("nd4", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd4), buffer);
 	sprintf(templn, HTML_INPUT("neth4", "%s", "15", "16") ":" HTML_NUMBER("netp4", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth4, webman_config->netp4); strcat(buffer, templn);
   #endif
@@ -961,18 +965,12 @@ static void setup_form(char *buffer, char *templn)
 							  "</td></tr></table>"                             , !(webman_config->combo2 & PLAY_DISC), buffer);
 
 #if defined(WM_CUSTOM_COMBO) || defined(WM_REQUEST)
-	char command[256]; memset(command, 0, 256);
+	char command[256];
 
-	if(
  #ifdef WM_CUSTOM_COMBO
-		(cellFsOpen(WM_CUSTOM_COMBO "r2_square", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED) ||
+	if( read_file(WM_CUSTOM_COMBO "r2_square", command, 255, 0) == 0)
  #endif
-		(cellFsOpen("/dev_hdd0/tmp/wm_custom_combo", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-	)
-	{
-		cellFsRead(fd, (void *)command, 255, NULL);
-		cellFsClose(fd);
-	}
+		read_file("/dev_hdd0/tmp/wm_custom_combo", command, 255, 0);
 
 	sprintf(templn, "&nbsp; &nbsp;" HTML_INPUT("ccbo\" list=\"cmds", "%s", "255", "50") "<br>", command); strcat(buffer, templn);
 
@@ -1034,7 +1032,7 @@ static void setup_form(char *buffer, char *templn)
 
 static int save_settings(void)
 {
-	return savefile(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
+	return save_file(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
 }
 
 static void reset_settings(void)
@@ -1126,17 +1124,10 @@ static void reset_settings(void)
 	webman_config->lang = 0; // english
 #endif
 
-	int fdwm = 0;
-
 	// read current settings
 	for(u8 retry = 0; retry < 10; retry++)
 	{
-		if(cellFsOpen(WMCONFIG, CELL_FS_O_RDONLY, &fdwm, NULL, 0) == CELL_FS_SUCCEEDED)
-		{
-			cellFsRead(fdwm, (void *)wmconfig, sizeof(WebmanCfg), NULL);
-			cellFsClose(fdwm);
-			break;
-		}
+		if(read_file(WMCONFIG, (char*)&wmconfig, sizeof(WebmanCfg), DONT_CLEAR_DATA)) break;
 
 		sys_timer_usleep(500000);
 	}

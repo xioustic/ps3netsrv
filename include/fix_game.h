@@ -27,9 +27,14 @@ enum SFO_Operation_Codes
 	GET_TITLE_ID_ONLY
 };
 
+static bool is_sfo(unsigned char *mem)
+{
+	return (mem[1]=='P' && mem[2]=='S' && mem[3]=='F');
+}
+
 #define READ_SFO_HEADER(ret) \
-	if(!(mem[1]=='P' && mem[2]=='S' && mem[3]=='F')) return ret; \
-	u16 pos, str, fld, dat, indx=0; \
+	if(is_sfo(mem) == false) return ret; \
+	u16 pos, str, fld, dat, indx = 0; \
 	fld=str=(mem[0x8]+(mem[0x9]<<8)); \
 	dat=pos=(mem[0xc]+(mem[0xd]<<8));
 
@@ -141,17 +146,15 @@ static void get_app_ver(unsigned char *mem, char *version, u16 sfo_size)
 
 static bool getTitleID(char *filename, char *titleID, u8 opcode)
 {
-	memset(titleID, 0, 10); int fs; bool ret = false;
+	bool ret = false;
 
-	if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+	memset(titleID, 0, 10);
+	char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
+
+	uint64_t sfo_size = read_file(filename, paramsfo, _4KB_, 0);
+
+	if(sfo_size)
 	{
-		char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
-		uint64_t sfo_size = 0;
-
-		cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &sfo_size);
-		cellFsRead(fs, (void *)&paramsfo, _4KB_, &sfo_size);
-		cellFsClose(fs);
-
 		// get titleid
 		if(opcode == GET_VERSION)
 			get_app_ver(mem, titleID, (u16)sfo_size);                 // get game version (app_ver)
@@ -162,7 +165,7 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 		{
 			ret = fix_param_sfo(mem, titleID, opcode, (u16)sfo_size); // get titleid & show warning if game needs to fix PS3_SYSTEM_VER
 
-			if(ret && opcode == FIX_SFO) savefile(filename, paramsfo, sfo_size);
+			if(ret && opcode == FIX_SFO) save_file(filename, paramsfo, sfo_size);
 		}
 	}
 	return ret;
@@ -439,7 +442,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 		{
 			// -- get TitleID from PARAM.SFO
-			char filename[MAX_PATH_LEN]; int fs;
+			char filename[MAX_PATH_LEN];
 
 			char *p = strstr(game_path, "/PS3_GAME"); if(!p) p = strstr(game_path, "/USRDIR"); if(p) *p = NULL;
 
@@ -448,23 +451,20 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 			else
 				sprintf(filename, "%s/PARAM.SFO", game_path);
 
-			if(file_exists(filename)==false) sprintf(filename, "%s/PS3_GAME/PARAM.SFO", game_path);
-			if(file_exists(filename)==false) {waitfor("/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
+			if(file_exists(filename) == false) sprintf(filename, "%s/PS3_GAME/PARAM.SFO", game_path);
+			if(file_exists(filename) == false) {waitfor("/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
 
-			if(cellFsOpen(filename,	CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+			char paramsfo[_4KB_]; unsigned char	*mem = (u8*)paramsfo;
+			uint64_t bytes_read = 0;
+
+			bytes_read = read_file(filename, paramsfo, _4KB_, 0);
+			if(is_sfo(mem))
 			{
-				char paramsfo[_4KB_]; unsigned char	*mem = (u8*)paramsfo;
-				uint64_t bytes_read = 0;
-
-				cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &bytes_read);
-				cellFsRead(fs, (void *)&paramsfo, _4KB_, &bytes_read);
-				cellFsClose(fs);
-
 				// fix ps3 extra or bgm + remoteplay + ps3 extra
 				char tmp_path[MAX_PATH_LEN]; sprintf(tmp_path, "%s/PS3_EXTRA", game_path); bool has_ps3_extra = isDir(tmp_path);
 				if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem, (u16)bytes_read))
 				{
-					savefile(filename, paramsfo, bytes_read);
+					save_file(filename, paramsfo, bytes_read);
 				}
 
 				tmp_path[10] = NULL;
@@ -472,7 +472,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 				// get titleid & fix game folder if version is higher than cfw
 				if((fix_param_sfo(mem, titleID, FIX_SFO, (u16)bytes_read) || fix_type == FIX_GAME_FORCED) && fix_type != FIX_GAME_DISABLED && !islike(tmp_path, "/net") && !islike(tmp_path, "/dev_bdvd") && !strstr(game_path, ".ntfs["))
 				{
-					savefile(filename, paramsfo, bytes_read);
+					save_file(filename, paramsfo, bytes_read);
 
 					sprintf(filename, "%s %s", STR_FIXING, game_path);
 					show_msg(filename);
@@ -487,21 +487,18 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 				{
 					sprintf(filename, "%s%s%s/PARAM.SFO", HDD0_GAME_DIR, titleID, i ? "" : "/C00");
 
-					if(cellFsOpen(filename,	CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+					bytes_read = read_file(filename, paramsfo, _4KB_, 0);
+					if(is_sfo(mem))
 					{
-						cellFsLseek(fs, 0, CELL_FS_SEEK_SET, &bytes_read);
-						cellFsRead(fs, (void *)&paramsfo, _4KB_, &bytes_read);
-						cellFsClose(fs);
-
 						// fix ps3 extra or bgm + remoteplay + ps3 extra
 						if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem, (u16)bytes_read))
 						{
-							savefile(filename, paramsfo, bytes_read);
+							save_file(filename, paramsfo, bytes_read);
 						}
 
 						if((fix_param_sfo(mem, titleID, FIX_SFO, (u16)bytes_read) || fix_type == FIX_GAME_FORCED) && fix_type!=FIX_GAME_DISABLED)
 						{
-							savefile(filename, paramsfo, bytes_read);
+							save_file(filename, paramsfo, bytes_read);
 
 							if(i == 0) continue;
 

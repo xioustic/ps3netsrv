@@ -16,13 +16,7 @@ static void webchat(char *buffer, char *templn, char *param, char *tempstr, sys_
 
 		if(buf.st_size > _32KB_)
 		{
-			if(cellFsOpen(WMCHATFILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-			{
-				u64 pos;
-				cellFsLseek(fd, (buf.st_size - 4080), CELL_FS_SEEK_SET, &pos);
-				cellFsRead(fd, (void *)&tempstr, 4080, NULL);
-				cellFsClose(fd);
-			}
+			read_file(WMCHATFILE, tempstr, 4080, (buf.st_size - 4080);
 		}
 
 		if(cellFsOpen(WMCHATFILE, CELL_FS_O_WRONLY | CELL_FS_O_TRUNC | CELL_FS_O_CREAT | CELL_FS_O_APPEND, &fd, NULL, 0) == CELL_FS_SUCCEEDED)

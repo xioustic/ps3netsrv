@@ -14,7 +14,7 @@ static void no_singstar_icon(void)
 			if(dir.d_name[2] == '\0' && dir.d_name[1] != '\0')
 			{
 				sprintf(xmlpath, "%s/%s/c/db.xml", "/dev_hdd0/tmp/explore/xil2/game", dir.d_name);
-				savefile(xmlpath, NULL, 0);
+				save_file(xmlpath, NULL, 0);
 				cellFsChmod(xmlpath, 0444);
 			}
 		}

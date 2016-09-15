@@ -299,7 +299,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							working = 0;
 							{ DELETE_TURNOFF } { BEEP2 }
-							if(_IS(cmd, "REBOOT")) savefile(WMNOSCAN, NULL, 0);
+							if(_IS(cmd, "REBOOT")) save_file(WMNOSCAN, NULL, 0);
 							{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 							sys_ppu_thread_exit(0);
 						}
@@ -455,7 +455,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(param[0] == '/')
 						{
 							u16 size = sprintf(buffer, "GET %s", param);
-							savefile(WMREQUEST_FILE, buffer, size);
+							save_file(WMREQUEST_FILE, buffer, size);
 							ssend(conn_s_ftp, FTP_OK_200); // The requested action has been successfully completed.
 						}
  #endif

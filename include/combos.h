@@ -722,7 +722,7 @@ reboot:
 					// vsh reboot
 					working = 0;
 					{ DELETE_TURNOFF }
-					savefile(WMNOSCAN, NULL, 0);
+					save_file(WMNOSCAN, NULL, 0);
 
 					vsh_reboot(); // VSH reboot
 

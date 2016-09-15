@@ -15,7 +15,7 @@ static u32 copied_count = 0;
 #define COPY_WHOLE_FILE		0
 #define SAVE_ALL			0
 #define APPEND_TEXT			(-0xADD0ADD0ADD000ALL)
-
+#define DONT_CLEAR_DATA		-1
 
 static int sysLv2FsLink(const char *oldpath, const char *newpath)
 {
@@ -55,7 +55,25 @@ static void mkdir_tree(char *path)
 }
 #endif
 
-int savefile(const char *file, const char *mem, int64_t size)
+static size_t read_file(const char *file, char *data, size_t size, int32_t offset)
+{
+	int fd = 0; uint64_t pos, read_e = 0;
+
+	if(offset < 0) offset = 0; else memset(data, 0, size);
+
+	if(cellFsOpen(file, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+	{
+		if(cellFsLseek(fd, offset, CELL_FS_SEEK_SET, &pos) == CELL_FS_SUCCEEDED)
+		{
+			if(cellFsRead(fd, (void *)data, size, &read_e) != CELL_FS_SUCCEEDED) read_e = 0;
+		}
+		cellFsClose(fd);
+	}
+
+	return read_e;
+}
+
+int save_file(const char *file, const char *mem, int64_t size)
 {
 	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
 	cellFsChmod(file, MODE);

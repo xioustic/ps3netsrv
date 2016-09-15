@@ -560,7 +560,7 @@ static char local_ip[16] = "127.0.0.1";
 
 static bool file_exists(const char* path);
 static int isDir(const char* path);
-int savefile(const char *file, const char *mem, int64_t size);
+int save_file(const char *file, const char *mem, int64_t size);
 
 #include "include/html.h"
 #include "include/peek_poke.h"
@@ -600,6 +600,7 @@ static void do_umount_iso(void);
 static size_t get_name(char *name, const char *filename, u8 cache);
 static void add_breadcrumb_trail(char *buffer, char *param);
 static void get_cpursx(char *cpursx);
+static void get_last_game(char *last_path);
 
 static bool from_reboot = false;
 static bool is_busy = false;
@@ -1055,10 +1056,9 @@ static void handleclient(u64 conn_s_p)
  #ifdef WM_REQUEST
 		if(wm_request)
 		{
-			if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && cellFsOpen(WMREQUEST_FILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+			if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && read_file(WMREQUEST_FILE, header, buf.st_size, 0) > 4)
 			{
-				cellFsRead(fd, (void *)header, buf.st_size, NULL);
-				cellFsClose(fd); for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n]=9;
+				for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n] = '+';
 				if(islike(header, "/play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
 			}
 			cellFsUnlink(WMREQUEST_FILE);
@@ -1498,7 +1498,7 @@ static void handleclient(u64 conn_s_p)
 
 							if(klic_polling == KL_AUTO && !strcmp(buffer, prev)) {sys_timer_usleep(10000); continue;}
 
-							savefile("/dev_hdd0/klic.log", buffer, APPEND_TEXT);
+							save_file("/dev_hdd0/klic.log", buffer, APPEND_TEXT);
 
 							if(klic_polling == KL_GET) break; strcpy(prev, buffer);
 						}
@@ -1783,7 +1783,7 @@ static void handleclient(u64 conn_s_p)
 				// /rebuild.ps3  reboots & start rebuilding file system
 
 				cmd[0] = cmd[1] = 0; cmd[2] = 0x03; cmd[3] = 0xE9; // 00 00 03 E9
-				savefile("/dev_hdd0/mms/db.err", cmd, 4);
+				save_file("/dev_hdd0/mms/db.err", cmd, 4);
 				goto reboot; // hard reboot
 			}
 			if(islike(param, "/recovery.ps3"))
@@ -1820,7 +1820,7 @@ static void handleclient(u64 conn_s_p)
 				{ DELETE_TURNOFF } { BEEP2 }
 
 				char *allow_scan = strstr(param,"?0");
-				if(allow_scan) *allow_scan = NULL; else savefile(WMNOSCAN, NULL, 0);
+				if(allow_scan) *allow_scan = NULL; else save_file(WMNOSCAN, NULL, 0);
 
 				bool is_restart = IS(param, "/restart.ps3");
 
@@ -2290,17 +2290,12 @@ static void handleclient(u64 conn_s_p)
 
 							// save text file
 							sprintf(txt, "%s", pos + 3);
-							savefile(filename, txt, SAVE_ALL);
+							save_file(filename, txt, SAVE_ALL);
 						}
 						else
 						{
 							// load text file
-							int fd;
-							if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-							{
-								cellFsRead(fd, (void *)txt, MAX_TEXT_LEN, NULL);
-								cellFsClose(fd);
-							}
+							read_file(filename, txt, MAX_TEXT_LEN, 0);
 						}
 
 						// show text box

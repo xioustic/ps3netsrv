@@ -53,7 +53,7 @@ static void add_launchpad_header(void)
 								 "<nsx anno=\"\" lt-id=\"131\" min-sys-ver=\"1\" rev=\"1093\" ver=\"1.0\">\n"
 								 "<spc anno=\"csxad=1&amp;adspace=9,10,11,12,13\" id=\"33537\" multi=\"o\" rep=\"t\">\n\n"; /* size: 196 */
 
-	savefile(LAUNCHPAD_FILE_XML, tempstr, SAVE_ALL);
+	save_file(LAUNCHPAD_FILE_XML, tempstr, SAVE_ALL);
 }
 
 static void add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID)
@@ -84,7 +84,7 @@ static void add_launchpad_entry(char *tempstr, char *templn, const char *url, ch
 								"<cntry agelmt=\"0\">all</cntry>\n"
 								"<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
 
-	savefile(LAUNCHPAD_FILE_XML, tempstr, -size);
+	save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
 
 	mtrl_items++; *tempstr = NULL;
 }
@@ -122,7 +122,7 @@ static void add_launchpad_footer(char *tempstr)
 								"<lang>all</lang></mtrl>\n\n"
 								"</spc></nsx>");
 
-	savefile(LAUNCHPAD_FILE_XML, tempstr, -size);
+	save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
 }
 #endif //#ifdef LAUNCHPAD
 
@@ -212,7 +212,7 @@ static void make_fb_xml(char *myxml, char *templn)
 							  QUERY_XMB("mgames", "xmb://localhost%s#seg_mygames")
 							  "%s</XMBML>", XML_HEADER, templn, STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
 
-	savefile(FB_XML, myxml, size);
+	save_file(FB_XML, myxml, size);
 }
 
 static u32 get_buffer_size(int footprint)
@@ -739,18 +739,9 @@ next_xml_entry:
 								{
 									if(!IS_NTFS)
 									{
-										int fs;
-										if(cellFsOpen(templn, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+										if(read_file(templn, tempID, 11, 0x810) == 11)
 										{
-											uint64_t msiz = 0;
-											if(cellFsLseek(fs, 0x810, CELL_FS_SEEK_SET, &msiz) == CELL_FS_SUCCEEDED)
-											{
-												if(cellFsRead(fs, (void *)&tempID, 11, &msiz) == CELL_FS_SUCCEEDED)
-												{
-													strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
-												}
-											}
-											cellFsClose(fs);
+											strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
 										}
 									}
 
@@ -1070,47 +1061,45 @@ continue_reading_folder_xml:
 
 	// --- save xml file
 	int fdxml = 0, slen;
-	cellFsOpen(xml, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdxml, NULL, 0);
-	cellFsWrite(fdxml, (char*)myxml, strlen(myxml), NULL);
+	if(cellFsOpen(xml, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdxml, NULL, 0) == CELL_FS_SUCCEEDED)
+	{
+		cellFsWrite(fdxml, (char*)myxml, strlen(myxml), NULL);
 
-	if( (webman_config->nogrp))
-	{
-		cellFsWrite(fdxml, (char*)myxml_ps3, strlen(myxml_ps3), NULL);
-		cellFsWrite(fdxml, (char*)"</Attributes><Items>", 20, NULL);
-		cellFsWrite(fdxml, (char*)myxml_items, strlen(myxml_items), NULL);
-		slen = sprintf(myxml, "%s%s", "</Items></View>", "</XMBML>\r\n");
-	}
-	else
-	{
-		if(!(webman_config->cmask & PS3)) cellFsWrite(fdxml, (char*)myxml_ps3, strlen(myxml_ps3), NULL);
-		if(!(webman_config->cmask & PS2)) cellFsWrite(fdxml, (char*)myxml_ps2, strlen(myxml_ps2), NULL);
+		if( (webman_config->nogrp))
+		{
+			cellFsWrite(fdxml, (char*)myxml_ps3, strlen(myxml_ps3), NULL);
+			cellFsWrite(fdxml, (char*)"</Attributes><Items>", 20, NULL);
+			cellFsWrite(fdxml, (char*)myxml_items, strlen(myxml_items), NULL);
+			slen = sprintf(myxml, "%s%s", "</Items></View>", "</XMBML>\r\n");
+		}
+		else
+		{
+			if(!(webman_config->cmask & PS3)) cellFsWrite(fdxml, (char*)myxml_ps3, strlen(myxml_ps3), NULL);
+			if(!(webman_config->cmask & PS2)) cellFsWrite(fdxml, (char*)myxml_ps2, strlen(myxml_ps2), NULL);
 #ifdef COBRA_ONLY
-		if(!(webman_config->cmask & PS1)) cellFsWrite(fdxml, (char*)myxml_psx, strlen(myxml_psx), NULL);
-		if(!(webman_config->cmask & PSP)) cellFsWrite(fdxml, (char*)myxml_psp, strlen(myxml_psp), NULL);
-		if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) cellFsWrite(fdxml, (char*)myxml_dvd, strlen(myxml_dvd), NULL);
+			if(!(webman_config->cmask & PS1)) cellFsWrite(fdxml, (char*)myxml_psx, strlen(myxml_psx), NULL);
+			if(!(webman_config->cmask & PSP)) cellFsWrite(fdxml, (char*)myxml_psp, strlen(myxml_psp), NULL);
+			if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU)) cellFsWrite(fdxml, (char*)myxml_dvd, strlen(myxml_dvd), NULL);
 #endif
-		slen = sprintf(myxml, "</XMBML>\r\n");
-	}
+			slen = sprintf(myxml, "</XMBML>\r\n");
+		}
 
-	cellFsWrite(fdxml, (char*)myxml, slen, NULL);
-	cellFsClose(fdxml);
-	cellFsChmod(xml, MODE);
+		cellFsWrite(fdxml, (char*)myxml, slen, NULL);
+		cellFsClose(fdxml);
+		cellFsChmod(xml, MODE);
 
 #ifndef LITE_EDITION
-	// --- replace & with ^ for droidMAN
-	if(cellFsOpen(xml, CELL_FS_O_RDONLY, &fdxml, NULL, 0) == CELL_FS_SUCCEEDED)
-	{
-		u64 read_e = 0;
-		u32 xmlsize = BUFFER_SIZE_ALL;
-		cellFsRead(fdxml, (void *)myxml_ps3, xmlsize, &read_e);
-		cellFsClose(fdxml);
+		// --- replace & with ^ for droidMAN
+		slen = read_file(xml, myxml_ps3, BUFFER_SIZE_ALL, 0);
+		if(slen)
+		{
+			for(int n = 0; n < slen; n++) if(myxml_ps3[n] == '&') myxml_ps3[n] = '^';
 
-		for(u32 n = 0; n < read_e; n++) if(myxml_ps3[n] == '&') myxml_ps3[n] = '^';
-
-		strcpy(xml + 37, ".droid\0"); // .xml -> .droid
-		savefile(xml, myxml_ps3, read_e);
-	}
+			strcpy(xml + 37, ".droid\0"); // .xml -> .droid
+			save_file(xml, myxml_ps3, slen);
+		}
 #endif
+	}
 
 #ifdef LAUNCHPAD
 	// --- launchpad footer

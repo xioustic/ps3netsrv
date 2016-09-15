@@ -5,7 +5,7 @@ static void disable_classic_ps2_mode(void);
 
 static void enable_classic_ps2_mode(void)
 {
-	savefile(PS2_CLASSIC_TOGGLER, NULL, 0);
+	save_file(PS2_CLASSIC_TOGGLER, NULL, 0);
 }
 
 static void disable_classic_ps2_mode(void)

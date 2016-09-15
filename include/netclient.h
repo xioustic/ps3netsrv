@@ -126,7 +126,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 			bytes_read = read_remote_file(s, (char*)chunk, 0, chunk_size, abort_connection);
 			if(bytes_read)
 			{
-				savefile(TEMP_NET_PSXISO, chunk, bytes_read);
+				save_file(TEMP_NET_PSXISO, chunk, bytes_read);
 
 				if(cellFsOpen(TEMP_NET_PSXISO, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 				{

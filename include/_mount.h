@@ -62,6 +62,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// init variables
 		// ---------------
 		uint8_t plen = 10; // /mount.ps3
+		uint8_t default_icon = iPS3;
 
 #ifdef COPY_PS3
 		char target[MAX_PATH_LEN], *pos; *target = NULL;
@@ -235,10 +236,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #ifdef COBRA_ONLY
 				else
 				{
-					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, 0, strlen(d_name), tempstr);
+					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, FROM_MOUNT, strlen(d_name), tempstr);
 				}
 #endif
-				get_default_icon(icon, _path, d_name, is_dir, tempID, -1, 0, f0, f1);
+				default_icon = get_default_icon(icon, _path, d_name, is_dir, tempID, -1, 0, f0, f1);
 
 				*filename = '/';
 			}
@@ -317,7 +318,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 
 									working = 0;
 									{ DELETE_TURNOFF }
-									savefile(WMNOSCAN, NULL, 0);
+									save_file(WMNOSCAN, NULL, 0);
 									{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} /*load LPAR id 1*/
 									sys_ppu_thread_exit(0);
 								}
@@ -559,16 +560,16 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 
 				if(is_movie)
 					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
-									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[strstr(param,"BDISO") ? 5 : 9], mounted ? STR_MOVIELOADED : STR_ERROR);
+									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[strstr(param,"BDISO") ? iBDVD : iDVD], mounted ? STR_MOVIELOADED : STR_ERROR);
 				else if(!extcmp(param, ".BIN.ENC", 8))
 					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
-									 "<hr>%s", enc_dir_name, wm_icons[7], 300, mounted ? STR_PS2LOADED : STR_ERROR);
+									 "<hr>%s", enc_dir_name, wm_icons[iPS2], 300, mounted ? STR_PS2LOADED : STR_ERROR);
 				else if((strstr(param, "/PSPISO") || strstr(param, "/ISO/")) && !extcasecmp(param, ".iso", 4))
 					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
-									 "<hr>%s", enc_dir_name, wm_icons[8], strcasestr(enc_dir_name,".png") ? 200 : 300, mounted ? STR_PSPLOADED : STR_ERROR);
+									 "<hr>%s", enc_dir_name, wm_icons[iPSP], strcasestr(enc_dir_name,".png") ? 200 : 300, mounted ? STR_PSPLOADED : STR_ERROR);
 				else
 					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
-									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[5], mounted ? STR_GAMELOADED : STR_ERROR);
+									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[default_icon], mounted ? STR_GAMELOADED : STR_ERROR);
 			}
 
 			strcat(buffer, tempstr);
@@ -752,6 +753,11 @@ static void do_umount(bool clean)
 #endif //#ifdef COBRA_ONLY
 }
 
+static void get_last_game(char *last_path)
+{
+	read_file(WMTMP "/last_game.txt", last_path, MAX_PATH_LEN, 0);
+}
+
 #ifdef COBRA_ONLY
 static void cache_file_to_hdd(char *source, char *target, const char *basepath, char *msg)
 {
@@ -760,7 +766,7 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 		sprintf(target, "/dev_hdd0%s", basepath);
 		cellFsMkdir(basepath, MODE);
 
-		strcat(target, strrchr(source, '/'));
+		strcat(target, strrchr(source, '/')); // add file name
 
 		if((copy_in_progress || fix_in_progress) == false && file_exists(target) == false)
 		{
@@ -782,7 +788,7 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 		if(file_exists(target)) strcpy(source, target);
 	}
 
-	if(islike(source, "/dev_bdvd")) do_umount(false);
+	do_umount(false);
 }
 
 static void cache_icon0_and_param_sfo(char *destpath)
@@ -825,19 +831,7 @@ static void mount_autoboot(void)
 		strcpy(path, (char *) webman_config->autoboot_path);
 	else
 	{	// get last game path
-		uint64_t read_e = 0;
-
-		if(webman_config->lastp && file_exists(WMTMP "/last_game.txt"))
-		{
-			int fd = 0;
-			if(cellFsOpen(WMTMP "/last_game.txt", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-			{
-				if(cellFsRead(fd, (void *)path, MAX_PATH_LEN, &read_e) != CELL_FS_SUCCEEDED) read_e = 0;
-				cellFsClose(fd);
-			}
-		}
-
-		path[read_e] = NULL;
+		get_last_game(path);
 	}
 
 	bool do_mount = false;
@@ -991,14 +985,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	if(do_eject)
 	{
 		// load last_games.bin
-		int fd = 0;
-		_lastgames lastgames; memset(&lastgames, 0, sizeof(_lastgames)); lastgames.last = 0xFF;
-
-		if(cellFsOpen(WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-		{
-			cellFsRead(fd, (void *)&lastgames, sizeof(_lastgames), NULL);
-			cellFsClose(fd);
-		}
+		_lastgames lastgames;
+		if(read_file(WMTMP "/last_games.bin", (char*)&lastgames, sizeof(_lastgames), 0) == 0) lastgames.last = 0xFF;
 
 		// find game being mounted in last_games.bin
 		bool _prev = false, _next = false;
@@ -1047,7 +1035,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		}
 
 		// save last_games.bin
-		savefile(WMTMP "/last_games.bin", (char *)&lastgames, sizeof(_lastgames));
+		save_file(WMTMP "/last_games.bin", (char *)&lastgames, sizeof(_lastgames));
 	}
 
 	// -----------------------
@@ -1057,7 +1045,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	if(*_path == '_' || strchr(_path, '/') == NULL) goto exit_mount;
 	else
 	{
-		savefile(WMTMP "/last_game.txt", _path, SAVE_ALL);
+		save_file(WMTMP "/last_game.txt", _path, SAVE_ALL);
 	}
 
 
@@ -1076,7 +1064,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	{
 		if(!extcmp(_path, ".ntfs[PSXISO]", 13) || (strstr(_path, ".ntfs[") != NULL && strstr(_path, "[raw]") != NULL))
 		{
-			bool found =false; u8 n;
+			bool found = false; u8 n;
 			const char raw_iso_sprx[4][40] = {  "/dev_flash/vsh/module/raw_iso.sprx",
 												"/dev_hdd0/raw_iso.sprx",
 												"/dev_hdd0/plugins/raw_iso.sprx",
@@ -1089,23 +1077,20 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			{
 				cellFsChmod(_path, MODE);
 
-				int fdw;
-				if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
+				sys_addr_t addr = 0;
+				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
-					sys_addr_t addr = 0;
-					if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
+					char *sprx_data = (char *)addr;
+					uint64_t msiz = read_file(_path, sprx_data, _64KB_, 0);
+					if(msiz > _4KB_)
 					{
-						u8* sprx_data = (u8*)addr; uint64_t msiz = 0;
-						cellFsRead(fdw, sprx_data, _64KB_, &msiz);
-						cellFsClose(fdw);
-
 						do_umount(false);
 
-						if(cobra_load_vsh_plugin(0, (char*)raw_iso_sprx[n], sprx_data, msiz) != CELL_OK) ret = false;
+						if(cobra_load_vsh_plugin(0, (char*)raw_iso_sprx[n], (u8*)sprx_data, msiz) != CELL_OK) ret = false;
 
 						sys_memory_free(addr);
+						goto exit_mount;
 					}
-					goto exit_mount;
 				}
 			}
 		}
@@ -1152,7 +1137,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
 				// create "wm_noscan" to avoid re-scan of XML returning to XMB from PS2
-				savefile(WMNOSCAN, NULL, 0);
+				save_file(WMNOSCAN, NULL, 0);
 
 				sprintf(temp, "\"%s\" %s", strrchr(_path, '/') + 1, STR_LOADED2);
 			}
@@ -1197,16 +1182,12 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 			else if(strstr(_path, "/GAME"))
 			{
-				int fdd = 0; char extgdfile[MAX_PATH_LEN];
+				char extgdfile[MAX_PATH_LEN], *extgdini = extgdfile;
 				sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
-				if(cellFsOpen(extgdfile, CELL_FS_O_RDONLY, &fdd, NULL, 0) == CELL_FS_SUCCEEDED)
+				if(read_file(extgdfile, extgdini, 12, 0))
 				{
-					memset(extgdfile, 0, 12);
-					cellFsRead(fdd, (void *)&extgdfile, 12, NULL);
-					cellFsClose(fdd);
-
-					if((extgd == 0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1, false); else
-					if((extgd == 1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0, false);
+					if((extgd == 0) &&  (extgdini[10] & (1<<1))) set_gamedata_status(1, false); else
+					if((extgd == 1) && !(extgdini[10] & (1<<1))) set_gamedata_status(0, false);
 				}
 				else if(extgd) set_gamedata_status(0, false);
 			}
@@ -1288,13 +1269,17 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				sys_addr_t addr = 0;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
+					char *rawiso_data = (char*)addr;
+					if(read_file(_path, rawiso_data, _64KB_, 0) > _4KB_)
+					{
+/*
 					int fdw;
 					if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 					{
-						u8* rawiso_data = (u8*)addr; uint64_t msiz = 0;
-						cellFsRead(fdw, rawiso_data, _64KB_, &msiz);
+						u8* rawiso_data = (u8*)addr;
+						cellFsRead(fdw, rawiso_data, _64KB_, NULL);
 						cellFsClose(fdw);
-
+*/
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
 						waitfor("/dev_bdvd", 3);
@@ -1516,7 +1501,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					if(!islike(_path, "/dev_hdd0"))
 					{
 	copy_ps2iso_to_hdd0:
-						cache_file_to_hdd(_path, cobra_iso_list[0], "/PS2ISO", templn);
+						cache_file_to_hdd(_path, iso_list[0], "/PS2ISO", templn);
 					}
 
 					if(file_exists(iso_list[0]))
@@ -1528,7 +1513,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
 						// create "wm_noscan" to avoid re-scan of XML returning to XMB from PS2
-						savefile(WMNOSCAN, NULL, 0);
+						save_file(WMNOSCAN, NULL, 0);
 					}
 					else
 						ret = false;
@@ -1565,76 +1550,70 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					if(!extcasecmp(_path, ".cue", 4))
 					{
 						unsigned int num_tracks = 0;
-						int fdw;
 
-						if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
+						sys_addr_t sysmem = 0;
+						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 						{
-							sys_addr_t sysmem = 0;
-							if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+							char *buf = (char*)sysmem;
+							uint64_t msiz = read_file(_path, buf, 65535, 0);
+							if(msiz > 10)
 							{
-								char *buf = (char*)sysmem; uint64_t msiz = 0;
-								cellFsRead(fdw, (void *)buf, 65535, &msiz);
-								cellFsClose(fdw);
+								TrackDef tracks[32];
+								tracks[0].lba = 0;
+								tracks[0].is_audio = 0;
 
-								if(msiz > 10)
+								char tcode[MAX_LINE_LEN];
+								u8 tmin = 0, tsec = 0, tfrm = 0;
+								u8 use_pregap = 0;
+								u32 lp = 0, tcode_len;
+
+								while(lp < msiz)// get_line ( templn, 512, sysmem ) != NULL )
 								{
-									TrackDef tracks[32];
-									tracks[0].lba = 0;
-									tracks[0].is_audio = 0;
-
-									char tcode[MAX_LINE_LEN];
-									u8 tmin = 0, tsec = 0, tfrm = 0;
-									u8 use_pregap = 0;
-									u32 lp = 0, tcode_len;
-
-									while(lp < msiz)// get_line ( templn, 512, sysmem ) != NULL )
+									u8 line_found = 0;
+									*templn = NULL;
+									for(u32 l = 0; l < MAX_LINE_LEN; l++)
 									{
-										u8 line_found = 0;
-										*templn = NULL;
-										for(u32 l = 0; l < MAX_LINE_LEN; l++)
+										if(l>=msiz) break;
+										if(lp<msiz && buf[lp] && buf[lp]!='\n' && buf[lp]!='\r')
 										{
-											if(l>=msiz) break;
-											if(lp<msiz && buf[lp] && buf[lp]!='\n' && buf[lp]!='\r')
-											{
-												templn[l]=buf[lp];
-												templn[l+1] = NULL;
-											}
-											else
-											{
-												templn[l] = NULL;
-											}
-											if(buf[lp]=='\n' || buf[lp]=='\r') line_found = 1;
-											lp++;
-											if(buf[lp]=='\n' || buf[lp]=='\r') lp++;
-
-											if(templn[l] == NULL) break;
+											templn[l]=buf[lp];
+											templn[l+1] = NULL;
 										}
+										else
+										{
+											templn[l] = NULL;
+										}
+										if(buf[lp]=='\n' || buf[lp]=='\r') line_found = 1;
+										lp++;
+										if(buf[lp]=='\n' || buf[lp]=='\r') lp++;
 
-										if(!line_found) break;
-
-										if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-										if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
-
-										tcode_len = sprintf(tcode, "%s", strrchr(templn, ' ') + 1); tcode[8] = NULL;
-										if((tcode_len != 8) || tcode[2]!=':' || tcode[5]!=':') continue;
-										tmin = (tcode[0]-'0')*10 + (tcode[1]-'0');
-										tsec = (tcode[3]-'0')*10 + (tcode[4]-'0');
-										tfrm = (tcode[6]-'0')*10 + (tcode[7]-'0');
-										if(use_pregap && num_tracks) tsec += 2;
-
-										if(num_tracks) tracks[num_tracks].is_audio = 1;
-										tracks[num_tracks].lba = (tmin * 60 + tsec) * 75 + tfrm;
-
-										num_tracks++; if(num_tracks >= 32) break;
+										if(templn[l] == NULL) break;
 									}
 
-									if(!num_tracks) num_tracks++;
-									cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
-									mount_iso = false;
+									if(!line_found) break;
+
+									if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
+									if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
+
+									tcode_len = sprintf(tcode, "%s", strrchr(templn, ' ') + 1); tcode[8] = NULL;
+									if((tcode_len != 8) || tcode[2]!=':' || tcode[5]!=':') continue;
+									tmin = (tcode[0]-'0')*10 + (tcode[1]-'0');
+									tsec = (tcode[3]-'0')*10 + (tcode[4]-'0');
+									tfrm = (tcode[6]-'0')*10 + (tcode[7]-'0');
+									if(use_pregap && num_tracks) tsec += 2;
+
+									if(num_tracks) tracks[num_tracks].is_audio = 1;
+									tracks[num_tracks].lba = (tmin * 60 + tsec) * 75 + tfrm;
+
+									num_tracks++; if(num_tracks >= 32) break;
 								}
 
-								sys_memory_free(sysmem);
+								if(!num_tracks) num_tracks++;
+								cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
+								mount_iso = false;
 							}
+
+							sys_memory_free(sysmem);
 						}
 					}
 
@@ -1843,15 +1822,8 @@ install_mm_payload:
 
 	if(do_eject == MOUNT_EXT_GDATA) // extgd
 	{
-		sprintf(_path, WMTMP "/last_game.txt"); int fd=0;
-		if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-		{
-			uint64_t read_e = 0;
-			if(cellFsRead(fd, (void *)_path, MAX_PATH_LEN, &read_e) == CELL_FS_SUCCEEDED) _path[read_e] = NULL;
-			cellFsClose(fd);
-		}
-		else
-			*_path = NULL;
+		// get last game path
+		get_last_game(_path);
 	}
 
 	#endif //#ifdef EXT_GDATA
@@ -1903,20 +1875,16 @@ install_mm_payload:
 	// auto-map /dev_hdd0/game to dev_usbxxx/GAMEI
 	//---------------------------------------------
 
-	if(do_eject!=1) ;
+	if(do_eject != 1) ;
 
 	else if(strstr(_path, "/GAME"))
 	{
-		int fdd =0; char extgdfile[MAX_PATH_LEN];
+		char extgdfile[MAX_PATH_LEN], *extgdini = extgdfile;
 		sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
-		if(cellFsOpen(extgdfile, CELL_FS_O_RDONLY, &fdd, NULL, 0) == CELL_FS_SUCCEEDED)
+		if(read_file(extgdfile, extgdini, 12, 0))
 		{
-			memset(extgdfile, 0, 12);
-			cellFsRead(fdd, (void *)&extgdfile, 12, NULL);
-			cellFsClose(fdd);
-
-			if((extgd == 0) &&  (extgdfile[10] & (1<<1))) set_gamedata_status(1, false); else
-			if((extgd == 1) && !(extgdfile[10] & (1<<1))) set_gamedata_status(0, false);
+			if((extgd == 0) &&  (extgdini[10] & (1<<1))) set_gamedata_status(1, false); else
+			if((extgd == 1) && !(extgdini[10] & (1<<1))) set_gamedata_status(0, false);
 		}
 		else if(extgd) set_gamedata_status(0, false);
 	}

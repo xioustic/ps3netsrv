@@ -104,7 +104,7 @@ typedef struct
 } __attribute__((packed)) netiso_args;
 
 
-int savefile(const char *file, const char *mem, int64_t size);
+int save_file(const char *file, const char *mem, int64_t size);
 int file_copy(const char *file1, char *file2, uint64_t maxbytes);
 int waitfor(const char *path, uint8_t timeout);
 
@@ -534,7 +534,7 @@ static void build_blank_iso(const char *title_id)
 	buf[0xC83F] = buf[0xC841] = 2;
 	buf[0xC844] = buf[0xC847] = buf[0xC848] = buf[0xC849] = 1;
 
-	savefile("/dev_hdd0/vsh/task.dat", (char*)buf, _128KB_);
+	save_file("/dev_hdd0/vsh/task.dat", (char*)buf, _128KB_);
 
 	if(sysmem) sys_memory_free(sysmem);
 	return;

@@ -182,7 +182,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		if(isDir(drives[d]))
 		{
 			hdd_free = (int)(get_free_space(drives[d])>>20);
-			sprintf(param, "<br><a href=\"%s\">USB%i: %'d %s</a>", drives[d], (10 * drives[d][9]) + drives[d][10], hdd_free, STR_MBFREE); strcat(templn, param);
+			sprintf(param, "<br><a href=\"%s\">USB%c%c%c: %'d %s</a>", drives[d], drives[d][8], drives[d][9], drives[d][10], hdd_free, STR_MBFREE); strcat(templn, param);
 		}
 	}
 #endif
@@ -232,17 +232,11 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	sprintf( templn, "<a href=\"/dev_hdd0/home/%08i\"><label title=\"Startup\">&#8986;</label> %id %02d:%02d:%02d</a>", xsetting_CC56EB2D()->GetCurrentUserNumber(), dd, hh, mm, ss); buffer += concat(buffer, templn);
 	///////////////////////
 
-	if(isDir("/dev_bdvd") && file_exists(WMTMP "/last_game.txt"))
+	if(isDir("/dev_bdvd"))
 	{
-		int fd = 0; memset(param, 0, HTML_RECV_SIZE);
+		get_last_game(param);
 
-		if(cellFsOpen(WMTMP "/last_game.txt", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-		{
-			cellFsRead(fd, (void *)param, MAX_PATH_LEN, NULL);
-			cellFsClose(fd);
-
-			if(strlen(param) > 10) {sprintf( templn, "<hr><font size=\"3\">" HTML_URL " -> ", IS_ON_XMB ? "/play.ps3" : "/dev_bdvd", "/dev_bdvd"); buffer += concat(buffer, templn); add_breadcrumb_trail(buffer, param); buffer += concat(buffer, "</font>");}
-		}
+		if(*param == '/') {sprintf( templn, "<hr><font size=\"3\">" HTML_URL " -> ", IS_ON_XMB ? "/play.ps3" : "/dev_bdvd", "/dev_bdvd"); buffer += concat(buffer, templn); add_breadcrumb_trail(buffer, param); buffer += concat(buffer, "</font>");}
 	}
 
 	// Get mac address [0xD-0x12]

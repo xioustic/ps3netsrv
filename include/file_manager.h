@@ -740,19 +740,13 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #endif
 
 			// show last mounted game
-			memset(tempstr, 0, _4KB_); memset(templn, 0, _MAX_PATH_LEN);
-			if(effective_disctype != DISC_TYPE_NONE && IS(param, "/dev_bdvd") && file_exists(WMTMP "/last_game.txt"))
+			memset(tempstr, 0, _4KB_);
+			if(effective_disctype != DISC_TYPE_NONE && IS(param, "/dev_bdvd"))
 			{
-				int fd = 0;
+				// get last game path
+				get_last_game(templn);
 
-				if(cellFsOpen(WMTMP "/last_game.txt", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-				{
-					u64 bytes_read = 0;
-					cellFsRead(fd, (void *)templn, _MAX_PATH_LEN, &bytes_read);
-					cellFsClose(fd);
-
-					if(bytes_read > 10) {sprintf(tempstr, HTML_SHOW_LAST_GAME); add_breadcrumb_trail(tempstr, templn); strcat(tempstr, HTML_SHOW_LAST_GAME_END);}
-				}
+				if(*templn == '/') {sprintf(tempstr, HTML_SHOW_LAST_GAME); add_breadcrumb_trail(tempstr, templn); strcat(tempstr, HTML_SHOW_LAST_GAME_END);}
 			}
 
 			///////////
@@ -789,15 +783,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 									 "webMAN - Simple Web Server" EDITION "<p>");
 
 #ifndef LITE_EDITION
-			if(cellFsOpen(WMTMP "/last_games.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+			buffer += concat(buffer, "<div id=\"lg\" style=\"display:none\">");
+
+			_lastgames lastgames;
+
+			if(read_file(WMTMP "/last_games.bin", (char*)&lastgames, sizeof(_lastgames), 0))
 			{
-				buffer += concat(buffer, "<div id=\"lg\" style=\"display:none\">");
-
-				_lastgames lastgames; memset(&lastgames, 0, sizeof(_lastgames));
-
-				cellFsRead(fd, (void *)&lastgames, sizeof(_lastgames), NULL);
-				cellFsClose(fd);
-
 				u8 n, m;
 				for(n = 0; n < MAX_LAST_GAMES; n++)
 				{
@@ -817,9 +808,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				{
 					if(*lastgames.game[n]) {sprintf(tempstr, "<a class=\"%c\" href=\"/mount.ps3%s\">%s</a><br>", isDir(lastgames.game[n]) ? 'd' : 'w', lastgames.game[n], strrchr(lastgames.game[n], '/') + 1); buffer += concat(buffer, tempstr);}
 				}
-
-				strcat(buffer, "</div>");
 			}
+			strcat(buffer, "</div></a>");
 #endif
 		}
 	}

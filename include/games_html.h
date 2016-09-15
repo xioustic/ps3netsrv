@@ -35,6 +35,8 @@
 
 #define HTML_KEY_LEN  6
 
+#define FROM_MOUNT  -99
+
 enum nocov_options
 {
 	SHOW_MMCOVERS = 0,
@@ -50,15 +52,20 @@ enum icon_groups
 	iPS2 = 7,
 	iPSP = 8,
 	iDVD = 9,
+	iBDVD = 5,
 };
 
 #define HAS_TITLE_ID  (*tempID > '@')
 
-#define HAS_ICON      ((*icon == 'h') || ((*icon == '/') && file_exists(icon)))
 #define NO_ICON       (!*icon)
 
 #define SHOW_COVERS_OR_ICON0  (webman_config->nocov != SHOW_DISC)
 #define SHOW_COVERS          ((webman_config->nocov == SHOW_MMCOVERS) || (webman_config->nocov == ONLINE_COVERS))
+
+static bool HAS(char *icon)
+{
+	return ((*icon == 'h') || ((*icon == '/') && file_exists(icon) && (icon[strlen(icon) - 1] & 0x20) == 'g' ));
+}
 
 static size_t get_name(char *name, const char *filename, u8 cache)
 {
@@ -175,7 +182,7 @@ static bool get_cover_by_titleid(char *icon, char *tempID)
 
 static bool get_cover_from_name(char *icon, const char *name, char *tempID)
 {
-	if(HAS_ICON) return true;
+	if(HAS(icon)) return true;
 
 	// get cover from tempID in PARAM.SFO
 	if(get_cover_by_titleid(icon, tempID)) return true;
@@ -246,7 +253,7 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 				icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
 			}
 
-			if(HAS_TITLE_ID && SHOW_COVERS) {get_cover_by_titleid(icon, tempID); if(HAS_ICON) return;}
+			if(HAS_TITLE_ID && SHOW_COVERS) {get_cover_by_titleid(icon, tempID); if(HAS(icon)) return;}
 
 			// get mm covers & titleID
 			get_cover_from_name(icon, entry_name, tempID);
@@ -257,7 +264,7 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 				char titleid[MAX_PATH_LEN];
 				char *pos = strchr(entry_name, '/'); if(pos) {*pos = NULL; sprintf(titleid, "%s/%s", entry_name, tempID); *pos = '/';} else sprintf(titleid, "%s", tempID);
 
-				char tmp[MAX_PATH_LEN]; if(HAS_ICON) sprintf(tmp, "%s", icon); else *tmp = NULL;
+				char tmp[MAX_PATH_LEN]; if(HAS(icon)) sprintf(tmp, "%s", icon); else *tmp = NULL;
 
 				sprintf(icon, "%s/%s.JPG", param, titleid); if(file_exists(icon)) return;
 				sprintf(icon, "%s/%s.PNG", param, titleid); if(file_exists(icon)) return;
@@ -375,73 +382,89 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 	}
 }
 
-static void get_default_icon(char *icon, const char *param, char *file, int is_dir, char *tempID, int ns, int abort_connection, u8 f0, u8 f1)
+static u8 get_default_icon_by_type(u8 f1)
 {
-	if(webman_config->nocov == SHOW_DISC) {if(get_cover_from_name(icon, file, tempID)) return; goto no_icon0;}
+	return  IS_PS3_TYPE   ? iPS3 :
+			IS_PSX_FOLDER ? iPSX :
+			IS_PS2_FOLDER ? iPS2 :
+			IS_PSP_FOLDER ? iPSP :
+			IS_DVD_FOLDER ? iDVD : iBDVD;
+}
+
+static u8 get_default_icon(char *icon, const char *param, char *file, int is_dir, char *tempID, int ns, int abort_connection, u8 f0, u8 f1)
+{
+	u8 default_icon = get_default_icon_by_type(f1);
+
+	char filename[MAX_PATH_LEN];
+
+	if(ns == FROM_MOUNT)
+		sprintf(filename, "%s", file);
+
+	if(webman_config->nocov == SHOW_DISC) {if(get_cover_from_name(icon, file, tempID)) return default_icon; goto no_icon0;}
 
 	if(!IS_NET) get_default_icon_from_folder(icon, is_dir, param, file, tempID, f0);
 
 	// continue using cover or default icon0.png
-	if(HAS_ICON) return;
+	if(HAS(icon)) return default_icon;
 
-	if(SHOW_COVERS && get_cover_from_name(icon, file, tempID)) return; // show mm cover
+	if(SHOW_COVERS && get_cover_from_name(icon, file, tempID)) return default_icon; // show mm cover
 
 	// get icon from folder && copy remote icon
 	get_default_icon_for_iso(icon, param, file, is_dir, ns, abort_connection);
 
-	if(HAS_ICON) return;
+	if(HAS(icon)) return default_icon;
 
 	//use the cached PNG from wmtmp if available
 	get_name(icon, file, GET_WMTMP);
 	strcat(icon, ".PNG");
 
 no_icon0:
-	if(HAS_ICON) return;
+	if(HAS(icon)) return default_icon;
 
-	if((webman_config->nocov == SHOW_ICON0) && get_cover_from_name(icon, file, tempID)) return; // show mm cover as last option (if it's disabled)
-
-	if(IS_BLU_TYPE) sprintf(icon, "%s/%s", param, file);
+	if((webman_config->nocov == SHOW_ICON0) && get_cover_from_name(icon, file, tempID)) return default_icon; // show mm cover as last option (if it's disabled)
 
 	//show the default icon by type
-		 if(IS_PSX_FOLDER || (strstr(icon, "PSX") != NULL)) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
-		strcpy(icon, wm_icons[iPSX]);
-	else if(IS_PS2_FOLDER || (strstr(icon, "PS2") != NULL)) //if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
-		strcpy(icon, wm_icons[iPS2]);
-	else if(IS_PSP_FOLDER || (strstr(icon, "PSP") != NULL)) //if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
-		strcpy(icon, wm_icons[iPSP]);
-	else if(IS_DVD_FOLDER || (strstr(icon, "DVD") != NULL)) //if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
-		strcpy(icon, wm_icons[iDVD]);
-	else                                                    //if(strstr(param, "/BDISO") || !extcmp(file, ".ntfs[BDISO]", 12) || || !extcmp(file, ".ntfs[BDFILE]", 13))
-		strcpy(icon, wm_icons[iPS3]);
+	if(default_icon == iPS3)
+	{
+		sprintf(icon, "%s/%s", param + 6, (ns == FROM_MOUNT) ? filename : file);
+
+			 if(strstr(icon, "PSX")) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
+			default_icon = iPSX;
+		else if(strstr(icon, "PS2")) //if(strstr(param, "/PS2ISO") || !extcmp(param, ".BIN.ENC", 8) || !extcmp(file, ".ntfs[PS2ISO]", 13))
+			default_icon = iPS2;
+		else if(strstr(icon, "PSP")) //if(strstr(param, "/PSPISO") || strstr(param, "/ISO/") || !extcmp(file, ".ntfs[PSPISO]", 13))
+			default_icon = iPSP;
+		else if(strstr(icon, "DVD")) //if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
+			default_icon = iDVD;
+	}
+
+	strcpy(icon, wm_icons[default_icon]);
+	return default_icon;
 }
 
 static int get_title_and_id_from_sfo(char *templn, char *tempID, const char *entry_name, char *icon, char *data, u8 f0)
 {
-	int fdw, ret;
-
-	ret = cellFsOpen(templn, CELL_FS_O_RDONLY, &fdw, NULL, 0); // get titleID & title from PARAM.SFO
+	int ret = FAILED;
 
 	// read param.sfo
-	if(ret == CELL_FS_SUCCEEDED)
+	unsigned char *mem = (u8*)data;
+	uint64_t sfo_size = read_file(templn, data, _4KB_, 0);
+
+	// get titleID & title from PARAM.SFO
+	if(is_sfo(mem))
 	{
-		uint64_t sfo_size = 0;
-		cellFsRead(fdw, (void *)data, _4KB_, &sfo_size);
-		cellFsClose(fdw);
+		parse_param_sfo(mem, tempID, templn, (u16)sfo_size);
 
-		if(sfo_size > 256)
-		{
-			unsigned char *mem = (u8*)data;
-			parse_param_sfo(mem, tempID, templn, (u16)sfo_size);
+		if(SHOW_COVERS) get_cover_by_titleid(icon, tempID);
 
-			if(SHOW_COVERS) get_cover_by_titleid(icon, tempID);
-		}
+		ret = CELL_FS_SUCCEEDED;
 	}
 
 	if(webman_config->use_filename)
 	{
 		if(NO_ICON && !HAS_TITLE_ID) get_cover_from_name(icon, entry_name, tempID); // get titleID from name
 
-		ret=~CELL_FS_SUCCEEDED;
+		ret = ~CELL_FS_SUCCEEDED;
 	}
 
 	if(ret != CELL_FS_SUCCEEDED)
@@ -737,6 +760,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	if(strstr(param, "/index.ps3?") || ((pTick.tick-pTick2.tick)/1000000)>43200) {DELETE_CACHED_GAMES}
 */
 
+	const u32 BUFFER_MAXSIZE = (BUFFER_SIZE_ALL - _12KB_);
+
 	// use cached page
 	loading_games = 1;
 	if(mobile_mode) {cellFsUnlink(GAMELIST_JS); buf_len = 0;}
@@ -744,14 +769,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	{
 		if(islike(param, "/index.ps3?")) cellFsUnlink(WMTMP "/games.html");
 
-		if(cellFsStat(WMTMP "/games.html", &buf) == CELL_FS_SUCCEEDED && buf.st_size > 10)
+		if(cellFsStat(WMTMP "/games.html", &buf) == CELL_FS_SUCCEEDED && (buf.st_size > 10 && buf.st_size < BUFFER_MAXSIZE))
 		{
-			int fdu;
-			if(cellFsOpen(WMTMP "/games.html", CELL_FS_O_RDONLY, &fdu, NULL, 0) == CELL_FS_SUCCEEDED)
+			if(read_file(WMTMP "/games.html", (char*)(buffer + buf_len), buf.st_size, 0))
 			{
-				cellFsRead(fdu, (char*)(buffer + buf_len), buf.st_size, NULL);
-				cellFsClose(fdu);
-
 				loading_games = 0; // return
 			}
 		}
@@ -765,8 +786,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		u16 idx = 0;
 		u32 tlen = buf_len; buffer[tlen] = NULL;
 		char *sysmem_html = buffer + _8KB_;
-
-		u32 BUFFER_MAXSIZE = (BUFFER_SIZE_ALL - _12KB_);
 
 		typedef struct
 		{
@@ -911,7 +930,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(!is_net && file_exists( param) == false) goto continue_reading_folder_html; //continue;
 				if(!is_net && cellFsOpendir( param, &fd) != CELL_FS_SUCCEEDED) goto continue_reading_folder_html; //continue;
 
-				default_icon = (f1 < 4) ? 5 : (f1 == 4) ? 9 : (f1 == 5) ? 7 : (f1 < 8 ) ? 6 : (f1 < 10 ) ? 8 : 5;
+				default_icon =  get_default_icon_by_type(f1);
 
 				while((!is_net && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #ifdef COBRA_ONLY
@@ -1019,18 +1038,9 @@ next_html_entry:
 								{
 									if(!IS_NTFS)
 									{
-										int fs;
-										if(cellFsOpen(templn, CELL_FS_O_RDONLY, &fs, NULL, 0) == CELL_FS_SUCCEEDED)
+										if(read_file(templn, tempID, 11, 0x810) == 11)
 										{
-											uint64_t msiz = 0;
-											if(cellFsLseek(fs, 0x810, CELL_FS_SEEK_SET, &msiz) == CELL_FS_SUCCEEDED)
-											{
-												if(cellFsRead(fs, (void *)&tempID, 11, &msiz) == CELL_FS_SUCCEEDED)
-												{
-													strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
-												}
-											}
-											cellFsClose(fs);
+											strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
 										}
 									}
 
@@ -1193,11 +1203,11 @@ next_html_entry:
 		else if(mobile_mode)
 		{
 			strcat(buffer + tlen, "];");
-			savefile(GAMELIST_JS, buffer, SAVE_ALL);
+			save_file(GAMELIST_JS, buffer, SAVE_ALL);
 		}
 		else
 		{
-			savefile(WMTMP "/games.html", (buffer + buf_len), strlen(buffer + buf_len));
+			save_file(WMTMP "/games.html", (buffer + buf_len), strlen(buffer + buf_len));
 		}
 	}
 	return true;
