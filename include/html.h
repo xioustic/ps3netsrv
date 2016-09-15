@@ -36,9 +36,9 @@
 
 #define HTML_HEADER_SIZE		264
 
-#define HTTP_RESPONSE_TITLE_LEN	94 /* strlen(HTML_RESPONSE_TITLE + HTML_BODY) = 30 + 64 */
+#define HTTP_RESPONSE_TITLE_LEN	90 /* strlen(HTML_RESPONSE_TITLE + HTML_BODY) = 26 + 64 */
 
-#define HTML_RESPONSE_TITLE		"webMAN MOD " WM_VERSION "<hr><h2>" /* size: 30 */
+#define HTML_RESPONSE_TITLE		"webMAN " WM_VERSION "<hr><h2>" /* size: 26 */
 
 #define HTML_BODY				"<body bgcolor=\"#101010\" text=\"#c0c0c0\">" \
 								"<font face=\"Courier New\">" /* size: 64 */
@@ -52,6 +52,7 @@
 
 #define SCRIPT_SRC_FMT			"<script src=\"%s\"></script>"
 #define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){self.location=\"%s\"},%i);</script>"
+#define HTML_REDIRECT_TO_BACK	"<script>self.location=window.history.back();</script>"
 #define HTML_REDIRECT_WAIT		3000
 
 #define HTML_SHOW_LAST_GAME		"<span style=\"position:absolute;right:8px\"><font size=2>"

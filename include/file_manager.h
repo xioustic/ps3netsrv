@@ -72,7 +72,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			sprintf(fsize, "%s", title);
 
 		// show title id & link to updates
-		if(*titleid)
+		if(*titleid && !islike(titleid, "NPWR"))
 			sprintf(tempstr, "<div class='sfo'>%s [<a href=\"%s/%s/%s-ver.xml\">%s</a>]</div>", fsize, "https://a0.ww.np.dl.playstation.net/tpl/np", titleid, titleid, titleid);
 		else
 			sprintf(tempstr, "<div class='sfo'>%s</div>", fsize);
@@ -128,8 +128,8 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			sprintf(fsize, HTML_URL2, "/fixgame.ps3", templn, HTML_DIR);
 #endif
 #ifdef COPY_PS3
-		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || IS(name, "savedata") || IS(name, "exdata") || IS(name, "home") ))
-			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", islike(templn, param) ? templn + plen : templn, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", HTML_DIR);
+		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") ))
+			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", templn, islike(templn, "/dev_hdd0") ? "/dev_usb000" : "/dev_hdd0", HTML_DIR);
 #endif
 #ifndef LITE_EDITION
 		else
@@ -350,6 +350,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 		sprintf(swap, HTML_URL2,
 						strstr(pbuffer, "To: ") ? "" :
 						islike(param + 23, "/trophy/NPWR") ? "/delete.ps3" :
+						islike(param, "/dev_hdd0/home") ? "/copy.ps3" :
 #ifdef FIX_GAME
 						islike(param, HDD0_GAME_DIR) ? "/fixgame.ps3" :
 #endif

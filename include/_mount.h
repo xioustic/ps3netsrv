@@ -652,7 +652,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			}
 
 			if(!copy_aborted && (cp_mode == 2) && file_exists(target)) del(source, true);
-			if(cp_mode) {cp_mode = 0; memset(cp_path, 0, MAX_PATH_LEN);}
+			if(cp_mode) {cp_mode = 0, *cp_path = NULL;}
 		}
 #endif //#ifdef COPY_PS3
 	}

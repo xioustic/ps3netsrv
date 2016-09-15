@@ -299,6 +299,7 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define CODE_INSTALL_PKG    1201
 #define CODE_DOWNLOAD_FILE  1202
 #define CODE_RETURN_TO_ROOT 1203
+#define CODE_GOBACK         1222
 
 #define IS_ON_XMB		(View_Find("game_plugin") == 0)
 #define IS_INGAME		(View_Find("game_plugin") != 0)
@@ -665,7 +666,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 {
 	u16 slen;
 
-	if(code == CODE_VIRTUALPAD)
+	if(code == CODE_VIRTUALPAD || code == CODE_GOBACK)
 	{
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
 								CODE_HTTP_OK, url, HTTP_RESPONSE_TITLE_LEN + strlen(msg), HTML_BODY, HTML_RESPONSE_TITLE, msg);
@@ -1723,12 +1724,16 @@ static void handleclient(u64 conn_s_p)
 				// /paste.ps3<path>  performs a copy or move of path stored in <cp_path clipboard> to <path> indicated in url
 
 				char *source = header, *target = cp_path;
-				sprintf(source, "/copy.ps3%s", cp_path);
-				sprintf(target, "%s", param + 10);
-				sprintf(param, "%s", source); strcat(target, strrchr(param, '/'));
-
-				is_binary = WEB_COMMAND, small_alloc = false;
-				goto html_response;
+				if(file_exists(cp_path))
+				{
+					sprintf(source, "/copy.ps3%s", cp_path);
+					sprintf(target, "%s", param + 10);
+					sprintf(param, "%s", source); strcat(target, strrchr(param, '/'));
+					is_binary = WEB_COMMAND, small_alloc = false;
+					goto html_response;
+				}
+				else
+					{http_response(conn_s, header, "/", CODE_GOBACK, HTML_REDIRECT_TO_BACK); goto exit_handleclient;}
 			}
    #endif // #ifdef COPY_PS3
 
