@@ -9,6 +9,7 @@
 int file_copy(const char *file1, char *file2, uint64_t maxbytes);
 
 static bool copy_in_progress = false;
+static bool dont_copy_same_size = true;
 
 static u32 copied_count = 0;
 
@@ -156,7 +157,7 @@ static int file_concat(char *file1, char *file2)
 */
 int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 {
-	struct CellFsStat buf;
+	struct CellFsStat buf, buf2;
 	int fd1, fd2;
 	int ret = FAILED;
 	copy_aborted = false;
@@ -190,10 +191,17 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 		return sysLv2FsLink(file1, file2);
 	}
 
-	if(buf.st_size > get_free_space("/dev_hdd0")) return FAILED;
-
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+
+	// skip if file already exists with same size
+	if(dont_copy_same_size && (cellFsStat(file2, &buf2) == CELL_FS_SUCCEEDED) && (buf2.st_size == buf.st_size))
+	{
+		copied_count++;
+		return buf.st_size;
+	}
+
+	if(buf.st_size > get_free_space("/dev_hdd0")) return FAILED;
 
 	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{

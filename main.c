@@ -1635,6 +1635,8 @@ static void handleclient(u64 conn_s_p)
 				goto html_response;
 			}
    #ifdef COPY_PS3
+			if(islike(param, "/copy")) {if(!copy_in_progress) dont_copy_same_size = (param[5] == '.'); param[5] = '.';}
+
 			if(islike(param, "/rmdir.ps3"))
 			{
 				// /rmdir.ps3        deletes history files & remove empty ISO folders

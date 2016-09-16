@@ -623,7 +623,6 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif // #ifdef PS2_DISC
 		}
 
-
 		// -------------
 		// perform copy
 		// -------------

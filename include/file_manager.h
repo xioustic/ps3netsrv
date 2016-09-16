@@ -22,9 +22,10 @@ u16 _MAX_LINE_LEN = MAX_LINE_LEN;
 
 static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, char *ename, char *templn, char *name, char *fsize, CellRtcDateTime rDate, unsigned long long sz, char *sf, u8 is_net, u8 show_icon0, u8 is_ps3_http, u8 skip_cmd, u8 sort_by)
 {
-	if(plen < 4) sz = 0, is_dir = true; // force folders in root -> fix: host_root, app_home
+	bool is_root = (plen < 4);
+	if(is_root) sz = 0, is_dir = true; // force folders in root -> fix: host_root, app_home
 
-	unsigned long long sbytes = sz; bool is_root = false; u16 flen, slen;
+	unsigned long long sbytes = sz; u16 flen, slen;
 
 	//////////////////
 	// build labels //
@@ -107,45 +108,70 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 		dclass = 'd'; // dir class
 		sbytes = 0;
 
-		bool show_play = ((flen == 8) && IS(templn, "/dev_bdvd") && IS_ON_XMB);
-
 		if(flen == 9 && IS(templn, "/host_root")) strcpy(templn, "/dev_hdd0/packages"); // replace host_root with a shortcut to /dev_hdd0/packages
 
 		if(*name == '.')
+		{
 			sprintf(fsize, HTML_URL, templn, HTML_DIR);
-		else if(flen == 9 && IS(templn, "/dev_blind"))
-			sprintf(fsize, HTML_URL2, templn, "?0", HTML_DIR);
-		else if(show_play && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")))
-			sprintf(fsize, HTML_URL, "/play.ps3", "&lt;Play>");
-		else if(show_play && isDir("/dev_bdvd/BDMV"))
-			sprintf(fsize, HTML_URL, "/play.ps3", "&lt;BDV>");
-		else if(show_play && isDir("/dev_bdvd/VIDEO_TS"))
-			sprintf(fsize, HTML_URL, "/play.ps3", "&lt;DVD>");
-		else if(show_play && isDir("/dev_bdvd/AVCHD"))
-			sprintf(fsize, HTML_URL, "/play.ps3", "&lt;AVCHD>");
+		}
+		else if(is_root)
+		{
+			bool show_play = ((flen == 8) && IS(templn, "/dev_bdvd") && IS_ON_XMB);
+
+			if(IS(templn, "/dev_blind"))
+			{
+				sprintf(fsize, HTML_URL2, templn, "?0", HTML_DIR);
+			}
+			else if(show_play && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")))
+			{
+				sprintf(fsize, HTML_URL, "/play.ps3", "&lt;Play>");
+			}
+			else if(show_play && isDir("/dev_bdvd/BDMV"))
+			{
+				sprintf(fsize, HTML_URL, "/play.ps3", "&lt;BDV>");
+			}
+			else if(show_play && isDir("/dev_bdvd/VIDEO_TS"))
+			{
+				sprintf(fsize, HTML_URL, "/play.ps3", "&lt;DVD>");
+			}
+			else if(show_play && isDir("/dev_bdvd/AVCHD"))
+			{
+				sprintf(fsize, HTML_URL, "/play.ps3", "&lt;AVCHD>");
+			}
+			else if(IS(templn, "/app_home"))
+			{
+				sprintf(tempstr, "%s/%08i", "/dev_hdd0/home", xsetting_CC56EB2D()->GetCurrentUserNumber()); sprintf(fsize, HTML_URL, tempstr, HTML_DIR);
+			}
+			else
+#ifndef LITE_EDITION
+			{
+				uint64_t freeSize = 0, devSize = 0;
+				system_call_3(SC_FS_DISK_FREE, (uint64_t)(uint32_t)templn, (uint64_t)(uint32_t)&devSize, (uint64_t)(uint32_t)&freeSize);
+
+				unsigned long long	free_mb    = (unsigned long long)(freeSize>>20),
+									free_kb    = (unsigned long long)(freeSize>>10),
+									devsize_mb = (unsigned long long)(devSize >>20);
+
+				// show graphic of device size & free space
+				sprintf(fsize,  "<div class='bf' style='height:18px;text-align:left;overflow:hidden;'><div class='bu' style='height:18px;width:%i%%'></div><div style='position:relative;top:-%ipx;text-align:right'>"
+								"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
+								"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), is_ps3_http ? 20 : 18, templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
+			}
+#else
+				sprintf(fsize, "<a href=\"/mount.ps3%s\">%s</a>", templn, HTML_DIR);
+#endif
+			if(strstr(fsize, "&lt;")) strcat(fsize, " &nbsp; ");
+		}
 #ifdef FIX_GAME
 		else if(islike(templn, HDD0_GAME_DIR) || (strstr(templn + 10, "/PS3_GAME" ) != NULL))
+		{
 			sprintf(fsize, HTML_URL2, "/fixgame.ps3", templn, HTML_DIR);
+		}
 #endif
 #ifdef COPY_PS3
 		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") ))
-			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", islike(templn, param) ? templn + plen : templn, islike(templn, "/dev_hdd0") ? drives[usb] : "/dev_hdd0", HTML_DIR);
-#endif
-#ifndef LITE_EDITION
-		else
-		if(plen < 4 && islike(templn, "/dev_"))
 		{
-			uint64_t freeSize = 0, devSize = 0; is_root = true;
-			system_call_3(SC_FS_DISK_FREE, (uint64_t)(uint32_t)templn, (uint64_t)(uint32_t)&devSize, (uint64_t)(uint32_t)&freeSize);
-
-			unsigned long long	free_mb    = (unsigned long long)(freeSize>>20),
-								free_kb    = (unsigned long long)(freeSize>>10),
-								devsize_mb = (unsigned long long)(devSize>>20);
-
-			// show graphic of device size & free space
-			sprintf(fsize,  "<div class='bf' style='height:18px;text-align:left;overflow:hidden;'><div class='bu' style='height:18px;width:%i%%'></div><div style='position:relative;top:-%ipx;text-align:right'>"
-							"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
-							"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), is_ps3_http ? 20 : 18, templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
+			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", islike(templn, param) ? templn + plen : templn, islike(templn, "/dev_hdd0") ? drives[usb] : "/dev_hdd0", HTML_DIR);
 		}
 #endif
 		else
@@ -400,7 +426,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 	if(is_net || cellFsOpendir(param, &fd) == CELL_FS_SUCCEEDED)
 	{
-		int plen = strlen(param);
+		int plen = strlen(param); bool is_root = (plen < 4);
 
 		if(!extcmp(param + MAX(plen - 7, 0), "/exdata", 7)) {_LINELEN = _MAX_LINE_LEN = _MAX_PATH_LEN = 200; skip_cmd = 1;}
 
@@ -574,7 +600,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				if(*file_query && (strcasestr(entry.d_name, file_query) == NULL)) continue;
 
-				if(plen < 4)
+				if(is_root)
 					flen = sprintf(templn, "/%s", entry.d_name);
 				else
 				{
@@ -606,7 +632,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-		if(plen < 4)
+		if(is_root)
 		{
 			for(u8 n = 0; n < 5; n++)
 			{
@@ -676,7 +702,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		// build footer //
 		//////////////////
 
-		if(plen > 4)
+		if(!is_root)
 		{
 			///////////
 			unsigned int effective_disctype = 1;

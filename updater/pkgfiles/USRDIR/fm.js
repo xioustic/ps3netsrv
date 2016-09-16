@@ -45,7 +45,8 @@ document.write( "<div id='mnu' style='position:fixed;width:180px;background:#333
 				"<a id='sd'>Dir by Date<br></a>" +
 				"<hr>" +
 				"<a id='m7'>Rename<br></a>" +
-				"<a id='m8'>Copy To<br></a></div>");
+				"<a id='m8'>Copy To</a><br>" +
+				"<a id='m9'>Copy & overwrite<br></a></div>");
 
 var s,m;
 
@@ -69,6 +70,7 @@ window.addEventListener('contextmenu',function(e){
 		m6.href='/paste.ps3'+self.location.pathname;m6.style.display=mf.style.display=(c=='w'||c=='d')?b:n;
 		m7.href='javascript:rn(\"'+p+'\")';m7.style.display=(p.substring(0,5)=='/dev_')?b:n;
 		m8.href='/copy.ps3'+p; m8.text = 'Copy to ' + ((p.indexOf('/dev_hdd')==0) ? "usb" : "hdd0");
+		m9.href='/copy_ps3'+p;
 		ms.href='http://google.com/search?q='+t.text;ms.style.display=(t.parentNode.className=='gn')?b:n;
 		y=p.indexOf('.ps3');if(y>0)p=p.substring(y+4);url=window.location.href;
 		ml.href=p.substring(0,p.lastIndexOf("/"));if(url.indexOf('?sort=')<0)ml.href+='?sort=name&desc';
