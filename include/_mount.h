@@ -1348,40 +1348,41 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				sys_addr_t sysmem = 0; netiso_svrid = -1;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 				{
+					netiso_svrid = netid - '0';
 					netiso_args *_netiso_args = (netiso_args*)sysmem;
 					memset(_netiso_args, 0, _64KB_);
 
-					if( is_netsrv_enabled(netid) )
+					if( is_netsrv_enabled(netiso_svrid) )
 					{
 						if(netid == '1')
 						{
 							sprintf(_netiso_args->server, "%s", webman_config->neth1);
-							_netiso_args->port = webman_config->netp1; netiso_svrid = 1;
+							_netiso_args->port = webman_config->netp1;
 						}
 						else
 						if(netid == '2')
 						{
 							sprintf(_netiso_args->server, "%s", webman_config->neth2);
-							_netiso_args->port = webman_config->netp2; netiso_svrid = 2;
+							_netiso_args->port = webman_config->netp2;
 						}
 				#ifdef NET3NET4
 						else
 						if(netid == '3')
 						{
 							sprintf(_netiso_args->server, "%s", webman_config->neth3);
-							_netiso_args->port = webman_config->netp3; netiso_svrid = 3;
+							_netiso_args->port = webman_config->netp3;
 						}
 						else
 						if(netid == '4')
 						{
 							sprintf(_netiso_args->server, "%s", webman_config->neth4);
-							_netiso_args->port = webman_config->netp4; netiso_svrid = 4;
+							_netiso_args->port = webman_config->netp4;
 						}
 				#endif
 						else
 						{
 							sprintf(_netiso_args->server, "%s", webman_config->neth0);
-							_netiso_args->port = webman_config->netp0; netiso_svrid = 0;
+							_netiso_args->port = webman_config->netp0;
 						}
 					}
 					else

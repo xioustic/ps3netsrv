@@ -9,7 +9,7 @@
 int file_copy(const char *file1, char *file2, uint64_t maxbytes);
 
 static bool copy_in_progress = false;
-static bool dont_copy_same_size = true;
+static bool dont_copy_same_size = true; // skip copy the file if it already exists in the destination folder with the same file size
 
 static u32 copied_count = 0;
 
@@ -454,7 +454,7 @@ static void delete_history(bool delete_folders)
 	for(u8 p = 0; p < 10; p++)
 	{
 		sprintf(path, "%s/%s", drives[0], paths[p]); cellFsRmdir(path);
-		strcat(path, AUTOPLAY_TAG); cellFsRmdir(path);
+		strcat(path, AUTOPLAY_TAG); 				 cellFsRmdir(path);
 	}
 	cellFsRmdir("/dev_hdd0/PKG");
 }

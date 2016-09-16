@@ -64,7 +64,7 @@ enum icon_type
 
 static bool HAS(char *icon)
 {
-	return ((*icon == 'h') || ((*icon == '/') && file_exists(icon) && (icon[strlen(icon) - 1] & 0x20) == 'g' ));
+	return ((*icon == 'h') || ((*icon == '/') && file_exists(icon) && (icon[strlen(icon) - 1] | 0x20) == 'g' ));
 }
 
 static size_t get_name(char *name, const char *filename, u8 cache)

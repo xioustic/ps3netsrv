@@ -217,7 +217,7 @@ static void make_fb_xml(char *myxml, char *templn)
 
 static u32 get_buffer_size(int footprint)
 {
-	if(footprint==1) //MIN
+	if(footprint == 1) //MIN
 	{
 #ifndef LITE_EDITION
 		return ( 320*KB);
@@ -231,7 +231,7 @@ static u32 get_buffer_size(int footprint)
 		return ( 1280*KB);
 	}
 	else
-	if(footprint==3) //MIN+
+	if(footprint == 3) //MIN+
 	{
 		return ( 512*KB);
 	}
@@ -460,10 +460,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	if(!(webman_config->nogrp))
 	{
-		if(!(webman_config->cmask & PS3)) {strcpy(myxml_ps3, "<View id=\"seg_wm_ps3_items\"><Attributes>"); xml_len[gPS3] = 40;}
+		if(!(webman_config->cmask & PS3)) {xml_len[gPS3] = sprintf(myxml_ps3, "<View id=\"seg_wm_ps3_items\"><Attributes>");}
 		if(!(webman_config->cmask & PS2))
 		{
-			strcpy(myxml_ps2, "<View id=\"seg_wm_ps2_items\"><Attributes>"); xml_len[gPS2] = 40;
+			xml_len[gPS2] =  sprintf(myxml_ps2, "<View id=\"seg_wm_ps2_items\"><Attributes>");
 			if(webman_config->ps2l && file_exists("/dev_hdd0/game/PS2U10000"))
 			{
 				sprintf(templn, "<Table key=\"ps2_classic_launcher\">"
@@ -474,10 +474,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 			}
 		}
 #ifdef COBRA_ONLY
-		if(!(webman_config->cmask & PS1)) {strcpy(myxml_psx, "<View id=\"seg_wm_psx_items\"><Attributes>"); xml_len[gPSX] = 40;}
+		if(!(webman_config->cmask & PS1)) {xml_len[gPSX] = sprintf(myxml_psx, "<View id=\"seg_wm_psx_items\"><Attributes>");}
 		if(!(webman_config->cmask & PSP))
 		{
-			strcpy(myxml_psp, "<View id=\"seg_wm_psp_items\"><Attributes>"); xml_len[gPSP] =  40;
+			xml_len[gPSP] =  sprintf(myxml_psp, "<View id=\"seg_wm_psp_items\"><Attributes>");
 			if(webman_config->pspl && file_exists("/dev_hdd0/game/PSPC66820"))
 			{
 				sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
@@ -489,7 +489,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 		}
 		if(!(webman_config->cmask & DVD) || !(webman_config->cmask & BLU))
 		{
-			strcpy(myxml_dvd, "<View id=\"seg_wm_dvd_items\"><Attributes>"); xml_len[gDVD] = 40;
+			xml_len[gDVD] = sprintf(myxml_dvd, "<View id=\"seg_wm_dvd_items\"><Attributes>");
 			if(webman_config->rxvid)
 			{
 				sprintf(templn, "<Table key=\"rx_video\">"
@@ -837,26 +837,14 @@ continue_reading_folder_xml:
 	{   // sort xmb items
 		char swap[16]; u16 m, n;
 
-		if((webman_config->nogrp))
-		{
-			for(n = 0; n < (key - 1); n++)
-				for(m = (n + 1); m < key; m++)
-					if(strncmp(skey[n]+1, skey[m]+1, XML_KEY_LEN) > 0)
-					{
-						strcpy(swap, skey[n]);
-						strcpy(skey[n], skey[m]);
-						strcpy(skey[m], swap);
-					}
-		}
-		else
-			for(n = 0; n < (key - 1); n++)
-				for(m = (n + 1); m < key; m++)
-					if(strncmp(skey[n], skey[m], XML_KEY_LEN) > 0)
-					{
-						strcpy(swap, skey[n]);
-						strcpy(skey[n], skey[m]);
-						strcpy(skey[m], swap);
-					}
+		for(n = 0; n < (key - 1); n++)
+			for(m = (n + 1); m < key; m++)
+				if(strncmp(skey[n], skey[m], XML_KEY_LEN) > 0)
+				{
+					strcpy(swap, skey[n]);
+					strcpy(skey[n], skey[m]);
+					strcpy(skey[m], swap);
+				}
 	}
 
 	// --- add eject & setup/xmbm+ menu
