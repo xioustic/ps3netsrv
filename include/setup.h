@@ -202,8 +202,8 @@ static void setup_parse_settings(char *param)
 	else
 		restore_fan(0); //restore syscon fan control mode
 
-	webman_config->warn = 0;
-	if(strstr(param, "warn=1")) webman_config->warn = 1;
+	webman_config->nowarn = 0;
+	if(strstr(param, "warn=1")) webman_config->nowarn = 1;
 
 	webman_config->foot=get_valuen(param, "fp=", 0, 6);
 
@@ -670,7 +670,7 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, HTML_BLU_SEPARATOR "<table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td>");
 
 	add_check_box("fc"  , "1", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
-	add_check_box("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->warn), buffer);
+	add_check_box("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->nowarn), buffer);
 
 	strcat(buffer, "<tr class=\"propfont\"><td>");
 	add_radio_button("temp", "0", "t_0", STR_AUTOAT , " : ", (webman_config->temp0 == 0), buffer);
@@ -1144,7 +1144,7 @@ static void reset_settings(void)
 	// set default autoboot path
 	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
-	if(webman_config->warn > 1) webman_config->warn = 0;
+	if(webman_config->nowarn > 1) webman_config->nowarn = 0;
 	webman_config->minfan = RANGE(webman_config->minfan, MIN_FANSPEED, 99);
 
 	// settings

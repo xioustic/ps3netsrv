@@ -2,7 +2,7 @@
 
 static void absPath(char* absPath_s, const char* path, const char* cwd)
 {
-	if(path[0] == '/') strcpy(absPath_s, path);
+	if(*path == '/') strcpy(absPath_s, path);
 	else
 	{
 		strcpy(absPath_s, cwd);
@@ -122,7 +122,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 			if(working && loggedin == 1)
 			{
-				if(_IS(cmd, "CWD"))
+				if(_IS(cmd, "CWD") || _IS(cmd, "XCWD"))
 				{
 					if(split == 1)
 					{
@@ -142,7 +142,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(_IS(cmd, "CDUP"))
+				if(_IS(cmd, "CDUP") || _IS(cmd, "XCUP"))
 				{
 					int pos = strlen(cwd) - 2;
 
@@ -160,7 +160,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 				}
 				else
-				if(_IS(cmd, "PWD"))
+				if(_IS(cmd, "PWD") || _IS(cmd, "XPWD"))
 				{
 					sprintf(buffer, "257 \"%s\"\r\n", cwd);
 					ssend(conn_s_ftp, buffer);
@@ -310,7 +310,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							bool rw_flash = isDir("/dev_blind"); char *status = to_upper(filename);
 
-							if(status[0] == 0) ; else
+							if(*status == NULL) ; else
 							if(IS(status, "ON" )) {if( rw_flash) continue;} else
 							if(IS(status, "OFF")) {if(!rw_flash) continue;}
 
@@ -342,7 +342,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							char *status = to_upper(filename);
 
-							if(status[0] == 0)		set_gamedata_status(extgd^1, true); else
+							if(*status == NULL)		set_gamedata_status(extgd^1, true); else
 							if(IS(status, "ON" ))	set_gamedata_status(0, true);		else
 							if(IS(status, "OFF"))	set_gamedata_status(1, true);
 
@@ -452,7 +452,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
  #endif
  #ifdef WM_REQUEST
 						else
-						if(param[0] == '/')
+						if(*param == '/')
 						{
 							u16 size = sprintf(buffer, "GET %s", param);
 							save_file(WMREQUEST_FILE, buffer, size);
@@ -476,13 +476,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					ssend(conn_s_ftp, "200 NOOP\r\n");
 				}
 				else
-				if(_IS(cmd, "MLSD") || _IS(cmd, "LIST") || _IS(cmd, "MLST"))
+				if(_IS(cmd, "MLSD") || _IS(cmd, "LIST") || _IS(cmd, "MLST") || _IS(cmd, "NLST"))
 				{
 					if(data_s >= 0)
 					{
+						bool nolist  = _IS(cmd, "NLST");
 						bool is_MLSD = _IS(cmd, "MLSD");
-
-						int nolist = (is_MLSD || _IS(cmd, "MLST"));
+						bool is_MLST = (*cmd | 0x20) == 'm'; // MLSD || MLST
 
 						if(split == 1)
 						{
@@ -512,60 +512,64 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							bool is_root = (strlen(d_path) < 6);
 
 							CellFsDirent entry; u64 read_e;
-							u16 slen; mode_t mode; char dirtype[2]; dirtype[1] = '\0';
+							u16 slen; mode_t mode; char dirtype;
 
 							while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #endif
 							{
-								if(IS(entry.d_name, "app_home") || IS(entry.d_name, "host_root")) continue;
-
-								absPath(filename, entry.d_name, d_path);
-
-								cellFsStat(filename, &buf); mode = buf.st_mode;
-								cellRtcSetTime_t(&rDate, buf.st_mtime);
-
 								if(nolist)
-								{
-
-									if(entry.d_name[0] == '.' && entry.d_name[1] == '\0')
-									{
-										dirtype[0] = 'c';
-									}
-									else
-									if(entry.d_name[0] == '.' && entry.d_name[1] == '.' && entry.d_name[2] == '\0')
-									{
-										dirtype[0] = 'p';
-									}
-									else
-									{
-										dirtype[0] = '\0';
-									}
-
-									slen = sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
-											is_MLSD ? "" : " ",
-											dirtype,
-											((mode & S_IFDIR) != 0) ? "dir" : "file",
-											((mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
-											(((mode & S_IRUSR) != 0) * 4 + ((mode & S_IWUSR) != 0) * 2 + ((mode & S_IXUSR) != 0) * 1),
-											(((mode & S_IRGRP) != 0) * 4 + ((mode & S_IWGRP) != 0) * 2 + ((mode & S_IXGRP) != 0) * 1),
-											(((mode & S_IROTH) != 0) * 4 + ((mode & S_IWOTH) != 0) * 2 + ((mode & S_IXOTH) != 0) * 1),
-											entry.d_name);
-								}
+									slen = sprintf(buffer, "%s\015\012", entry.d_name);
 								else
-									slen = sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s   1 root  root        %llu %s %02i %02i:%02i %s\r\n",
-											(mode & S_IFDIR) ? "d" : "-",
-											(mode & S_IRUSR) ? "r" : "-",
-											(mode & S_IWUSR) ? "w" : "-",
-											(mode & S_IXUSR) ? "x" : "-",
-											(mode & S_IRGRP) ? "r" : "-",
-											(mode & S_IWGRP) ? "w" : "-",
-											(mode & S_IXGRP) ? "x" : "-",
-											(mode & S_IROTH) ? "r" : "-",
-											(mode & S_IWOTH) ? "w" : "-",
-											(mode & S_IXOTH) ? "x" : "-",
-											(unsigned long long)buf.st_size, smonth[rDate.month-1], rDate.day,
-											rDate.hour, rDate.minute, entry.d_name);
+								{
+									if(IS(entry.d_name, "app_home") || IS(entry.d_name, "host_root")) continue;
 
+									absPath(filename, entry.d_name, d_path);
+
+									cellFsStat(filename, &buf); mode = buf.st_mode;
+									cellRtcSetTime_t(&rDate, buf.st_mtime);
+
+									if(is_MLST)
+									{
+
+										if(entry.d_name[0] == '.' && entry.d_name[1] == '\0')
+										{
+											dirtype = 'c';
+										}
+										else
+										if(entry.d_name[0] == '.' && entry.d_name[1] == '.' && entry.d_name[2] == '\0')
+										{
+											dirtype = 'p';
+										}
+										else
+										{
+											dirtype = '\0';
+										}
+
+										slen = sprintf(buffer, "%stype=%c%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
+												is_MLSD ? "" : " ",
+												dirtype,
+												((mode & S_IFDIR) != 0) ? "dir" : "file",
+												((mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
+												(((mode & S_IRUSR) != 0) * 4 + ((mode & S_IWUSR) != 0) * 2 + ((mode & S_IXUSR) != 0) * 1),
+												(((mode & S_IRGRP) != 0) * 4 + ((mode & S_IWGRP) != 0) * 2 + ((mode & S_IXGRP) != 0) * 1),
+												(((mode & S_IROTH) != 0) * 4 + ((mode & S_IWOTH) != 0) * 2 + ((mode & S_IXOTH) != 0) * 1),
+												entry.d_name);
+									}
+									else
+										slen = sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s   1 root  root        %llu %s %02i %02i:%02i %s\r\n",
+												(mode & S_IFDIR) ? "d" : "-",
+												(mode & S_IRUSR) ? "r" : "-",
+												(mode & S_IWUSR) ? "w" : "-",
+												(mode & S_IXUSR) ? "x" : "-",
+												(mode & S_IRGRP) ? "r" : "-",
+												(mode & S_IWGRP) ? "w" : "-",
+												(mode & S_IXGRP) ? "x" : "-",
+												(mode & S_IROTH) ? "r" : "-",
+												(mode & S_IWOTH) ? "w" : "-",
+												(mode & S_IXOTH) ? "x" : "-",
+												(unsigned long long)buf.st_size, smonth[rDate.month-1], rDate.day,
+												rDate.hour, rDate.minute, entry.d_name);
+								}
 								if(send(data_s, buffer, slen, 0) < 0) break;
 								sys_timer_usleep(1000);
 							}
@@ -581,7 +585,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							else
 							{
 								char *slash = strchr(d_path + 1, '/');
-								if(slash) slash[0] = '\0';
+								if(slash) *slash = '\0';
 
 								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
 								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", d_path, (int)(get_free_space(d_path)>>20), STR_MBFREE, cpursx);
@@ -647,62 +651,58 @@ pasv_again:
 						{
 							absPath(filename, param, cwd);
 
-							//if(file_exists(filename))
+
+							int rr=-4;
+
+							if(islike(filename, "/dvd_bdvd"))
+								{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+
+							if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 							{
-								int rr=-4;
+								sys_addr_t sysmem = 0; size_t buffer_size = BUFFER_SIZE_FTP;
 
-								if(islike(filename, "/dvd_bdvd"))
-									{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
-
-								if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+								if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 								{
-									sys_addr_t sysmem = 0; size_t buffer_size = BUFFER_SIZE_FTP;
+									char *buffer2 = (char*)sysmem;
 
-									if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+									u64 read_e = 0, pos; //, write_e
+
+									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
+									rest = 0;
+
+									//int optval = buffer_size;
+									//setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
+
+									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
+									rr=0;
+
+									while(working)
 									{
-										char *buffer2 = (char*)sysmem;
-
-										u64 read_e = 0, pos; //, write_e
-
-										cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
-										rest = 0;
-
-										//int optval = buffer_size;
-										//setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
-
-										ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
-										rr=0;
-
-										while(working)
+										//sys_timer_usleep(1668);
+										if(cellFsRead(fd, (void *)buffer2, buffer_size, &read_e) == CELL_FS_SUCCEEDED)
 										{
-											//sys_timer_usleep(1668);
-											if(cellFsRead(fd, (void *)buffer2, buffer_size, &read_e) == CELL_FS_SUCCEEDED)
+											if(read_e > 0)
 											{
-												if(read_e > 0)
-												{
-													if(send(data_s, buffer2, (size_t)read_e, 0) < 0) {rr=-3; break;}
-												}
-												else
-													break;
+												if(send(data_s, buffer2, (size_t)read_e, 0) < 0) {rr=-3; break;}
 											}
 											else
-												{rr=-2; break;}
+												break;
 										}
-										sys_memory_free(sysmem);
+										else
+											{rr=-2; break;}
 									}
-									cellFsClose(fd);
+									sys_memory_free(sysmem);
 								}
-
-								if( rr == 0)
-									ssend(conn_s_ftp, FTP_OK_226);		// Closing data connection. Requested file action successful (for example, file transfer or file abort).
-
-								else if( rr == -4)
-									ssend(conn_s_ftp, FTP_ERROR_550);	// Requested action not taken. File unavailable (e.g., file not found, no access).
-								else
-									ssend(conn_s_ftp, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
-
+								cellFsClose(fd);
 							}
-							//else ssend(conn_s_ftp, FTP_ERROR_550);	// Requested action not taken. File unavailable (e.g., file not found, no access).
+
+							if( rr == 0)
+								ssend(conn_s_ftp, FTP_OK_226);		// Closing data connection. Requested file action successful (for example, file transfer or file abort).
+
+							else if( rr == -4)
+								ssend(conn_s_ftp, FTP_ERROR_550);	// Requested action not taken. File unavailable (e.g., file not found, no access).
+							else
+								ssend(conn_s_ftp, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
 						}
 						else
 						{
@@ -925,13 +925,13 @@ pasv_again:
 						}
 						else
 						{
-							source[0] = NULL;
+							*source = NULL;
 							ssend(conn_s_ftp, FTP_ERROR_RNFR_550);	// Requested action not taken. File unavailable
 						}
 					}
 					else
 					{
-						source[0] = NULL;
+						*source = NULL;
 						ssend(conn_s_ftp, FTP_ERROR_501);			// Syntax error in parameters or arguments.
 					}
 				}
@@ -939,7 +939,7 @@ pasv_again:
 				else
 				if(_IS(cmd, "RNTO"))
 				{
-					if(split == 1 && source[0]=='/')
+					if(split == 1 && *source=='/')
 					{
 						absPath(filename, param, cwd);
 
@@ -956,7 +956,7 @@ pasv_again:
 					{
 						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
 					}
-					source[0]=0;
+					*source = NULL;
 				}
 
 				else
@@ -965,7 +965,7 @@ pasv_again:
 					ssend(conn_s_ftp, FTP_OK_USER_230); // User logged in, proceed.
 				}
 				else
-				/*if(  _IS(cmd, "OPTS") == 0
+				/*if(  _IS(cmd, "OPTS")
 					|| _IS(cmd, "REIN") || _IS(cmd, "ADAT")
 					|| _IS(cmd, "AUTH") || _IS(cmd, "CCC" )
 					|| _IS(cmd, "CONF") || _IS(cmd, "ENC" )

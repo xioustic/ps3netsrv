@@ -408,7 +408,7 @@ typedef struct
 	char neth0[16];
 	uint8_t poll;
 	uint8_t ftpd;
-	uint8_t warn;
+	uint8_t nowarn;
 	uint8_t fanc;
 	uint8_t temp1;
 	uint8_t rxvid;

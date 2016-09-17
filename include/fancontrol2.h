@@ -157,7 +157,7 @@ static void poll_thread(uint64_t poll)
 				char STR_OVERHEAT[80];//		= "System overheat warning!";
 				char STR_OVERHEAT2[120];//	= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
  #endif
-				if(!webman_config->warn)
+				if(!webman_config->nowarn)
 				{
  #ifndef ENGLISH_ONLY
 					sprintf(STR_OVERHEAT,     "System overheat warning!");
@@ -183,7 +183,7 @@ static void poll_thread(uint64_t poll)
 					old_fan = fan_speed;
 					fan_control(fan_speed, 0);
 
-					if(!webman_config->warn) show_msg((char*)STR_OVERHEAT2);
+					if(!webman_config->nowarn) show_msg((char*)STR_OVERHEAT2);
 				}
 			}
 		}
