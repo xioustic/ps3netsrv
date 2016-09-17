@@ -112,8 +112,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	while((connactive == 1) && working)
 	{
-
-		if(working && (recv(conn_s_ftp, buffer, FTP_RECV_SIZE, 0) > 0))
+		if(working && ((recv(conn_s_ftp, buffer, FTP_RECV_SIZE, 0)) > 0))
 		{
 			buffer[strcspn(buffer, "\n")] = '\0';
 			buffer[strcspn(buffer, "\r")] = '\0';
@@ -201,6 +200,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										" CDUP\r\n"
 										" ABOR\r\n"
 										" REST STREAM\r\n"
+										" PWD\r\n"
+										" TYPE\r\n"
 										" PASV\r\n"
 										" LIST\r\n"
 										" MLSD\r\n"
@@ -489,8 +490,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							strcpy(tempcwd, param);
 							absPath(d_path, tempcwd, cwd);
 						}
-						else
-							strcpy(d_path, cwd);
+
+						if(split != 1 || !isDir(d_path)) strcpy(d_path, cwd);
 
 #if NTFS_EXT
 						ntfs_md *mounts;
@@ -505,14 +506,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							struct stat st; CellFsDirent entry;
 							while(ps3ntfs_dirnext(pdir, entry.d_name, &st) == 0)
 #else
-						if(cellFsOpendir( (isDir(d_path) ? d_path : cwd), &fd) == CELL_FS_SUCCEEDED)
+						if(cellFsOpendir(d_path, &fd) == CELL_FS_SUCCEEDED)
 						{
 							ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
 							bool is_root = (strlen(d_path) < 6);
 
 							CellFsDirent entry; u64 read_e;
-							u16 slen; mode_t mode; char dirtype;
+							u16 slen; mode_t mode; char dirtype[2]; dirtype[1] = NULL;
 
 							while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #endif
@@ -523,7 +524,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								{
 									if(IS(entry.d_name, "app_home") || IS(entry.d_name, "host_root")) continue;
 
-									absPath(filename, entry.d_name, d_path);
+									sprintf(filename, "%s/%s", d_path, entry.d_name);
 
 									cellFsStat(filename, &buf); mode = buf.st_mode;
 									cellRtcSetTime_t(&rDate, buf.st_mtime);
@@ -533,19 +534,19 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 										if(entry.d_name[0] == '.' && entry.d_name[1] == '\0')
 										{
-											dirtype = 'c';
+											*dirtype = 'c';
 										}
 										else
 										if(entry.d_name[0] == '.' && entry.d_name[1] == '.' && entry.d_name[2] == '\0')
 										{
-											dirtype = 'p';
+											*dirtype = 'p';
 										}
 										else
 										{
-											dirtype = '\0';
+											*dirtype = '\0';
 										}
 
-										slen = sprintf(buffer, "%stype=%c%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
+										slen = sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
 												is_MLSD ? "" : " ",
 												dirtype,
 												((mode & S_IFDIR) != 0) ? "dir" : "file",
@@ -556,7 +557,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 												entry.d_name);
 									}
 									else
-										slen = sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s   1 root  root        %llu %s %02i %02i:%02i %s\r\n",
+										slen = sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s 1 root  root  %13llu %s %02i %02i:%02i %s\r\n",
 												(mode & S_IFDIR) ? "d" : "-",
 												(mode & S_IRUSR) ? "r" : "-",
 												(mode & S_IWUSR) ? "w" : "-",
@@ -650,7 +651,6 @@ pasv_again:
 						if(split == 1)
 						{
 							absPath(filename, param, cwd);
-
 
 							int rr=-4;
 
@@ -939,7 +939,7 @@ pasv_again:
 				else
 				if(_IS(cmd, "RNTO"))
 				{
-					if(split == 1 && *source=='/')
+					if(split == 1 && *source == '/')
 					{
 						absPath(filename, param, cwd);
 

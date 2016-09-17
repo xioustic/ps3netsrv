@@ -148,18 +148,17 @@ static void poll_thread(uint64_t poll)
 		to++;
 		if(to == 20)
 		{
-			get_temperature(0, &t1); // CPU
-			get_temperature(1, &t2); // RSX
-
-			if(t1 > (MAX_TEMPERATURE-2) || t2 > (MAX_TEMPERATURE-2))
+			if(!webman_config->nowarn)
 			{
- #ifndef ENGLISH_ONLY
-				char STR_OVERHEAT[80];//		= "System overheat warning!";
-				char STR_OVERHEAT2[120];//	= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
- #endif
-				if(!webman_config->nowarn)
+				get_temperature(0, &t1); // CPU
+				get_temperature(1, &t2); // RSX
+
+				if(t1 > (MAX_TEMPERATURE-2) || t2 > (MAX_TEMPERATURE-2))
 				{
  #ifndef ENGLISH_ONLY
+					char STR_OVERHEAT[80];//		= "System overheat warning!";
+					char STR_OVERHEAT2[120];//	= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
+
 					sprintf(STR_OVERHEAT,     "System overheat warning!");
 					sprintf(STR_OVERHEAT2,    "  OVERHEAT DANGER!\nFAN SPEED INCREASED!");
 
@@ -171,19 +170,19 @@ static void poll_thread(uint64_t poll)
 					sprintf(msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
 					show_msg(msg);
 					sys_timer_sleep(2);
-				}
 
-				if((t1 > MAX_TEMPERATURE) || (t2 > MAX_TEMPERATURE))
-				{
-					if(!max_temp) max_temp = (MAX_TEMPERATURE - 3);
-					if(fan_speed < 0xB0) fan_speed = 0xB0; // 69%
-					else
-						if(fan_speed < MAX_FANSPEED) fan_speed += 8;
+					if((t1 > MAX_TEMPERATURE) || (t2 > MAX_TEMPERATURE))
+					{
+						if(!max_temp) max_temp = (MAX_TEMPERATURE - 3);
+						if(fan_speed < 0xB0) fan_speed = 0xB0; // 69%
+						else
+							if(fan_speed < MAX_FANSPEED) fan_speed += 8;
 
-					old_fan = fan_speed;
-					fan_control(fan_speed, 0);
+						old_fan = fan_speed;
+						fan_control(fan_speed, 0);
 
-					if(!webman_config->nowarn) show_msg((char*)STR_OVERHEAT2);
+						if(!webman_config->nowarn) show_msg((char*)STR_OVERHEAT2);
+					}
 				}
 			}
 		}
