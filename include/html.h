@@ -75,7 +75,9 @@ char *strcasestr(const char *s1, const char *s2);
 
 static bool IS(const char *a, const char *b)
 {
-	return (strcmp(a, b) == 0);		// compare two strings. returns true if they are identical
+	while(*a && (*a == *b)) a++,b++;
+	return !(*a-*b); // compare two strings. returns true if they are identical
+	//return (strcmp(a, b) == 0);	// compare two strings. returns true if they are identical
 }
 
 static bool _IS(const char *a, const char *b)
@@ -96,13 +98,15 @@ static size_t concat(char *dest, const char *src)
 
 static char *to_upper(char *text)
 {
-	for(size_t i = 0; text[i]; i++) if(text[i] >= 'a' && text[i] <= 'z') text[i] -= 0x20;
-	return text;
+	char *upper = text;
+	for( ; *text; text++) if(*text >= 'a' && *text <= 'z') *text ^= 0x20;
+	return upper;
 }
 
 static bool islike(const char *param, const char *text)
 {
-	return (memcmp(param, text, strlen(text)) == 0);
+	while(*text && (*text == *param)) text++, param++;
+	return !*text;
 }
 
 static char h2a(const char hex)
@@ -145,11 +149,11 @@ static inline void urldec(char *url, char *original)
 
 static bool urlenc(char *dst, const char *src)
 {
-	size_t i, j = 0, n = strlen(src), pos = 0;
+	size_t i, j = 0, pos = 0;
 
-	if(islike(src, "http") && (src[4] == ':' || src[5] == ':') && (n > 8)) { for(i = 8; i < n; i++) if(src[i] == '/') {pos = i; break;} }
+	if(islike(src, "http") && (src[4] == ':' || src[5] == ':') && (src[6] == '/') && src[7]) { for(i = 8; src[i]; i++) if(src[i] == '/') {pos = i; break;} }
 
-	for(i = 0; i < n; i++, j++)
+	for(i = 0; src[i]; i++, j++)
 	{
 		if(src[i] & 0x80)
 		{
@@ -173,7 +177,7 @@ static bool urlenc(char *dst, const char *src)
 	}
 	dst[j] = '\0';
 
-	return (j > n); // true if dst != src
+	return (j > i); // true if dst != src
 }
 
 static size_t htmlenc(char *dst, char *src, u8 cpy2src)
@@ -263,13 +267,11 @@ static size_t add_check_box(const char *name, const char *value, const char *lab
 	char templn[MAX_LINE_LEN], clabel[MAX_LINE_LEN];
 	strcpy(clabel, label);
 	char *p = strstr(clabel, AUTOBOOT_PATH);
-	if(p != NULL)
+	if(p)
 	{
-		*p = NULL;
-		sprintf(templn, HTML_INPUT("autop", "%s", "255", "40"), webman_config->autoboot_path);
-		strcat(clabel, templn);
-		p = strstr(label, AUTOBOOT_PATH) + strlen(AUTOBOOT_PATH);
-		strcat(clabel, p);
+		u8 pos = p - clabel;
+		sprintf(p, HTML_INPUT("autop", "%s", "255", "40"), webman_config->autoboot_path);
+		strcat(p, label + pos + strlen(AUTOBOOT_PATH));
 	}
 	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
 	return concat(buffer, templn);

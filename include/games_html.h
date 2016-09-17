@@ -1185,7 +1185,6 @@ next_html_entry:
 		else
 			for(u16 m = 0; m < idx; m++)
 			{
-				if(!strstr((line_entry[m].path) + HTML_KEY_LEN + 60, "\"gn\"")) continue;
 				tlen += concat(buffer + tlen, GAME_DIV_PREFIX);
 				tlen += concat(buffer + tlen, (line_entry[m].path) + HTML_KEY_LEN);
 				tlen += concat(buffer + tlen, GAME_DIV_SUFIX);

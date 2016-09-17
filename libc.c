@@ -6,10 +6,8 @@ void *memset(void *m, int c, size_t n)
 {
 	char *s = (char *) m;
 
-	while (n-- != 0)
-	{
+	while (n--)
 		*s++ = (char) c;
-	}
 
 	return m;
 }
@@ -43,7 +41,7 @@ int memcmp(const void* s1, const void* s2, size_t n)
 size_t strlen(const char *s)
 {
 	const char *p = s;
-	while (*s) ++s;
+	while (*s) s++;
 	return s - p;
 }
 
@@ -94,10 +92,8 @@ int strncasecmp (__const char *s1, __const char *s2, size_t n)
 
 	while(n--)
 	{
-		c1 = *((unsigned char *)(s1++));
-		c2 = *((unsigned char *)(s2++));
-		if (c1 >= 'A' && c1 <= 'Z') c1 = c1 + 0x20; // ('a' - 'A')
-		if (c2 >= 'A' && c2 <= 'Z') c2 = c2 + 0x20; // ('a' - 'A')
+		c1 = *((unsigned char *)(s1++)); if (c1 >= 'A' && c1 <= 'Z') c1 += 0x20; // ('a' - 'A')
+		c2 = *((unsigned char *)(s2++)); if (c2 >= 'A' && c2 <= 'Z') c2 += 0x20; // ('a' - 'A')
 		if (c1 != c2)   return (c1 - c2);
 		if (c1 == '\0') return 0;
 	}
@@ -107,16 +103,13 @@ int strncasecmp (__const char *s1, __const char *s2, size_t n)
 
 int strcasecmp (__const char *s1, __const char *s2)
 {
-	int c1, c2, n = strlen(s1);
+	int c1, c2;
 
-	while(n--)
+	while(*s1)
 	{
-		c1 = *((unsigned char *)(s1++));
-		c2 = *((unsigned char *)(s2++));
-		if (c1 >= 'A' && c1 <= 'Z') c1 = c1 + 0x20; // ('a' - 'A')
-		if (c2 >= 'A' && c2 <= 'Z') c2 = c2 + 0x20; // ('a' - 'A')
+		c1 = *((unsigned char *)(s1++)); if (c1 >= 'A' && c1 <= 'Z') c1 += 0x20; // ('a' - 'A')
+		c2 = *((unsigned char *)(s2++)); if (c2 >= 'A' && c2 <= 'Z') c2 += 0x20; // ('a' - 'A')
 		if (c1 != c2)   return (c1 - c2);
-		if (c1 == '\0') return 0;
 	}
 
 	return 0;

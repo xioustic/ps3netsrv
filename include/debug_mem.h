@@ -173,8 +173,8 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		value  = convertH(v+1);
 		fvalue = peekq(address);
 
-		if(bits32) value = ((uint64_t)(value << 32) | (uint64_t)(fvalue & 0xffffffffULL)); else
-		if(bits16) value = ((uint64_t)(value << 48) | (uint64_t)(fvalue & 0xffffffffffffULL)); else
+		if(bits32) value = ((uint64_t)(value << 32) | (uint64_t)(fvalue & 0xffffffffULL));      else
+		if(bits16) value = ((uint64_t)(value << 48) | (uint64_t)(fvalue & 0xffffffffffffULL));  else
 		if(bits8)  value = ((uint64_t)(value << 56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
 
 		pokeq(address, value);
@@ -186,8 +186,8 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		value = convertH(v+1);
 		fvalue = peek_lv1(address);
 
-		if(bits32) value = ((uint64_t)(value << 32) | (uint64_t)(fvalue & 0xffffffffULL)); else
-		if(bits16) value = ((uint64_t)(value << 48) | (uint64_t)(fvalue & 0xffffffffffffULL)); else
+		if(bits32) value = ((uint64_t)(value << 32) | (uint64_t)(fvalue & 0xffffffffULL));      else
+		if(bits16) value = ((uint64_t)(value << 48) | (uint64_t)(fvalue & 0xffffffffffffULL));  else
 		if(bits8)  value = ((uint64_t)(value << 56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
 
 		poke_lv1(address, value);
