@@ -2251,9 +2251,9 @@ static void handleclient(u64 conn_s_p)
 
 					// game list resizer
 					if(!is_ps3_http && islike(param, "/index.ps3"))
-						sprintf( templn, "<script>function rz(z){document.cookie=z;var i,el=document.getElementsByClassName('gc');for(i=0;i<el.length;++i)el[i].style.zoom=z/100;}</script>"
+						sprintf( templn, "<script>function rz(z){document.cookie=z + '; expires=Tue, 19 Jan 2038 03:14:07 UTC;';var i,el=document.getElementsByClassName('gc');for(i=0;i<el.length;++i)el[i].style.zoom=z/100;}</script>"
 										 "&nbsp;<input id=\"sz\" type=\"range\" value=\"100\" min=\"20\" max=\"200\" style=\"width:80px;position:relative;top:7px;\" ondblclick=\"this.value=100;rz(100);\" onchange=\"rz(this.value);\">"
-										 "<script>var d=document,z=d.cookie;css=d.styleSheets[0];css.insertRule('.gc{zoom:'+z+'%%}',css.cssRules.length);d.getElementById('sz').value=z;</script>"
+										 "<script>var d=document,z=d.cookie.split(';');css=d.styleSheets[0];css.insertRule('.gc{zoom:'+z+'%%}',css.cssRules.length);d.getElementById('sz').value=z;</script>"
 										 "</form><hr>");
 					else
  #endif
