@@ -489,9 +489,12 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 						char *pw, *ps, wcard[MAX_PATH_LEN]; *wcard = NULL;
 
+						pw = strstr(param, "*");if(pw) {ps = strstr(param, "/"); if(ps && (ps < pw)) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0;}
+
+						if(*param == NULL) split = 0;
+
 						if(split == 1)
 						{
-							pw = strstr(param, "*");if(pw) {ps = strstr(param, "/"); if(ps < pw) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0;}
 							strcpy(tempcwd, param);
 							absPath(d_path, tempcwd, cwd);
 						}
