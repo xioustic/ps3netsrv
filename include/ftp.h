@@ -53,7 +53,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	char cmd[16], param[MAX_PATH_LEN], filename[MAX_PATH_LEN], source[MAX_PATH_LEN]; // used as source parameter in RNFR and COPY commands
 	char buffer[FTP_RECV_SIZE], *cpursx = filename, *tempcwd = filename, *d_path = param;
 	struct CellFsStat buf;
-	int fd;
+	int fd, pos;
 
 	int p1x = 0;
 	int p2x = 0;
@@ -125,6 +125,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					if(split == 1)
 					{
+						if(IS(param, "..")) goto cdup;
 						absPath(tempcwd, param, cwd);
 					}
 					else
@@ -143,7 +144,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "CDUP") || _IS(cmd, "XCUP"))
 				{
-					int pos = strlen(cwd) - 2;
+					cdup:
+					pos = strlen(cwd) - 2;
 
 					for(int i = pos; i > 0; i--)
 					{
@@ -481,12 +483,15 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					if(data_s >= 0)
 					{
-						bool nolist  = _IS(cmd, "NLST");
+						bool nolist  = _IS(cmd, "NLST"); if(IS(param, "-l")) nolist = false;
 						bool is_MLSD = _IS(cmd, "MLSD");
 						bool is_MLST = (*cmd | 0x20) == 'm'; // MLSD || MLST
 
+						char *pw, *ps, wcard[MAX_PATH_LEN]; *wcard = NULL;
+
 						if(split == 1)
 						{
+							pw = strstr(param, "*");if(pw) {ps = strstr(param, "/"); if(ps < pw) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0;}
 							strcpy(tempcwd, param);
 							absPath(d_path, tempcwd, cwd);
 						}
@@ -518,6 +523,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #endif
 							{
+								if(*wcard && strcasestr(entry.d_name, wcard) == NULL) continue;
+
 								if(nolist)
 									slen = sprintf(buffer, "%s\015\012", entry.d_name);
 								else
@@ -577,9 +584,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							cellFsClosedir(fd);
 
+							get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
+
 							if(is_root)
 							{
-								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
 								sprintf(buffer, "226 [/] [%s]\r\n", cpursx);
 								ssend(conn_s_ftp, buffer);
 							}
@@ -588,7 +596,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								char *slash = strchr(d_path + 1, '/');
 								if(slash) *slash = '\0';
 
-								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
 								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", d_path, (int)(get_free_space(d_path)>>20), STR_MBFREE, cpursx);
 								ssend(conn_s_ftp, buffer);
 							}
@@ -792,7 +799,6 @@ pasv_again:
 							absPath(filename, param, cwd);
 
 							int rr = FAILED;
-							u64 pos = 0;
 
 							if(cellFsOpen(filename, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 							{
@@ -806,7 +812,7 @@ pasv_again:
 								if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 								{
 									char *buffer2= (char*)sysmem;
-									u64 read_e = 0;
+									u64 read_e = 0, pos = 0;
 
 									if(rest)
 										cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
