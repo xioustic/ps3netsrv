@@ -41,7 +41,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 {
 	int conn_s_ftp = (int)conn_s_ftp_p; // main communications socket
 	int data_s = -1;			// data socket
-	int data_ls = -1;
+	int pasv_s = -1;			// passive data socket
 
 	int connactive = 1;			// whether the ftp connection is active or not
 	int dataactive = 0;			// prevent the data connection from being closed at the end of the loop
@@ -487,9 +487,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						bool is_MLSD = _IS(cmd, "MLSD");
 						bool is_MLST = (*cmd | 0x20) == 'm'; // MLSD || MLST
 
+						// --- get d_path & wildcard ---
 						char *pw, *ps, wcard[MAX_PATH_LEN]; *wcard = NULL;
 
-						pw = strstr(param, "*");if(pw) {ps = strstr(param, "/"); if(ps && (ps < pw)) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0;}
+						pw = strstr(param, "*");if(pw) {ps = strstr(param, "/"); if((ps > param) && (ps < pw)) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0; if(!*wcard && !ps) strcpy(wcard, param);}
 
 						if(*param == NULL) split = 0;
 
@@ -500,7 +501,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						}
 
 						if(split != 1 || !isDir(d_path)) strcpy(d_path, cwd);
-
+						// ---
 #if NTFS_EXT
 						ntfs_md *mounts;
 						int mountCount;
@@ -625,14 +626,14 @@ pasv_again:
 						p1x = ( ( (pTick.tick & 0xfe0000) >> 16) & 0xff) | 0x80; // use ports 32768 -> 65279 (0x8000 -> 0xFEFF)
 						p2x = ( ( (pTick.tick & 0x00ff00) >>  8) & 0xff);
 					}
-					data_ls = slisten(getPort(p1x, p2x), 1);
+					pasv_s = slisten(getPort(p1x, p2x), 1);
 
-					if(data_ls >= 0)
+					if(pasv_s >= 0)
 					{
 						sprintf(pasv_output, "227 Entering Passive Mode (%s,%i,%i)\r\n", ip_address, p1x, p2x);
 						ssend(conn_s_ftp, pasv_output);
 
-						if((data_s = accept(data_ls, NULL, NULL)) > 0)
+						if((data_s = accept(pasv_s, NULL, NULL)) > 0)
 						{
 							dataactive = 1;
 						}
@@ -644,7 +645,7 @@ pasv_again:
 					}
 					else
 					{
-						p1x=0;
+						p1x = 0;
 						if(pasv_retry < 10)
 						{
 							pasv_retry++;
@@ -746,7 +747,7 @@ pasv_again:
 					}
 				}
 				else
-				if(_IS(cmd, "MKD"))
+				if(_IS(cmd, "MKD") || _IS(cmd, "XMKD"))
 				{
 					if(split == 1)
 					{
@@ -768,7 +769,7 @@ pasv_again:
 					}
 				}
 				else
-				if(_IS(cmd, "RMD"))
+				if(_IS(cmd, "RMD") || _IS(cmd, "XRMD"))
 				{
 					if(split == 1)
 					{
@@ -834,7 +835,7 @@ pasv_again:
 										//sys_timer_usleep(1668);
 										if((read_e = (u64)recv(data_s, buffer2, buffer_size, MSG_WAITALL)) > 0)
 										{
-											if(cellFsWrite(fd, buffer2, read_e, NULL) != CELL_FS_SUCCEEDED) {rr=FAILED;break;}
+											if(cellFsWrite(fd, buffer2, read_e, NULL) != CELL_FS_SUCCEEDED) {rr = FAILED;break;}
 										}
 										else
 											break;
@@ -1001,7 +1002,7 @@ pasv_again:
 				else
 				{
 					sclose(&data_s);
-					if(data_ls > 0) {sclose(&data_ls); data_ls=FAILED;}
+					if(pasv_s > 0) {sclose(&pasv_s); pasv_s = -1;}
 					rest = 0;
 				}
 			}
@@ -1010,33 +1011,19 @@ pasv_again:
 				// commands available when not logged in
 				if(_IS(cmd, "USER"))
 				{
-					if(split == 1)
-					{
-						ssend(conn_s_ftp, FTP_OK_331); // User name okay, need password.
-					}
-					else
-					{
-						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
-					}
+					ssend(conn_s_ftp, FTP_OK_331); // User name okay, need password.
 				}
 				else
 				if(_IS(cmd, "PASS"))
 				{
-					if(split == 1)
+					if((webman_config->ftp_password[0] == NULL) || IS(webman_config->ftp_password, param))
 					{
-						if((webman_config->ftp_password[0] == NULL) || IS(webman_config->ftp_password, param))
-						{
-							ssend(conn_s_ftp, FTP_OK_230);		// User logged in, proceed. Logged out if appropriate.
-							loggedin = 1;
-						}
-						else
-						{
-							ssend(conn_s_ftp, FTP_ERROR_430);	// Invalid username or password
-						}
+						ssend(conn_s_ftp, FTP_OK_230);		// User logged in, proceed. Logged out if appropriate.
+						loggedin = 1;
 					}
 					else
 					{
-						ssend(conn_s_ftp, FTP_ERROR_501);		// Syntax error in parameters or arguments.
+						ssend(conn_s_ftp, FTP_ERROR_430);	// Invalid username or password
 					}
 				}
 				else
@@ -1076,7 +1063,7 @@ pasv_again:
 
 static void ftpd_thread(uint64_t arg)
 {
-	int list_s = FAILED;
+	int list_s = -1;
 
 relisten:
 	if(working) list_s = slisten(FTPPORT, 4);
@@ -1104,10 +1091,10 @@ relisten:
 				else {sclose(&conn_s_ftp); break;}
 			}
 			else
-			if((sys_net_errno==SYS_NET_EBADF) || (sys_net_errno==SYS_NET_ENETDOWN))
+			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s = FAILED;
+				list_s = -1;
 				if(working) goto relisten;
 				else break;
 			}
