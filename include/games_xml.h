@@ -126,23 +126,26 @@ static void add_launchpad_footer(char *tempstr)
 }
 #endif //#ifdef LAUNCHPAD
 
-static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, u16 tlen, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)
+static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)
 {
+	u16 tlen = strlen(templn);
 	if(tlen < 6) strcat(templn, "      ");
 
 	u8 c = 0;
 	if(templn[4] == ']' && templn[0] == '[') {c = (templn[5]!=' ') ? 5 : 6;} // ignore tag prefixes. e.g. [PS3] [PS2] [PSX] [PSP] [DVD] [BDV] [ISO] etc.
 	sprintf(skey, "!%c%c%c%c%c%c%04i", templn[c], templn[c+1], templn[c+2], templn[c+3], templn[c+4], templn[c+5], key);
 
+	templn[tlen] = NULL;
+
 	char *p = strstr(templn + 5, "CD");
-	if(p) {if(ISDIGIT(p[2])) skey[6]=p[2]; if(ISDIGIT(p[3])) skey[6] = p[3];} // sort by CD#
+	if(p) {if(ISDIGIT(p[2])) skey[6] = p[2]; if(ISDIGIT(p[3])) skey[6] = p[3];} // sort by CD#
 	else
 	{
 		if(tlen > 64) tlen = 64;
 		for(u16 i = 5; i < tlen; i++)
 		{
 			if(templn[i+1]=='[') break;
-			if(templn[i]==' ') {skey[6]=templn[++i]; break;} // sort by 2nd word
+			if(templn[i]==' ') {skey[6] = templn[++i]; break;} // sort by 2nd word
 			//if(ISDIGIT(templn[i])) {skey[6]=templn[i]; break;} // sort by game number (if possible)
 		}
 	}
@@ -154,20 +157,20 @@ static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, u
 	if( !(webman_config->nogrp) )
 	{
 		if(((IS_PS3_TYPE)   || ((IS_NTFS) && !extcmp(entry_name + plen, ".ntfs[PS3ISO]", 13))) && xml_len[gPS3] < (BUFFER_SIZE - _4KB_ - ITEMS_BUFFER(gPS3)))
-		{xml_len[gPS3] += concat(myxml_ps3+xml_len[gPS3], tempstr); *skey=PS3_; ++item_count[gPS3];}
+		{xml_len[gPS3] += concat(myxml_ps3 + xml_len[gPS3], tempstr); *skey=PS3_, ++item_count[gPS3];}
 		else
 		if(((IS_PS2_FOLDER) || ((IS_NTFS) && !extcmp(entry_name + plen, ".ntfs[PS2ISO]", 13))) && xml_len[gPS2] < (BUFFER_SIZE_PS2 - ITEMS_BUFFER(gPS2)))
-		{xml_len[gPS2] += concat(myxml_ps2+xml_len[gPS2], tempstr); *skey=PS2; ++item_count[gPS2];}
+		{xml_len[gPS2] += concat(myxml_ps2 + xml_len[gPS2], tempstr); *skey=PS2, ++item_count[gPS2];}
 #ifdef COBRA_ONLY
 		else
 		if(((IS_PSX_FOLDER) || ((IS_NTFS) && !extcmp(entry_name + plen, ".ntfs[PSXISO]", 13))) && xml_len[gPSX] < (BUFFER_SIZE_PSX - ITEMS_BUFFER(gPSX)))
-		{xml_len[gPSX] += concat(myxml_psx+xml_len[gPSX], tempstr); *skey=PS1; ++item_count[gPSX];}
+		{xml_len[gPSX] += concat(myxml_psx + xml_len[gPSX], tempstr); *skey=PS1, ++item_count[gPSX];}
 		else
 		if(((IS_PSP_FOLDER) || ((IS_NTFS) && !extcmp(entry_name + plen, ".ntfs[PSPISO]", 13))) && xml_len[gPSP] < (BUFFER_SIZE_PSP - ITEMS_BUFFER(gPSP)))
-		{xml_len[gPSP] += concat(myxml_psp+xml_len[gPSP], tempstr); *skey=PSP; ++item_count[gPSP];}
+		{xml_len[gPSP] += concat(myxml_psp + xml_len[gPSP], tempstr); *skey=PSP, ++item_count[gPSP];}
 		else
 		if(((IS_BLU_FOLDER) || (IS_DVD_FOLDER) || ((IS_NTFS) && (!extcmp(entry_name + plen, ".ntfs[DVDISO]", 13) || !extcmp(entry_name, ".ntfs[BDISO]", 12) || !extcmp(entry_name, ".ntfs[BDFILE]", 13)))) && xml_len[gDVD] < (BUFFER_SIZE_DVD - ITEMS_BUFFER(gDVD)))
-		{xml_len[gDVD] += concat(myxml_dvd+xml_len[gDVD], tempstr); *skey=BLU; ++item_count[gDVD];}
+		{xml_len[gDVD] += concat(myxml_dvd + xml_len[gDVD], tempstr); *skey=BLU, ++item_count[gDVD];}
 #endif
 		else
 			return (false);
@@ -601,7 +604,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 			//led(YELLOW, ON);
 			{
 				CellFsDirent entry; u64 read_e;
-				int fd2 = 0, flen, slen, plen;
+				int fd2 = 0, flen, plen;
 				char tempID[12];
 				u8 is_iso = 0;
 				cellRtcGetCurrentTick(&pTick);
@@ -641,15 +644,15 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0)==FAILED) {v3_entry++; continue;}
 
-						slen = sprintf(tempstr, "<Table key=\"%04i\">"
-												XML_PAIR("icon","%s")
-												XML_PAIR("title","%s") "%s"
-												XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
-												XML_PAIR("info","%s%s%s") "</Table>",
-												key, icon,
-												templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, (u16)pTick.tick, neth, param, "");
+						sprintf(tempstr, "<Table key=\"%04i\">"
+										 XML_PAIR("icon","%s")
+										 XML_PAIR("title","%s") "%s"
+										 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
+										 XML_PAIR("info","%s%s%s") "</Table>",
+										 key, icon,
+										 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, (u16)pTick.tick, neth, param, "");
 
-						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, slen, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
+						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
 						if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
@@ -750,15 +753,15 @@ next_xml_entry:
 								char *p = strchr(entry.d_name, '/'); if(p) {*p = NULL; sprintf(folder_name, "/%s", entry.d_name); *p = '/';}
 							}
 
-							slen = sprintf(tempstr, "<Table key=\"%04i\">"
-													XML_PAIR("icon","%s")
-													XML_PAIR("title","%s") "%s"
-													XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
-													XML_PAIR("info","%s%s%s") "</Table>",
-													key, icon,
-													templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
+							sprintf(tempstr, "<Table key=\"%04i\">"
+											 XML_PAIR("icon","%s")
+											 XML_PAIR("title","%s") "%s"
+											 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
+											 XML_PAIR("info","%s%s%s") "</Table>",
+											 key, icon,
+											 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
 
-							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, slen, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
+							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
 
  #ifdef LAUNCHPAD
 							if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
