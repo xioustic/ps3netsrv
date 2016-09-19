@@ -478,6 +478,8 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_eject.png"    , ICONS_DIR "/icon_wm_eject.png"   );
 //  CopyFile(APP_USRDIR "/icon_wm_root.png"     , ICONS_DIR "/icon_wm_root.png"    );
 
+	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, TMP_DIR "/wm_online_ids.txt");
+
 	// XMBM+ webMAN
 	sysLv2FsMkdir(XMLMANPLS_DIR, 0777);
 	sysLv2FsMkdir(XMLMANPLS_DIR "/USRDIR", 0777);
@@ -538,6 +540,7 @@ int main()
 	CopyFile(APP_USRDIR "/usbredirect.png" 	, XMLMANPLS_IMAGES_DIR "/usbredirect.png");
 	CopyFile(APP_USRDIR "/vshmenu.png"   	, XMLMANPLS_IMAGES_DIR "/vshmenu.png");
 	CopyFile(APP_USRDIR "/webman.png"  		, XMLMANPLS_IMAGES_DIR "/webman.png");
+
 
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 

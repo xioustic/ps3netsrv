@@ -185,10 +185,10 @@ static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, u
 
 static void make_fb_xml(char *myxml, char *templn)
 {
-	sprintf(templn, WM_ICONS_PATH "icon_wm_root.png");
+	sprintf(templn, WM_ICONS_PATH "/icon_wm_root.png");
 
 	if(file_exists(templn))
-		sprintf(templn, XML_PAIR("icon", WM_ICONS_PATH "icon_wm_root.png"));
+		sprintf(templn, XML_PAIR("icon", WM_ICONS_PATH "/icon_wm_root.png"));
 	else
 		sprintf(templn, XML_PAIR("icon_rsc", "item_tex_ps3util"));
 

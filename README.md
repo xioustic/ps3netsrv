@@ -92,6 +92,7 @@ Requirements for GNU/Linux:
 - bguerville for web downloader & package installer module
 - Mysis, who wrote some useful libs and reverse engineering VSH Exports functions: http://www.ps3devwiki.com/ps3/VSH#Exports
 - 3141card for VSH Menu POC & Littlebalup for his enhancement/new features
+- jjolano (John Olano) for OpenFTP server
 - PSX-SCENE, PSX-PLACE, PLAYSTATIONHAX, PS3HAX & other scene websites/users, who translated, helped in the testing process
 
 

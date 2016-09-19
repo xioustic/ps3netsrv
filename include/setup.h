@@ -213,7 +213,9 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "spp=1"))  webman_config->spp|=1;  //remove syscalls & history
 	#endif
 	if(strstr(param, "shh=1"))  webman_config->spp|=2;  //remove history & block psn servers (offline mode)
+	#ifndef LITE_EDITION
 	if(strstr(param, "shh=2"))  webman_config->spp|=4;  //offline mode in game
+	#endif
 #endif
 
 #ifdef SPOOF_CONSOLEID
@@ -254,7 +256,7 @@ static void setup_parse_settings(char *param)
 	}
 #endif
 
-	webman_config->lang=0; //English
+	webman_config->lang = 0; //English
 
 #ifndef ENGLISH_ONLY
 	if(strstr(param, "&l=99")) webman_config->lang=99; // Unknown LANG_XX.TXT
@@ -370,21 +372,21 @@ static void setup_form(char *buffer, char *templn)
 {
  #ifndef ENGLISH_ONLY
 	char STR_SCAN1[48];//		= "Scan these devices";
-	char STR_PSPL[40];//			= "Show PSP Launcher";
-	char STR_PS2L[48];//			= "Show PS2 Classic Launcher";
+	char STR_PSPL[40];//		= "Show PSP Launcher";
+	char STR_PS2L[48];//		= "Show PS2 Classic Launcher";
 	char STR_RXVID[64];//		= "Show Video sub-folder";
-	char STR_LPG[128];//			= "Load last-played game on startup";
+	char STR_LPG[128];//		= "Load last-played game on startup";
 	char STR_AUTOB[96];//		= "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup";
-	char STR_DELAYAB[168];//		= "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)";
+	char STR_DELAYAB[168];//	= "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)";
 	char STR_DEVBL[112];//		= "Enable /dev_blind (writable /dev_flash) on startup";
 	char STR_CONTSCAN[120];//	= "Disable content scan on startup";
 	char STR_USBPOLL[88];//		= "Disable USB polling";
 	char STR_FTPSVC[64];//		= "Disable FTP service";
 	char STR_FIXGAME[56];//		= "Disable auto-fix game";
 	char STR_COMBOS[88];//		= "Disable all PAD shortcuts";
-	char STR_MMCOVERS[72];//		= "Disable multiMAN covers";
+	char STR_MMCOVERS[72];//	= "Disable multiMAN covers";
 	char STR_ACCESS[88];//		= "Disable remote access to FTP/WWW services";
-	char STR_NOSETUP[120];//		= "Disable webMAN Setup entry in \"webMAN Games\"";
+	char STR_NOSETUP[120];//	= "Disable webMAN Setup entry in \"webMAN Games\"";
 	char STR_NOSPOOF[96];//		= "Disable firmware version spoofing";
 	char STR_NOGRP[104];//		= "Disable grouping of content in \"webMAN Games\"";
 	char STR_NOWMDN[112];//		= "Disable startup notification of WebMAN on the XMB";
@@ -393,38 +395,38 @@ static void setup_form(char *buffer, char *templn)
 	#endif
 	char STR_AUTO_PLAY[24];//	= "Auto-Play";
 	char STR_RESET_USB[48];//	= "Disable Reset USB Bus";
-	char STR_TITLEID[128];//		= "Include the ID as part of the title of the game";
+	char STR_TITLEID[128];//	= "Include the ID as part of the title of the game";
 	char STR_FANCTRL[96];//		= "Enable dynamic fan control";
 	char STR_NOWARN[96];//		= "Disable temperature warnings";
 	char STR_AUTOAT[32];//		= "Auto at";
 	char STR_LOWEST[24];//		= "Lowest";
-	char STR_FANSPEED[48];//		= "fan speed";
+	char STR_FANSPEED[48];//	= "fan speed";
 
 	char STR_PS2EMU[32];//		= "PS2 Emulator";
-	char STR_LANGAMES[96];//		= "Scan for LAN games/videos";
+	char STR_LANGAMES[96];//	= "Scan for LAN games/videos";
 	char STR_ANYUSB[88];//		= "Wait for any USB device to be ready";
 	char STR_ADDUSB[136];//		= "Wait additionally for each selected USB device to be ready";
-	char STR_SPOOFID[112];//		= "Change idps and psid in lv2 memory at system startup";
+	char STR_SPOOFID[112];//	= "Change idps and psid in lv2 memory at system startup";
 	char STR_DELCFWSYS[144];//	= "Disable CFW syscalls and delete history files at system startup";
-	char STR_MEMUSAGE[80];//		= "Plugin memory usage";
+	char STR_MEMUSAGE[80];//	= "Plugin memory usage";
 	char STR_PLANG[40];//		= "Plugin language";
 	char STR_PROFILE[16];//		= "Profile";
 	char STR_DEFAULT[32];//		= "Default";
 	char STR_COMBOS2[80];//		= "XMB/In-Game PAD SHORTCUTS";
-	char STR_FAILSAFE[40];//		= "FAIL SAFE";
-	char STR_SHOWTEMP[56];//		= "SHOW TEMP";
-	char STR_SHOWIDPS[24];//		= "SHOW IDPS";
-	char STR_PREVGAME[64];//		= "PREV GAME";
-	char STR_NEXTGAME[56];//		= "NEXT GAME";
+	char STR_FAILSAFE[40];//	= "FAIL SAFE";
+	char STR_SHOWTEMP[56];//	= "SHOW TEMP";
+	char STR_SHOWIDPS[24];//	= "SHOW IDPS";
+	char STR_PREVGAME[64];//	= "PREV GAME";
+	char STR_NEXTGAME[56];//	= "NEXT GAME";
 	char STR_SHUTDOWN2[32];//	= "SHUTDOWN ";
-	char STR_RESTART2[32];//		= "RESTART&nbsp; ";
+	char STR_RESTART2[32];//	= "RESTART&nbsp; ";
 	#ifdef REMOVE_SYSCALLS
 	char STR_DELCFWSYS2[48];//	= "DEL CFW SYSCALLS";
 	#endif
-	char STR_UNLOADWM[64];//		= "UNLOAD WM";
-	char STR_FANCTRL2[48];//		= "CTRL FAN";
-	char STR_FANCTRL4[72];//		= "CTRL DYN FAN";
-	char STR_FANCTRL5[88];//		= "CTRL MIN FAN";
+	char STR_UNLOADWM[64];//	= "UNLOAD WM";
+	char STR_FANCTRL2[48];//	= "CTRL FAN";
+	char STR_FANCTRL4[72];//	= "CTRL DYN FAN";
+	char STR_FANCTRL5[88];//	= "CTRL MIN FAN";
 	char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
 	char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
 
@@ -759,7 +761,9 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, " • Offline  : <select name=\"shh\">");
 	add_option_item("0", STR_DISABLED, !(webman_config->spp & 6), buffer);
 	add_option_item("1", "Lock PSN",    (webman_config->spp & 2), buffer);
+	#ifndef LITE_EDITION
 	add_option_item("2", STR_GAMES,     (webman_config->spp & 4), buffer);
+	#endif
 	strcat(buffer, "</select>");
 
 #endif

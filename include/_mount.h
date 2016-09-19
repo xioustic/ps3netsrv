@@ -74,6 +74,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif
 		char enc_dir_name[1024], *source = param + plen;
 		bool mounted = false; max_mapped = 0;
+
+		// -------------------------
+		// use relative source path
+		// -------------------------
 		if(file_exists(source) == false) {sprintf(templn, "%s/%s", html_base_path, source + 1); if(file_exists(templn)) sprintf(source, "%s", templn);}
 
 		// ----------------------------
@@ -83,12 +87,13 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		if(purl)
 		{
 			webman_config->ps1emu = strstr(purl, "net") ? 1 : 0;
-			purl--; *purl = NULL;
+			purl--, *purl = NULL;
 		}
 
+#ifndef LITE_EDITION
 		purl = strstr(source, "offline=");
 		if(purl) net_status = (*(purl + 8) == '0') ? 1 : 0;
-
+#endif
 		purl = strstr(source, "?random=");
 		if(purl) *purl = NULL;
 
@@ -133,9 +138,9 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// -----------------
 		if(mount_ps3)
 		{
+#ifndef LITE_EDITION
 			if(mounted && (strstr(param, OFFLINE_TAG) != NULL)) net_status = 0;
 
-#ifndef LITE_EDITION
 			if(mounted && IS_ON_XMB && strstr(param, "/PSPISO") == NULL && extcmp(param, ".BIN.ENC", 8) != 0)
 			{
 				uint8_t autoplay = webman_config->autoplay;
@@ -836,10 +841,11 @@ static void mount_autoboot(void)
 	if(webman_config->autob &&
 		((cobra_mode && islike(webman_config->autoboot_path, "/net")) || islike(webman_config->autoboot_path, "http") || file_exists(webman_config->autoboot_path))) // autoboot
 		strcpy(path, (char *) webman_config->autoboot_path);
-	else
-	{	// get last game path
+	else if(webman_config->lastp)
+	{
 		get_last_game(path);
 	}
+	else return;
 
 	bool do_mount = false;
 

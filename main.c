@@ -107,12 +107,19 @@ SYS_MODULE_STOP(wwwd_stop);
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
 
-#define WMCONFIG			"/dev_hdd0/tmp/wmconfig.bin"		// webMAN config file
-#define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
-#define WM_ICONS_PATH		"/dev_hdd0/tmp/wm_icons/"			// webMAN icons path
-#define WMNOSCAN			"/dev_hdd0/tmp/wm_noscan"			// webMAN config file to skip on boot
-#define WMNET_DISABLED		"/dev_hdd0/tmp/wm_disabled"			// webMAN config file to re-enable network
-#define WMREQUEST_FILE		"/dev_hdd0/tmp/wm_request"			// webMAN request file
+#define TMP_DIR				"/dev_hdd0/tmp"
+
+#define WMCONFIG			TMP_DIR "/wmconfig.bin"			// webMAN config file
+#define WMTMP				TMP_DIR "/wmtmp"				// webMAN work/temp folder
+#define WM_LANG_PATH		TMP_DIR "/wm_lang"				// webMAN language folder
+#define WM_ICONS_PATH		TMP_DIR "/wm_icons"				// webMAN icons folder
+#define WM_COMBO_PATH		TMP_DIR "/wm_combo"				// webMAN custom combos folder
+#define WMNOSCAN			TMP_DIR "/wm_noscan"			// webMAN config file to skip on boot
+#define WMREQUEST_FILE		TMP_DIR "/wm_request"			// webMAN request file
+#define WMNET_DISABLED		TMP_DIR "/wm_netdisabled"		// webMAN config file to re-enable network
+#define WMONLINE_GAMES		TMP_DIR "/wm_online_ids.txt"	// webMAN config file to skip disable network
+
+#define VSH_MENU_IMAGES		"/dev_hdd0/plugins/images"
 
 #define HDD0_GAME_DIR		"/dev_hdd0/game/"
 
@@ -366,7 +373,9 @@ static bool syscalls_removed = false;
 static float c_firmware = 0.0f;
 static u8 dex_mode = 0;
 
+#ifndef LITE_EDITION
 static int32_t net_status = -1;
+#endif
 
 static u64 SYSCALL_TABLE = 0;
 static u64 LV2_OFFSET_ON_LV1; // value is set on detect_firmware -> 0x1000000 on 4.46, 0x8000000 on 4.76/4.78
@@ -531,20 +540,20 @@ static u8   cp_mode = 0;           // 0 = none / 1 = copy / 2 = cut/move
 #define OFFLINE_TAG		"[offline]"
 #define AUTOPLAY_TAG	" [auto]"
 
-static char wm_icons[12][60] = {WM_ICONS_PATH "icon_wm_album_ps3.png", //024.png  [0]
-								WM_ICONS_PATH "icon_wm_album_psx.png", //026.png  [1]
-								WM_ICONS_PATH "icon_wm_album_ps2.png", //025.png  [2]
-								WM_ICONS_PATH "icon_wm_album_psp.png", //022.png  [3]
-								WM_ICONS_PATH "icon_wm_album_dvd.png", //023.png  [4]
+static char wm_icons[12][60] = {WM_ICONS_PATH "/icon_wm_album_ps3.png", //024.png  [0]
+								WM_ICONS_PATH "/icon_wm_album_psx.png", //026.png  [1]
+								WM_ICONS_PATH "/icon_wm_album_ps2.png", //025.png  [2]
+								WM_ICONS_PATH "/icon_wm_album_psp.png", //022.png  [3]
+								WM_ICONS_PATH "/icon_wm_album_dvd.png", //023.png  [4]
 
-								WM_ICONS_PATH "icon_wm_ps3.png",       //024.png  [5]
-								WM_ICONS_PATH "icon_wm_psx.png",       //026.png  [6]
-								WM_ICONS_PATH "icon_wm_ps2.png",       //025.png  [7]
-								WM_ICONS_PATH "icon_wm_psp.png",       //022.png  [8]
-								WM_ICONS_PATH "icon_wm_dvd.png",       //023.png  [9]
+								WM_ICONS_PATH "/icon_wm_ps3.png",       //024.png  [5]
+								WM_ICONS_PATH "/icon_wm_psx.png",       //026.png  [6]
+								WM_ICONS_PATH "/icon_wm_ps2.png",       //025.png  [7]
+								WM_ICONS_PATH "/icon_wm_psp.png",       //022.png  [8]
+								WM_ICONS_PATH "/icon_wm_dvd.png",       //023.png  [9]
 
-								WM_ICONS_PATH "icon_wm_settings.png",  //icon/icon_home.png  [10]
-								WM_ICONS_PATH "icon_wm_eject.png",     //icon/icon_home.png  [11]
+								WM_ICONS_PATH "/icon_wm_settings.png",  //icon/icon_home.png  [10]
+								WM_ICONS_PATH "/icon_wm_eject.png",     //icon/icon_home.png  [11]
 								};
 
 #ifndef ENGLISH_ONLY
@@ -964,11 +973,13 @@ static void handleclient(u64 conn_s_p)
 				block_online_servers(false);
 			}
  #endif
+ #ifndef LITE_EDITION
 			if(file_exists(WMNET_DISABLED)) //re-enable network (force offline in game)
 			{
 				net_status = 1;
 				poll_start_play_time();
 			}
+ #endif
 		}
 
 		sys_ppu_thread_exit(0);
@@ -2610,11 +2621,11 @@ static void handleclient(u64 conn_s_p)
 
 							// delete folders & subfolders
 							del(WMTMP, true);
-							del("/dev_hdd0/xmlhost", true);
-							del("/dev_hdd0/tmp/wm_lang", true);
-							del("/dev_hdd0/tmp/wm_icons", true);
-							del("/dev_hdd0/tmp/wm_combo", true);
-							del("/dev_hdd0/plugins/images", true);
+							del(WM_LANG_PATH, true);
+							del(WM_ICONS_PATH, true);
+							del(WM_COMBO_PATH, true);
+							del(HTML_BASE_PATH, true);
+							del(VSH_MENU_IMAGES, true);
 							goto reboot;
 						}
 						else

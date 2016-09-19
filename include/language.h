@@ -420,7 +420,7 @@ static bool language(const char *key_name, char *default_str)
 		i = webman_config->lang; if(i > 23) i = 23;
 
 		sprintf(lang_code, "_%s", lang_codes[i]);
-		sprintf(lang_path, "%s/LANG%s.TXT", "/dev_hdd0/tmp/wm_lang", lang_code);
+		sprintf(lang_path, "%s/LANG%s.TXT", WM_LANG_PATH, lang_code);
 
 		struct CellFsStat buf;
 

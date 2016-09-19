@@ -1,32 +1,47 @@
 static void poll_start_play_time(void)
 {
+#ifndef LITE_EDITION
+	int32_t status = 0;
+#endif
+
 	if(IS_ON_XMB)
 	{
 		gTick = rTick;
 
+#ifndef LITE_EDITION
 		if(net_status >= 0)
 		{
+			xsetting_F48C0548()->GetSettingNet_enable(&status);
 			xsetting_F48C0548()->SetSettingNet_enable(net_status);
-			net_status = -1; // notify network setting restored with 1 beep
+			net_status = -1; if(net_status && !status) show_msg((char*)ONLINE_TAG);
 			cellFsUnlink(WMNET_DISABLED);
 		}
+#endif
 	}
 	else if(gTick.tick == rTick.tick) /* the game started a moment ago */
 	{
 		cellRtcGetCurrentTick(&gTick);
 
+#ifndef LITE_EDITION
 		if((webman_config->spp & 4) || (net_status >= 0))
 		{
 			get_game_info();
 
-			if(strlen(_game_TitleID) == 9)
+			if(strlen(_game_TitleID) == 9 && View_Find("nas_plugin_module") == 0)
 			{
-				int32_t status = 0; xsetting_F48C0548()->GetSettingNet_enable(&status);
-				xsetting_F48C0548()->SetSettingNet_enable(net_status < 0 ? 0 : net_status);
-				if(status && (net_status <= 0)) save_file(WMNET_DISABLED, NULL, 0);
-				net_status = status; show_msg((char*)OFFLINE_TAG);
+				char online_title_ids[512];
+				read_file(WMONLINE_GAMES, online_title_ids, 512, 0); // read title ids to skip auto-disable network
+
+				if(strstr(online_title_ids, _game_TitleID) == NULL)
+				{
+					xsetting_F48C0548()->GetSettingNet_enable(&status);
+					xsetting_F48C0548()->SetSettingNet_enable(net_status < 0 ? 0 : net_status);
+					if(status && (net_status <= 0)) {save_file(WMNET_DISABLED, NULL, 0); show_msg((char*)OFFLINE_TAG);}
+					net_status = status;
+				}
 			}
 		}
+#endif
 	}
 }
 
