@@ -1,14 +1,14 @@
 static void poll_start_play_time(void)
 {
-#ifndef LITE_EDITION
+	#ifdef OFFLINE_INGAME
 	int32_t status = 0;
-#endif
+	#endif
 
 	if(IS_ON_XMB)
 	{
 		gTick = rTick;
 
-#ifndef LITE_EDITION
+	#ifdef OFFLINE_INGAME
 		if(net_status >= 0)
 		{
 			xsetting_F48C0548()->GetSettingNet_enable(&status);
@@ -16,23 +16,33 @@ static void poll_start_play_time(void)
 			net_status = -1; if(net_status && !status) show_msg((char*)ONLINE_TAG);
 			cellFsUnlink(WMNET_DISABLED);
 		}
-#endif
+	#endif
 	}
 	else if(gTick.tick == rTick.tick) /* the game started a moment ago */
 	{
 		cellRtcGetCurrentTick(&gTick);
 
-#ifndef LITE_EDITION
+	#ifdef OFFLINE_INGAME
 		if((webman_config->spp & 4) || (net_status >= 0))
 		{
 			get_game_info();
 
 			if(strlen(_game_TitleID) == 9 && View_Find("nas_plugin_module") == 0)
 			{
-				char online_title_ids[512];
-				read_file(WMONLINE_GAMES, online_title_ids, 512, 0); // read title ids to skip auto-disable network
+				bool set_net_setatus = true;
+				if(net_status < 0)
+				{
+					char online_title_ids[1024];
+					read_file(WMOFFLINE_GAMES, online_title_ids, 1024, 0); // auto-disable network only on these title ids
+					if(*online_title_ids) set_net_setatus = strstr(online_title_ids, _game_TitleID);
+					else
+					{
+						read_file(WMONLINE_GAMES, online_title_ids, 1024, 0);  // auto-disable network except on these title ids
+						set_net_setatus = (strstr(online_title_ids, _game_TitleID) == NULL);
+					}
+				}
 
-				if(strstr(online_title_ids, _game_TitleID) == NULL)
+				if(set_net_setatus)
 				{
 					xsetting_F48C0548()->GetSettingNet_enable(&status);
 					xsetting_F48C0548()->SetSettingNet_enable(net_status < 0 ? 0 : net_status);
@@ -41,7 +51,7 @@ static void poll_start_play_time(void)
 				}
 			}
 		}
-#endif
+	#endif
 	}
 }
 
@@ -174,13 +184,10 @@ static void poll_thread(uint64_t poll)
 					char STR_OVERHEAT[80];//		= "System overheat warning!";
 					char STR_OVERHEAT2[120];//	= "  OVERHEAT DANGER!\nFAN SPEED INCREASED!";
 
-					sprintf(STR_OVERHEAT,     "System overheat warning!");
-					sprintf(STR_OVERHEAT2,    "  OVERHEAT DANGER!\nFAN SPEED INCREASED!");
+					language("STR_OVERHEAT", STR_OVERHEAT, "System overheat warning!");
+					language("STR_OVERHEAT2", STR_OVERHEAT2, "  OVERHEAT DANGER!\nFAN SPEED INCREASED!");
 
-					language("STR_OVERHEAT", STR_OVERHEAT);
-					language("STR_OVERHEAT2", STR_OVERHEAT2);
-
-					language("/CLOSEFILE", NULL);
+					language("/CLOSEFILE", NULL, NULL);
  #endif
 					sprintf(msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
 					show_msg(msg);
@@ -204,7 +211,11 @@ static void poll_thread(uint64_t poll)
 		if(to > 40) to = 0;
 
 		// detect aprox. time when a game is launched & set network connect status
+		#ifndef OFFLINE_INGAME
+		if((sec % 10) == 0) poll_start_play_time();
+		#else
 		if((sec % 10) == 0 || (webman_config->spp & 4)) poll_start_play_time();
+		#endif
 
 		// USB Polling
 		if(poll == 0 && sec >= 120) // check USB drives each 120 seconds

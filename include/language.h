@@ -184,10 +184,10 @@ static char STR_REFRESH[24];//		= "Refresh";
 static char STR_SHUTDOWN[32];//		= "Shutdown";
 static char STR_RESTART[32];//		= "Restart";
 
-static char STR_BYTE[8]				= "b";
-static char STR_KILOBYTE[8]			= "KB";
-static char STR_MEGABYTE[8]			= "MB";
-static char STR_GIGABYTE[8]			= "GB";
+static char STR_BYTE[8];//			= "b";
+static char STR_KILOBYTE[8];//		= "KB";
+static char STR_MEGABYTE[8];//		= "MB";
+static char STR_GIGABYTE[8];//		= "GB";
 
 static char STR_COPYING[24];//		= "Copying";
 static char STR_CPYDEST[24];//		= "Destination";
@@ -399,7 +399,7 @@ static uint32_t get_system_language(uint8_t *lang)
 #define CHUNK_SIZE 512
 #define GET_NEXT_BYTE  {if(p < CHUNK_SIZE) c = buffer[p++]; else {cellFsRead(fd, buffer, CHUNK_SIZE, &bytes_read); c = *buffer, p = 1;} lang_pos++;}
 
-static bool language(const char *key_name, char *default_str)
+static bool language(const char *key_name, char *label, const char *default_str)
 {
 	if(*key_name == '/') {if(fh) cellFsClose(fh); fh = 0; return false;} // /CLOSEFILE
 
@@ -407,6 +407,8 @@ static bool language(const char *key_name, char *default_str)
 	uint64_t bytes_read = 0;
 	char *buffer = html_base_path;
 	static size_t p = 0, lang_pos = 0, size = 0;
+
+	sprintf(label, "%s", default_str);
 
 	bool do_retry = true;
 
@@ -462,10 +464,10 @@ static bool language(const char *key_name, char *default_str)
 
 					if(c == ']' || lang_pos >= size) break;
 
-					default_str[str_len++] = c;
+					label[str_len++] = c;
 				}
 
-				default_str[str_len] = NULL;
+				label[str_len] = NULL;
 				return true;
 			}
 		}
@@ -485,151 +487,81 @@ static void update_language(void)
 	fh = 0;
 
 	// initialize variables with default values
-	static bool do_once = true;
+	sprintf(STR_SETTINGSUPD, "%s%s", "Settings updated.<br>", "<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.");
 
-	if(do_once)
+	*COVERS_PATH = NULL;
+
+	if(language("STR_TRADBY", STR_TRADBY, "<br>"))
 	{
-		sprintf(STR_TRADBY,      "<br>");
+		language("STR_FILES", STR_FILES, "Files");
+		language("STR_GAMES", STR_GAMES, "Games");
+		language("STR_SETUP", STR_SETUP, "Setup");
+		language("STR_HOME", STR_HOME, "Home");
+		language("STR_EJECT", STR_EJECT, "Eject");
+		language("STR_INSERT", STR_INSERT, "Insert");
+		language("STR_UNMOUNT", STR_UNMOUNT, "Unmount");
+		language("STR_COPY", STR_COPY, "Copy Folder");
+		language("STR_REFRESH", STR_REFRESH, "Refresh");
+		language("STR_SHUTDOWN", STR_SHUTDOWN, "Shutdown");
+		language("STR_RESTART", STR_RESTART, "Restart");
 
-		sprintf(STR_FILES,       "Files");
-		sprintf(STR_GAMES,       "Games");
-		sprintf(STR_SETUP,       "Setup");
-		sprintf(STR_HOME,        "Home");
-		sprintf(STR_EJECT,       "Eject");
-		sprintf(STR_INSERT,      "Insert");
-		sprintf(STR_UNMOUNT,     "Unmount");
-		sprintf(STR_COPY,        "Copy Folder");
-		sprintf(STR_REFRESH,     "Refresh");
-		sprintf(STR_SHUTDOWN,    "Shutdown");
-		sprintf(STR_RESTART,     "Restart");
+		language("STR_BYTE", STR_BYTE, "b");
+		language("STR_KILOBYTE", STR_KILOBYTE, "KB");
+		language("STR_MEGABYTE", STR_MEGABYTE, "MB");
+		language("STR_GIGABYTE", STR_GIGABYTE, "GB");
 
-		sprintf(STR_MANUAL,      "Manual");
+		language("STR_COPYING", STR_COPYING, "Copying");
+		language("STR_CPYDEST", STR_CPYDEST, "Destination");
+		language("STR_CPYFINISH", STR_CPYFINISH, "Copy Finished!");
+		language("STR_CPYABORT", STR_CPYABORT, "Copy aborted!");
+		language("STR_DELETE", STR_DELETE, "Delete");
 
-		sprintf(STR_COPYING,     "Copying");
-		sprintf(STR_CPYDEST,     "Destination");
-		sprintf(STR_CPYFINISH,   "Copy Finished!");
-		sprintf(STR_CPYABORT,    "Copy aborted!");
-		sprintf(STR_DELETE,      "Delete");
+		language("STR_SCAN2", STR_SCAN2, "Scan for content");
+		language("STR_VIDLG", STR_VIDLG, "Video");
 
-		sprintf(STR_SCAN2,       "Scan for content");
-		sprintf(STR_VIDLG,       "Video");
+		language("STR_MANUAL", STR_MANUAL, "Manual");
 
-		sprintf(STR_SAVE,        "Save");
-		sprintf(STR_SETTINGSUPD, "%s%s", "Settings updated.<br>", "<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.");
-		sprintf(STR_ERROR,       "Error!");
+		language("STR_SAVE", STR_SAVE, "Save");
+		language("STR_SETTINGSUPD", STR_SETTINGSUPD, STR_SETTINGSUPD);
+		language("STR_ERROR", STR_ERROR, "Error!");
 
-		sprintf(STR_MYGAMES,     "webMAN Games");
+		language("STR_MYGAMES", STR_MYGAMES, "webMAN Games");
 
-		sprintf(STR_FIXING,      "Fixing");
+		language("STR_FIXING", STR_FIXING, "Fixing");
 
-		sprintf(STR_WMSETUP,     "webMAN Setup");
+		language("STR_WMSETUP", STR_WMSETUP, "webMAN Setup");
 
-		sprintf(STR_UNMOUNTGAME, "Unmount current game");
+		language("STR_UNMOUNTGAME", STR_UNMOUNTGAME, "Unmount current game");
 
-		sprintf(STR_WMSTART,     "webMAN loaded!");
-		sprintf(STR_WMUNL,       "webMAN unloaded!");
-		sprintf(STR_CFWSYSALRD,  "CFW Syscalls already disabled");
+		language("STR_WMSTART", STR_WMSTART, "webMAN loaded!");
+		language("STR_WMUNL", STR_WMUNL, "webMAN unloaded!");
+		language("STR_CFWSYSALRD", STR_CFWSYSALRD, "CFW Syscalls already disabled");
 
-		sprintf(STR_GAMEUM,      "Game unmounted.");
+		language("STR_GAMEUM", STR_GAMEUM, "Game unmounted.");
 
-		sprintf(STR_EJECTED,     "Disc ejected.");
-		sprintf(STR_LOADED,      "Disc inserted.");
-		sprintf(STR_LOADED2,     "loaded   ");
+		language("STR_EJECTED", STR_EJECTED, "Disc ejected.");
+		language("STR_LOADED", STR_LOADED, "Disc inserted.");
+		language("STR_LOADED2", STR_LOADED2, "loaded   ");
 
-		sprintf(STR_STORAGE,     "System storage");
-		sprintf(STR_MEMORY,      "Memory available");
-		sprintf(STR_MBFREE,      "MB free");
-		sprintf(STR_KBFREE,      "KB free");
+		language("STR_STORAGE", STR_STORAGE, "System storage");
+		language("STR_MEMORY", STR_MEMORY, "Memory available");
+		language("STR_MBFREE", STR_MBFREE, "MB free");
+		language("STR_KBFREE", STR_KBFREE, "KB free");
 
-		sprintf(STR_FANCTRL3,    "Fan control:");
-		sprintf(STR_ENABLED,     "Enabled");
-		sprintf(STR_DISABLED,    "Disabled");
+		language("STR_FANCTRL3", STR_FANCTRL3, "Fan control:");
+		language("STR_ENABLED", STR_ENABLED, "Enabled");
+		language("STR_DISABLED", STR_DISABLED, "Disabled");
 
-		sprintf(STR_FANCH0,      "Fan setting changed:");
-		sprintf(STR_FANCH1,      "MAX TEMP: ");
-		sprintf(STR_FANCH2,      "FAN SPEED: ");
-		sprintf(STR_FANCH3,      "MIN FAN SPEED: ");
+		language("STR_FANCH0", STR_FANCH0, "Fan setting changed:");
+		language("STR_FANCH1", STR_FANCH1, "MAX TEMP: ");
+		language("STR_FANCH2", STR_FANCH2, "FAN SPEED: ");
+		language("STR_FANCH3", STR_FANCH3, "MIN FAN SPEED: ");
 
-		sprintf(STR_NOTFOUND,     "Not found!");
+		language("STR_NOTFOUND", STR_NOTFOUND, "Not found!");
 
-		*COVERS_PATH = NULL;
-
-		sprintf(search_url,       "http://google.com/search?q=");
-
-		do_once = false;
-	}
-
-	if(language("STR_TRADBY", STR_TRADBY))
-	{
-		language("STR_FILES", STR_FILES);
-		language("STR_GAMES", STR_GAMES);
-		language("STR_SETUP", STR_SETUP);
-		language("STR_HOME", STR_HOME);
-		language("STR_EJECT", STR_EJECT);
-		language("STR_INSERT", STR_INSERT);
-		language("STR_UNMOUNT", STR_UNMOUNT);
-		language("STR_COPY", STR_COPY);
-		language("STR_REFRESH", STR_REFRESH);
-		language("STR_SHUTDOWN", STR_SHUTDOWN);
-		language("STR_RESTART", STR_RESTART);
-
-		language("STR_BYTE", STR_BYTE);
-		language("STR_KILOBYTE", STR_KILOBYTE);
-		language("STR_MEGABYTE", STR_MEGABYTE);
-		language("STR_GIGABYTE", STR_GIGABYTE);
-
-		language("STR_COPYING", STR_COPYING);
-		language("STR_CPYDEST", STR_CPYDEST);
-		language("STR_CPYFINISH", STR_CPYFINISH);
-		language("STR_CPYABORT", STR_CPYABORT);
-		language("STR_DELETE", STR_DELETE);
-
-		language("STR_SCAN2", STR_SCAN2);
-		language("STR_VIDLG", STR_VIDLG	);
-
-		language("STR_MANUAL", STR_MANUAL);
-
-		language("STR_SAVE", STR_SAVE);
-		language("STR_SETTINGSUPD", STR_SETTINGSUPD);
-		language("STR_ERROR", STR_ERROR);
-
-		language("STR_MYGAMES", STR_MYGAMES);
-
-		language("STR_FIXING", STR_FIXING);
-
-		language("STR_WMSETUP", STR_WMSETUP);
-
-		language("STR_UNMOUNTGAME", STR_UNMOUNTGAME);
-
-		language("STR_WMSTART", STR_WMSTART);
-		language("STR_WMUNL", STR_WMUNL);
-		language("STR_CFWSYSALRD", STR_CFWSYSALRD);
-
-		language("STR_GAMEUM", STR_GAMEUM);
-
-		language("STR_EJECTED", STR_EJECTED);
-		language("STR_LOADED", STR_LOADED);
-		language("STR_LOADED2", STR_LOADED2);
-
-		language("STR_STORAGE", STR_STORAGE);
-		language("STR_MEMORY", STR_MEMORY);
-		language("STR_MBFREE", STR_MBFREE);
-		language("STR_KBFREE", STR_KBFREE);
-
-		language("STR_FANCTRL3", STR_FANCTRL3);
-		language("STR_ENABLED", STR_ENABLED);
-		language("STR_DISABLED", STR_DISABLED);
-
-		language("STR_FANCH0", STR_FANCH0);
-		language("STR_FANCH1", STR_FANCH1);
-		language("STR_FANCH2", STR_FANCH2);
-		language("STR_FANCH3", STR_FANCH3);
-
-		language("STR_NOTFOUND", STR_NOTFOUND);
-
-		language("COVERS_PATH", COVERS_PATH);
-		language("IP_ADDRESS", local_ip);
-		language("SEARCH_URL", search_url);
+		language("COVERS_PATH", COVERS_PATH, COVERS_PATH);
+		language("IP_ADDRESS", local_ip, local_ip);
+		language("SEARCH_URL", search_url, "http://google.com/search?q=");
 /*
 #ifdef COBRA_ONLY
 		language("STR_DISCOBRA", STR_DISCOBRA);
@@ -642,7 +574,7 @@ static void update_language(void)
 */
 	}
 
-	language("/CLOSEFILE", NULL);
+	language("/CLOSEFILE", NULL, NULL);
 
 	*html_base_path = NULL;
 }

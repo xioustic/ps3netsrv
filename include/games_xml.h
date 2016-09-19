@@ -195,10 +195,8 @@ static void make_fb_xml(char *myxml, char *templn)
  #ifndef ENGLISH_ONLY
 	char STR_LOADGAMES[72];//	= "Load games with webMAN";
 
-	sprintf(STR_LOADGAMES,   "Load games with webMAN");
-
-	language("STR_LOADGAMES", STR_LOADGAMES);
-	language("/CLOSEFILE", NULL);
+	language("STR_LOADGAMES", STR_LOADGAMES, "Load games with webMAN");
+	language("/CLOSEFILE", NULL, NULL);
  #endif
 
 	u16 size = sprintf(myxml, "%s"
@@ -378,37 +376,22 @@ static bool update_mygames_xml(u64 conn_s_p)
 	char STR_LAUNCHPSP[144];//	= "Launch PSP ISO mounted through webMAN or mmCM";
 	char STR_LAUNCHPS2[48];//	= "Launch PS2 Classic";
 
-	sprintf(STR_WMSETUP2,    "Setup webMAN options");
+	language("STR_WMSETUP2", STR_WMSETUP2, "Setup webMAN options");
 
-	sprintf(STR_EJECTDISC,   "Eject Disc");
+	language("STR_EJECTDISC", STR_EJECTDISC, "Eject Disc");
 
-	sprintf(STR_PS3FORMAT,   "PS3 format games");
-	sprintf(STR_PS2FORMAT,   "PS2 format games");
-	sprintf(STR_PS1FORMAT,   "PSOne format games");
-	sprintf(STR_PSPFORMAT,   "PSP\xE2\x84\xA2 format games");
+	language("STR_PS3FORMAT", STR_PS3FORMAT, "PS3 format games");
+	language("STR_PS2FORMAT", STR_PS2FORMAT, "PS2 format games");
+	language("STR_PS1FORMAT", STR_PS1FORMAT, "PSOne format games");
+	language("STR_PSPFORMAT", STR_PSPFORMAT, "PSP\xE2\x84\xA2 format games");
 
-	sprintf(STR_VIDFORMAT,   "Blu-ray\xE2\x84\xA2 and DVD");
-	sprintf(STR_VIDEO,       "Video content");
+	language("STR_VIDFORMAT", STR_VIDFORMAT, "Blu-ray\xE2\x84\xA2 and DVD");
+	language("STR_VIDEO", STR_VIDEO, "Video content");
 
-	sprintf(STR_LAUNCHPSP,   "Launch PSP ISO mounted through webMAN or mmCM");
-	sprintf(STR_LAUNCHPS2,   "Launch PS2 Classic");
+	language("STR_LAUNCHPSP", STR_LAUNCHPSP, "Launch PSP ISO mounted through webMAN or mmCM");
+	language("STR_LAUNCHPS2", STR_LAUNCHPS2, "Launch PS2 Classic");
 
-	language("STR_WMSETUP2", STR_WMSETUP2);
-
-	language("STR_EJECTDISC", STR_EJECTDISC);
-
-	language("STR_PS3FORMAT", STR_PS3FORMAT);
-	language("STR_PS2FORMAT", STR_PS2FORMAT);
-	language("STR_PS1FORMAT", STR_PS1FORMAT);
-	language("STR_PSPFORMAT", STR_PSPFORMAT);
-
-	language("STR_VIDFORMAT", STR_VIDFORMAT);
-	language("STR_VIDEO", STR_VIDEO);
-
-	language("STR_LAUNCHPSP", STR_LAUNCHPSP);
-	language("STR_LAUNCHPS2", STR_LAUNCHPS2);
-
-	language("/CLOSEFILE", NULL);
+	language("/CLOSEFILE", NULL, NULL);
 #endif
 
 

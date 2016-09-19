@@ -497,7 +497,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						// --- get d_path & wildcard ---
 						char *pw, *ps, wcard[MAX_PATH_LEN]; *wcard = NULL;
 
-						pw = strstr(param, "*");if(pw) {ps = strstr(param, "/"); if((ps > param) && (ps < pw)) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0; if(!*wcard && !ps) strcpy(wcard, param);}
+						pw = strchr(param, '*'); if(pw) {ps = strrchr(param, '/'); if((ps > param) && (ps < pw)) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0; if(!*wcard && !ps) strcpy(wcard, param);}
 
 						if(*param == NULL) split = 0;
 
@@ -627,7 +627,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					rest = 0;
 					u8 pasv_retry = 0;
 
-					for(; pasv_retry < 10; pasv_retry++)
+					for( ; pasv_retry < 10; pasv_retry++)
 					{
 						if(data_s >= 0) sclose(&data_s);
 						if(pasv_s >= 0) sclose(&pasv_s);
@@ -653,6 +653,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					if(pasv_retry >= 10)
 					{
 						ssend(conn_s_ftp, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
+						if(pasv_s >= 0) sclose(&pasv_s);
 						pasv_s = -1;
 					}
 				}
@@ -1003,10 +1004,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					ssend(conn_s_ftp, FTP_ERROR_500);	// Syntax error, command unrecognized and the requested	action did not take place.
 				}
 
-				if(dataactive == 1)
-				{
-					dataactive = 0;
-				}
+				if(dataactive == 1) dataactive = 0;
 				else
 				{
 					sclose(&data_s); data_s = -1;

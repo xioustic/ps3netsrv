@@ -137,13 +137,10 @@
 							char STR_RMVWMCFG[96];//		= "webMAN config reset in progress...";
 							char STR_RMVWMCFGOK[112];//	= "Done! Restart within 3 seconds";
 
-							sprintf(STR_RMVWMCFG,   "webMAN config reset in progress...");
-							sprintf(STR_RMVWMCFGOK, "Done! Restart within 3 seconds");
+							language("STR_RMVWMCFG", STR_RMVWMCFG, "webMAN config reset in progress...");
+							language("STR_RMVWMCFGOK", STR_RMVWMCFGOK, "Done! Restart within 3 seconds");
 
-							language("STR_RMVWMCFG", STR_RMVWMCFG);
-							language("STR_RMVWMCFGOK", STR_RMVWMCFGOK);
-
-							language("/CLOSEFILE", NULL);
+							language("/CLOSEFILE", NULL, NULL);
 #endif
 							cellFsUnlink(WMCONFIG);
 							{ BEEP1 }

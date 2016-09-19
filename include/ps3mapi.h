@@ -1061,7 +1061,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 {
 	int conn_s_ps3mapi = (int)conn_s_ps3mapi_p; // main communications socket
 	int data_s = -1;							// data socket
-	int data_ls = -1;
+	int pasv_s = -1;
 
 	int connactive = 1;							// whether the ps3mapi connection is active or not
 	int dataactive = 0;							// prevent the data connection from being closed at the end of the loop
@@ -1110,10 +1110,11 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 
 		if(working && (recv(conn_s_ps3mapi, buffer, PS3MAPI_RECV_SIZE, 0) > 0))
 		{
-			buffer[strcspn(buffer, "\n")] = '\0';
-			buffer[strcspn(buffer, "\r")] = '\0';
+			char *p = strstr(buffer, "\r\n");
+			if(p) strcpy(p, "\0\0"); else break;
 
 			int split = ssplit(buffer, cmd, 19, param1, PS3MAPI_MAX_LEN);
+
 			if(_IS(cmd, "DISCONNECT"))
 			{
 				ssend(conn_s_ps3mapi, PS3MAPI_OK_221);
@@ -1418,6 +1419,8 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GET"))
 					{
+						if(data_s < 0 && pasv_s >= 0) data_s = accept(pasv_s, NULL, NULL);
+
 						if(data_s > 0)
 						{
 							if(split == 1)
@@ -1448,7 +1451,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 													while(0 < leftsize)
 													{
 														system_call_6(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_PROC_MEM, (u64)attached_pid, offset, (u64)(u32)buffer2, (u64)sizetoread);
-														if(send(data_s, buffer2, sizetoread, 0)<0) { rr = -3; break; }
+														if(send(data_s, buffer2, sizetoread, 0) < 0) { rr = -3; break; }
 														offset += sizetoread;
 														leftsize -= sizetoread;
 														if(leftsize < BUFFER_SIZE_PS3MAPI) sizetoread = leftsize;
@@ -1459,7 +1462,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 												else
 												{
 													system_call_6(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_PROC_MEM, (u64)attached_pid, (u64)offset, (u64)(u32)buffer2, (u64)size);
-													if(send(data_s, buffer2, size, 0)<0) { rr = -3; break; }
+													if(send(data_s, buffer2, size, 0) < 0) { rr = -3; break; }
 													break;
 												}
 											}
@@ -1479,6 +1482,8 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "SET"))
 					{
+						if(data_s < 0 && pasv_s >= 0) data_s = accept(pasv_s, NULL, NULL);
+
 						if(data_s > 0)
 						{
 							if(split == 1)
@@ -1677,39 +1682,35 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			else if(_IS(cmd, "PASV"))
 			{
 				u8 pasv_retry = 0;
-			pasv_again:
-				if(!p1x)
+
+				for( ; pasv_retry < 10; pasv_retry++)
 				{
+					if(data_s >= 0) sclose(&data_s);
+					if(pasv_s >= 0) sclose(&pasv_s);
+
 					cellRtcGetCurrentTick(&pTick);
 					p1x = (((pTick.tick & 0xfe0000) >> 16) & 0xff) | 0x80; // use ports 32768 -> 65279 (0x8000 -> 0xFEFF)
 					p2x = (((pTick.tick & 0x00ff00) >> 8) & 0xff);
+
+					pasv_s = slisten(getPort(p1x, p2x), 1);
+
+					if(pasv_s >= 0)
+					{
+						sprintf(pasv_output, "227 Entering Passive Mode (%s,%i,%i)\r\n", ip_address, p1x, p2x);
+						ssend(conn_s_ps3mapi, pasv_output);
+
+						if((data_s = accept(pasv_s, NULL, NULL)) > 0)
+						{
+							dataactive = 1; break;
+						}
+					}
 				}
-				data_ls = slisten(getPort(p1x, p2x), 1);
 
-				if(data_ls >= 0)
+				if(pasv_retry >= 10)
 				{
-					sprintf(pasv_output, "227 Entering Passive Mode (%s,%i,%i)\r\n", ip_address, p1x, p2x);
-					ssend(conn_s_ps3mapi, pasv_output);
-
-					if((data_s = accept(data_ls, NULL, NULL)) > 0)
-					{
-						dataactive = 1;
-					}
-					else
-					{
-						ssend(conn_s_ps3mapi, PS3MAPI_ERROR_451);
-					}
-
-				}
-				else
-				{
-					p1x = 0;
-					if(pasv_retry<10)
-					{
-						pasv_retry++;
-						goto pasv_again;
-					}
-					ssend(conn_s_ps3mapi, PS3MAPI_ERROR_451);
+					ssend(conn_s_ps3mapi, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
+					if(pasv_s >= 0) sclose(&pasv_s);
+					pasv_s = -1;
 				}
 			}
 			else ssend(conn_s_ps3mapi, PS3MAPI_ERROR_502);
@@ -1717,8 +1718,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			if(dataactive == 1) dataactive = 0;
 			else
 			{
-				sclose(&data_s);
-				if(data_ls>0) { sclose(&data_ls); data_ls = FAILED; }
+				sclose(&data_s); data_s = -1;
 			}
 		}
 		else
@@ -1732,8 +1732,11 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 
 	sprintf(buffer, PS3MAPI_DISCONNECT_NOTIF, inet_ntoa(conn_info.remote_adr));
 	show_msg(buffer);
+
+	if(pasv_s >= 0) sclose(&pasv_s);
 	sclose(&conn_s_ps3mapi);
 	sclose(&data_s);
+
 	sys_ppu_thread_exit(0);
 }
 

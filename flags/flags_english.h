@@ -28,6 +28,7 @@
 #define GET_KLICENSEE	1	// /klic.ps3
 #define PS3_BROWSER		1	// /browser.ps3 / open browser combos
 //#define EMBED_JS		1	// use embedded javascript instead of external js files
+#define OFFLINE_INGAME	1	// allow set auto-disable network in-game
 
 //// EXTRA FEATURES ////
 //#define XMB_SCREENSHOT	1	// screenshot XMB using L2 + R2 + SELECT + START (thanks to 3141card)

@@ -213,11 +213,10 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "spp=1"))  webman_config->spp|=1;  //remove syscalls & history
 	#endif
 	if(strstr(param, "shh=1"))  webman_config->spp|=2;  //remove history & block psn servers (offline mode)
-	#ifndef LITE_EDITION
+	#ifdef OFFLINE_INGAME
 	if(strstr(param, "shh=2"))  webman_config->spp|=4;  //offline mode in game
 	#endif
 #endif
-
 #ifdef SPOOF_CONSOLEID
 	if(strstr(param, "id1=1"))  webman_config->sidps = 1; //spoof IDPS
 	if(strstr(param, "id2=1"))  webman_config->spsid = 1; //spoof PSID
@@ -430,123 +429,67 @@ static void setup_form(char *buffer, char *templn)
 	char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
 	char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
 
-	sprintf(STR_SCAN1,       "Scan these devices");
-	sprintf(STR_PSPL,        "Show PSP Launcher");
-	sprintf(STR_PS2L,        "Show PS2 Classic Launcher");
-	sprintf(STR_RXVID,       "Show Video sub-folder");
-	sprintf(STR_LPG,         "Load last-played game on startup");
-	sprintf(STR_AUTOB,       "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup");
-	sprintf(STR_DELAYAB,     "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)");
-	sprintf(STR_DEVBL,       "Enable /dev_blind (writable /dev_flash) on startup");
-	sprintf(STR_CONTSCAN,    "Disable content scan on startup");
-	sprintf(STR_USBPOLL,     "Disable USB polling");
-	sprintf(STR_FTPSVC,      "Disable FTP service");
-	sprintf(STR_FIXGAME,     "Disable auto-fix game");
-	sprintf(STR_COMBOS,      "Disable all PAD shortcuts");
-	sprintf(STR_MMCOVERS,    "Disable multiMAN covers");
-	sprintf(STR_ACCESS,      "Disable remote access to FTP/WWW services");
-	sprintf(STR_NOSETUP,     "Disable webMAN Setup entry in \"webMAN Games\"");
-	sprintf(STR_NOSPOOF,     "Disable firmware version spoofing");
-	sprintf(STR_NOGRP,       "Disable grouping of content in \"webMAN Games\"");
-	sprintf(STR_NOWMDN,      "Disable startup notification of WebMAN on the XMB");
-	#ifdef NOSINGSTAR
-	sprintf(STR_NOSINGSTAR,  "Remove SingStar icon");
-	#endif
-	sprintf(STR_AUTO_PLAY,   "Auto-Play");
-	sprintf(STR_RESET_USB,   "Disable Reset USB Bus");
-	sprintf(STR_TITLEID,     "Include the ID as part of the title of the game");
-	sprintf(STR_FANCTRL,     "Enable dynamic fan control");
-	sprintf(STR_NOWARN,      "Disable temperature warnings");
-	sprintf(STR_AUTOAT,      "Auto at");
-	sprintf(STR_LOWEST,      "Lowest");
-	sprintf(STR_FANSPEED,    "fan speed");
-
-	sprintf(STR_PS2EMU,      "PS2 Emulator");
-	sprintf(STR_LANGAMES,    "Scan for LAN games/videos");
-	sprintf(STR_ANYUSB,      "Wait for any USB device to be ready");
-	sprintf(STR_ADDUSB,      "Wait additionally for each selected USB device to be ready");
-	sprintf(STR_SPOOFID,     "Change idps and psid in lv2 memory at system startup");
-	sprintf(STR_DELCFWSYS,   "Disable CFW syscalls and delete history files at system startup");
-	sprintf(STR_MEMUSAGE,    "Plugin memory usage");
-	sprintf(STR_PLANG,       "Plugin language");
-	sprintf(STR_PROFILE,     "Profile");
-	sprintf(STR_DEFAULT,     "Default");
-	sprintf(STR_COMBOS2,     "XMB/In-Game PAD SHORTCUTS");
-	sprintf(STR_FAILSAFE,    "FAIL SAFE");
-	sprintf(STR_SHOWTEMP,    "SHOW TEMP");
-	sprintf(STR_SHOWIDPS,    "SHOW IDPS");
-	sprintf(STR_PREVGAME,    "PREV GAME");
-	sprintf(STR_NEXTGAME,    "NEXT GAME");
-	sprintf(STR_SHUTDOWN2,   "SHUTDOWN ");
-	sprintf(STR_RESTART2,    "RESTART&nbsp; ");
-	#ifdef REMOVE_SYSCALLS
-	sprintf(STR_DELCFWSYS2,  "DEL CFW SYSCALLS");
-	#endif
-	sprintf(STR_UNLOADWM,    "UNLOAD WM");
-	sprintf(STR_FANCTRL2,    "CTRL FAN");
-	sprintf(STR_FANCTRL4,    "CTRL DYN FAN");
-	sprintf(STR_FANCTRL5,    "CTRL MIN FAN");
-
-	language("STR_SCAN1", STR_SCAN1);
-	language("STR_PSPL", STR_PSPL);
-	language("STR_PS2L", STR_PS2L);
-	language("STR_RXVID", STR_RXVID);
-	language("STR_LPG", STR_LPG);
-	language("STR_AUTOB", STR_AUTOB);
-	language("STR_DELAYAB", STR_DELAYAB);
-	language("STR_DEVBL", STR_DEVBL);
-	language("STR_CONTSCAN", STR_CONTSCAN);
-	language("STR_USBPOLL", STR_USBPOLL);
-	language("STR_FTPSVC", STR_FTPSVC);
-	language("STR_FIXGAME", STR_FIXGAME);
-	language("STR_COMBOS", STR_COMBOS);
-	language("STR_MMCOVERS", STR_MMCOVERS);
-	language("STR_ACCESS", STR_ACCESS);
-	language("STR_NOSETUP", STR_NOSETUP);
-	language("STR_NOSPOOF", STR_NOSPOOF);
-	language("STR_NOGRP", STR_NOGRP);
-	language("STR_NOWMDN", STR_NOWMDN);
+	language("STR_SCAN1", STR_SCAN1, "Scan these devices");
+	language("STR_PSPL", STR_PSPL, "Show PSP Launcher");
+	language("STR_PS2L", STR_PS2L, "Show PS2 Classic Launcher");
+	language("STR_RXVID", STR_RXVID, "Show Video sub-folder");
+	language("STR_LPG", STR_LPG, "Load last-played game on startup");
+	language("STR_AUTOB", STR_AUTOB, "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup");
+	language("STR_DELAYAB", STR_DELAYAB, "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)");
+	language("STR_DEVBL", STR_DEVBL, "Enable /dev_blind (writable /dev_flash) on startup");
+	language("STR_CONTSCAN", STR_CONTSCAN, "Disable content scan on startup");
+	language("STR_USBPOLL", STR_USBPOLL, "Disable USB polling");
+	language("STR_FTPSVC", STR_FTPSVC, "Disable FTP service");
+	language("STR_FIXGAME", STR_FIXGAME, "Disable auto-fix game");
+	language("STR_COMBOS", STR_COMBOS, "Disable all PAD shortcuts");
+	language("STR_MMCOVERS", STR_MMCOVERS, "Disable multiMAN covers");
+	language("STR_ACCESS", STR_ACCESS, "Disable remote access to FTP/WWW services");
+	language("STR_NOSETUP", STR_NOSETUP, "Disable webMAN Setup entry in \"webMAN Games\"");
+	language("STR_NOSPOOF", STR_NOSPOOF, "Disable firmware version spoofing");
+	language("STR_NOGRP", STR_NOGRP, "Disable grouping of content in \"webMAN Games\"");
+	language("STR_NOWMDN", STR_NOWMDN, "Disable startup notification of WebMAN on the XMB");
 #ifdef NOSINGSTAR
-	language("STR_NOSINGSTAR", STR_NOSINGSTAR);
+	language("STR_NOSINGSTAR", STR_NOSINGSTAR, "Remove SingStar icon");
 #endif
-	language("STR_AUTO_PLAY", STR_AUTO_PLAY);
-	language("STR_RESET_USB", STR_RESET_USB);
-	language("STR_TITLEID", STR_TITLEID);
-	language("STR_FANCTRL", STR_FANCTRL);
-	language("STR_NOWARN", STR_NOWARN);
-	language("STR_AUTOAT", STR_AUTOAT);
-	language("STR_LOWEST", STR_LOWEST);
-	language("STR_FANSPEED", STR_FANSPEED);
+	language("STR_AUTO_PLAY", STR_AUTO_PLAY, "Auto-Play");
+	language("STR_RESET_USB", STR_RESET_USB, "Disable Reset USB Bus");
+	language("STR_TITLEID", STR_TITLEID, "Include the ID as part of the title of the game");
+	language("STR_FANCTRL", STR_FANCTRL, "Enable dynamic fan control");
+	language("STR_NOWARN", STR_NOWARN, "Disable temperature warnings");
+	language("STR_AUTOAT", STR_AUTOAT, "Auto at");
+	language("STR_LOWEST", STR_LOWEST, "Lowest");
+	language("STR_FANSPEED", STR_FANSPEED, "fan speed");
 
-	language("STR_PS2EMU", STR_PS2EMU);
-	language("STR_LANGAMES", STR_LANGAMES);
-	language("STR_ANYUSB", STR_ANYUSB);
-	language("STR_ADDUSB", STR_ADDUSB);
-	language("STR_SPOOFID", STR_SPOOFID);
-	language("STR_DELCFWSYS", STR_DELCFWSYS);
-	language("STR_MEMUSAGE", STR_MEMUSAGE);
-	language("STR_PLANG", STR_PLANG);
-	language("STR_PROFILE", STR_PROFILE);
-	language("STR_DEFAULT", STR_DEFAULT);
-	language("STR_COMBOS2", STR_COMBOS2);
-	language("STR_FAILSAFE", STR_FAILSAFE);
-	language("STR_SHOWTEMP", STR_SHOWTEMP);
-	language("STR_SHOWIDPS", STR_SHOWIDPS);
-	language("STR_PREVGAME", STR_PREVGAME);
-	language("STR_NEXTGAME", STR_NEXTGAME);
-	language("STR_SHUTDOWN2", STR_SHUTDOWN2);
-	language("STR_RESTART2", STR_RESTART2);
+	language("STR_PS2EMU", STR_PS2EMU, "PS2 Emulator");
+	language("STR_LANGAMES", STR_LANGAMES, "Scan for LAN games/videos");
+	language("STR_ANYUSB", STR_ANYUSB, "Wait for any USB device to be ready");
+	language("STR_ADDUSB", STR_ADDUSB, "Wait additionally for each selected USB device to be ready");
+	language("STR_SPOOFID", STR_SPOOFID, "Change idps and psid in lv2 memory at system startup");
+	language("STR_DELCFWSYS", STR_DELCFWSYS, "Disable CFW syscalls and delete history files at system startup");
+	language("STR_MEMUSAGE", STR_MEMUSAGE, "Plugin memory usage");
+	language("STR_PLANG", STR_PLANG, "Plugin language");
+	language("STR_PROFILE", STR_PROFILE, "Profile");
+	language("STR_DEFAULT", STR_DEFAULT, "Default");
+	language("STR_COMBOS2", STR_COMBOS2, "XMB/In-Game PAD SHORTCUTS");
+	language("STR_FAILSAFE", STR_FAILSAFE, "FAIL SAFE");
+	language("STR_SHOWTEMP", STR_SHOWTEMP, "SHOW TEMP");
+	language("STR_SHOWIDPS", STR_SHOWIDPS, "SHOW IDPS");
+	language("STR_PREVGAME", STR_PREVGAME, "PREV GAME");
+	language("STR_NEXTGAME", STR_NEXTGAME, "NEXT GAME");
+	language("STR_SHUTDOWN2", STR_SHUTDOWN2, "SHUTDOWN ");
+	language("STR_RESTART2", STR_RESTART2, "RESTART&nbsp; ");
 	#ifdef REMOVE_SYSCALLS
-	language("STR_DELCFWSYS2", STR_DELCFWSYS2);
+	language("STR_DELCFWSYS2", STR_DELCFWSYS2, "DEL CFW SYSCALLS");
 	#endif
-	language("STR_UNLOADWM", STR_UNLOADWM);
-	language("STR_FANCTRL2", STR_FANCTRL2);
-	language("STR_FANCTRL4", STR_FANCTRL4);
-	language("STR_FANCTRL5", STR_FANCTRL5);
+
+	language("STR_UNLOADWM", STR_UNLOADWM, "UNLOAD WM");
+	language("STR_FANCTRL2", STR_FANCTRL2, "CTRL FAN");
+	language("STR_FANCTRL4", STR_FANCTRL4, "CTRL DYN FAN");
+	language("STR_FANCTRL5", STR_FANCTRL5, "CTRL MIN FAN");
 	//language("STR_UPDN", STR_UPDN);
 	//language("STR_LFRG", STR_LFRG);
 
-	language("/CLOSEFILE", NULL);
+	language("/CLOSEFILE", NULL, NULL);
  #endif
 
 	uint8_t value;
@@ -761,7 +704,7 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, " • Offline  : <select name=\"shh\">");
 	add_option_item("0", STR_DISABLED, !(webman_config->spp & 6), buffer);
 	add_option_item("1", "Lock PSN",    (webman_config->spp & 2), buffer);
-	#ifndef LITE_EDITION
+	#ifdef OFFLINE_INGAME
 	add_option_item("2", STR_GAMES,     (webman_config->spp & 4), buffer);
 	#endif
 	strcat(buffer, "</select>");
@@ -1141,9 +1084,9 @@ static void reset_settings(void)
 		sys_timer_usleep(500000);
 	}
 
-#ifndef COBRA_ONLY
+	#ifndef COBRA_ONLY
 	webman_config->spp = 0; //disable removal of syscalls on nonCobra
-#endif
+	#endif
 
 	// set default autoboot path
 	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);

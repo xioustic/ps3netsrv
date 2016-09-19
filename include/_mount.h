@@ -90,7 +90,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			purl--, *purl = NULL;
 		}
 
-#ifndef LITE_EDITION
+#ifdef OFFLINE_INGAME
 		purl = strstr(source, "offline=");
 		if(purl) net_status = (*(purl + 8) == '0') ? 1 : 0;
 #endif
@@ -138,9 +138,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// -----------------
 		if(mount_ps3)
 		{
-#ifndef LITE_EDITION
+#ifdef OFFLINE_INGAME
 			if(mounted && (strstr(param, OFFLINE_TAG) != NULL)) net_status = 0;
-
+#endif
+#ifndef LITE_EDITION
 			if(mounted && IS_ON_XMB && strstr(param, "/PSPISO") == NULL && extcmp(param, ".BIN.ENC", 8) != 0)
 			{
 				uint8_t autoplay = webman_config->autoplay;
@@ -553,18 +554,15 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				sprintf(STR_MOVIELOADED, "Movie %s%s%smovie.",
 										 "loaded successfully. Start the ", "movie from the disc icon<br>under the Video column"                , ".</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the ");
 
-				sprintf(STR_GAMETOM,     "Game to mount");
-				sprintf(STR_MOVIETOM,    "Movie to mount");
+				language("STR_GAMETOM", STR_GAMETOM, "Game to mount");
+				language("STR_GAMELOADED", STR_GAMELOADED, STR_GAMELOADED);
+				language("STR_PSPLOADED", STR_PSPLOADED, STR_PSPLOADED);
+				language("STR_PS2LOADED", STR_PS2LOADED, STR_PS2LOADED);
 
-				language("STR_GAMETOM", STR_GAMETOM);
-				language("STR_GAMELOADED", STR_GAMELOADED);
-				language("STR_PSPLOADED", STR_PSPLOADED);
-				language("STR_PS2LOADED", STR_PS2LOADED);
+				language("STR_MOVIETOM", STR_MOVIETOM, "Movie to mount");
+				language("STR_MOVIELOADED", STR_MOVIELOADED, STR_MOVIELOADED);
 
-				language("STR_MOVIETOM", STR_MOVIETOM);
-				language("STR_MOVIELOADED", STR_MOVIELOADED);
-
-				language("/CLOSEFILE", NULL);
+				language("/CLOSEFILE", NULL, NULL);
 #endif
 				bool is_movie = strstr(param, "/BDISO") || strstr(param, "/DVDISO") || !extcmp(param, ".ntfs[BDISO]", 12) || !extcmp(param, ".ntfs[DVDISO]", 13);
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);

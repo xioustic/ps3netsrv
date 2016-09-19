@@ -117,7 +117,9 @@ SYS_MODULE_STOP(wwwd_stop);
 #define WMNOSCAN			TMP_DIR "/wm_noscan"			// webMAN config file to skip on boot
 #define WMREQUEST_FILE		TMP_DIR "/wm_request"			// webMAN request file
 #define WMNET_DISABLED		TMP_DIR "/wm_netdisabled"		// webMAN config file to re-enable network
-#define WMONLINE_GAMES		TMP_DIR "/wm_online_ids.txt"	// webMAN config file to skip disable network
+
+#define WMONLINE_GAMES		TMP_DIR "/wm_online_ids.txt"	// webMAN config file to skip disable network setting on these title ids
+#define WMOFFLINE_GAMES		TMP_DIR "/wm_offline_ids.txt"	// webMAN config file to disable network setting on specific title ids (overrides wm_online_ids.txt)
 
 #define VSH_MENU_IMAGES		"/dev_hdd0/plugins/images"
 
@@ -373,7 +375,7 @@ static bool syscalls_removed = false;
 static float c_firmware = 0.0f;
 static u8 dex_mode = 0;
 
-#ifndef LITE_EDITION
+#ifdef OFFLINE_INGAME
 static int32_t net_status = -1;
 #endif
 
@@ -957,7 +959,7 @@ static void handleclient(u64 conn_s_p)
 			spoof_idps_psid();
  #endif
  #ifdef COBRA_ONLY
-	#ifdef REMOVE_SYSCALLS
+			#ifdef REMOVE_SYSCALLS
 			if(webman_config->spp & 1) //remove syscalls & history
 			{
 				sys_timer_sleep(5);
@@ -966,22 +968,21 @@ static void handleclient(u64 conn_s_p)
 				delete_history(true);
 			}
 			else
-	#endif
+			#endif
 			if(webman_config->spp & 2) //remove history & block psn servers (offline mode)
 			{
 				delete_history(false);
 				block_online_servers(false);
 			}
- #endif
- #ifndef LITE_EDITION
+			#ifdef OFFLINE_INGAME
 			if(file_exists(WMNET_DISABLED)) //re-enable network (force offline in game)
 			{
 				net_status = 1;
 				poll_start_play_time();
 			}
+			#endif
  #endif
 		}
-
 		sys_ppu_thread_exit(0);
 	}
 
@@ -1451,16 +1452,16 @@ static void handleclient(u64 conn_s_p)
 
 				u8 klic_polling_status = klic_polling;
 
-				if(strstr(param, "off"))  klic_polling = KL_OFF;  else
-				if(strstr(param, "auto")) klic_polling = KL_AUTO; else
-				if(strstr(param, "?log")) klic_polling = klic_polling ? KL_OFF : KL_GET; // toggle
+				if(param[10] == 'o') klic_polling = KL_OFF;  else
+				if(param[10] == 'a') klic_polling = KL_AUTO; else
+				if(param[10] == 'l') klic_polling = klic_polling ? KL_OFF : KL_GET; // toggle
 
-				if((klic_polling_status == 0) && (klic_polling == 2))
+				if((klic_polling_status == KL_OFF) && (klic_polling == KL_AUTO))
 				{
 					if(IS_ON_XMB) http_response(conn_s, header, param, CODE_HTTP_OK, (char*)"/KLIC: Waiting for game...");
 
 					// wait until game start
-					while((klic_polling == 2) && IS_ON_XMB && working) {sys_timer_usleep(500000);}
+					while((klic_polling == KL_AUTO) && IS_ON_XMB && working) {sys_timer_usleep(500000);}
 				}
 
 				char kl[0x120], prev[0x200], buffer[0x200]; memset(kl, 0, 120);
@@ -1517,7 +1518,7 @@ static void handleclient(u64 conn_s_p)
 							if(klic_polling == KL_GET) break; strcpy(prev, buffer);
 						}
 
-						klic_polling = 0;
+						klic_polling = KL_OFF;
 					}
 				}
 
@@ -1604,8 +1605,8 @@ static void handleclient(u64 conn_s_p)
 				// /netstatus.ps3?0        disable network access in registry
 				// /netstatus.ps3?disable  disable network access in registry
 
-				if(param[15] == '0' || param[15] == 'e') xsetting_F48C0548()->SetSettingNet_enable(0);
-				if(param[15] == '1' || param[15] == 'd') xsetting_F48C0548()->SetSettingNet_enable(1);
+				if( param[15] & 1) xsetting_F48C0548()->SetSettingNet_enable(1); else //enable
+				if(~param[15] & 1) xsetting_F48C0548()->SetSettingNet_enable(0);      //disable
 
 				int32_t status = 0;
 				xsetting_F48C0548()->GetSettingNet_enable(&status);
@@ -2395,8 +2396,8 @@ static void handleclient(u64 conn_s_p)
 
 						sprintf(STR_XMLRF, "Game list refreshed (<a href=\"%s\">mygames.xml</a>).%s", MY_GAMES_XML, "<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.");
 
-						language("STR_XMLRF", STR_XMLRF);
-						language("/CLOSEFILE", NULL);
+						language("STR_XMLRF", STR_XMLRF, STR_XMLRF);
+						language("/CLOSEFILE", NULL, NULL);
  #endif
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
 					}
@@ -2529,9 +2530,9 @@ static void handleclient(u64 conn_s_p)
 						// /extgd.ps3?0        disable external GAME DATA
 						// /extgd.ps3?disable  disable external GAME DATA
 
-						if(param[10] != '?') extgd ^= 1; else
-						if(param[11] == 'e' /*enable */ || param[11] == '1') extgd = 1; else
-						if(param[11] == 'd' /*disable*/ || param[11] == '0') extgd = 0;
+						if( param[10] != '?') extgd ^= 1; else //toggle
+						if( param[11] & 1)    extgd  = 1; else //enable
+						if(~param[11] & 1)    extgd  = 0;      //disable
 
 						strcat(pbuffer, "External Game DATA: ");
 
@@ -2555,8 +2556,8 @@ static void handleclient(u64 conn_s_p)
 
 						if(param[11] == '?')
 						{
-							if((param[12] == '1') || (param[12] == 'e')) system_bgm = 0; //enable
-							if((param[12] == '0') || (param[12] == 'd')) system_bgm = 1; //disable
+							if( param[12] & 1) system_bgm = 0; else //enable
+							if(~param[12] & 1) system_bgm = 1;      //disable
 						}
 
 						if(param[12] != 's')
