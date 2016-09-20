@@ -519,7 +519,17 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 
 		if(get_title_and_id_from_sfo(templn, tempID, entry_name, icon, tempstr, f0) != CELL_FS_SUCCEEDED || !HAS_TITLE_ID)
 		{
-			sprintf(templn, "%s/%s", param, entry_name); // return ISO file name
+			if(!IS_NTFS)
+			{
+				sprintf(templn, "%s/%s", param, entry_name); // get raw title ID from ISO
+
+				if(read_file(templn, tempID, 11, 0x810) == 11)
+				{
+					strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
+				}
+			}
+
+			get_name(templn, entry_name, NO_EXT);
 		}
 	}
 	else
@@ -1035,19 +1045,6 @@ next_html_entry:
 								get_name(templn, entry.d_name, NO_EXT);
 #else
 								if(get_name_iso_or_sfo(templn, tempID, icon, param, entry.d_name, f0, f1, uprofile, flen, tempstr) == FAILED) continue;
-
-								if(IS_PS3_FOLDER && !HAS_TITLE_ID)
-								{
-									if(!IS_NTFS)
-									{
-										if(read_file(templn, tempID, 11, 0x810) == 11)
-										{
-											strncpy(&tempID[4], &tempID[5], 5); tempID[9] = NULL;
-										}
-									}
-
-									get_name(templn, entry.d_name, NO_EXT);
-								}
 #endif
 							}
 

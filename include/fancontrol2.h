@@ -6,6 +6,8 @@ static void poll_start_play_time(void)
 
 	if(IS_ON_XMB)
 	{
+		if(gTick.tick != rTick.tick) vshnet_setUpdateUrl("http://127.0.0.1/dev_hdd0/ps3-updatelist.txt"); // custom update file
+
 		gTick = rTick;
 
 	#ifdef OFFLINE_INGAME
