@@ -499,7 +499,9 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 			if((uprofile  > 0) && (uprofile != fprofile)) return FAILED;
 		}
 
-		flen-=13; char *ntfs_ext = (char*)entry_name + flen;
+		flen-=13; if(flen < 0) return FAILED;
+
+		char *ntfs_ext = (char*)entry_name + flen;
 		if(IS_PS3_FOLDER && !IS(ntfs_ext, ".ntfs[PS3ISO]")) return FAILED;
 		if(IS_PS2_FOLDER && !IS(ntfs_ext, ".ntfs[PS2ISO]")) return FAILED;
 		if(IS_PSX_FOLDER && !IS(ntfs_ext, ".ntfs[PSXISO]")) return FAILED;

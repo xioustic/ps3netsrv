@@ -953,7 +953,7 @@ static void setup_form(char *buffer, char *templn)
 					"<a href=\"http://www.psx-place.com/threads/webman-mod-general-information-thread.27/\">webMAN-MOD - Main thread of webMAN-MOD on Psx-place</a><br>");
 #else
 	strcat(buffer,  HTML_BLU_SEPARATOR
-					"webMAN - Simple Web Server" EDITION "<br>");
+					"webMAN - Simple Web Server" EDITION "<p>");
 #endif
 
 /*

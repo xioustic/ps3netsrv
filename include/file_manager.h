@@ -215,7 +215,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 #endif
 
 #ifdef PKG_HANDLER
-	else if( IS(ext, ".pkg") || IS(ext, ".PKG") )
+	else if( IS(ext, ".pkg") || IS(ext, ".PKG") || IS(ext, ".p3t") )
 			sprintf(fsize, "<a href=\"/install.ps3%s\">%'llu %s</a>", templn, sz, sf);
 #endif
 
@@ -224,9 +224,9 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
 	else if(   show_img
  #ifndef PKG_HANDLER
-			|| IS(ext, ".pkg")
+			|| IS(ext, ".pkg") || IS(ext, ".p3t")
  #endif
-			|| IS(ext, ".p3t") || IS(ext5, ".edat")
+			|| IS(ext5, ".edat")
 			|| IS(ext, ".rco") || IS(ext, ".qrc")
 			|| !strcasecmp(ext, ".mp4") || !strcasecmp(ext, ".mkv") || !strcasecmp(ext, ".avi")
 			|| !strcasecmp(ext, ".mp3")

@@ -14,7 +14,7 @@ typedef struct
 	int (*DoUnk10)(int , void* , void * );    // 3 Parameter:
 	int (*DoUnk11)(int, int, void*, void*);   // 4 Parameter: int value (=0 -> npsignin), ignored, uint8 [0x1B4]{message, pkg_path,..},uint8 [0x25]
 	int (*DoUnk12)(void*);                    // 1 Parameter: uint8 [0x220] - auth_plugin if 5 (0x102,handler,0,0) / msg_only_for_psp_need_copy_ask
-	int (*DoUnk13)(char*, char*);             // 2 Parameter: char * path, char * message - Theme Install/Copy ? (type: bdc, category: TI, CD_%u.p3t)
+	int (*installTheme)(char*, char*);        // 2 Parameter: char * path, char * message - Theme Install/Copy ? (type: bdc, category: TI, CD_%u.p3t)
 	int (*DoUnk14)(char*);                    // 1 Parameter: char * path? - page_update_history
 	int (*DoUnk15)(void);                     // 0 Parameter: disables 2 second sleep on ps2bootparam.dat
 	int (*DoUnk16)(char*);                    // 1 Parameter: strncpy char * [0x20] (TitleId/ContentId?)

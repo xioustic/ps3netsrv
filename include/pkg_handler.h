@@ -159,6 +159,14 @@ static void unload_web_plugins(void)
 		press_cancel_button();
 	}
 #endif
+
+	int view = View_Find("explore_plugin");
+
+	if(view)
+	{
+		explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
+		explore_interface->ExecXMBcommand("close_all_list",0,0);
+	}
 }
 
 static void downloadPKG_thread(void)
@@ -178,7 +186,11 @@ static void installPKG_thread(void)
 		game_ext_interface = (game_ext_plugin_interface *)plugin_GetInterface(View_Find("game_ext_plugin"),1);
 	}
 	game_ext_interface->LoadPage();
-	game_ext_interface->installPKG(pkg_path);
+
+	if(!extcasecmp(pkg_path, ".p3t", 4))
+		game_ext_interface->installTheme(pkg_path, (char*)"");
+	else
+		game_ext_interface->installPKG(pkg_path);
 }
 
 static int download_file(const char *param, char *msg)
@@ -326,7 +338,7 @@ static int installPKG(const char *pkgpath, char *msg)
 
 		if( file_exists(pkg_path) )
 		{
-			if(!extcasecmp(pkg_path, ".pkg", 4)) //check if file has a .pkg extension or not and treat accordingly
+			if(!extcasecmp(pkg_path, ".pkg", 4) || !extcasecmp(pkg_path, ".p3t", 4)) //check if file has a .pkg extension or not and treat accordingly
 			{
 				unload_web_plugins();
 

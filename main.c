@@ -102,7 +102,8 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.35 MOD"						// webMAN version
+#define WM_VERSION			"1.43.36 MOD"						// webMAN version
+
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
 #define MM_ROOT_STL			"/dev_hdd0/tmp/game_repo/main"		// stealthMAN root folder
@@ -701,7 +702,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 			{
 				*p = NULL;
 				if(code == CODE_INSTALL_PKG) add_breadcrumb_trail(templn, (char *)msg + 11); else strcat(templn, msg);
-				strcat(templn, "<p>To: \0"); add_breadcrumb_trail(templn, p + 5);
+				if(code == CODE_DOWNLOAD_FILE || extcasecmp(pkg_path, ".p3t", 4) != 0) strcat(templn, "<p>To: \0"); add_breadcrumb_trail(templn, p + 5);
 			}
 			else
 				strcat(templn, msg);
