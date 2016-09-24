@@ -597,7 +597,9 @@ static void setup_form(char *buffer, char *templn)
 #ifdef COBRA_ONLY
 	add_check_box("bus", "1", STR_RESET_USB, _BR_, (webman_config->bus), buffer);
 #endif
+#ifndef LITE_EDITION
 	add_check_box("apd", "1", STR_AUTO_PLAY, _BR_, (webman_config->autoplay), buffer);
+#endif
 
 #ifdef FIX_GAME
 	if(c_firmware>=4.20f && c_firmware<=4.78f)

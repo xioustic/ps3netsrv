@@ -187,23 +187,6 @@ Notes:
 - If u try to use an 2,5" HDD on Pi B+ or Pi2 add "max_usb_current=1" to "config.txt"(on root of SD-Card) but make sure your Pi's power supply has at least 2A
 
 
----------------------------
-How to compile it yourself:
----------------------------
-1. Download latest ps3netsrv-source from http://github.com/aldostools and replace the 'makefile' with the one from 'ps3netsrv-pi'
-2. Start latest 'Raspbian Jessie Lite' and update it via "sudo apt-get update" and "sudo apt-get upgrade"
-3. Enter "sudo apt-get install ntfs-3g" (if u need ntfs support)
-4. Copy over the folder with the source files from step 1 over to '/home/pi/'-directory (i recommend 'WinSCP' for this task)
-5. Enter "cd /home/pi/ps3netsrv-pi"
-6. Enter "make" (this will create the 'ps3netsrv' executable inside 'cd /home/pi/ps3netsrv-pi')
-
-I've tried it on a Pi 3 and compared it to the ps3netsrv on my NAS: It performs with about 50% of the NAS-speed.
-(I've installed a 500MB PKG over network and compared the install-times)
-It's not that great... but i guess at least it's useable.
-May be performance can be increased using a EXT4 formatted USB-device... i didn't check this !
-If anyone tries this pls let us know the results !
-
-
 Regards
 
 Rudi Rastelli
