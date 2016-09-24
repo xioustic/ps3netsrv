@@ -74,8 +74,10 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		if(strstr(param, "?u")) enable_fan_control(3, templn);
 	}
 
+#ifdef SPOOF_CONSOLEID
 	get_eid0_idps();
 	get_idps_psid();
+#endif
 
 	sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);
 
@@ -252,15 +254,19 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	sprintf( templn, "<hr></font><h2><a class=\"s\" href=\"/setup.ps3\">"
 						"Firmware : %s %s<br>"
 						"%s<br>"
+#ifdef SPOOF_CONSOLEID
 						"PSID LV2 : %016llX%016llX<hr>"
 						"IDPS EID0: %016llX%016llX<br>"
 						"IDPS LV2 : %016llX%016llX<br>"
+#endif
 						"MAC Addr : %02X:%02X:%02X:%02X:%02X:%02X - %s %s</h2></a></b>",
 					fw_version, cfw_info,
 					(syscalls_removed) ? STR_CFWSYSALRD : "",
+#ifdef SPOOF_CONSOLEID
 					PSID[0], PSID[1],
 					eid0_idps[0], eid0_idps[1],
 					IDPS[0], IDPS[1],
+#endif
 					mac_address[13], mac_address[14], mac_address[15], mac_address[16], mac_address[17], mac_address[18], ip, net_type); buffer += concat(buffer, templn);
 
 	/////////////////////////////

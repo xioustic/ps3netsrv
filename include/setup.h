@@ -597,9 +597,7 @@ static void setup_form(char *buffer, char *templn)
 #ifdef COBRA_ONLY
 	add_check_box("bus", "1", STR_RESET_USB, _BR_, (webman_config->bus), buffer);
 #endif
-#ifndef LITE_EDITION
 	add_check_box("apd", "1", STR_AUTO_PLAY, _BR_, (webman_config->autoplay), buffer);
-#endif
 
 #ifdef FIX_GAME
 	if(c_firmware>=4.20f && c_firmware<=4.78f)
@@ -874,7 +872,9 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #endif
 #else
+ #ifdef SPOOF_CONSOLEID
 	add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"             , !(webman_config->combo & SHOW_IDPS), buffer);
+ #endif
  #ifdef WM_REQUEST
 	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
  #else

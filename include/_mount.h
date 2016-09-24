@@ -141,7 +141,6 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #ifdef OFFLINE_INGAME
 			if(mounted && (strstr(param, OFFLINE_TAG) != NULL)) net_status = 0;
 #endif
-#ifndef LITE_EDITION
 			if(mounted && IS_ON_XMB && strstr(param, "/PSPISO") == NULL && extcmp(param, ".BIN.ENC", 8) != 0)
 			{
 				uint8_t autoplay = webman_config->autoplay;
@@ -195,7 +194,6 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					if((atag && !l2) || (!atag && l2)) {sys_timer_sleep(1); launch_disc(category, seg_name);} // L2 + X
 				}
 			}
-#endif // #ifndef LITE_EDITION
 
 			is_busy = false;
 			return;

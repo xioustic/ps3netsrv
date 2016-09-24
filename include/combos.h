@@ -659,8 +659,8 @@ show_popup:
 							{
 #ifndef LITE_EDITION
 								enable_ingame_screenshot();
-#endif
 								show_idps(msg);
+#endif
 							}
 						}
 #ifdef WM_CUSTOM_COMBO

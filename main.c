@@ -1087,6 +1087,9 @@ static void handleclient(u64 conn_s_p)
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
 												is_ps3_http = 0;
 
+if(strstr(header, "/cpursx_ps3") || strstr(header, ".js") || strstr(header, ".css")) ;
+else save_file("/dev_hdd0/debug.txt", header, APPEND_TEXT);
+
 			header[strcspn(header, "\n")] = NULL;
 			header[strcspn(header, "\r")] = NULL;
 
@@ -1149,6 +1152,17 @@ static void handleclient(u64 conn_s_p)
 
 					goto exit_handleclient;
 				}
+			}
+ #elif defined(LITE_EDITION)
+			if(islike(param, "/play.ps3"))
+			{
+				// /play.ps3                     start game from disc icon
+
+				// default: play.ps3?col=game&seg=seg_device
+				char col[16], seg[80]; *col = *seg = NULL;
+				launch_disc(col, seg);
+
+				sprintf(param, "/cpursx.ps3");
 			}
  #endif //  #ifdef VIRTUAL_PAD
 

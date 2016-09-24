@@ -96,7 +96,6 @@ static void spoof_idps_psid(void)
 
 	get_idps_psid();
 }
-#endif
 
 static void get_eid0_idps(void)
 {
@@ -134,3 +133,4 @@ static void show_idps(char *msg)
 	show_msg(msg);
 	sys_timer_sleep(2);
 }
+#endif
