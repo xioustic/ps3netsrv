@@ -305,14 +305,14 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 		flen -= 12; // remove .BIN.ENC.PNG
 		if(flen > 0 && icon[flen] == '.')
 		{
-			icon[flen] = NULL; strcat(icon, ".png");
+			icon[flen] = NULL; strcat(icon + flen, ".png");
 			if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon, ".PNG");
+			icon[flen] = NULL; strcat(icon + flen, ".PNG");
 			if(file_exists(icon)) return;
 		}
 	}
 
-	const char ext[4][5] = {".jpg", ".png", ".PNG", ".JPG"};
+	const char ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
 
 	if(isdir || (ns >= 0))
 		{get_name(icon, file, GET_WMTMP); strcat(icon, ".PNG");} //wmtmp
@@ -323,14 +323,14 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 		char *p = strstr(icon + flen, ".ntfs[");
 		if(p) {flen -= strlen(p), *p = NULL;}
 
-		if((flen > 2) && icon[flen - 2] == '.' ) {flen -= 2; icon[flen] = NULL;} // remove file extension (split iso)
-		if((flen > 4) && icon[flen - 4] == '.' ) {flen -= 4; icon[flen] = NULL;} // remove file extension
+		if((flen > 2) && icon[flen - 2] == '.' ) {flen -= 2, icon[flen] = NULL;} // remove file extension (split iso)
+		if((flen > 4) && icon[flen - 4] == '.' ) {flen -= 4, icon[flen] = NULL;} // remove file extension
 
 		//file name + ext
 		for(u8 e = 0; e < 4; e++)
 		{
 			icon[flen] = NULL; // remove file extension
-			strcat(icon, ext[e]);
+			strcat(icon + flen, ext[e]);
 			if(file_exists(icon)) return;
 		}
 	}
@@ -339,45 +339,41 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 	if(file_exists(icon) == false)
 	{
 #ifdef COBRA_ONLY
+#ifndef LITE_EDITION
 		if(ns < 0) {*icon = NULL; return;}
 
-		char tempstr[_4KB_];
-		int tlen = 0, icon_len = 0;
+		char remote_file[MAX_PATH_LEN];
 
 		if(isdir)
 		{
 			if(webman_config->nocov == SHOW_DISC) return; // no icon0
-			sprintf(tempstr, "%s/%s/PS3_GAME/ICON0.PNG", param, file);
+			sprintf(remote_file, "%s/%s/PS3_GAME/ICON0.PNG", param, file);
+
+			copy_net_file(icon, remote_file, ns, COPY_WHOLE_FILE);
+			if(file_exists(icon)) return;
 		}
 		else
 		{
 			get_name(icon, file, NO_EXT);
-			tlen = sprintf(tempstr, "%s/%s.jpg", param, icon);
+			int tlen = sprintf(remote_file, "%s/%s", param, icon);
 
-			icon_len = get_name(icon, file, GET_WMTMP); strcat(icon, ".jpg"); //wmtmp
-			if(file_exists(icon)) return;
-		}
+			int icon_len = get_name(icon, file, GET_WMTMP); //wmtmp
 
-#ifndef LITE_EDITION
-		copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
-		if(file_exists(icon)) return;
-
-		if(tlen > 4)
-			for(u8 e = 1; e < 4; e++)
+			for(u8 e = 0; e < 4; e++)
 			{
 				icon[icon_len] = NULL; strcat(icon + icon_len, ext[e]);
 				if(file_exists(icon)) return;
 
-				tempstr[tlen - 4] = NULL; strcat(tempstr + tlen, ext[e]);
+				remote_file[tlen] = NULL; strcat(remote_file + tlen, ext[e]);
 
 				//Copy remote icon locally
-				copy_net_file(icon, tempstr, ns, COPY_WHOLE_FILE);
+				copy_net_file(icon, remote_file, ns, COPY_WHOLE_FILE);
 				if(file_exists(icon)) return;
 			}
-
+		}
 #endif //#ifndef LITE_EDITION
-
 #endif //#ifdef COBRA_ONLY
+
 		*icon = NULL;
 	}
 }

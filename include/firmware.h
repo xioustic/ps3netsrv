@@ -153,6 +153,7 @@ static void detect_firmware(void)
 			get_fan_policy_offset = 0x8000000000009E38ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 			set_fan_policy_offset = 0x800000000000A334ULL; // sys 389 set_fan_policy
 
+#ifdef SPOOF_CONSOLEID
 			// idps / psid cex
 			if(c_firmware == 4.55f)
 			{
@@ -176,6 +177,7 @@ static void detect_firmware(void)
 			}
 
 			if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
+#endif
 		}
 		else if(c_firmware >= 4.21f && c_firmware <= 4.53f)
 		{
@@ -220,6 +222,7 @@ static void detect_firmware(void)
 			}
 			else
 #endif
+#ifdef SPOOF_CONSOLEID
 			if(c_firmware == 4.55f)
 			{
 				idps_offset1 = 0x8000000000407930ULL;
@@ -247,6 +250,7 @@ static void detect_firmware(void)
 			}
 
 			if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
+#endif
 		}
 		else if(c_firmware >= 4.21f && c_firmware <= 4.53f)
 		{

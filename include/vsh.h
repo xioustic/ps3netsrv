@@ -110,6 +110,18 @@ static void launch_disc(char *category, char *seg_name)
 
 		if(!IS(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{
+			u8 retry = 0;
+
+			while(View_Find("webrender_plugin"))
+			{
+				sys_timer_usleep(500000); retry++; if(retry > 4) break;
+			}
+
+			while(View_Find("webbrowser_plugin"))
+			{
+				sys_timer_usleep(500000); retry++; if(retry > 4) break;
+			}
+
 			// use segment for media type
 			if(IS(category, "game") && IS(seg_name, "seg_device"))
 			{
@@ -120,25 +132,29 @@ static void launch_disc(char *category, char *seg_name)
 				{return;}
 			}
 
-			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
-			explore_interface->ExecXMBcommand("close_all_list",0,0);
-			sys_timer_usleep(200000);
-			{sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command,0,0);}
+			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+			for(n = 0; n < 8; n++)
+			{
+				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
+				sys_timer_usleep(250000);
+			}
+
+			sys_timer_sleep(2);
+
+			{sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);}
 			sys_timer_usleep(500000);
-			explore_interface->ExecXMBcommand("close_all_list",0,0);
+			explore_interface->ExecXMBcommand("close_all_list", 0, 0);
 			sys_timer_usleep(200000);
 			sprintf(explore_command, "focus_segment_index %s", seg_name);
-			explore_interface->ExecXMBcommand((char*)explore_command,0,0);
+			explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
 			sys_timer_usleep(500000);
-			explore_interface->ExecXMBcommand("exec_push",0,0);
+			explore_interface->ExecXMBcommand("exec_push", 0, 0);
 		}
 		else {BEEP3}
 	}
 }
 
 /*
-#include "vsh/xmb_plugin.h"
-
 static void show_msg2(char* msg) // usage: show_msg2(L"text");
 {
 	if(View_Find("xmb_plugin") != 0)

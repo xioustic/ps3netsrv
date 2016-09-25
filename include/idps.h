@@ -1,3 +1,5 @@
+#ifdef SPOOF_CONSOLEID
+
 #define SC_GET_IDPS 					(870)
 #define SC_GET_PSID 					(872)
 
@@ -32,7 +34,6 @@ static void get_idps_psid(void)
 	{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 }
 
-#ifdef SPOOF_CONSOLEID
 static void spoof_idps_psid(void)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
@@ -133,4 +134,5 @@ static void show_idps(char *msg)
 	show_msg(msg);
 	sys_timer_sleep(2);
 }
+
 #endif

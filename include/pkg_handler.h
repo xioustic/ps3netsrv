@@ -119,7 +119,7 @@ static int LoadPluginById(int id, void *handler)
 	{
 		xmm0_interface = (xmb_plugin_xmm0 *)plugin_GetInterface(View_Find("xmb_plugin"), 'XMM0');
 	}
-	return xmm0_interface->LoadPlugin3(id, handler,0);
+	return xmm0_interface->LoadPlugin3(id, handler, 0);
 }
 
 static int UnloadPluginById(int id, void *handler)
@@ -128,7 +128,7 @@ static int UnloadPluginById(int id, void *handler)
 	{
 		xmm0_interface = (xmb_plugin_xmm0 *)plugin_GetInterface(View_Find("xmb_plugin"), 'XMM0');
 	}
-	return xmm0_interface->Shutdown(id, handler,1);
+	return xmm0_interface->Shutdown(id, handler, 1);
 }
 
 static void unloadSysPluginCallback(void)
@@ -164,8 +164,8 @@ static void unload_web_plugins(void)
 
 	if(view)
 	{
-		explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
-		explore_interface->ExecXMBcommand("close_all_list",0,0);
+		explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+		explore_interface->ExecXMBcommand("close_all_list", 0, 0);
 	}
 }
 
@@ -174,7 +174,7 @@ static void downloadPKG_thread(void)
 
 	if(download_interface == 0) // test if download_interface is loaded for interface access
 	{
-		download_interface = (download_plugin_interface *)plugin_GetInterface(View_Find("download_plugin"),1);
+		download_interface = (download_plugin_interface *)plugin_GetInterface(View_Find("download_plugin"), 1);
 	}
 	download_interface->DownloadURL(0, pkg_durl, pkg_dpath);
 }
@@ -183,7 +183,7 @@ static void installPKG_thread(void)
 {
 	if(game_ext_interface == 0) // test if game_ext_plugin is loaded for interface access
 	{
-		game_ext_interface = (game_ext_plugin_interface *)plugin_GetInterface(View_Find("game_ext_plugin"),1);
+		game_ext_interface = (game_ext_plugin_interface *)plugin_GetInterface(View_Find("game_ext_plugin"), 1);
 	}
 	game_ext_interface->LoadPage();
 

@@ -1,4 +1,5 @@
 @echo off
+mode con: cols=132 lines=45
 
 set CYGWIN=C:\cygwin\bin
 
@@ -23,7 +24,7 @@ rd objs>nul
 cls
 title [1/10] Building webftp_server_full.sprx...
 copy .\flags\flags_full.h .\flags.h >nul
-%CYGWIN%\bash --login -i -c 'make'
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_full.sprx
 
 del /q webftp_server.elf>nul
@@ -39,7 +40,7 @@ rd objs>nul
 cls
 title [2/10] Building webftp_server_cobra.sprx...
 copy .\flags\flags_cobra.h .\flags.h >nul
-%CYGWIN%\bash --login -i -c 'make'
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_cobra.sprx
 
 del /q webftp_server.elf>nul
@@ -51,8 +52,8 @@ rd objs>nul
 
 cls
 title [3/10] Building webftp_server_ps3mapi.sprx...
-copy .\flags\flags_ps3mapi.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_ps3mapi.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_ps3mapi.sprx
 
 del /q webftp_server.elf>nul
@@ -64,8 +65,8 @@ rd objs>nul
 
 cls
 title [4/10] Building webftp_server_english.sprx...
-copy .\flags\flags_english.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_english.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_english.sprx
 
 del /q webftp_server.elf>nul
@@ -77,8 +78,8 @@ rd objs>nul
 
 cls
 title [5/10] Building webftp_server_rebug_cobra_multi23.sprx...
-copy .\flags\flags_rebug_cobra_multi23.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_rebug_cobra_multi23.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_rebug_cobra_multi23.sprx
 
 del /q webftp_server.elf>nul
@@ -90,8 +91,8 @@ rd objs>nul
 
 cls
 title [6/10] Building webftp_server_rebug_cobra_ps3mapi.sprx...
-copy .\flags\flags_rebug_cobra_ps3mapi.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_rebug_cobra_ps3mapi.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_rebug_cobra_ps3mapi.sprx
 
 del /q webftp_server.elf>nul
@@ -102,8 +103,8 @@ del /q objs\*.o>nul
 
 cls
 title [7/10] Building webftp_server_rebug_cobra_english.sprx...
-copy .\flags\flags_rebug_cobra_english.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_rebug_cobra_english.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_rebug_cobra_english.sprx
 
 del /q webftp_server.elf>nul
@@ -114,8 +115,8 @@ del /q objs\*.o>nul
 
 cls
 title [8/10] Building webftp_server_noncobra.sprx...
-copy .\flags\flags_noncobra.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_noncobra.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_noncobra.sprx
 
 del /q webftp_server.elf>nul
@@ -126,8 +127,8 @@ del /q objs\*.o>nul
 
 cls
 title [9/10] Building webftp_server_ccapi.sprx...
-copy .\flags\flags_ccapi.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_ccapi.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_ccapi.sprx
 
 del /q webftp_server.elf>nul
@@ -138,8 +139,8 @@ del /q objs\*.o>nul
 
 cls
 title [10/10] Building webftp_server_lite.sprx...
-copy .\flags\flags_lite.h .\flags.h
-%CYGWIN%\bash --login -i -c 'make'
+copy .\flags\flags_lite.h .\flags.h >nul
+%CYGWIN%\bash --login -i -c 'make' >nul
 if exist webftp_server.sprx ren webftp_server.sprx webftp_server_lite.sprx
 
 del /q webftp_server.elf>nul

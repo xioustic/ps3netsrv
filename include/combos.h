@@ -659,6 +659,8 @@ show_popup:
 							{
 #ifndef LITE_EDITION
 								enable_ingame_screenshot();
+#endif
+#ifdef SPOOF_CONSOLEID
 								show_idps(msg);
 #endif
 							}

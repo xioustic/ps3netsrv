@@ -74,8 +74,6 @@ static void remove_cfw_syscalls(bool keep_ccapi)
 
 	u64 sc_null = peekq(SYSCALL_TABLE);
 
-	get_idps_psid();
-
 	u32 initial_sc = keep_ccapi ? 4 : 0;
 
 	#ifdef COBRA_ONLY

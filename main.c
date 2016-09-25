@@ -1087,9 +1087,6 @@ static void handleclient(u64 conn_s_p)
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
 												is_ps3_http = 0;
 
-if(strstr(header, "/cpursx_ps3") || strstr(header, ".js") || strstr(header, ".css")) ;
-else save_file("/dev_hdd0/debug.txt", header, APPEND_TEXT);
-
 			header[strcspn(header, "\n")] = NULL;
 			header[strcspn(header, "\r")] = NULL;
 
