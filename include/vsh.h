@@ -132,22 +132,19 @@ static void launch_disc(char *category, char *seg_name)
 				{return;}
 			}
 
+			// wait 6 seconds (delay until the disc icon appear on XMB)
 			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
-			for(n = 0; n < 8; n++)
+			for(n = 0; n < 80; n++)
 			{
 				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-				sys_timer_usleep(250000);
+				sys_timer_usleep(25000);
+				sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
+				sys_timer_usleep(25000);
+				sprintf(explore_command, "focus_segment_index %s", seg_name);
+				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
+				sys_timer_usleep(25000);
 			}
 
-			sys_timer_sleep(2);
-
-			{sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);}
-			sys_timer_usleep(500000);
-			explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-			sys_timer_usleep(200000);
-			sprintf(explore_command, "focus_segment_index %s", seg_name);
-			explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-			sys_timer_usleep(500000);
 			explore_interface->ExecXMBcommand("exec_push", 0, 0);
 		}
 		else {BEEP3}

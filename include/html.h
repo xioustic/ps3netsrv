@@ -53,6 +53,7 @@
 #define SCRIPT_SRC_FMT			"<script src=\"%s\"></script>"
 #define HTML_REDIRECT_TO_URL	"<script>setTimeout(function(){self.location=\"%s\"},%i);</script>"
 #define HTML_REDIRECT_TO_BACK	"<script>self.location=window.history.back();</script>"
+#define HTML_CLOSE_BROWSER		"<script>window.close(this);</script>"
 #define HTML_REDIRECT_WAIT		3000
 
 #define HTML_SHOW_LAST_GAME		"<span style=\"position:absolute;right:8px\"><font size=2>"

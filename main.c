@@ -310,6 +310,7 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define CODE_DOWNLOAD_FILE  1202
 #define CODE_RETURN_TO_ROOT 1203
 #define CODE_GOBACK         1222
+#define CODE_CLOSE_BROWSER  1223
 
 #define IS_ON_XMB		(View_Find("game_plugin") == 0)
 #define IS_INGAME		(View_Find("game_plugin") != 0)
@@ -680,7 +681,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 {
 	u16 slen;
 
-	if(code == CODE_VIRTUALPAD || code == CODE_GOBACK)
+	if(code == CODE_VIRTUALPAD || code == CODE_GOBACK || code == CODE_CLOSE_BROWSER)
 	{
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
 								CODE_HTTP_OK, url, HTTP_RESPONSE_TITLE_LEN + strlen(msg), HTML_BODY, HTML_RESPONSE_TITLE, msg);
@@ -2742,15 +2743,33 @@ static void handleclient(u64 conn_s_p)
 						ps3mapi_find_peek_poke(pbuffer, templn, param);
 					}
  #endif
-
 					else
- #ifdef PS2_DISC
-					if(mount_ps3 || forced_mount || islike(param, "/mount.ps3") || islike(param, "/mount.ps2") || islike(param, "/mount_ps2") || islike(param, "/copy.ps3"))
- #else
-					if(mount_ps3 || forced_mount || islike(param, "/mount.ps3") || islike(param, "/copy.ps3"))
- #endif
+					if(mount_ps3)
 					{
 						// /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
+
+						http_response(conn_s, header, param, CODE_CLOSE_BROWSER, HTML_CLOSE_BROWSER); //auto-close browser (don't wait for mount)
+
+						if(webman_config->autoplay)
+						{
+							int view = View_Find("explore_plugin");
+							if(view)
+							{
+								explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+								explore_interface->ExecXMBcommand("close_all_list", 0, 0);
+							}
+						}
+
+						game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount);
+						goto exit_handleclient;
+					}
+					else
+ #ifdef PS2_DISC
+					if(forced_mount || islike(param, "/mount.ps3") || islike(param, "/mount.ps2") || islike(param, "/mount_ps2") || islike(param, "/copy.ps3"))
+ #else
+					if(forced_mount || islike(param, "/mount.ps3") || islike(param, "/copy.ps3"))
+ #endif
+					{
 						// /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
 						// /mount.ps3/unmount
 						// /mount.ps2/<path>[?random=<x>]
@@ -2799,9 +2818,7 @@ static void handleclient(u64 conn_s_p)
 send_response:
 				if(mobile_mode && allow_retry_response) {allow_retry_response = false; goto mobile_response;}
 
-				if(mount_ps3)
-					strcat(pbuffer, "<script>window.close(this);</script>"); //auto-close
-				else if(islike(param, "/mount.ps3?http"))
+				if(islike(param, "/mount.ps3?http"))
 					{http_response(conn_s, header, param, CODE_HTTP_OK, param + 11); break;}
 				else
 				{
