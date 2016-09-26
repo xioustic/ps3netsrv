@@ -101,7 +101,7 @@ typedef struct
 	uint32_t lba;
 	int is_audio;
 } TrackDef;
-
+/*
 // This structure represents the Disc structure format 0 as defined in MMC-6 document
 typedef struct
 {
@@ -124,7 +124,7 @@ typedef struct
 	uint8_t bca_present : 1;
 	uint8_t reserved1 : 7;
 } __attribute__((packed)) DiscPhysInfo;
-
+*/
 typedef struct
 {
 	uint16_t size; // size of structure, this will be set automatically by the library
@@ -141,7 +141,7 @@ typedef struct
  *
  * Return values: 0 on sucess, ENOSYS if not in Cobra.
  */
-int cobra_lib_init(void);
+//int cobra_lib_init(void);
 
 
 /*
@@ -149,7 +149,7 @@ int cobra_lib_init(void);
  *
  * Return values: 0 on sucess, ENOSYS if not in Cobra.
  */
-int cobra_lib_finalize(void);
+//int cobra_lib_finalize(void);
 
 
 /*
@@ -579,7 +579,7 @@ int cobra_map_game(const char *path, const char *title_id, int *special_mode);
  * If path is not NULL, and any of the paths in the "paths" array is NULL, EINVAL is returned.
  * If path is not NULL, and any of the paths in the "new_paths" array is NULL, that specific entry is unmapped instead of mapped.
  */
-int cobra_map_paths(char *paths[], char *new_paths[], unsigned int num);
+//int cobra_map_paths(char *paths[], char *new_paths[], unsigned int num);
 
 
 /*

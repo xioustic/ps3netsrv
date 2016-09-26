@@ -153,11 +153,6 @@ static int sys_storage_ext_mount_ps2_discfile(unsigned int filescount, char *fil
 	return (int)p1;
 }
 
-static int sys_map_paths(char *paths[], char *new_paths[], unsigned int num)
-{
-	system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_MAP_PATHS, (uint64_t)(uint32_t)paths, (uint64_t)(uint32_t)new_paths, num);
-	return (int)p1;
-}
 /*
 static int sys_storage_ext_mount_encrypted_image(char *image, char *mount_point, char *filesystem, uint64_t nonce)
 {
@@ -1509,12 +1504,12 @@ int cobra_map_game(const char *path, const char *title_id, int *special_mode)
 
 	return 0;
 }
-
+/*
 int cobra_map_paths(char *paths[], char *new_paths[], unsigned int num)
 {
 	return sys_map_paths(paths, new_paths, num);
 }
-
+*/
 int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 {
 	int ret;

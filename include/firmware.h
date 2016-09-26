@@ -148,7 +148,7 @@ static void detect_firmware(void)
 
 	if(!dex_mode)
 	{ // CEX
-		if(c_firmware >= 4.55f && c_firmware <= 4.80f)
+		if(c_firmware >= 4.55f /*&& c_firmware <= 4.80f*/)
 		{
 			get_fan_policy_offset = 0x8000000000009E38ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 			set_fan_policy_offset = 0x800000000000A334ULL; // sys 389 set_fan_policy
@@ -200,7 +200,7 @@ static void detect_firmware(void)
 #if defined(DEX_SUPPORT) || defined(DECR_SUPPORT)
 	else if(dex_mode)
 	{ // DEX & DEH
-		if(c_firmware >= 4.55f && c_firmware <= 4.80f)
+		if(c_firmware >= 4.55f /*&& c_firmware <= 4.80f*/)
 		{
 				get_fan_policy_offset = 0x8000000000009EB8ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 				set_fan_policy_offset = 0x800000000000A3B4ULL; // sys 389 set_fan_policy

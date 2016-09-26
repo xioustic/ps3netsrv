@@ -485,7 +485,7 @@ typedef struct
 	uint8_t  launchpad_xml;
 	char default_restart;
 	char padding[98];
-} __attribute__((packed)) WebmanCfg;
+} /*__attribute__((packed))*/ WebmanCfg;
 
 static u8 wmconfig[sizeof(WebmanCfg)];
 static WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
@@ -1412,7 +1412,7 @@ static void handleclient(u64 conn_s_p)
 					{
 						if(*param2 == NULL) sprintf(param2, "/");
 						if(*param2 == '/' ) {do_umount(false); sprintf(header, "http://%s%s", local_ip, param2); open_browser(header, 0);} else
-						if(*param2 == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1); explore_interface->ExecXMBcommand(url,0,0);}} else
+						if(*param2 == '$' ) {int view = View_Find("explore_plugin"); if(view) {explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1); explore_interface->ExecXMBcommand(url,0,0);}} else
 						if(*param2 == '?' ) {do_umount(false);  open_browser(url, 0);} else
 											{					open_browser(url, 1);} // example: /browser.ps3*regcam:reg?   More examples: http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23
 

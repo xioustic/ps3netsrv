@@ -158,32 +158,32 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				{
 					int view = View_Find("explore_plugin");
 
-					if(!(webman_config->nogrp) && webman_config->rxvid && view != 0)
+					if(!(webman_config->nogrp) && webman_config->rxvid && (view != 0))
 					{
-						explore_interface = (explore_plugin_interface *)plugin_GetInterface(view,1);
-						if(!extcmp(param, ".pkg", 4))
+						explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+						if(strcasestr(param, ".pkg"))
 						{
-							explore_interface->ExecXMBcommand("close_all_list",0,0);
-							explore_interface->ExecXMBcommand("focus_segment_index seg_package_files",0,0);
+							explore_interface->ExecXMBcommand("close_all_list", 0, 0);
+							explore_interface->ExecXMBcommand("focus_segment_index seg_package_files", 0, 0);
 						}
 						else
 						{
-							explore_interface->ExecXMBcommand("focus_index rx_video",0,0);
+							explore_interface->ExecXMBcommand("focus_index rx_video", 0, 0);
 							sys_timer_usleep(200000);
-							explore_interface->ExecXMBcommand("exec_push",0,0);
+							explore_interface->ExecXMBcommand("exec_push", 0, 0);
 							sys_timer_usleep(200000);
-							explore_interface->ExecXMBcommand("focus_index 0",0,0);
+							explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
 
 							if(!autoplay || strcasestr(param, ".mkv")) {is_busy = false; return;}
 
 							sys_timer_sleep(2);
-							explore_interface->ExecXMBcommand("exec_push",0,0);
+							explore_interface->ExecXMBcommand("exec_push", 0, 0);
 						}
 
 						if(autoplay)
 						{
 							sys_timer_sleep(2);
-							explore_interface->ExecXMBcommand("exec_push",0,0);
+							explore_interface->ExecXMBcommand("exec_push", 0, 0);
 						}
 					}
 				}
@@ -317,7 +317,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 								uint64_t lv2_offset = 0x15DE78; // 4.xx CFW LV1 memory location for: /flh/os/lv2_kernel.self
 								if(peek_lv1(lv2_offset) != 0x2F666C682F6F732FULL)
 									for(uint64_t addr = 0x100000ULL; addr<0xFFFFF8ULL; addr+=4) // Find in 16MB
-										if(peek_lv1(addr) == 0x2F6F732F6C76325FULL)           // /os/lv2_
+										if(peek_lv1(addr) == 0x2F6F732F6C76325FULL)             // /os/lv2_
 										{
 											lv2_offset=addr-4; break; // 0x12A2C0 on 3.55
 										}
