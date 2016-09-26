@@ -701,6 +701,8 @@ static void do_umount(bool clean)
 {
 	if(clean) cellFsUnlink(WMTMP "/last_game.txt");
 
+	cellFsUnlink("/dev_hdd0/tmp/game/ICON0.PNG");
+
 	if(fan_ps2_mode) reset_fan_mode();
 
 #ifdef COBRA_ONLY
@@ -1740,7 +1742,7 @@ install_mm_payload:
 
 	if(cobra_mode) goto exit_mount;
 
-	if(base_addr==0 || SYSCALL_TABLE == 0) {ret = false; goto exit_mount;}
+	if(base_addr == 0 || SYSCALL_TABLE == 0) {ret = false; goto exit_mount;}
 
 	// restore syscall table
 	{

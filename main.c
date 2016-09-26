@@ -2750,7 +2750,7 @@ static void handleclient(u64 conn_s_p)
 
 						http_response(conn_s, header, param, CODE_CLOSE_BROWSER, HTML_CLOSE_BROWSER); //auto-close browser (don't wait for mount)
 
-						if(webman_config->autoplay)
+						if(webman_config->autoplay && (strstr(param, ".ntfs[BD") == NULL) && (strstr(param, "/PSPISO") == NULL))
 						{
 							int view = View_Find("explore_plugin");
 							if(view)

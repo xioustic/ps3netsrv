@@ -90,55 +90,55 @@ static void detect_firmware(void)
 #ifndef COBRA_ONLY
 	if(!dex_mode)
 	{   // CEX
-		if(c_firmware == 3.41f) {base_addr = 0x2B5D30; open_hook = 0x2AAFC8;} else
-		if(c_firmware == 3.55f) {base_addr = 0x2BE0D0; open_hook = 0x2B3274;} else
-		if(c_firmware == 4.21f) {base_addr = 0x2D0C98; open_hook = 0x2C2558;} else
-		if(c_firmware == 4.30f) {base_addr = 0x2D2418; open_hook = 0x2C3CD4;} else
-		if(c_firmware == 4.31f) {base_addr = 0x2D2428; open_hook = 0x2C3CE0;} else
-		if(c_firmware == 4.40f) {base_addr = 0x2D29A8; open_hook = 0x2C4284;} else
-		if(c_firmware == 4.41f) {base_addr = 0x2D29B8; open_hook = 0x2C4290;} else
-		if(c_firmware == 4.46f) {base_addr = 0x2D2ED8; open_hook = 0x2C47B0;} else
-		if(c_firmware == 4.50f) {base_addr = 0x2D4CB8; open_hook = 0x29DD20;} else
-		if(c_firmware == 4.53f) {base_addr = 0x2D4E48; open_hook = 0x29DEF8;} else
-		if(c_firmware == 4.55f) {base_addr = 0x2D7660; open_hook = 0x29F748;} else
-		if(c_firmware == 4.60f) {base_addr = 0x2D88D0; open_hook = 0x2A02BC;} else
-		if(c_firmware == 4.65f) {base_addr = 0x2D88E0; open_hook = 0x2A02C8;} else
-		if(c_firmware == 4.66f) {base_addr = 0x2D88E0; open_hook = 0x2A02C8;} else
-		if(c_firmware == 4.70f) {base_addr = 0x2D8A70; open_hook = 0x2975C0;} else
+		if(c_firmware == 3.41f) {base_addr = 0x2B5D30, open_hook = 0x2AAFC8;} else
+		if(c_firmware == 3.55f) {base_addr = 0x2BE0D0, open_hook = 0x2B3274;} else
+		if(c_firmware == 4.21f) {base_addr = 0x2D0C98, open_hook = 0x2C2558;} else
+		if(c_firmware == 4.30f) {base_addr = 0x2D2418, open_hook = 0x2C3CD4;} else
+		if(c_firmware == 4.31f) {base_addr = 0x2D2428, open_hook = 0x2C3CE0;} else
+		if(c_firmware == 4.40f) {base_addr = 0x2D29A8, open_hook = 0x2C4284;} else
+		if(c_firmware == 4.41f) {base_addr = 0x2D29B8, open_hook = 0x2C4290;} else
+		if(c_firmware == 4.46f) {base_addr = 0x2D2ED8, open_hook = 0x2C47B0;} else
+		if(c_firmware == 4.50f) {base_addr = 0x2D4CB8, open_hook = 0x29DD20;} else
+		if(c_firmware == 4.53f) {base_addr = 0x2D4E48, open_hook = 0x29DEF8;} else
+		if(c_firmware == 4.55f) {base_addr = 0x2D7660, open_hook = 0x29F748;} else
+		if(c_firmware == 4.60f) {base_addr = 0x2D88D0, open_hook = 0x2A02BC;} else
+		if(c_firmware == 4.65f) {base_addr = 0x2D88E0, open_hook = 0x2A02C8;} else
+		if(c_firmware == 4.66f) {base_addr = 0x2D88E0, open_hook = 0x2A02C8;} else
+		if(c_firmware == 4.70f) {base_addr = 0x2D8A70, open_hook = 0x2975C0;} else
 		if(c_firmware >= 4.75f &&
-		   c_firmware <= 4.78f) {base_addr = 0x2D8AF0; open_hook = 0x297638;} else
-		if(c_firmware == 4.80f) {base_addr = 0x2D8AE0; open_hook = 0x29762C;}
+		   c_firmware <= 4.78f) {base_addr = 0x2D8AF0, open_hook = 0x297638;} else
+		if(c_firmware == 4.80f) {base_addr = 0x2D8AE0, open_hook = 0x29762C;}
 	}
  #ifdef DECR_SUPPORT
 	else if(dex_mode == 1)
 	{   // DECR
-		if(c_firmware == 3.55f) {base_addr = 0x2F5320; open_hook = 0x2E31F4;} else
-	  //if(c_firmware == 4.50f) {base_addr = 0x30D2C0; open_hook = 0x2CEF08;} else
-		if(c_firmware == 4.60f) {base_addr = 0x310EE0; open_hook = 0x2D1464;} else
-		if(c_firmware == 4.78f) {base_addr = 0x3110F0; open_hook = 0x2C87E0;} else
-		if(c_firmware == 4.80f) {base_addr = 0x3110F0; open_hook = 0x2C87D4;}
+		if(c_firmware == 3.55f) {base_addr = 0x2F5320, open_hook = 0x2E31F4;} else
+	  //if(c_firmware == 4.50f) {base_addr = 0x30D2C0, open_hook = 0x2CEF08;} else
+		if(c_firmware == 4.60f) {base_addr = 0x310EE0, open_hook = 0x2D1464;} else
+		if(c_firmware == 4.78f) {base_addr = 0x3110F0, open_hook = 0x2C87E0;} else
+		if(c_firmware == 4.80f) {base_addr = 0x3110F0, open_hook = 0x2C87D4;}
 	}
  #endif
  #ifdef DEX_SUPPORT
 	else if(dex_mode == 2)
 	{   // DEX
-		if(c_firmware == 3.55f) {base_addr = 0x2D5B20; open_hook = 0x2C8A94;} else
-		if(c_firmware == 4.21f) {base_addr = 0x2EB418; open_hook = 0x2D9718;} else
-		if(c_firmware == 4.30f) {base_addr = 0x2ECB48; open_hook = 0x2DAE4C;} else
-		if(c_firmware == 4.31f) {base_addr = 0x2ECB58; open_hook = 0x2DAE58;} else
-		if(c_firmware == 4.40f) {base_addr = 0x2ED408; open_hook = 0x2DB730;} else
-		if(c_firmware == 4.41f) {base_addr = 0x2ED418; open_hook = 0x2DB73C;} else
-		if(c_firmware == 4.46f) {base_addr = 0x2ED938; open_hook = 0x2DBC5C;} else
-		if(c_firmware == 4.50f) {base_addr = 0x2F4778; open_hook = 0x2B81E8;} else
-		if(c_firmware == 4.53f) {base_addr = 0x2F5F88; open_hook = 0x2B83C0;} else
-		if(c_firmware == 4.55f) {base_addr = 0x2F8730; open_hook = 0x2B9C14;} else
-		if(c_firmware == 4.60f) {base_addr = 0x2FA220; open_hook = 0x2BB004;} else
-		if(c_firmware == 4.65f) {base_addr = 0x2FA230; open_hook = 0x2BB010;} else
-		if(c_firmware == 4.66f) {base_addr = 0x2FA230; open_hook = 0x2BB010;} else
-		if(c_firmware == 4.70f) {base_addr = 0x2FA540; open_hook = 0x2B2480;} else
+		if(c_firmware == 3.55f) {base_addr = 0x2D5B20, open_hook = 0x2C8A94;} else
+		if(c_firmware == 4.21f) {base_addr = 0x2EB418, open_hook = 0x2D9718;} else
+		if(c_firmware == 4.30f) {base_addr = 0x2ECB48, open_hook = 0x2DAE4C;} else
+		if(c_firmware == 4.31f) {base_addr = 0x2ECB58, open_hook = 0x2DAE58;} else
+		if(c_firmware == 4.40f) {base_addr = 0x2ED408, open_hook = 0x2DB730;} else
+		if(c_firmware == 4.41f) {base_addr = 0x2ED418, open_hook = 0x2DB73C;} else
+		if(c_firmware == 4.46f) {base_addr = 0x2ED938, open_hook = 0x2DBC5C;} else
+		if(c_firmware == 4.50f) {base_addr = 0x2F4778, open_hook = 0x2B81E8;} else
+		if(c_firmware == 4.53f) {base_addr = 0x2F5F88, open_hook = 0x2B83C0;} else
+		if(c_firmware == 4.55f) {base_addr = 0x2F8730, open_hook = 0x2B9C14;} else
+		if(c_firmware == 4.60f) {base_addr = 0x2FA220, open_hook = 0x2BB004;} else
+		if(c_firmware == 4.65f) {base_addr = 0x2FA230, open_hook = 0x2BB010;} else
+		if(c_firmware == 4.66f) {base_addr = 0x2FA230, open_hook = 0x2BB010;} else
+		if(c_firmware == 4.70f) {base_addr = 0x2FA540, open_hook = 0x2B2480;} else
 		if(c_firmware >= 4.75f &&
-		   c_firmware <= 4.78f) {base_addr = 0x2FA5B0; open_hook = 0x2B24F8;}
-		if(c_firmware == 4.80f) {base_addr = 0x2FA680; open_hook = 0x2B25C4;}
+		   c_firmware <= 4.78f) {base_addr = 0x2FA5B0, open_hook = 0x2B24F8;}
+		if(c_firmware == 4.80f) {base_addr = 0x2FA680, open_hook = 0x2B25C4;}
 	}
  #endif
 
@@ -206,6 +206,7 @@ static void detect_firmware(void)
 				set_fan_policy_offset = 0x800000000000A3B4ULL; // sys 389 set_fan_policy
 
 			// idps / psid dex
+#ifdef SPOOF_CONSOLEID
 #ifdef DECR_SUPPORT
 			if(dex_mode == 1)
 			{ // DEH
@@ -222,7 +223,6 @@ static void detect_firmware(void)
 			}
 			else
 #endif
-#ifdef SPOOF_CONSOLEID
 			if(c_firmware == 4.55f)
 			{
 				idps_offset1 = 0x8000000000407930ULL;

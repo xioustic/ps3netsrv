@@ -198,17 +198,19 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				if(_IS(cmd, "FEAT"))
 				{
 					ssend(conn_s_ftp,	"211-Ext:\r\n"
-										" SIZE\r\n"
-										" MDTM\r\n"
+										" REST STREAM\r\n"
+										" PASV\r\n"
 										" PORT\r\n"
 										" CDUP\r\n"
 										" ABOR\r\n"
-										" REST STREAM\r\n"
 										" PWD\r\n"
 										" TYPE\r\n"
-										" PASV\r\n"
+										" SIZE\r\n"
+										" SITE\r\n"
+										" APPE\r\n"
 										" LIST\r\n"
 										" MLSD\r\n"
+										" MDTM\r\n"
 										" MLST type*;size*;modify*;UNIX.mode*;UNIX.uid*;UNIX.gid*;\r\n"
 										"211 End\r\n");
 				}
@@ -800,7 +802,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(_IS(cmd, "STOR"))
+				if(_IS(cmd, "STOR") || _IS(cmd, "APPE"))
 				{
 					if(data_s < 0 && pasv_s >= 0) data_s = accept(pasv_s, NULL, NULL);
 
@@ -810,9 +812,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							absPath(filename, param, cwd);
 
-							int rr = FAILED;
+							int rr = FAILED, is_append = _IS(cmd, "APPE");
 
-							if(cellFsOpen(filename, CELL_FS_O_CREAT|CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+							if(cellFsOpen(filename, CELL_FS_O_CREAT | CELL_FS_O_WRONLY | (is_append ? CELL_FS_O_APPEND : 0), &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 							{
 
 								sys_addr_t sysmem = 0; size_t buffer_size = BUFFER_SIZE_FTP;
@@ -826,7 +828,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									char *buffer2= (char*)sysmem;
 									u64 read_e = 0, pos = 0;
 
-									if(rest)
+									if(rest || is_append)
 										cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 									else
 										cellFsFtruncate(fd, 0);
@@ -984,7 +986,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					ssend(conn_s_ftp, FTP_OK_USER_230); // User logged in, proceed.
 				}
 				else
-				/*if(  _IS(cmd, "OPTS")
+				/*if(  _IS(cmd, "OPTS") || _IS(cmd, "ACCT")
 					|| _IS(cmd, "REIN") || _IS(cmd, "ADAT")
 					|| _IS(cmd, "AUTH") || _IS(cmd, "CCC" )
 					|| _IS(cmd, "CONF") || _IS(cmd, "ENC" )
@@ -993,9 +995,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					|| _IS(cmd, "LPSV") || _IS(cmd, "MIC" )
 					|| _IS(cmd, "PBSZ") || _IS(cmd, "PROT")
 					|| _IS(cmd, "SMNT") || _IS(cmd, "STOU")
+					|| _IS(cmd, "STRU") || _IS(cmd, "CLNT")
 					|| _IS(cmd, "XRCP") || _IS(cmd, "XSEN")
 					|| _IS(cmd, "XSEM") || _IS(cmd, "XRSQ")
-					|| _IS(cmd, "STAT"))
+					|| _IS(cmd, "STAT") || _IS(cmd, "ALLO") )
 				{
 					ssend(conn_s_ftp, FTP_ERROR_502);	// Command not implemented.
 				}

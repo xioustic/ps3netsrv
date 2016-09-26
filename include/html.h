@@ -188,9 +188,7 @@ static size_t htmlenc(char *dst, char *src, u8 cpy2src)
 	{
 		if(src[i] & 0x80)
 		{
-			dst[j++] = '&';
-			dst[j++] = '#';
-			t = sprintf(tmp, "%i;", (int)(unsigned char)src[i]); c = 0;
+			t = sprintf(tmp, "&#%i;", (int)(unsigned char)src[i]); c = 0;
 			while(t--) {dst[j++] = tmp[c++];}
 		}
 		else dst[j++] = src[i];
