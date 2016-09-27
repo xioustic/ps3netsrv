@@ -111,7 +111,7 @@ static void launch_disc(char *category, char *seg_name)
 
 		if(!IS(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{
-			u8 retry = 0, timeout = 40, icon_found = 0;
+			u8 retry = 0, timeout = 4, icon_found = 0;
 
 			while(View_Find("webrender_plugin"))
 			{
@@ -126,7 +126,7 @@ static void launch_disc(char *category, char *seg_name)
 			// use segment for media type
 			if(IS(category, "game") && IS(seg_name, "seg_device"))
 			{
-				if(isDir("/dev_bdvd/PS3_GAME")) {timeout = 200, icon_found = timeout - 80;} else
+				if(isDir("/dev_bdvd/PS3_GAME")) {timeout = 20, icon_found = timeout - 8;} else
 				if(file_exists("/dev_bdvd/SYSTEM.CNF")) ; else
 				if(isDir("/dev_bdvd/BDMV") )    {sprintf(category, "video"); sprintf(seg_name, "seg_bdmav_device");} else
 				if(isDir("/dev_bdvd/VIDEO_TS")) {sprintf(category, "video"); sprintf(seg_name, "seg_dvdv_device" );} else
@@ -140,15 +140,15 @@ static void launch_disc(char *category, char *seg_name)
 			{
 				if((n < icon_found) && file_exists("/dev_hdd0/tmp/game/ICON0.PNG")) n = icon_found;
 
+				sys_timer_usleep(100000);
 				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-				sys_timer_usleep(25000);
+				sys_timer_usleep(250000);
 				sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-				sys_timer_usleep(25000);
+				sys_timer_usleep(250000);
 				sprintf(explore_command, "focus_segment_index %s", seg_name);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-				sys_timer_usleep(25000);
+				sys_timer_usleep(150000);
 			}
-
 			explore_interface->ExecXMBcommand("exec_push", 0, 0);
 		}
 		else {BEEP3}
