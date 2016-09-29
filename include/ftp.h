@@ -761,6 +761,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					{
 						absPath(filename, param, cwd);
 
+						filepath_check(filename);
+
 						if(cellFsMkdir(filename, MODE) == CELL_FS_SUCCEEDED)
 						{
 							sprintf(buffer, "257 \"%s\" OK\r\n", param);
@@ -813,6 +815,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							absPath(filename, param, cwd);
 
 							int rr = FAILED, is_append = _IS(cmd, "APPE");
+
+							filepath_check(filename);
 
 							if(cellFsOpen(filename, CELL_FS_O_CREAT | CELL_FS_O_WRONLY | (is_append ? CELL_FS_O_APPEND : 0), &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 							{
@@ -963,6 +967,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					if(split == 1 && *source == '/')
 					{
 						absPath(filename, param, cwd);
+
+						filepath_check(filename);
 
 						if(cellFsRename(source, filename) == CELL_FS_SUCCEEDED)
 						{

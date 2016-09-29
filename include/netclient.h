@@ -733,7 +733,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	if(file_exists(local_file)) return CELL_OK; // local file already exists
 
-	int abort_connection=0, is_directory=0, fdw = 0; int64_t file_size; u64 mtime, ctime, atime;
+	int abort_connection = 0, is_directory = 0, fdw = 0; int64_t file_size; u64 mtime, ctime, atime;
 
 	if(remote_stat(ns, remote_file, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0) return FAILED;
 

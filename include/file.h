@@ -97,12 +97,29 @@ int save_file(const char *file, const char *mem, int64_t size)
 	return FAILED;
 }
 
+static void filepath_check(char *file)
+{
+	if(file[5] == 'u' && islike(file, "/dev_usb"))
+	{
+		u16 n = 8, c = 8;
+		// remove invalid chars
+		while(true)
+		{
+			if(file[c] == '\\') file[c] = '/';
+			if(strchr("\"<|>:*?", file[c]) == NULL) file[n++] = file[c];
+			if(!file[c++]) break;
+		}
+	}
+}
+
 /*
-static int file_concat(char *file1, char *file2)
+static int file_concat(const char *file1, char *file2)
 {
 	struct CellFsStat buf;
 	int fd1, fd2;
-	int ret=FAILED;
+	int ret = FAILED;
+
+	filepath_check(file2);
 
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
@@ -155,21 +172,6 @@ static int file_concat(char *file1, char *file2)
 	return ret;
 }
 */
-
-static void filepath_check(char *file)
-{
-	if(file[5] == 'u' && islike(file, "/dev_usb"))
-	{
-		u16 n = 8, c = 8;
-		// remove invalid chars
-		while(true)
-		{
-			if(file[c] == '\\') file[c] = '/';
-			if(strchr("\"<|>:*?", file[c]) == NULL) file[n++] = file[c];
-			if(!file[c++]) break;
-		}
-	}
-}
 
 int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 {

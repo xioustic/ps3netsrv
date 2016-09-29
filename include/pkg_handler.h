@@ -249,6 +249,8 @@ static int download_file(const char *param, char *msg)
 
 		if(pdpath_len > 0) strncpy(pdpath, param + 4, pdpath_len);
 
+		filepath_check(pdpath);
+
 		conv_num_durl = mbstowcs((wchar_t *)pkg_durl, (const char *)pdurl, pdurl_len + 1);  //size_t stdc_FCAC2E8E(wchar_t *dest, const char *src, size_t max)
 
 	}

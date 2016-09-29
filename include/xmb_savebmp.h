@@ -91,6 +91,8 @@ static void saveBMP(char *path, bool notify_bmp)
 		sprintf(path, "/dev_hdd0/screenshot_%02d_%02d_%02d_%02d_%02d_%02d.bmp", t.year, t.month, t.day, t.hour, t.minute, t.second);
 	}
 
+	filepath_check(path);
+
 	// create bmp file
 	int fd;
 	if(IS_INGAME || cellFsOpen(path, CELL_FS_O_WRONLY|CELL_FS_O_CREAT|CELL_FS_O_TRUNC, &fd, NULL, 0) != CELL_FS_SUCCEEDED) { BEEP3 ; return;}

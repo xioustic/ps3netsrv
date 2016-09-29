@@ -1687,6 +1687,8 @@ static void handleclient(u64 conn_s_p)
 				{
 					sprintf(param, "%s", param + 10);
 
+					filepath_check(param);
+
 					mkdir_tree(param);
 					cellFsMkdir(param, DMODE);
 				}
@@ -2314,6 +2316,8 @@ static void handleclient(u64 conn_s_p)
 
 						// get file name
 						get_value(filename, param + ((param[9] == '/') ? 9 : 12), MAX_PATH_LEN); // /edit.ps3<file>  *or* /edit.ps3?f=<file>&t=<txt>
+
+						filepath_check(filename);
 
 						char *pos = strstr(param, "&t=");
 						if(pos)
