@@ -508,6 +508,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				// ------------------
 				// show copying file
 				// ------------------
+				filepath_check(target);
+
 				bool is_error = ((islike(target, drives[usb]) && isDir(drives[usb]) == false)) || islike(target, source);
 
 				// show source path

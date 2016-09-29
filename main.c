@@ -1727,6 +1727,7 @@ static void handleclient(u64 conn_s_p)
 
 				if(islike(target, "/"))
 				{
+					filepath_check(target);
 					cellFsRename(source, target);
 					char *p = strrchr(target, '/'); *p = NULL;
 					sprintf(param, "%s", target);

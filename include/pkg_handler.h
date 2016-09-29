@@ -270,7 +270,7 @@ static int download_file(const char *param, char *msg)
 
 		if((pdpath_len > 0) && (pdpath_len < MAX_DLPATH_LEN) && (isDir(pdpath) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)) ;
 
-		else if(isDir(DEFAULT_PKG_PATH) || cellFsMkdir(pdpath, DMODE) == CELL_FS_SUCCEEDED)
+		else if(isDir(DEFAULT_PKG_PATH) || cellFsMkdir(DEFAULT_PKG_PATH, DMODE) == CELL_FS_SUCCEEDED)
 		{
 			pdpath_len = sprintf(pdpath, DEFAULT_PKG_PATH);
 		}
@@ -290,6 +290,8 @@ static int download_file(const char *param, char *msg)
 		if(conv_num_dpath > 0)
 		{
 			unload_web_plugins();
+
+			mkdir_tree(pdpath); cellFsMkdir(pdpath, MODE);
 
 			sprintf(msg_durl, "%s%s", "Downloading ", pdurl);
 

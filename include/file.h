@@ -155,12 +155,30 @@ static int file_concat(char *file1, char *file2)
 	return ret;
 }
 */
+
+static void filepath_check(char *file)
+{
+	if(file[5] == 'u' && islike(file, "/dev_usb"))
+	{
+		u16 n = 8, c = 8;
+		// remove invalid chars
+		while(true)
+		{
+			if(file[c] == '\\') file[c] = '/';
+			if(strchr("\"<|>:*?", file[c]) == NULL) file[n++] = file[c];
+			if(!file[c++]) break;
+		}
+	}
+}
+
 int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 {
 	struct CellFsStat buf, buf2;
 	int fd1, fd2;
 	int ret = FAILED;
 	copy_aborted = false;
+
+	filepath_check(file2);
 
 	if(IS(file1, file2)) return FAILED;
 
@@ -282,8 +300,10 @@ next_part:
 }
 
 #ifdef COPY_PS3
-static int folder_copy(const char *path1, const char *path2)
+static int folder_copy(const char *path1, char *path2)
 {
+	filepath_check(path2);
+
 	cellFsChmod(path1, DMODE);
 	cellFsMkdir(path2, DMODE);
 
