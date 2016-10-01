@@ -449,7 +449,7 @@ int main()
 	CopyFile(APP_USRDIR "/background.gif", XMLHOST_DIR "/background.gif");
 
 	// copy javascripts
-	CopyFile(APP_USRDIR "/jquery.min.js",    XMLHOST_DIR "/jquery.min.js");  // jQuery v3.1.0
+	CopyFile(APP_USRDIR "/jquery.min.js",    XMLHOST_DIR "/jquery.min.js");  // jQuery v3.1.1
 	CopyFile(APP_USRDIR "/jquery-ui.min.js", XMLHOST_DIR "/jquery-ui.min.js"); // jQuery UI v1.12.0
 
 	CopyFile(APP_USRDIR "/fm.js",     XMLHOST_DIR "/fm.js");
@@ -540,6 +540,13 @@ int main()
 	CopyFile(APP_USRDIR "/usbredirect.png" 	, XMLMANPLS_IMAGES_DIR "/usbredirect.png");
 	CopyFile(APP_USRDIR "/vshmenu.png"   	, XMLMANPLS_IMAGES_DIR "/vshmenu.png");
 	CopyFile(APP_USRDIR "/webman.png"  		, XMLMANPLS_IMAGES_DIR "/webman.png");
+
+	CopyFile(APP_USRDIR "/setup.png"  		, XMLMANPLS_IMAGES_DIR "/setup.png");
+	CopyFile(APP_USRDIR "/eject.png"  		, XMLMANPLS_IMAGES_DIR "/eject.png");
+	CopyFile(APP_USRDIR "/clear.png"  		, XMLMANPLS_IMAGES_DIR "/clear.png");
+	CopyFile(APP_USRDIR "/cache.png"  		, XMLMANPLS_IMAGES_DIR "/cache.png");
+	CopyFile(APP_USRDIR "/refresh.png"		, XMLMANPLS_IMAGES_DIR "/refresh.png");
+	CopyFile(APP_USRDIR "/restart.png"  	, XMLMANPLS_IMAGES_DIR "/restart.png");
 
 
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);

@@ -527,7 +527,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				if(strstr(target, "/webftp_server")) {sprintf(tempstr, "<HR>%s", STR_SETTINGSUPD);} else
 				if(cp_mode) {char *p = strrchr(_path, '/'); *p = NULL; sprintf(tempstr, HTML_REDIRECT_TO_URL, _path, HTML_REDIRECT_WAIT);}
 
-				if(is_error) {show_msg((char*)STR_CPYABORT); cp_mode = 0; return;}
+				if(is_error) {show_msg((char*)STR_CPYABORT); cp_mode = CP_MODE_NONE; return;}
 			}
 			else
 #endif // #ifdef COPY_PS3
@@ -641,6 +641,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				show_msg(templn);
 				copy_in_progress = true, copied_count = 0;
 
+				if(islike(target, "/dev_blind")) enable_dev_blind(NO_MSG);
+
 				// make target dir tree
 				mkdir_tree(target);
 
@@ -661,8 +663,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					show_msg((char*)STR_CPYFINISH);
 			}
 
-			if(!copy_aborted && (cp_mode == 2) && file_exists(target)) del(source, true);
-			if(cp_mode) {cp_mode = 0, *cp_path = NULL;}
+			if(!copy_aborted && (cp_mode == CP_MODE_MOVE) && file_exists(target)) del(source, true);
+			if(cp_mode) {cp_mode = CP_MODE_NONE, *cp_path = NULL;}
 		}
 #endif //#ifdef COPY_PS3
 	}
@@ -725,7 +727,6 @@ static void do_umount(bool clean)
 		sys_map_path("//dev_bdvd", NULL);
 
 		sys_map_path("/app_home", isDir("/dev_hdd0/packages") ? (char*)"/dev_hdd0/packages" : NULL);
-		//{sys_map_path("//app_home", NULL);}
 
 		sys_map_path("/dev_bdvd/PS3/UPDATE", NULL);
 
@@ -1930,14 +1931,12 @@ install_mm_payload:
 			sprintf(expplg, "%s/IEXP0_440.BIN", app_sys);
 		else if(c_firmware == 4.46f)
 			sprintf(expplg, "%s/IEXP0_446.BIN", app_sys);
-		else if(c_firmware == 4.50f || c_firmware == 4.53f || c_firmware == 4.55f)
+		else if(c_firmware >= 4.50f && c_firmware <= 4.55f)
 			sprintf(expplg, "%s/IEXP0_450.BIN", app_sys);
-		else if(c_firmware == 4.60f || c_firmware == 4.65f || c_firmware == 4.66f)
+		else if(c_firmware >= 4.60f && c_firmware <= 4.66f)
 			sprintf(expplg, "%s/IEXP0_460.BIN", app_sys);
-		else if(c_firmware == 4.70f || c_firmware == 4.75f || c_firmware == 4.76f || c_firmware == 4.78f)
+		else if(c_firmware >= 4.70f && c_firmware <= 4.80f)
 			sprintf(expplg, "%s/IEXP0_470.BIN", app_sys);
-		else if(c_firmware == 4.80f)
-			sprintf(expplg, "%s/IEXP0_480.BIN", app_sys);
 		else
 			sprintf(expplg, "%s/none", app_sys);
 

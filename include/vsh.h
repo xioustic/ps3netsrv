@@ -149,6 +149,7 @@ static void launch_disc(char *category, char *seg_name)
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
 				sys_timer_usleep(150000);
 			}
+
 			explore_interface->ExecXMBcommand("exec_push", 0, 0);
 		}
 		else {BEEP3}

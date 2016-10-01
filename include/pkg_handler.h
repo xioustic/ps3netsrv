@@ -312,6 +312,7 @@ end_download_process:
 static int installPKG(const char *pkgpath, char *msg)
 {
 	int ret = FAILED;
+
 	if(IS_INGAME)
 	{
 		unload_web_plugins();
@@ -366,22 +367,19 @@ static int installPKG_combo(char *msg)
 
 	if(cellFsOpendir(DEFAULT_PKG_PATH, &fd) == CELL_FS_SUCCEEDED)
 	{
-		char pkgfile[MAX_PKGPATH_LEN];
-
 		CellFsDirent dir; u64 read_e;
 
 		pkg_delete_after_install = true;
-		//if(file_exists(pkg_path)) {sprintf(pkgfile, "%s.bak", pkg_path); cellFsRename(pkg_path, pkgfile); pkg_path[0] = NULL;}
 
 		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(!extcasecmp(dir.d_name, ".pkg", 4))
 			{
+				char pkgfile[MAX_PKGPATH_LEN];
 				sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dir.d_name); ret = 0; { BEEP1 }
 
 				installPKG(pkgfile, msg); show_msg(msg);
 				wait_for_pkg_install();
-				//break;
 			}
 		}
 		cellFsClosedir(fd);
@@ -414,7 +412,7 @@ static void poll_downloaded_pkg_files(char *msg)
 					if(cellFsStat(dlfile, &s) == CELL_FS_SUCCEEDED && pkg_size == s.st_size)
 					{
 						char pkgfile[MAX_PATH_LEN]; u16 pkg_len;
-						pkg_len = sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, dlfile + strlen(TEMP_DOWNLOAD_PATH));
+						pkg_len = sprintf(pkgfile, "%s%s", DEFAULT_PKG_PATH, entry.d_name);
 						for(u8 retry = 1; retry < 255; retry++)
 						{
 							if(cellFsRename(dlfile, pkgfile) == CELL_FS_SUCCEEDED) break;

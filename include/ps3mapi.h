@@ -1122,7 +1122,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else if(_IS(cmd, "SERVER"))
 			{
-				if(split == 1)
+				if(split)
 				{
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETVERSION"))
@@ -1144,7 +1144,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else if(_IS(cmd, "CORE"))
 			{
-				if(split == 1)
+				if(split)
 				{
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETVERSION"))
@@ -1170,7 +1170,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else if(_IS(cmd, "PS3"))
 			{
-				if(split == 1)
+				if(split)
 				{
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "SHUTDOWN"))
@@ -1221,7 +1221,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "NOTIFY"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							show_msg(param2);
 							ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
@@ -1245,10 +1245,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "LED"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								u64 color = val(param1);
 								u64 mode = val(param2);
@@ -1270,7 +1270,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "DISABLESYSCALL"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							int num = val(param2);
 							{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_DISABLE_SYSCALL, (u64)num); }
@@ -1280,7 +1280,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "CHECKSYSCALL"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							int num = val(param2);
 							int check = 0;
@@ -1292,7 +1292,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "PDISABLESYSCALL8"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							int mode = val(param2);
 							{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, (u64)mode); }
@@ -1331,10 +1331,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "SETIDPS"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								u64 part1 = convertH(param1);
 								u64 part2 = convertH(param2);
@@ -1354,10 +1354,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "SETPSID"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								u64 part1 = convertH(param1);
 								u64 part2 = convertH(param2);
@@ -1377,12 +1377,12 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else if(_IS(cmd, "PROCESS"))
 			{
-				if(split == 1)
+				if(split)
 				{
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETNAME"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							u32 pid = val(param2);
 							memset(param2, 0, sizeof(param2));
@@ -1414,7 +1414,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else if(_IS(cmd, "MEMORY"))
 			{
-				if(split == 1)
+				if(split)
 				{
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GET"))
@@ -1423,14 +1423,14 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 
 						if(data_s > 0)
 						{
-							if(split == 1)
+							if(split)
 							{
 								split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-								if(split == 1)
+								if(split)
 								{
 									u32 attached_pid = val(param1);
 									split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-									if(split == 1)
+									if(split)
 									{
 										u64 offset = convertH(param1);
 										u32 size = val(param2);
@@ -1486,10 +1486,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 
 						if(data_s > 0)
 						{
-							if(split == 1)
+							if(split)
 							{
 								split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-								if(split == 1)
+								if(split)
 								{
 									u32 attached_pid = val(param1);
 									u64 offset = convertH(param2);
@@ -1533,15 +1533,15 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else if(_IS(cmd, "MODULE"))
 			{
-				if(split == 1)
+				if(split)
 				{
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETNAME"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								u32 pid = val(param1);
 								s32 prxid = val(param2);
@@ -1556,10 +1556,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "GETFILENAME"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								u32 pid = val(param1);
 								s32 prxid = val(param2);
@@ -1574,7 +1574,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "GETALLPRXID"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							s32 prxid_list[128];
 							u32 pid = val(param2);
@@ -1592,10 +1592,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "LOAD"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								u32 pid = val(param1);
 								{system_call_6(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_LOAD_PROC_MODULE, (u64)pid, (u64)(u32)param2, NULL, 0); }
@@ -1607,10 +1607,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "UNLOAD"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								u32 pid = val(param1);
 								s32 prx_id = val(param2);
@@ -1623,10 +1623,10 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "LOADVSHPLUG"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							split = ssplit(param2, param1, PS3MAPI_MAX_LEN, param2, PS3MAPI_MAX_LEN);
-							if(split == 1)
+							if(split)
 							{
 								unsigned int slot = val(param1);
 								if( slot ) {{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_LOAD_VSH_PLUGIN, (u64)slot, (u64)(u32)param2, NULL, 0); }}
@@ -1637,7 +1637,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "UNLOADVSHPLUGS"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							unsigned int slot = val(param2);
 							if( slot ) {{system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN, (u64)slot); }}
@@ -1647,7 +1647,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					}
 					else if(_IS(cmd, "GETVSHPLUGINFO"))
 					{
-						if(split == 1)
+						if(split)
 						{
 							unsigned int slot = val(param2);
 							memset(param1, 0, sizeof(param1));
@@ -1667,7 +1667,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else if(_IS(cmd, "TYPE"))
 			{
-				if(split == 1)
+				if(split)
 				{
 					ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
 						 if(IS(param1, "A")) dataactive = 1;
@@ -1715,7 +1715,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			}
 			else ssend(conn_s_ps3mapi, PS3MAPI_ERROR_502);
 
-			if(dataactive == 1) dataactive = 0;
+			if(dataactive) dataactive = 0;
 			else
 			{
 				sclose(&data_s); data_s = -1;

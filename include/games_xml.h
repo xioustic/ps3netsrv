@@ -56,8 +56,10 @@ static void add_launchpad_header(void)
 	save_file(LAUNCHPAD_FILE_XML, tempstr, SAVE_ALL);
 }
 
-static void add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID)
+static void add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID, char *icon)
 {
+	if(*url != 'h') return;
+
 	// add entry
 	if(*tempID == NULL) sprintf(tempID, "NOID");
 
@@ -77,14 +79,17 @@ static void add_launchpad_entry(char *tempstr, char *templn, const char *url, ch
 		strncpy(templn, tempstr, j);
 	}
 
+	if(!icon || ((tempID[0] == 'B' || tempID[1] == 'P') && (islike(icon, "/dev_flash") || strstr(icon, "/icon_wm_")))) sprintf(icon, "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/%s", tempID);
+	if(file_exists(icon)) {urlenc(tempstr, icon); sprintf(icon, "http://%s%s", local_ip, tempstr);} else sprintf(icon, "%s/%s%s", LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG");
+
 	u16 size = sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
 								"<desc>%s</desc>\n"
-								"<url type=\"2\">%s/%s%s</url>\n"
+								"<url type=\"2\">%s</url>\n"
 								"<target type=\"u\">%s</target>\n"
 								"<cntry agelmt=\"0\">all</cntry>\n"
-								"<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG", url);
+								"<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, icon, url);
 
-	save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
+	save_file(LAUNCHPAD_FILE_XML, tempstr, -size); // append
 
 	mtrl_items++; *tempstr = NULL;
 }
@@ -93,22 +98,22 @@ static void add_launchpad_extras(char *tempstr, char *url)
 {
 	// --- launchpad extras
 	sprintf(url, "http://%s/setup.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png");
+	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png", NULL);
 
 	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png");
+	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png", NULL);
 
 	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Clear Recently Played", url, (char*)"clear.png");
+	add_launchpad_entry(tempstr, (char*)"Clear Recently Played", url, (char*)"clear.png", NULL);
 
 	sprintf(url, "http://%s/refresh.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Refresh My WebMAN Games", url, (char*)"refresh.png");
+	add_launchpad_entry(tempstr, (char*)"Refresh My WebMAN Games", url, (char*)"refresh.png", NULL);
 
 	sprintf(url, "http://%s/restart.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Restart PS3", url, (char*)"restart.png");
+	add_launchpad_entry(tempstr, (char*)"Restart PS3", url, (char*)"restart.png", NULL);
 
 	sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
-	add_launchpad_entry(tempstr, (char*)"Clear LaunchPad Cache", url, (char*)"cache.png");
+	add_launchpad_entry(tempstr, (char*)"Clear LaunchPad Cache", url, (char*)"cache.png", NULL);
 }
 
 static void add_launchpad_footer(char *tempstr)
@@ -642,7 +647,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 					{
 						if((ls == false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1]==NULL)) ls=true; // single letter folder was found
 
-						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0)==FAILED) {v3_entry++; continue;}
+						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0) == FAILED) {v3_entry++; continue;}
 
 						sprintf(tempstr, "<Table key=\"%04i\">"
 										 XML_PAIR("icon","%s")
@@ -658,7 +663,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 						if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
 						{
 							sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
-							add_launchpad_entry(tempstr, templn, url, tempID);
+							add_launchpad_entry(tempstr, templn, url, tempID, icon);
 						}
  #endif
 
@@ -725,7 +730,7 @@ next_xml_entry:
 
 							get_default_icon(icon, param, entry.d_name, !is_iso, tempID, ns, abort_connection, f1, f0);
 
-							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
+							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.d_name);
 
@@ -754,7 +759,7 @@ next_xml_entry:
 							if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
 							{
 								sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
-								add_launchpad_entry(tempstr, templn, url, tempID);
+								add_launchpad_entry(tempstr, templn, url, tempID, icon);
 							}
  #endif
 						}

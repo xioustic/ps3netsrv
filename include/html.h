@@ -167,8 +167,8 @@ static bool urlenc(char *dst, const char *src)
 			dst[j++] = '3';
 			dst[j] = (src[i] & 0xf) + 7;
 		}
-		else if(src[i]==' ' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
-		{
+		else if(src[i]==' ' || src[i]=='\'' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
+    		{
 			dst[j++] = '%';
 			dst[j++] = '2';
 			dst[j] = (src[i] == '+') ? 'B' : '0' + (src[i] & 0xf);

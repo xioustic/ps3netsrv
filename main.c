@@ -398,6 +398,13 @@ enum get_name_options
 	NO_PATH   = 2,
 };
 
+enum cp_mode_options
+{
+	CP_MODE_NONE = 0,
+	CP_MODE_COPY = 1,
+	CP_MODE_MOVE = 2,
+};
+
 ////////////////////////////////
 typedef struct
 {
@@ -536,8 +543,8 @@ static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_u
 static char paths [11][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
 
 #ifdef COPY_PS3
-static char cp_path[MAX_PATH_LEN]; // cut/copy/paste buffer
-static u8   cp_mode = 0;           // 0 = none / 1 = copy / 2 = cut/move
+static char cp_path[MAX_PATH_LEN];   // cut/copy/paste buffer
+static u8   cp_mode = CP_MODE_NONE;  // 0 = none / 1 = copy / 2 = cut/move
 #endif
 
 #define ONLINE_TAG		"[online]"
@@ -679,7 +686,7 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 
 static void http_response(int conn_s, char *header, const char *url, int code, const char *msg)
 {
-	u16 slen;
+	u16 slen; *header = NULL;
 
 	if(code == CODE_VIRTUALPAD || code == CODE_GOBACK || code == CODE_CLOSE_BROWSER)
 	{
@@ -826,20 +833,23 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 
 	sprintf(templn, "</head>%s", HTML_BODY); buffer += concat(buffer, templn);
 
+	char slider[40]; if(file_exists(MOBILE_HTML)) sprintf(slider, " [<a href=\"/games.ps3\">Slider</a>]"); else *slider = NULL;
+
 #ifdef PS3MAPI
 	#ifdef WEB_CHAT
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>] [<a href=\"/games.ps3\">Slider</a>] [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, STR_SETUP); buffer += concat(buffer, templn);
+		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP);
 	#else
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>] [<a href=\"/games.ps3\">Slider</a>] [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, STR_SETUP ); buffer += concat(buffer, templn);
+		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP );
 	#endif
 #else
 	#ifdef WEB_CHAT
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>] [<a href=\"/games.ps3\">Slider</a>] [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, STR_SETUP); buffer += concat(buffer, templn);
+		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP);
 	#else
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>] [<a href=\"/games.ps3\">Slider</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, STR_SETUP ); buffer += concat(buffer, templn);
+		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP );
 	#endif
 #endif
 
+	buffer += concat(buffer, templn);
 	return buffer;
 }
 
@@ -1088,8 +1098,8 @@ static void handleclient(u64 conn_s_p)
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
 												is_ps3_http = 0;
 
-			header[strcspn(header, "\n")] = NULL;
-			header[strcspn(header, "\r")] = NULL;
+			char *p = strstr(header, "\r\n");
+			if(p) strcpy(p, "\0\0"); else goto respond_error;
 
 			ssplit(header, cmd, 15, header, HTML_RECV_LAST);
 			ssplit(header, param, HTML_RECV_LAST, cmd, 15);
@@ -1577,15 +1587,15 @@ static void handleclient(u64 conn_s_p)
 					if(pos) get_value(path1, pos + 4, MAX_PATH_LEN);
 				}
 
-				bool isremap = islike(param, "/remap.ps3");
+				bool isremap = (param[1] == 'r');
 
 				if(isremap)
 				{
-					pos = strstr(param, "to=");
+					pos = strstr(param, "to="); sprintf(path2, "/dev_bdvd");
 					if(pos) get_value(path2, pos + 3, MAX_PATH_LEN);
 				}
 
-				if(file_exists(path1))
+				if(file_exists(isremap ? path2 : path1))
 				{
 					sys_map_path(path1, path2);
 
@@ -1659,7 +1669,7 @@ static void handleclient(u64 conn_s_p)
 				is_popup = 1;
 				goto html_response;
 			}
-   #ifdef COPY_PS3
+	#ifdef COPY_PS3
 			if(islike(param, "/copy")) {if(!copy_in_progress) dont_copy_same_size = (param[5] == '.'); param[5] = '.';}
 
 			if(islike(param, "/rmdir.ps3"))
@@ -1738,14 +1748,14 @@ static void handleclient(u64 conn_s_p)
 			else
 			if(islike(param, "/cpy.ps3") || islike(param, "/cut.ps3"))
 			{
-				// /cpy.ps3<path>  stores <path> in <cp_path clipboard> buffer for copy with /paste.ps3 (cp_mode = 1)
-				// /cut.ps3<path>  stores <path> in <cp_path clipboard> buffer for move with /paste.ps3 (cp_mode = 2)
+				// /cpy.ps3<path>  stores <path> in <cp_path> clipboard buffer for copy with /paste.ps3 (cp_mode = 1)
+				// /cut.ps3<path>  stores <path> in <cp_path> clipboard buffer for move with /paste.ps3 (cp_mode = 2)
 
-				cp_mode = islike(param, "/cut.ps3") ? 2 : 1;
+				cp_mode = islike(param, "/cut.ps3") ? CP_MODE_MOVE : CP_MODE_COPY;
 				sprintf(cp_path, "%s", param + 8);
 				sprintf(param, "%s", cp_path);
 				char *p = strrchr(param, '/'); *p = NULL;
-				if(file_exists(cp_path) == false) cp_mode = 0;
+				if(file_exists(cp_path) == false) cp_mode = CP_MODE_NONE;
 
 				is_binary = FOLDER_LISTING, small_alloc = false;
 				goto html_response;
@@ -1767,7 +1777,7 @@ static void handleclient(u64 conn_s_p)
 				else
 					{http_response(conn_s, header, "/", CODE_GOBACK, HTML_REDIRECT_TO_BACK); goto exit_handleclient;}
 			}
-   #endif // #ifdef COPY_PS3
+	#endif // #ifdef COPY_PS3
 
  #endif //#ifndef LITE_EDITION
 
@@ -1808,7 +1818,7 @@ static void handleclient(u64 conn_s_p)
 				working = 0;
 				{ DELETE_TURNOFF } { BEEP1 }
 
-				if(strstr(param, "?"))
+				if(param[13] == '?')
 					vsh_shutdown(); // shutdown using VSH
 				else
 					{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
@@ -1865,7 +1875,7 @@ static void handleclient(u64 conn_s_p)
  #ifndef LITE_EDITION
 				if(param2) {mode = param2[1]; if(strstr(param, "$")) {webman_config->default_restart = mode; save_settings();}} else if(is_restart) mode = webman_config->default_restart;
  #else
-				if(param2)  mode = param2[1];
+				if(param2)  mode = param2[1]; else if(is_restart) mode = webman_config->default_restart;
  #endif
 				if(mode == 'q')
 					{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} // (quick reboot) load LPAR id 1
@@ -2002,16 +2012,20 @@ static void handleclient(u64 conn_s_p)
 					islike(param, "/eject.ps3")   ||
 					islike(param, "/insert.ps3")) ;
 
-			else if(islike(param, "/net") && (param[4] >= '0' && param[4] <= '4')) //net0/net1/net2/net3/net4
-			{
-				is_binary = FOLDER_LISTING, small_alloc = false;
-			}
 			else
 			{
-				struct CellFsStat buf;
-				is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
+				struct CellFsStat buf; bool is_net = false;
 
-				if(!is_binary && *param)
+				if(islike(param, "/net") && (param[4] >= '0' && param[4] <= '4')) //net0/net1/net2/net3/net4
+				{
+					is_binary = FOLDER_LISTING, small_alloc = false, is_net = true;
+				}
+				else
+					is_binary = (*param == '/') && (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
+
+				if(is_binary == BINARY_FILE) ;
+
+				else if(*param == '/')
 				{
 					char *sort = strstr(param, "?sort=");
 					if(sort) {sort_by = sort[6]; if(strstr(sort, "desc")) sort_order = -1; *sort = NULL;}
@@ -2023,14 +2037,16 @@ static void handleclient(u64 conn_s_p)
 						*sort = NULL;
 					}
 
-					if(file_exists(param) == false)
+					if(is_net || file_exists(param) == false)
 					{
-						sort = strchr(param, '#');
+						sort = strrchr(param, '#');
 						if(sort) *sort = NULL;
 					}
 
+					if(is_net) goto html_response;
+
 					if(islike(param, "/favicon.ico")) {sprintf(param, "%s", wm_icons[iPS3]);} else
-					if(file_exists(param) == false)   {strcpy(header, param); sprintf(param, "%s/%s", html_base_path, header);} // use html path (if path is omitted)
+					if(file_exists(param) == false && *html_base_path == '/') {strcpy(header, param); sprintf(param, "%s/%s", html_base_path, header);} // use html path (if path is omitted)
 
 					is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 				}
@@ -2042,8 +2058,8 @@ static void handleclient(u64 conn_s_p)
 				}
 				else
 				{
-					c_len = 0;
-					http_response(conn_s, header, param, is_busy ? CODE_SERVER_BUSY : CODE_BAD_REQUEST, is_busy ? (char*)"503 Server is Busy":(char*)"400 Bad Request");
+ respond_error:
+					http_response(conn_s, header, param, is_busy ? CODE_SERVER_BUSY : CODE_BAD_REQUEST, is_busy ? "503 Server is Busy" : "400 Bad Request");
 
 					goto exit_handleclient;
 				}

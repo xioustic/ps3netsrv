@@ -808,7 +808,7 @@ static int ejected_disc(void)
 	}
 
 
-	if(cellFsOpendir("/psx_cdrom0", &fd)==0)
+	if(cellFsOpendir("/psx_cdrom0", &fd) == CELL_FS_SUCCEEDED)
 	{
 		cellFsClosedir(fd);
 		if(ejected)

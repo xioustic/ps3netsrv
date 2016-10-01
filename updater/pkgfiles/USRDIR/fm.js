@@ -23,7 +23,7 @@ function rn(f){
 }
 function ku(e){
 	e=e||window.event;
-	if(e.keyCode==113){a=document.querySelectorAll('a:hover')[0].pathname.replace('/mount.ps3','');rn(a);}
+	if(e.keyCode==113){try{a=document.querySelectorAll('a:hover')[0].pathname.replace('/mount.ps3','');rn(a);}catch(err){}}
 }
 
 // Right-click menu
@@ -46,9 +46,17 @@ document.write( "<div id='mnu' style='position:fixed;width:180px;background:#333
 				"<hr>" +
 				"<a id='m7'>Rename<br></a>" +
 				"<a id='m8'>Copy To</a><br>" +
-				"<a id='m9'>Copy & overwrite<br></a></div>");
+				"<a id='m9'>Copy & overwrite<br></a>"+
+				"</div>");
 
 var s,m;
+
+document.oncopy = function(e){
+	e.preventDefault();
+	try{a=document.querySelectorAll('a:hover')[0].href;}catch(err){}
+	var clipboard=e.clipboardData;
+	clipboard.setData("text/plain",a);
+};
 
 window.addEventListener('contextmenu',function(e){
 

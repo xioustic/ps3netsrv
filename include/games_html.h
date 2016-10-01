@@ -582,7 +582,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 			if(e >= 8) return FAILED;
 
 			sprintf(tempstr, "%s/%s/%s.%s", param, data[v3_entry].name, data[v3_entry].name, iso_ext[e]);
-			if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)==0) break;
+			if(remote_stat(ns, tempstr, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) == CELL_OK) break;
 		}
 
 		u8 index = 4;
@@ -592,7 +592,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		for(u8 e = 0; e < 4; e++)
 		{
 			sprintf(enc_dir_name, "%s/%s/%s%s", param, data[v3_entry].name, data[v3_entry].name, img_ext[e]);
-			if(remote_stat(ns, enc_dir_name, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)==0) {index = e; break;}
+			if(remote_stat(ns, enc_dir_name, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) == CELL_OK) {index = e; break;}
 		}
 
 		if(index < 4)
@@ -834,7 +834,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		if(!b0 && strstr(param, "net" ))  {filter0=7;  b0=3;}
  #endif
 #endif
-		if(strstr(param, "?")!=NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html")==NULL && strstr(param, "mobile")==NULL) strcpy(filter_name, strrchr(param, '?')+1);
+		if(strstr(param, "?") != NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html") == NULL && strstr(param, "mobile") == NULL) strcpy(filter_name, strrchr(param, '?') + 1);
 
 		int ns = -2; u8 uprofile = profile; enum icon_type default_icon;
 
@@ -955,11 +955,11 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
  #ifndef LITE_EDITION
 					if(is_net)
 					{
-						if((ls == false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1]==NULL)) ls=true; // single letter folder was found
+						if((ls == false) && (li == 0) && (f1 > 1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1] == NULL)) ls = true; // single letter folder was found
 
-						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 1)==FAILED) {v3_entry++; continue;}
+						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 1) == FAILED) {v3_entry++; continue;}
 
-						if(*filter_name >=' ' && strcasestr(templn, filter_name)==NULL && strcasestr(param, filter_name)==NULL && strcasestr(data[v3_entry].name, filter_name)==NULL) {v3_entry++; continue;}
+						if(*filter_name >=' ' && strcasestr(templn, filter_name) == NULL && strcasestr(param, filter_name) == NULL && strcasestr(data[v3_entry].name, filter_name) == NULL) {v3_entry++; continue;}
 
 						if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
@@ -1053,7 +1053,7 @@ next_html_entry:
 
 							get_default_icon(icon, param, entry.d_name, !is_iso, tempID, ns, abort_connection, f0, f1);
 
-							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [")==NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
+							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.d_name);
 

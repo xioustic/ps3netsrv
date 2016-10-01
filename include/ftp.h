@@ -1,5 +1,7 @@
 #define FTP_RECV_SIZE  (MAX_PATH_LEN + 20)
 
+#define FTP_FILE_UNAVAILABLE    -4
+
 static void absPath(char* absPath_s, const char* path, const char* cwd)
 {
 	if(*path == '/') strcpy(absPath_s, path);
@@ -123,7 +125,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 			{
 				if(_IS(cmd, "CWD") || _IS(cmd, "XCWD"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						if(IS(param, "..")) goto cdup;
 						absPath(tempcwd, param, cwd);
@@ -177,7 +179,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "REST"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						ssend(conn_s_ftp, FTP_OK_REST_350); // Requested file action pending further information
 						rest = val(param);
@@ -219,7 +221,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					rest = 0;
 
-					if(split == 1)
+					if(split)
 					{
 						char data[6][4];
 						u8 i = 0;
@@ -261,7 +263,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "SITE"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN-1);
 
@@ -448,7 +450,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									file_copy(source, param, COPY_WHOLE_FILE);
 
 								show_msg((char*)STR_CPYFINISH);
-								//memset(source, 0, 512);
 								copy_in_progress = false;
 							}
 							else
@@ -503,13 +504,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 						if(*param == NULL) split = 0;
 
-						if(split == 1)
+						if(split)
 						{
 							strcpy(tempcwd, param);
 							absPath(d_path, tempcwd, cwd);
 						}
 
-						if(split != 1 || !isDir(d_path)) strcpy(d_path, cwd);
+						if(!split || !isDir(d_path)) strcpy(d_path, cwd);
 						// ---
 #if NTFS_EXT
 						ntfs_md *mounts;
@@ -666,11 +667,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 					if(data_s >= 0)
 					{
-						if(split == 1)
+						if(split)
 						{
 							absPath(filename, param, cwd);
 
-							int rr=-4;
+							int err = FTP_FILE_UNAVAILABLE;
 
 							if(islike(filename, "/dvd_bdvd"))
 								{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
@@ -692,7 +693,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									//setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
-									rr = 0;
+									err = CELL_FS_OK;
 
 									while(working)
 									{
@@ -701,24 +702,24 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										{
 											if(read_e > 0)
 											{
-												if(send(data_s, buffer2, (size_t)read_e, 0) < 0) {rr=-3; break;}
+												if(send(data_s, buffer2, (size_t)read_e, 0) < 0) {err = FAILED; break;}
 											}
 											else
 												break;
 										}
 										else
-											{rr=-2; break;}
+											{err = FAILED; break;}
 									}
 									sys_memory_free(sysmem);
 								}
 								cellFsClose(fd);
 							}
 
-							if( rr == 0)
+							if( err == CELL_FS_OK)
 							{
 								ssend(conn_s_ftp, FTP_OK_226);		// Closing data connection. Requested file action successful (for example, file transfer or file abort).
 							}
-							else if( rr == -4)
+							else if( err == FTP_FILE_UNAVAILABLE)
 								ssend(conn_s_ftp, FTP_ERROR_550);	// Requested action not taken. File unavailable (e.g., file not found, no access).
 							else
 								ssend(conn_s_ftp, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
@@ -736,7 +737,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "DELE"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						absPath(filename, param, cwd);
 
@@ -757,7 +758,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "MKD") || _IS(cmd, "XMKD"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						absPath(filename, param, cwd);
 
@@ -781,7 +782,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "RMD") || _IS(cmd, "XRMD"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						absPath(filename, param, cwd);
 
@@ -810,11 +811,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 					if(data_s >= 0)
 					{
-						if(split == 1)
+						if(split)
 						{
 							absPath(filename, param, cwd);
 
-							int rr = FAILED, is_append = _IS(cmd, "APPE");
+							int err = FAILED, is_append = _IS(cmd, "APPE");
 
 							filepath_check(filename);
 
@@ -838,18 +839,19 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										cellFsFtruncate(fd, 0);
 
 									rest = 0;
-									rr = 0;
+									err = CELL_FS_OK;
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
 									//int optval = buffer_size;
 									//setsockopt(data_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
+
 									while(working)
 									{
 										//sys_timer_usleep(1668);
 										if((read_e = (u64)recv(data_s, buffer2, buffer_size, MSG_WAITALL)) > 0)
 										{
-											if(cellFsWrite(fd, buffer2, read_e, NULL) != CELL_FS_SUCCEEDED) {rr = FAILED;break;}
+											if(cellFsWrite(fd, buffer2, read_e, NULL) != CELL_FS_SUCCEEDED) {err = FAILED; break;}
 										}
 										else
 											break;
@@ -858,10 +860,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								}
 								cellFsClose(fd);
 								cellFsChmod(filename, MODE);
-								if(!working || rr!=0) cellFsUnlink(filename);
+								if(!working || err != 0) cellFsUnlink(filename);
 							}
 
-							if(rr == 0)
+							if(err == CELL_FS_OK)
 							{
 								ssend(conn_s_ftp, FTP_OK_226);		// Closing data connection. Requested file action successful (for example, file transfer or file abort).
 							}
@@ -883,7 +885,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "SIZE"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						absPath(filename, param, cwd);
 						if(cellFsStat(filename, &buf) == CELL_FS_SUCCEEDED)
@@ -910,7 +912,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "MDTM"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						absPath(filename, param, cwd);
 						if(cellFsStat(filename, &buf) == CELL_FS_SUCCEEDED)
@@ -940,7 +942,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "RNFR"))
 				{
-					if(split == 1)
+					if(split)
 					{
 						absPath(source, param, cwd);
 
@@ -964,7 +966,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "RNTO"))
 				{
-					if(split == 1 && *source == '/')
+					if(split && (*source == '/'))
 					{
 						absPath(filename, param, cwd);
 
@@ -1013,7 +1015,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					ssend(conn_s_ftp, FTP_ERROR_500);	// Syntax error, command unrecognized and the requested	action did not take place.
 				}
 
-				if(dataactive == 1) dataactive = 0;
+				if(dataactive) dataactive = 0;
 				else
 				{
 					sclose(&data_s); data_s = -1;
