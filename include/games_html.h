@@ -973,17 +973,17 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 							int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320; h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280; h = 280;}
 
-							sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s%s/%s\"},",
-									*icon ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
+							flen = sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s%s/%s\"},",
+											*icon ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
 						}
 						else
-							sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
-									neth, param, enc_dir_name, (u16)pTick.tick, idx,
-									icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
-									neth, param, enc_dir_name, templn);
+							flen = sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
+											neth, param, enc_dir_name, (u16)pTick.tick, idx,
+											icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
+											neth, param, enc_dir_name, templn);
 
-						v3_entry++; flen = strlen(tempstr);
-						if(flen > MAX_LINE_LEN) continue; //ignore lines too long
+						v3_entry++;
+						if((flen + HTML_KEY_LEN) > MAX_LINE_LEN) continue; //ignore lines too long
 						strcpy(line_entry[idx].path, tempstr); idx++;
 						tlen += (flen + div_size);
 					}
