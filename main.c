@@ -344,7 +344,6 @@ typedef struct {
 static u8 profile = 0;
 
 static u8 loading_html = 0;
-static u8 loading_games = 0;
 static u8 refreshing_xml = 0;
 
 #ifdef SYS_BGM
@@ -526,6 +525,8 @@ int npklic_struct_offset = 0; u8 klic_polling = 0;
 
 static bool is_mamba = false;
 static uint16_t cobra_version = 0;
+
+static u32 plugin_active = 0;
 
 static bool is_mounting = false;
 static bool copy_aborted = false;
@@ -720,6 +721,8 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		else
 			sprintf(templn, "%s", msg);
 
+		if(code == CODE_SERVER_BUSY || code == CODE_BAD_REQUEST) show_msg((char*)msg + 4);
+
 #ifndef EMBED_JS
 		if(css_exists)
 		{
@@ -865,6 +868,8 @@ static void handleclient(u64 conn_s_p)
 
 	char *file_query = param + HTML_RECV_LAST; *file_query = NULL;
 
+	plugin_active++;
+
 	if(conn_s_p == START_DAEMON || conn_s_p == REFRESH_CONTENT)
 	{
 		if(conn_s_p == START_DAEMON)
@@ -995,6 +1000,8 @@ static void handleclient(u64 conn_s_p)
 			#endif
  #endif
 		}
+
+		plugin_active--;
 		sys_ppu_thread_exit(0);
 	}
 
@@ -1099,7 +1106,7 @@ static void handleclient(u64 conn_s_p)
 												is_ps3_http = 0;
 
 			char *p = strstr(header, "\r\n");
-			if(p) strcpy(p, "\0\0"); else goto respond_error;
+			if(p) strcpy(p, "\0\0");
 
 			ssplit(header, cmd, 15, header, HTML_RECV_LAST);
 			ssplit(header, param, HTML_RECV_LAST, cmd, 15);
@@ -1110,7 +1117,7 @@ static void handleclient(u64 conn_s_p)
 			if(wm_request) { for(size_t n = 0; param[n]; n++) {if(param[n] == 9) param[n] = ' ';} } wm_request = 0;
  #endif
 
-			bool allow_retry_response = true, small_alloc = true, mobile_mode = false;
+			bool allow_retry_response = true, small_alloc = true; u8 mobile_mode = false;
 
  #ifdef USE_DEBUG
 	ssend(debug_s, param);
@@ -1282,6 +1289,7 @@ static void handleclient(u64 conn_s_p)
 
 					wait_for_pkg_install();
 
+					plugin_active--;
 					sys_ppu_thread_exit(0);
 				}
 
@@ -1795,7 +1803,7 @@ static void handleclient(u64 conn_s_p)
 				else
 					restore_fan(1); //set ps2 fan control mode
 
-				loading_html = working = 0;
+				working = plugin_active = 0;
 
 				sclose(&conn_s);
 				if(sysmem) sys_memory_free(sysmem);
@@ -1815,7 +1823,7 @@ static void handleclient(u64 conn_s_p)
 				#endif
 
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
-				working = 0;
+				working = plugin_active = 0;
 				{ DELETE_TURNOFF } { BEEP1 }
 
 				if(param[13] == '?')
@@ -2058,7 +2066,6 @@ static void handleclient(u64 conn_s_p)
 				}
 				else
 				{
- respond_error:
 					http_response(conn_s, header, param, is_busy ? CODE_SERVER_BUSY : CODE_BAD_REQUEST, is_busy ? "503 Server is Busy" : "400 Bad Request");
 
 					goto exit_handleclient;
@@ -2804,17 +2811,23 @@ static void handleclient(u64 conn_s_p)
 					{
 						// /index.ps3                  show game list in HTML (refresh if cache file is not found)
 						// /index.ps3?html             refresh game list in HTML
+						// /index.ps3?launchpad        refresh game list in LaunchPad xml
 						// /index.ps3?mobile           show game list in slider mode
 						// /index.ps3?<query>          search game by device name, path or name of game
 						// /index.ps3?<device>?<name>  search game by device name and name
 						// /index.ps3?<query>&mobile   search game by device name, path or name of game in slider mode
 
-						mobile_mode|=(strstr(param, "?mob")!=NULL || strstr(param, "&mob")!=NULL);
-
+						mobile_mode |= ((strstr(param, "?mob") != NULL) || (strstr(param, "&mob") != NULL));
+#ifdef LAUNCHPAD
+						char *launchpad = strstr(param, "?launchpad");
+						if(launchpad) {*launchpad = NULL; mobile_mode = LAUNCHPAD_MODE, auto_mount = false; sprintf(templn, "%s LaunchPad: %s", STR_REFRESH, STR_SCAN2); show_msg(templn);}
+#endif
 						if(game_listing(buffer, templn, param, tempstr, mobile_mode, auto_mount) == false)
 						{
 							{ PS3MAPI_RESTORE_SC8_DISABLE_STATUS }
 							{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
+
+							http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
 
 							is_busy = false;
 
@@ -2834,6 +2847,9 @@ static void handleclient(u64 conn_s_p)
 					{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
 					is_busy = false;
+#ifdef LAUNCHPAD
+					if(mobile_mode == LAUNCHPAD_MODE) {sprintf(templn, "%s LaunchPad: OK", STR_REFRESH); http_response(conn_s, header, param, CODE_HTTP_OK, templn); show_msg(templn); goto exit_handleclient;}
+#endif
 				}
 
 send_response:
@@ -2882,6 +2898,7 @@ exit_handleclient:
 	if(sysmem) sys_memory_free(sysmem);
 	if(loading_html) loading_html--;
 
+	plugin_active--;
 	sys_ppu_thread_exit(0);
 }
 

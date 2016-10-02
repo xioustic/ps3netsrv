@@ -59,6 +59,8 @@
 
 		#define PERSIST  100
 
+		if(pad_idle > 3000) {pad_idle = 0; if(plugin_active) parse_pad_command("off", 0); parse_pad_command("off", 0);} // turn vpad off / simulate pad activity
+
 		for(n = 0; n < 10; n++)
 		{
 			if(show_persistent_popup == PERSIST) {goto show_persistent_popup;}
@@ -78,7 +80,7 @@
 					for(u8 p = 0; p < 8; p++)
 						if(cellPadGetData(p, &data) == CELL_PAD_OK && data.len > 0) break;
 
-					if(data.len == 0) {sys_timer_usleep(300000); continue;}
+					if(data.len == 0) {sys_timer_usleep(300000); ++pad_idle; continue;} else pad_idle = 0;
 				}
 
 				if(data.len > 0)

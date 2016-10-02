@@ -71,7 +71,9 @@ static void poll_thread(uint64_t poll)
 	int delta = 0;
 	char msg[256];
 
-	u8 show_persistent_popup = 0; // combos.h
+	// combos.h
+	u8 show_persistent_popup = 0;
+	u32 pad_idle = 0;
 
 	old_fan = 0;
 	while(working)

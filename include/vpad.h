@@ -33,13 +33,13 @@ static inline void sys_pad_dbg_ldd_set_data_insert_mode(int32_t handle, uint16_t
 
 static int32_t register_ldd_controller(void)
 {
-	uint8_t data[0x114];
-	int32_t port;
-	uint32_t capability, mode, port_setting;
-
 	// register ldd controller with custom device capability
 	if (vpad_handle < 0)
 	{
+		uint8_t data[0x114];
+		int32_t port;
+		uint32_t capability, mode, port_setting;
+
 		capability = 0xFFFF; // CELL_PAD_CAPABILITY_PS3_CONFORMITY | CELL_PAD_CAPABILITY_PRESS_MODE | CELL_PAD_CAPABILITY_HP_ANALOG_STICK | CELL_PAD_CAPABILITY_ACTUATOR;
 		sys_pad_dbg_ldd_register_controller(data, (int32_t *)&(vpad_handle), 5, (uint32_t)capability << 1); //vpad_handle = cellPadLddRegisterController();
 		sys_timer_usleep(500000); // allow some time for ps3 to register ldd controller
@@ -143,6 +143,7 @@ static u8 parse_pad_command(const char *param, u8 is_combo)
 
 		if(is_combo) {vcombo = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] << 8) | (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1]); return CELL_OK;}
 
+		// assign enter button
 		if((data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_CROSS | CELL_PAD_CTRL_CIRCLE)) && ((param[5] == '=') || (param[6] == '=')))
 		{
 			int enter_button = 1;

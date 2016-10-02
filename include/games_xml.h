@@ -9,11 +9,6 @@
 #define WEB_LINK_PAIR			XML_PAIR("module_name", "webbrowser_plugin")
 #define STR_NOITEM_PAIR			XML_PAIR("str_noitem", "msg_error_no_content") "</Table>"
 
-#define LAUNCHPAD_FILE_XML		"/dev_hdd0/tmp/wm_launchpad.xml"
-#define LAUNCHPAD_MAX_ITEMS		500
-#define LAUNCHPAD_COVER_SVR		"http://xmbmods.co/wmlp/covers"
-//#define LAUNCHPAD_COVER_SVR	"http://ps3extra.free.fr/covers"
-
 #define XML_KEY_LEN 7
 
 enum xmb_groups
@@ -41,97 +36,6 @@ static void refresh_xml(char *msg)
 	sprintf(msg, "%s XML%s: OK", STR_REFRESH, SUFIX2(profile));
 	show_msg(msg);
 }
-
-#ifdef LAUNCHPAD
-static u32 mtrl_items = 0;
-
-static void add_launchpad_header(void)
-{
-	mtrl_items = 0;
-
-	const char *tempstr = (char*)"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
-								 "<nsx anno=\"\" lt-id=\"131\" min-sys-ver=\"1\" rev=\"1093\" ver=\"1.0\">\n"
-								 "<spc anno=\"csxad=1&amp;adspace=9,10,11,12,13\" id=\"33537\" multi=\"o\" rep=\"t\">\n\n"; /* size: 196 */
-
-	save_file(LAUNCHPAD_FILE_XML, tempstr, SAVE_ALL);
-}
-
-static void add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID, char *icon)
-{
-	if(*url != 'h') return;
-
-	// add entry
-	if(*tempID == NULL) sprintf(tempID, "NOID");
-
-	// fix &
-	if(strstr(templn, "&"))
-	{
-		size_t j = 0;
-		for(size_t i = 0; templn[i]; i++, j++)
-		{
-			tempstr[j] = templn[i];
-
-			if(templn[i] == '&')
-			{
-				sprintf(&tempstr[j], "&amp;"); j += 4;
-			}
-		}
-		strncpy(templn, tempstr, j);
-	}
-
-	if(*icon == NULL || ((tempID[0] == 'B' || tempID[1] == 'P') && (islike(icon, "/dev_flash") || strstr(icon, "/icon_wm_")))) sprintf(icon, "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/%s", tempID);
-	if(file_exists(icon)) {urlenc(tempstr, icon); sprintf(icon, "http://%s%s", local_ip, tempstr);} else sprintf(icon, "%s/%s%s", LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG");
-
-	u16 size = sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
-								"<desc>%s</desc>\n"
-								"<url type=\"2\">%s</url>\n"
-								"<target type=\"u\">%s</target>\n"
-								"<cntry agelmt=\"0\">all</cntry>\n"
-								"<lang>all</lang></mtrl>\n\n", (1080000000UL + mtrl_items), templn, icon, url);
-
-	save_file(LAUNCHPAD_FILE_XML, tempstr, -size); // append
-
-	mtrl_items++; *tempstr = *icon = NULL;
-}
-
-static void add_launchpad_extras(char *tempstr, char *url)
-{
-	char icon_url[MAX_PATH_LEN]; *icon_url = NULL;
-
-	// --- launchpad extras
-	sprintf(url, "http://%s/setup.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png", icon_url);
-
-	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png", icon_url);
-
-	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Clear Recently Played", url, (char*)"clear.png", icon_url);
-
-	sprintf(url, "http://%s/refresh.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Refresh My WebMAN Games", url, (char*)"refresh.png", icon_url);
-
-	sprintf(url, "http://%s/restart.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Restart PS3", url, (char*)"restart.png", icon_url);
-
-	sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
-	add_launchpad_entry(tempstr, (char*)"Clear LaunchPad Cache", url, (char*)"cache.png", icon_url);
-}
-
-static void add_launchpad_footer(char *tempstr)
-{
-	// --- add scroller placeholder
-	u16 size = sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
-								"<desc></desc>\n"
-								"<url type=\"2\"></url>\n"
-								"<target type=\"u\"></target>\n"
-								"<cntry agelmt=\"0\">all</cntry>\n"
-								"<lang>all</lang></mtrl>\n\n"
-								"</spc></nsx>");
-
-	save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
-}
-#endif //#ifdef LAUNCHPAD
 
 static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)
 {
@@ -511,16 +415,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	led(YELLOW, BLINK_FAST);
 
-#ifdef LAUNCHPAD
-	bool launchpad_xml = isDir("/dev_flash/rebug") && !(webman_config->launchpad_xml);
-
-	if(launchpad_xml)
-	{
-		del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
-		add_launchpad_header();
-	}
-#endif
-
 	check_cover_folders(tempstr);
 
 	int ns = -2; u8 uprofile = profile;
@@ -661,14 +555,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
 
- #ifdef LAUNCHPAD
-						if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
-						{
-							sprintf(url, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
-							add_launchpad_entry(tempstr, templn, url, tempID, icon);
-						}
- #endif
-
 						v3_entry++;
 					}
 					else
@@ -756,14 +642,6 @@ next_xml_entry:
 											 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
 
 							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
-
- #ifdef LAUNCHPAD
-							if(launchpad_xml && (mtrl_items < LAUNCHPAD_MAX_ITEMS))
-							{
-								sprintf(url, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
-								add_launchpad_entry(tempstr, templn, url, tempID, icon);
-							}
- #endif
 						}
 //////////////////////////////
 						if(subfolder) goto next_xml_entry;
@@ -1055,7 +933,7 @@ continue_reading_folder_xml:
 		cellFsWrite(fdxml, (char*)myxml, slen, NULL);
 		cellFsClose(fdxml);
 		cellFsChmod(xml, MODE);
-
+/*
 #ifndef LITE_EDITION
 		// --- replace & with ^ for droidMAN
 		slen = read_file(xml, myxml_ps3, BUFFER_SIZE_ALL, 0);
@@ -1067,14 +945,16 @@ continue_reading_folder_xml:
 			save_file(xml, myxml_ps3, slen);
 		}
 #endif
+*/
 	}
 
 #ifdef LAUNCHPAD
-	// --- launchpad footer
+	bool launchpad_xml = isDir("/dev_flash/rebug") && !(webman_config->launchpad_xml);
+
 	if(launchpad_xml)
 	{
-		add_launchpad_extras(tempstr, url);
-		add_launchpad_footer(tempstr);
+		*myxml_ps3 = *param = *tempstr = *templn = NULL;
+		game_listing(myxml_ps3, templn, param, tempstr, LAUNCHPAD_MODE, false);
 	}
 #endif
 

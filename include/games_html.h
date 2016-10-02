@@ -55,12 +55,20 @@ enum icon_type
 	iBDVD = 5,
 };
 
+#define LAUNCHPAD_MODE			2
+#define LAUNCHPAD_FILE_XML		"/dev_hdd0/tmp/wm_launchpad.xml"
+#define LAUNCHPAD_MAX_ITEMS		500
+#define LAUNCHPAD_COVER_SVR		"http://xmbmods.co/wmlp/covers"
+//#define LAUNCHPAD_COVER_SVR	"http://ps3extra.free.fr/covers"
+
 #define HAS_TITLE_ID  (*tempID > '@')
 
 #define NO_ICON       (!*icon)
 
 #define SHOW_COVERS_OR_ICON0  (webman_config->nocov != SHOW_DISC)
 #define SHOW_COVERS          ((webman_config->nocov == SHOW_MMCOVERS) || (webman_config->nocov == ONLINE_COVERS))
+
+static u8 loading_games = 0;
 
 static bool HAS(char *icon)
 {
@@ -625,6 +633,101 @@ static void add_query_html(char *buffer, const char *param)
 	sprintf(templn, "[<a href=\"/index.ps3?%s\">%s</a>] ", param, label); strcat(buffer, templn);
 }
 
+#ifdef LAUNCHPAD
+static void add_launchpad_header(void)
+{
+	const char *tempstr = (char*)"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
+								 "<nsx anno=\"\" lt-id=\"131\" min-sys-ver=\"1\" rev=\"1093\" ver=\"1.0\">\n"
+								 "<spc anno=\"csxad=1&amp;adspace=9,10,11,12,13\" id=\"33537\" multi=\"o\" rep=\"t\">\n\n"; /* size: 196 */
+
+	save_file(LAUNCHPAD_FILE_XML, tempstr, SAVE_ALL);
+}
+
+static int add_launchpad_entry(char *tempstr, char *templn, const char *url, char *tempID, char *icon, int append)
+{
+	// add entry
+	if(*tempID == NULL) sprintf(tempID, "NOID");
+
+	// fix &
+	if(strstr(templn, "&"))
+	{
+		size_t j = 0;
+		for(size_t i = 0; templn[i]; i++, j++)
+		{
+			tempstr[j] = templn[i];
+
+			if(templn[i] == '&')
+			{
+				sprintf(&tempstr[j], "&amp;"); j += 4;
+			}
+		}
+		strncpy(templn, tempstr, j);
+	}
+
+	if(*icon == NULL || ((tempID[0] == 'B' || tempID[1] == 'P') && (islike(icon, "/dev_flash") || strstr(icon, "/icon_wm_")))) sprintf(icon, "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/%s", tempID);
+	if(file_exists(icon)) {urlenc(tempstr, icon); sprintf(icon, "http://%s%s", local_ip, tempstr);} else sprintf(icon, "%s/%s%s", LAUNCHPAD_COVER_SVR, tempID, strstr(tempID, ".png") ? "" : ".JPG");
+
+	int size;
+	if(append)
+	{
+		size = sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
+								"<desc>%s</desc>\n"
+								"<url type=\"2\">%s</url>\n"
+								"<target type=\"u\">%s</target>\n"
+								"<cntry agelmt=\"0\">all</cntry>\n"
+								"<lang>all</lang></mtrl>\n\n", (1080000000UL + append), templn, icon, url);
+
+		save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
+	}
+	else
+		size = sprintf(tempstr, "%s</desc>\n"
+								"<url type=\"2\">%s</url>\n"
+								"<target type=\"u\">%s</target>\n", templn, icon, url);
+
+	*icon = NULL;
+
+	return size;
+}
+
+static void add_launchpad_extras(char *tempstr, char *url)
+{
+	char icon_url[MAX_PATH_LEN]; *icon_url = NULL;
+
+	// --- launchpad extras
+	sprintf(url, "http://%s/setup.ps3", local_ip);
+	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1001);
+
+	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
+	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1002);
+
+	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
+	add_launchpad_entry(tempstr, (char*)"Clear Recently Played", url, (char*)"clear.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1003);
+
+	sprintf(url, "http://%s/index.ps3?launchpad", local_ip);
+	add_launchpad_entry(tempstr, (char*)"Refresh LaunchPad", url, (char*)"refresh.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1004);
+
+	sprintf(url, "http://%s/restart.ps3", local_ip);
+	add_launchpad_entry(tempstr, (char*)"Restart PS3", url, (char*)"restart.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1005);
+
+	sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
+	add_launchpad_entry(tempstr, (char*)"Clear LaunchPad Cache", url, (char*)"cache.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1006);
+}
+
+static void add_launchpad_footer(char *tempstr)
+{
+	// --- add scroller placeholder
+	u16 size = sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
+								"<desc></desc>\n"
+								"<url type=\"2\"></url>\n"
+								"<target type=\"u\"></target>\n"
+								"<cntry agelmt=\"0\">all</cntry>\n"
+								"<lang>all</lang></mtrl>\n\n"
+								"</spc></nsx>");
+
+	save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
+}
+#endif //#ifdef LAUNCHPAD
+
 static void check_cover_folders(char *buffer)
 {
 #ifndef ENGLISH_ONLY
@@ -704,7 +807,7 @@ static int check_content(u8 f1)
 	return CELL_OK;
 }
 
-static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, bool mobile_mode, bool auto_mount)
+static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, u8 mode, bool auto_mount)
 {
 	u64 c_len = 0;
 	CellRtcTick pTick;
@@ -713,8 +816,13 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	struct CellFsStat buf;
 	int fd;
 
+	u8 mobile_mode = mode, launchpad_mode = (mode == LAUNCHPAD_MODE);
+
 	gmobile_mode = mobile_mode;
 
+#ifdef LAUNCHPAD
+	if(launchpad_mode) cellFsUnlink(LAUNCHPAD_FILE_XML); else
+#endif
 	if(!mobile_mode && strstr(param, "/index.ps3"))
 	{
 		char *pbuffer = buffer + buf_len + concat(buffer, "<font style=\"font-size:18px\">");
@@ -750,7 +858,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 	c_len = 0; while(loading_games && working && (c_len < 500)) {sys_timer_usleep(200000); c_len++;}
 
-	if(c_len >= 500 || !working) {strcat(buffer, "503 Server is busy"); return false;}
+	if(c_len >= 500 || !working) return false;
 
 /*
 	CellRtcTick pTick, pTick2;
@@ -774,6 +882,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 	// use cached page
 	loading_games = 1;
+
+	if(launchpad_mode) buf_len = 0; else
 	if(mobile_mode) {cellFsUnlink(GAMELIST_JS); buf_len = 0;}
 	else
 	{
@@ -820,21 +930,30 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		u8 div_size = mobile_mode ? 0 : GAME_DIV_SIZE;
 
-#ifdef COBRA_ONLY
-		if(strstr(param, "ntfs")) {filter0 = NTFS, b0 = 1;} else
+#ifdef LAUNCHPAD
+		if(launchpad_mode)
+		{
+			max_entries = LAUNCHPAD_MAX_ITEMS, tlen = 0;
+		}
+		else
 #endif
-		for(u8 f0 = 0; f0 < 16; f0++) if(strstr(param, drives[f0])) {filter0 = f0, b0 = 1; break;}
-		for(u8 f1 = 0; f1 < 11; f1++) if(strstr(param, paths [f1])) {filter1 = f1, b1 = 1; break;}
-		if(!b0 && strstr(param, "hdd" ))  {filter0 = 0, b0 = 1;}
-		if(!b0 && strstr(param, "usb" ))  {filter0 = 1, b0 = 2;}
-		if(!b1 && strstr(param, "games")) {filter1 = 0, b1 = 2;}
-		if(!b1 && strstr(param, "?ps3"))  {filter1 = 0, b1 = 3;}
+		{
+#ifdef COBRA_ONLY
+			if(strstr(param, "ntfs")) {filter0 = NTFS, b0 = 1;} else
+#endif
+			for(u8 f0 = 0; f0 < 16; f0++) if(strstr(param, drives[f0])) {filter0 = f0, b0 = 1; break;}
+			for(u8 f1 = 0; f1 < 11; f1++) if(strstr(param, paths [f1])) {filter1 = f1, b1 = 1; break;}
+			if(!b0 && strstr(param, "hdd" ))  {filter0 = 0, b0 = 1;}
+			if(!b0 && strstr(param, "usb" ))  {filter0 = 1, b0 = 2;}
+			if(!b1 && strstr(param, "games")) {filter1 = 0, b1 = 2;}
+			if(!b1 && strstr(param, "?ps3"))  {filter1 = 0, b1 = 3;}
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-		if(!b0 && strstr(param, "net" ))  {filter0=7;  b0=3;}
+			if(!b0 && strstr(param, "net" ))  {filter0 = 7, b0=3;}
  #endif
 #endif
-		if(strstr(param, "?") != NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html") == NULL && strstr(param, "mobile") == NULL) strcpy(filter_name, strrchr(param, '?') + 1);
+			if(strstr(param, "?") != NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html") == NULL && strstr(param, "mobile") == NULL) strcpy(filter_name, strrchr(param, '?') + 1);
+		}
 
 		int ns = -2; u8 uprofile = profile; enum icon_type default_icon;
 
@@ -933,7 +1052,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				{
 					v3_entries = read_remote_dir(ns, &data2, &abort_connection);
 					if(!data2) goto continue_reading_folder_html; //continue;
-					data=(netiso_read_dir_result_data*)data2; sprintf(neth, "/net%i", (f0-7));
+					data = (netiso_read_dir_result_data*)data2; sprintf(neth, "/net%i", (f0-7));
 				}
  #endif
 #endif
@@ -965,6 +1084,14 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						snprintf(tempstr, HTML_KEY_LEN + 1, "%s      ", templn); to_upper(tempstr); // sort key
 
+ #ifdef LAUNCHPAD
+						if(launchpad_mode)
+						{
+							sprintf(line_entry[idx].path, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
+							flen = add_launchpad_entry(tempstr + HTML_KEY_LEN, templn, line_entry[idx].path, tempID, icon, false);
+						}
+						else
+ #endif
 						if(mobile_mode)
 						{
 							if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore: cause syntax error in javascript: gamelist.js
@@ -1063,6 +1190,14 @@ next_html_entry:
 
 							snprintf(tempstr, HTML_KEY_LEN + 1, "%s      ", templn); to_upper(tempstr); // sort key
 
+ #ifdef LAUNCHPAD
+							if(launchpad_mode)
+							{
+								sprintf(line_entry[idx].path, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
+								flen = add_launchpad_entry(tempstr + HTML_KEY_LEN, templn, line_entry[idx].path, tempID, icon, false);
+							}
+							else
+ #endif
 							if(mobile_mode)
 							{
 								if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore names with quotes: cause syntax error in javascript: gamelist.js
@@ -1141,6 +1276,14 @@ next_html_entry:
 		bool sortable = false;
 #endif
 
+#ifdef LAUNCHPAD
+		if(launchpad_mode)
+		{
+			del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
+			add_launchpad_header();
+		}
+		else
+#endif
 		if(mobile_mode)
 			sprintf(buffer, "slides = [");
 		else
@@ -1172,6 +1315,30 @@ next_html_entry:
 
 		tlen = buf_len;
 
+#ifdef LAUNCHPAD
+		if(launchpad_mode)
+		{
+			int fd, size;
+			if(cellFsOpen(LAUNCHPAD_FILE_XML, CELL_FS_O_APPEND | CELL_FS_O_CREAT | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+			{
+				for(u16 m = 0; m < idx; m++)
+				{
+					size = sprintf(tempstr, "<mtrl id=\"%lu\" until=\"2100-12-31T23:59:00.000Z\">\n"
+											"<desc>%s"
+											"<cntry agelmt=\"0\">all</cntry>\n"
+											"<lang>all</lang></mtrl>\n\n", (1080000000UL + m), (line_entry[m].path) + HTML_KEY_LEN);
+					cellFsWrite(fd, tempstr, size, NULL);
+				}
+				cellFsClose(fd);
+			}
+			add_launchpad_extras(tempstr, templn);
+			add_launchpad_footer(tempstr);
+
+			loading_games = 0;
+			return true;
+		}
+		else
+#endif
 		if(mobile_mode)
 			for(u16 m = 0; m < idx; m++)
 			{
@@ -1189,8 +1356,6 @@ next_html_entry:
 		if(sortable) strcat(buffer + tlen, "</div>");
 #endif
 
-		loading_games = 0;
-
 		if(auto_mount && idx == 1)
 		{
 			char *p = strstr(line_entry[0].path + HTML_KEY_LEN, "?random="); *p = NULL;
@@ -1205,6 +1370,8 @@ next_html_entry:
 		{
 			save_file(WMTMP "/games.html", (buffer + buf_len), strlen(buffer + buf_len));
 		}
+
+		loading_games = 0;
 	}
 	return true;
 }

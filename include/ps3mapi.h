@@ -1096,6 +1096,8 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 	char ip_address[16];
 	char pasv_output[56];
 
+	plugin_active++;
+
 	ssend(conn_s_ps3mapi, PS3MAPI_OK_220);
 
 	u8 ip_len = sprintf(ip_address, "%s", inet_ntoa(conn_info.local_adr));
@@ -1176,7 +1178,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					if(_IS(cmd, "SHUTDOWN"))
 					{
 						ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
-						working = 0;
+						working = plugin_active = 0;
 						{ DELETE_TURNOFF }
 						{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0); }
 						sys_ppu_thread_exit(0);
@@ -1184,7 +1186,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					else if(_IS(cmd, "REBOOT"))
 					{
 						ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
-						working = 0;
+						working = plugin_active = 0;
 						{ DELETE_TURNOFF }
 						{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0); }
 						sys_ppu_thread_exit(0);
@@ -1192,7 +1194,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					else if(_IS(cmd, "SOFTREBOOT"))
 					{
 						ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
-						working = 0;
+						working = plugin_active = 0;
 						{ DELETE_TURNOFF }
 						{system_call_3(SC_SYS_POWER, SYS_SOFT_REBOOT, NULL, 0); }
 						sys_ppu_thread_exit(0);
@@ -1200,7 +1202,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 					else if(_IS(cmd, "HARDREBOOT"))
 					{
 						ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
-						working = 0;
+						working = plugin_active = 0;
 						{ DELETE_TURNOFF }
 						{system_call_3(SC_SYS_POWER, SYS_HARD_REBOOT, NULL, 0); }
 						sys_ppu_thread_exit(0);
@@ -1737,6 +1739,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 	sclose(&conn_s_ps3mapi);
 	sclose(&data_s);
 
+	plugin_active--;
 	sys_ppu_thread_exit(0);
 }
 
@@ -1784,7 +1787,6 @@ static void ps3mapi_thread(u64 arg)
 		}
 end:
 		sclose(&list_s);
-		sys_ppu_thread_exit(0);
 	}
 	else show_msg((char *)"PS3MAPI Server not loaded!");
 

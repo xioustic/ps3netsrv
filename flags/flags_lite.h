@@ -23,7 +23,7 @@
 //#define BDVD_REGION	1	// change BD/DVD region
 #define REMOVE_SYSCALLS	1	// remove syscalls on startup and using R2+TRIANGLE
 //#define SPOOF_CONSOLEID	1	// spoof idps/psid (thanks to M@tumot0 & zar)
-//#define VIRTUAL_PAD	1	// virtual pad (thanks to OsiriX)
+#define VIRTUAL_PAD		1	// virtual pad (thanks to OsiriX)
 //#define WM_REQUEST	1	// accept commands via local file /dev_hdd0/tmp/wm_request
 //#define GET_KLICENSEE	1	// /klic.ps3
 //#define PS3_BROWSER	1	// /browser.ps3 / open browser combos
