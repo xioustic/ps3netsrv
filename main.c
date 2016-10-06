@@ -1949,8 +1949,6 @@ static void handleclient(u64 conn_s_p)
 			}
 			else mobile_mode = false;
 
-			if(islike(param, "/index.ps3")) small_alloc=false;
-
 			if(!is_busy && (islike(param, "/index.ps3?")  ||
 
  #ifdef DEBUG_MEM
@@ -2084,6 +2082,8 @@ static void handleclient(u64 conn_s_p)
 			{
 				u8 uprofile = profile; char url[10]; bool is_index_ps3 = islike(param, "/index.ps3?");
 
+				if(is_index_ps3 || islike(param, "/refresh.ps3")) {char mode, *cover_mode = strstr(param, "?cover="); if(cover_mode) {mode = *(cover_mode + 7) | 0x20, *cover_mode = NULL; webman_config->nocov = (mode == 'o') ? ONLINE_COVERS : (mode == 'd' || mode == 'n') ? SHOW_DISC : (mode == 'i') ? SHOW_ICON0 : SHOW_MMCOVERS;}}
+
 				for(u8 i = 0; i < 5; i++)
 				{
 					sprintf(url, "?%i",    i); if(strstr(param, url)) {profile = i; break;}
@@ -2158,7 +2158,7 @@ static void handleclient(u64 conn_s_p)
 			}
 			else
 			{
-				if(!small_alloc)
+				if(!small_alloc || islike(param, "/index.ps3"))
 				{
 					BUFFER_SIZE_HTML = get_buffer_size(webman_config->foot);
 
@@ -2305,6 +2305,18 @@ static void handleclient(u64 conn_s_p)
 						sprintf( templn, "<script>function rz(z){document.cookie=z + '; expires=Tue, 19 Jan 2038 03:14:07 UTC;';var i,el=document.getElementsByClassName('gc');for(i=0;i<el.length;++i)el[i].style.zoom=z/100;}</script>"
 										 "&nbsp;<input id=\"sz\" type=\"range\" value=\"100\" min=\"20\" max=\"200\" style=\"width:80px;position:relative;top:7px;\" ondblclick=\"this.value=100;rz(100);\" onchange=\"rz(this.value);\">"
 										 "<script>var d=document,z=d.cookie.split(';');css=d.styleSheets[0];css.insertRule('.gc{zoom:'+z+'%%}',css.cssRules.length);d.getElementById('sz').value=z;</script>"
+/*
+										 // select icon type
+										 "&nbsp;"
+										 "<select name=\"cov\" onchange=\"wmsg.style.display='block';window.location='/index.ps3?cover='+cov.value;\" accesskey=\"C\" style=\"font-size:12px;\">"
+										 "<option value=m>MM COVERS</option>"
+										 "<option value=i>ICON0.PNG</option>"
+										 "<option value=n>DISC ICONS</option>"
+#ifndef ENGLISH_ONLY
+										 "<option value=o>ONLINE COVERS</option>"
+#endif
+										 "</select>"
+*/
 										 "</form><hr>");
 					else
  #endif

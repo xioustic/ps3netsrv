@@ -414,7 +414,7 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 	if(fh == 0)
 	{
-		if(webman_config->lang > 22 && (webman_config->lang != 99)) return false;
+		if(webman_config->lang > 22 && (webman_config->lang != 99)) webman_config->lang = 0;
 
 		const char lang_codes[24][3]={"EN", "FR", "IT", "ES", "DE", "NL", "PT", "RU", "HU", "PL", "GR", "HR", "BG", "IN", "TR", "AR", "CN", "KR", "JP", "ZH", "DK", "CZ", "SK", "XX"};
 		char lang_path[34];

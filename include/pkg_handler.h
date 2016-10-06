@@ -84,12 +84,16 @@ static void wait_for_xml_download(char *filename, char *param)
 	char *xml = strstr(filename, ".xm!");
 	if(xml)
 	{
-		sys_timer_sleep(5); xml[4] = '\0';
+		xml = strstr(filename, "~");
 
-		if(file_exists(filename) == false) sys_timer_sleep(5); // wait a bit more
-		if(file_exists(filename) == false) return;
+		struct CellFsStat s; u64 size = 475000; if(xml) size = val(xml + 1); else xml = strstr(filename, ".xm!");
 
-		strcpy(param, filename); xml[3] = 'l';
+		for(u8 retry = 0; retry < 15; retry++)
+			{sys_timer_sleep(2); if(cellFsStat(filename, &s) == CELL_FS_SUCCEEDED && s.st_size >= size) break;}
+
+		if(s.st_size < size) {cellFsUnlink(filename); return;}
+
+		strcpy(param, filename); strcpy(xml, ".xml");
 		cellFsUnlink(filename);
 		cellFsRename(param, filename);
 

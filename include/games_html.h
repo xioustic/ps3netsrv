@@ -70,9 +70,23 @@ enum icon_type
 
 static u8 loading_games = 0;
 
+static const char ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
+
+static const char cpath[5][32] = {MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"};
+
 static bool HAS(char *icon)
 {
 	return ((*icon == 'h') || ((*icon == '/') && file_exists(icon) && (icon[strlen(icon) - 1] | 0x20) == 'g' ));
+}
+
+static bool get_image_file(char *icon, int flen)
+{
+	for(u8 e = 0; e < 4; e++)
+	{
+		sprintf(icon + flen, "%s", ext[e]);
+		if(file_exists(icon)) return true;
+	}
+	return false;
 }
 
 static size_t get_name(char *name, const char *filename, u8 cache)
@@ -99,6 +113,7 @@ static size_t get_name(char *name, const char *filename, u8 cache)
 		if((pos > 0) && name[pos] == '.' && (strcasestr(ISO_EXTENSIONS, &name[pos]))) {flen = pos; name[flen] = NULL;} else
 		if(!extcmp(name, ".BIN.ENC", 8)) {flen -= 8; name[flen] = NULL;}
 	}
+
 	if(cache) return (size_t) flen;
 
 	// remove title id from file name
@@ -114,54 +129,41 @@ static bool get_cover_by_titleid(char *icon, char *tempID)
 {
 	if(!HAS_TITLE_ID) return false;
 
-	const char ext[4][4] = {"JPG", "PNG", "jpg", "png"};
+	int flen;
 
 	if(SHOW_COVERS)
 	{
 #ifndef ENGLISH_ONLY
 		if(covers_exist[0] && (webman_config->nocov == SHOW_MMCOVERS && *COVERS_PATH == '/'))
 		{
-			for(u8 e = 0; e < 4; e++)
-			{
-				sprintf(icon, "%s/%s.%s", COVERS_PATH, tempID, ext[e]);
-				if(file_exists(icon)) return true;
-			}
+			flen = sprintf(icon, "%s/%s", COVERS_PATH, tempID);
+			if(get_image_file(icon, flen)) return true;
 		}
 #endif
-
-		const char cpath[5][32] = {MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"};
 
 		if(covers_exist[1] && *tempID == 'S')
 		{
 			for(u8 p = 0; p < 3; p++)
-				for(u8 e = 0; e < 4; e++)
 				{
-					sprintf(icon, "%s/covers_retro/psx/%c%c%c%c_%c%c%c.%c%c_COV.%s", cpath[p],
-							tempID[0], tempID[1], tempID[2], tempID[3],
-							tempID[4], tempID[5], tempID[6], tempID[7], tempID[8], ext[e]);
+					flen = sprintf(icon, "%s/covers_retro/psx/%c%c%c%c_%c%c%c.%c%c_COV", cpath[p],
+									tempID[0], tempID[1], tempID[2], tempID[3],
+									tempID[4], tempID[5], tempID[6], tempID[7], tempID[8]);
 
-					if(file_exists(icon)) return true;
+					if(get_image_file(icon, flen)) return true;
 				}
 		}
 
 		for(u8 p = 1; p < 6; p++)
 			if(covers_exist[p])
 			{
-
-				for(u8 e = 0; e < 4; e++)
-				{
-					sprintf(icon, "%s/covers/%s.%s", cpath[p - 1], tempID, ext[e]);
-					if(file_exists(icon)) return true;
-				}
+				flen = sprintf(icon, "%s/covers/%s", cpath[p - 1], tempID);
+				if(get_image_file(icon, flen)) return true;
 			}
 
 		if(covers_exist[6])
 		{
-			for(u8 e = 0; e < 4; e++)
-			{
-				sprintf(icon, "%s/%s.%s", WMTMP, tempID, ext[e]);
-				if(file_exists(icon)) return true;
-			}
+			flen = sprintf(icon, "%s/%s", WMTMP, tempID);
+			if(get_image_file(icon, flen)) return true;
 		}
 
 #ifdef ENGLISH_ONLY
@@ -250,15 +252,10 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 			if(flen > 2 && icon[flen-2] == '.') flen -= 2; // remove file extension (split iso)
 			if(flen > 4 && icon[flen-4] == '.') flen -= 4; // remove file extension
 
-			char *icon_ext = icon + flen;
-
 			// get covers from iso folder
 			if((f0 < 7 || f0 > NTFS) || (f0 == NTFS && (webman_config->nocov == SHOW_ICON0)))
 			{
-				icon[flen] = NULL; strcat(icon_ext, ".jpg"); if(file_exists(icon)) return;
-				icon[flen] = NULL; strcat(icon_ext, ".JPG"); if(file_exists(icon)) return;
-				icon[flen] = NULL; strcat(icon_ext, ".png"); if(file_exists(icon)) return;
-				icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
+				if(get_image_file(icon, flen)) return;
 			}
 
 			if(HAS_TITLE_ID && SHOW_COVERS) {get_cover_by_titleid(icon, tempID); if(HAS(icon)) return;}
@@ -288,12 +285,10 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 
 			// get covers/icons from /dev_hdd0/tmp/wmtmp
 			flen = get_name(icon, entry_name, GET_WMTMP);
-			icon_ext = icon + flen;
 
-			icon[flen] = NULL; strcat(icon_ext, ".jpg"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".png"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".PNG"); if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon_ext, ".JPG"); if(file_exists(icon) == false) *icon = NULL;
+			if(get_image_file(icon, flen)) return;
+
+			*icon = NULL;
 	}
 }
 
@@ -305,43 +300,32 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 
 	if(!extcmp(file, ".BIN.ENC", 8))
 	{
-		sprintf(icon, "%s/%s.png", param, file);
-		if(file_exists(icon)) return;
-		flen = sprintf(icon, "%s/%s.PNG", param, file);
-		if(file_exists(icon)) return;
-
-		flen -= 12; // remove .BIN.ENC.PNG
-		if(flen > 0 && icon[flen] == '.')
-		{
-			icon[flen] = NULL; strcat(icon + flen, ".png");
-			if(file_exists(icon)) return;
-			icon[flen] = NULL; strcat(icon + flen, ".PNG");
-			if(file_exists(icon)) return;
-		}
-	}
-
-	const char ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
-
-	if(isdir || (ns >= 0))
-		{get_name(icon, file, GET_WMTMP); strcat(icon, ".PNG");} //wmtmp
-	else
-	{
 		flen = sprintf(icon, "%s/%s", param, file);
 
-		char *p = strstr(icon + flen, ".ntfs[");
-		if(p) {flen -= strlen(p), *p = NULL;}
+		if(get_image_file(icon, flen)) return;
 
-		if((flen > 2) && icon[flen - 2] == '.' ) {flen -= 2, icon[flen] = NULL;} // remove file extension (split iso)
-		if((flen > 4) && icon[flen - 4] == '.' ) {flen -= 4, icon[flen] = NULL;} // remove file extension
-
-		//file name + ext
-		for(u8 e = 0; e < 4; e++)
+		flen -= 8; // remove .BIN.ENC
+		if(flen > 0 && icon[flen] == '.')
 		{
-			icon[flen] = NULL; // remove file extension
-			strcat(icon + flen, ext[e]);
-			if(file_exists(icon)) return;
+			if(get_image_file(icon, flen)) return;
 		}
 	}
+
+	flen = sprintf(icon, "%s/%s", param, file);
+
+	if(file_exists(icon) == false)
+	{
+		flen = get_name(icon, file, GET_WMTMP); //wmtmp
+	}
+
+	char *p = isdir ? NULL : strstr(icon + MAX(flen - 13, 0), ".ntfs[");
+	if(p) {flen -= strlen(p), *p = NULL;}
+
+	if((flen > 2) && icon[flen - 2] == '.' ) {flen -= 2, icon[flen] = NULL;} // remove file extension (split iso)
+	if((flen > 4) && icon[flen - 4] == '.' ) {flen -= 4, icon[flen] = NULL;} // remove file extension
+
+	//file name + ext
+	if(get_image_file(icon, flen)) return;
 
 	//copy remote file
 	if(file_exists(icon) == false)
@@ -369,10 +353,10 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 
 			for(u8 e = 0; e < 4; e++)
 			{
-				icon[icon_len] = NULL; strcat(icon + icon_len, ext[e]);
+				sprintf(icon + icon_len, "%s", ext[e]);
 				if(file_exists(icon)) return;
 
-				remote_file[tlen] = NULL; strcat(remote_file + tlen, ext[e]);
+				sprintf(remote_file + tlen, "%s", ext[e]);
 
 				//Copy remote icon locally
 				copy_net_file(icon, remote_file, ns, COPY_WHOLE_FILE);
@@ -421,8 +405,9 @@ static enum icon_type get_default_icon(char *icon, const char *param, char *file
 	if(HAS(icon)) return default_icon;
 
 	//use the cached PNG from wmtmp if available
-	get_name(icon, file, GET_WMTMP);
-	strcat(icon, ".PNG");
+	int flen = get_name(icon, file, GET_WMTMP);
+
+	if(get_image_file(icon, flen)) return default_icon;
 
 no_icon0:
 	if(HAS(icon)) return default_icon;
@@ -475,7 +460,7 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, const char *ent
 
 	if(ret != CELL_FS_SUCCEEDED)
 	{
-		get_name(templn, entry_name, NO_PATH); if(!IS_NTFS) utf8enc(data, templn, GET_WMTMP); //use file name as title
+		get_name(templn, entry_name, NO_PATH); if(!IS_NTFS) utf8enc(data, templn, true); //use file name as title
 	}
 
 	return ret;
@@ -596,16 +581,15 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		u8 index = 4;
 
 		// cover: folder/filename.jpg
-		char img_ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
 		for(u8 e = 0; e < 4; e++)
 		{
-			sprintf(enc_dir_name, "%s/%s/%s%s", param, data[v3_entry].name, data[v3_entry].name, img_ext[e]);
+			sprintf(enc_dir_name, "%s/%s/%s%s", param, data[v3_entry].name, data[v3_entry].name, ext[e]);
 			if(remote_stat(ns, enc_dir_name, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) == CELL_OK) {index = e; break;}
 		}
 
 		if(index < 4)
 		{
-			get_name(icon, data[v3_entry].name, GET_WMTMP); strcat(icon, img_ext[index]);
+			get_name(icon, data[v3_entry].name, GET_WMTMP); strcat(icon, ext[index]);
 			copy_net_file(icon, enc_dir_name, ns, COPY_WHOLE_FILE);
 
 			if(file_exists(icon) == false) *icon = NULL;
@@ -731,14 +715,13 @@ static void add_launchpad_footer(char *tempstr)
 static void check_cover_folders(char *buffer)
 {
 #ifndef ENGLISH_ONLY
-												covers_exist[0] = isDir(COVERS_PATH);
+														 covers_exist[0] = isDir(COVERS_PATH);
 #endif
-	sprintf(buffer, "%s/covers", MM_ROOT_STD) ; covers_exist[1] = isDir(buffer);
-	sprintf(buffer, "%s/covers", MM_ROOT_STL) ; covers_exist[2] = isDir(buffer);
-	sprintf(buffer, "%s/covers", MM_ROOT_SSTL); covers_exist[3] = isDir(buffer);
-												covers_exist[4] = isDir("/dev_hdd0/GAMES/covers");
-												covers_exist[5] = isDir("/dev_hdd0/GAMEZ/covers");
-												covers_exist[6] = isDir(WMTMP) && SHOW_COVERS_OR_ICON0;
+		for(u8 p = 1; p < 6; p++)
+		{
+			sprintf(buffer, "%s/covers", cpath[p - 1]) ; covers_exist[p] = isDir(buffer);
+		}
+														 covers_exist[6] = isDir(WMTMP) && SHOW_COVERS_OR_ICON0;
 
 #ifndef ENGLISH_ONLY
 	if(!covers_exist[0]) {use_custom_icon_path = strstr(COVERS_PATH, "%s"); use_icon_region = strstr(COVERS_PATH, "%s/%s");} else {use_icon_region = use_custom_icon_path = false;}
@@ -917,11 +900,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		check_cover_folders(templn);
 
-#ifndef ENGLISH_ONLY
 		char onerror_prefix[24]=" onerror=\"this.src='", onerror_suffix[8]="';\"";  // wm_icons[default_icon]
+#ifndef ENGLISH_ONLY
 		if(!use_custom_icon_path) *onerror_prefix = *onerror_suffix = NULL;
-#else
-		char onerror_prefix[8]="", onerror_suffix[8]="";
 #endif
 		char icon[MAX_PATH_LEN], enc_dir_name[1024], subpath[MAX_PATH_LEN];
 

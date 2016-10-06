@@ -146,8 +146,11 @@ static void setup_parse_settings(char *param)
 	if( strstr(param, "np=1" )) webman_config->nopad = 1;
 	if( strstr(param, "nc=1" )) webman_config->nocov = SHOW_ICON0;    else // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons, 3 = Online Covers)
 	if( strstr(param, "ic=1" )) webman_config->nocov = SHOW_ICON0;    else
-	if( strstr(param, "ic=2" )) webman_config->nocov = SHOW_DISC;     else
+	if( strstr(param, "ic=2" )) webman_config->nocov = SHOW_DISC;
+#ifndef ENGLISH_ONLY
+	else
 	if( strstr(param, "ic=3" )) webman_config->nocov = ONLINE_COVERS;
+#endif
 
 	if( strstr(param, "nd=1" )) webman_config->netd = 1;
 	webman_config->netp=get_valuen16(param, "netp=");
@@ -260,7 +263,7 @@ static void setup_parse_settings(char *param)
 #ifndef ENGLISH_ONLY
 	if(strstr(param, "&l=99")) webman_config->lang=99; // Unknown LANG_XX.TXT
 	else
-		webman_config->lang=get_valuen(param, "&l=", 0, 22);
+		webman_config->lang = get_valuen(param, "&l=", 0, 22);
 
 	update_language();
 #endif
@@ -586,8 +589,10 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "<select name=\"ic\" onchange=\"nc.checked=(ic.value==1);\" accesskey=\"C\">");
 	add_option_item("0" , "MM COVERS",     (value == SHOW_MMCOVERS), buffer);
 	add_option_item("1" , "ICON0.PNG",     (value == SHOW_ICON0),    buffer);
-	add_option_item("2" , "No ICON0.PNG",  (value == SHOW_DISC),     buffer);
+	add_option_item("2" , "DISC ICONS",    (value == SHOW_DISC),     buffer);
+#ifndef ENGLISH_ONLY
 	add_option_item("3" , "ONLINE COVERS", (value == ONLINE_COVERS), buffer);
+#endif
 	strcat(buffer, "</select><br>");
 
 	add_check_box("tid", "1", STR_TITLEID, " • ", (webman_config->tid),  buffer);

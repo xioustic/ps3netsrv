@@ -487,15 +487,17 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				if(_IS(cmd, "NOOP"))
 				{
 					ssend(conn_s_ftp, "200 NOOP\r\n");
+					dataactive = 1;
 				}
 				else
 				if(_IS(cmd, "MLSD") || _IS(cmd, "LIST") || _IS(cmd, "MLST") || _IS(cmd, "NLST"))
 				{
-					bool nolist  = _IS(cmd, "NLST"); if(IS(param, "-l")) nolist = false;
+					bool nolist  = _IS(cmd, "NLST"); if(IS(param, "-l") || IS(param, "-al")) {*param = NULL, nolist = false;}
 					bool is_MLSD = _IS(cmd, "MLSD");
-					bool is_MLST = (*cmd | 0x20) == 'm'; // MLSD || MLST
+					bool is_MLST = _IS(cmd, "MLST");
+					bool is_MLSx = is_MLSD || is_MLST;
 
-					if(data_s < 0 && pasv_s >= 0) data_s = accept(pasv_s, NULL, NULL);
+					if((data_s < 0) && (pasv_s >= 0) && !is_MLST) data_s = accept(pasv_s, NULL, NULL);
 
 					if(data_s >= 0)
 					{
@@ -510,6 +512,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							strcpy(tempcwd, param);
 							absPath(d_path, tempcwd, cwd);
+
+							if(!isDir(d_path) && (*wcard == NULL)) {strcpy(wcard, tempcwd); split = 0, *param = NULL;}
 						}
 
 						if(!split || !isDir(d_path)) strcpy(d_path, cwd);
@@ -552,9 +556,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									cellFsStat(filename, &buf); mode = buf.st_mode;
 									cellRtcSetTime_t(&rDate, buf.st_mtime);
 
-									if(is_MLST)
+									if(is_MLSx)
 									{
-
 										if(entry.d_name[0] == '.' && entry.d_name[1] == '\0')
 										{
 											*dirtype = 'c';
@@ -572,11 +575,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										slen = sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
 												is_MLSD ? "" : " ",
 												dirtype,
-												((mode & S_IFDIR) != 0) ? "dir" : "file",
-												((mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
-												(((mode & S_IRUSR) != 0) * 4 + ((mode & S_IWUSR) != 0) * 2 + ((mode & S_IXUSR) != 0) * 1),
-												(((mode & S_IRGRP) != 0) * 4 + ((mode & S_IWGRP) != 0) * 2 + ((mode & S_IXGRP) != 0) * 1),
-												(((mode & S_IROTH) != 0) * 4 + ((mode & S_IWOTH) != 0) * 2 + ((mode & S_IXOTH) != 0) * 1),
+												( (mode & S_IFDIR) != 0) ? "dir" : "file",
+												( (mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
+												(((mode & S_IRUSR) != 0) * 4 + ((mode & S_IWUSR) != 0) * 2 + ((mode & S_IXUSR) != 0)),
+												(((mode & S_IRGRP) != 0) * 4 + ((mode & S_IWGRP) != 0) * 2 + ((mode & S_IXGRP) != 0)),
+												(((mode & S_IROTH) != 0) * 4 + ((mode & S_IWOTH) != 0) * 2 + ((mode & S_IXOTH) != 0)),
 												entry.d_name);
 									}
 									else

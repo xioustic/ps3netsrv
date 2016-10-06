@@ -450,7 +450,7 @@ int main()
 
 	// copy javascripts
 	CopyFile(APP_USRDIR "/jquery.min.js",    XMLHOST_DIR "/jquery.min.js");  // jQuery v3.1.1
-	CopyFile(APP_USRDIR "/jquery-ui.min.js", XMLHOST_DIR "/jquery-ui.min.js"); // jQuery UI v1.12.0
+	CopyFile(APP_USRDIR "/jquery-ui.min.js", XMLHOST_DIR "/jquery-ui.min.js"); // jQuery UI v1.12.1
 
 	CopyFile(APP_USRDIR "/fm.js",     XMLHOST_DIR "/fm.js");
 	CopyFile(APP_USRDIR "/games.js",  XMLHOST_DIR "/games.js");
