@@ -188,8 +188,8 @@ static void setup_parse_settings(char *param)
 	webman_config->temp0   = 0;
 
 	webman_config->temp1   = get_valuen(param, "step=", 40, MAX_TEMPERATURE); //°C
-	webman_config->ps2temp = get_valuen(param, "fsp0=", 20, 99); // %
-	webman_config->manu    = get_valuen(param, "manu=", 20, 95); // %
+	webman_config->ps2temp = get_valuen(param, "fsp0=", MIN_FANSPEED, 99); // %
+	webman_config->manu    = get_valuen(param, "manu=", MIN_FANSPEED, 95); // %
 
 	if(strstr(param, "temp=1"))
 		webman_config->temp0 = (u8)(((float)(webman_config->manu+1) * 255.f)/100.f); // manual fan speed
@@ -1098,8 +1098,12 @@ static void reset_settings(void)
 	// set default autoboot path
 	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
+	// check stored data
 	if(webman_config->nowarn > 1) webman_config->nowarn = 0;
-	webman_config->minfan = RANGE(webman_config->minfan, MIN_FANSPEED, 99);
+	webman_config->manu = RANGE(webman_config->manu, MIN_FANSPEED, 99);       // %
+	webman_config->minfan = RANGE(webman_config->minfan, MIN_FANSPEED, 99);   // %
+	webman_config->ps2temp = RANGE(webman_config->ps2temp, MIN_FANSPEED, 99); // %
+	webman_config->temp1 = RANGE(webman_config->temp1, 40, MAX_TEMPERATURE);  //°C
 
 	// settings
 	save_settings();
