@@ -568,12 +568,12 @@ static void netiso_stop_thread(uint64_t arg)
 
 static bool is_netsrv_enabled(u8 server_id)
 {
-	return( (server_id == 0 && (webman_config->netd0 && webman_config->neth0[0] && webman_config->netp0))
-		||	(server_id == 1 && (webman_config->netd1 && webman_config->neth1[0] && webman_config->netp1))
-		||	(server_id == 2 && (webman_config->netd2 && webman_config->neth2[0] && webman_config->netp2))
+	return( (server_id == 0 && ((webman_config->netd0 == 1) && webman_config->neth0[0] && webman_config->netp0))
+		||	(server_id == 1 && ((webman_config->netd1 == 1) && webman_config->neth1[0] && webman_config->netp1))
+		||	(server_id == 2 && ((webman_config->netd2 == 1) && webman_config->neth2[0] && webman_config->netp2))
 #ifdef NET3NET4
-		||	(server_id == 3 && (webman_config->netd3 && webman_config->neth3[0] && webman_config->netp3))
-		||	(server_id == 4 && (webman_config->netd4 && webman_config->neth4[0] && webman_config->netp4))
+		||	(server_id == 3 && ((webman_config->netd3 == 1) && webman_config->neth3[0] && webman_config->netp3))
+		||	(server_id == 4 && ((webman_config->netd4 == 1) && webman_config->neth4[0] && webman_config->netp4))
 #endif
 		  );
 }
@@ -585,19 +585,19 @@ static int connect_to_remote_server(u8 server_id)
 	if( is_netsrv_enabled(server_id) )
 	{
 		// check duplicated connections
-		if(server_id == 1 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth1) && webman_config->netp0 == webman_config->netp1) return FAILED;
+		if(server_id == 1 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth1) && webman_config->netp0 == webman_config->netp1) return FAILED;
 
-		if(server_id == 2 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth2) && webman_config->netp0 == webman_config->netp2) return FAILED;
-		if(server_id == 2 && webman_config->netd1 && IS(webman_config->neth1, webman_config->neth2) && webman_config->netp1 == webman_config->netp2) return FAILED;
+		if(server_id == 2 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth2) && webman_config->netp0 == webman_config->netp2) return FAILED;
+		if(server_id == 2 && (webman_config->netd1 == 1) && IS(webman_config->neth1, webman_config->neth2) && webman_config->netp1 == webman_config->netp2) return FAILED;
 #ifdef NET3NET4
-		if(server_id == 3 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth3) && webman_config->netp0 == webman_config->netp3) return FAILED;
-		if(server_id == 3 && webman_config->netd1 && IS(webman_config->neth1, webman_config->neth3) && webman_config->netp1 == webman_config->netp3) return FAILED;
-		if(server_id == 3 && webman_config->netd2 && IS(webman_config->neth2, webman_config->neth3) && webman_config->netp2 == webman_config->netp3) return FAILED;
+		if(server_id == 3 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth3) && webman_config->netp0 == webman_config->netp3) return FAILED;
+		if(server_id == 3 && (webman_config->netd1 == 1) && IS(webman_config->neth1, webman_config->neth3) && webman_config->netp1 == webman_config->netp3) return FAILED;
+		if(server_id == 3 && (webman_config->netd2 == 1) && IS(webman_config->neth2, webman_config->neth3) && webman_config->netp2 == webman_config->netp3) return FAILED;
 
-		if(server_id == 4 && webman_config->netd0 && IS(webman_config->neth0, webman_config->neth4) && webman_config->netp0 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && webman_config->netd1 && IS(webman_config->neth1, webman_config->neth4) && webman_config->netp1 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && webman_config->netd2 && IS(webman_config->neth2, webman_config->neth4) && webman_config->netp2 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && webman_config->netd3 && IS(webman_config->neth3, webman_config->neth4) && webman_config->netp3 == webman_config->netp4) return FAILED;
+		if(server_id == 4 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth4) && webman_config->netp0 == webman_config->netp4) return FAILED;
+		if(server_id == 4 && (webman_config->netd1 == 1) && IS(webman_config->neth1, webman_config->neth4) && webman_config->netp1 == webman_config->netp4) return FAILED;
+		if(server_id == 4 && (webman_config->netd2 == 1) && IS(webman_config->neth2, webman_config->neth4) && webman_config->netp2 == webman_config->netp4) return FAILED;
+		if(server_id == 4 && (webman_config->netd3 == 1) && IS(webman_config->neth3, webman_config->neth4) && webman_config->netp3 == webman_config->netp4) return FAILED;
 #endif
 		u8 retries = 0;
 

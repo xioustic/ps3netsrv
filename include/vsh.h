@@ -113,12 +113,7 @@ static void launch_disc(char *category, char *seg_name)
 		{
 			u8 retry = 0, timeout = 4, icon_found = 0;
 
-			while(View_Find("webrender_plugin"))
-			{
-				sys_timer_usleep(500000); retry++; if(retry > 4) break;
-			}
-
-			while(View_Find("webbrowser_plugin"))
+			while(View_Find("webrender_plugin") || View_Find("webbrowser_plugin"))
 			{
 				sys_timer_usleep(500000); retry++; if(retry > 4) break;
 			}

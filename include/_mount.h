@@ -20,8 +20,8 @@ typedef struct
 
 #define PLAYSTATION      "PLAYSTATION "
 
-// /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
-// /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
+// /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_emu.self}][offline={0/1}]
+// /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_emu.self}][offline={0/1}]
 // /mount.ps3/unmount
 // /mount.ps2/<path>[?random=<x>]
 // /mount.ps2/unmount
@@ -75,11 +75,6 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		char enc_dir_name[1024], *source = param + plen;
 		bool mounted = false; max_mapped = 0;
 
-		// -------------------------
-		// use relative source path
-		// -------------------------
-		if(file_exists(source) == false) {sprintf(templn, "%s/%s", html_base_path, source + 1); if(file_exists(templn)) sprintf(source, "%s", templn);}
-
 		// ----------------------------
 		// remove url query parameters
 		// ----------------------------
@@ -97,6 +92,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		purl = strstr(source, "?random=");
 		if(purl) *purl = NULL;
 
+		// -------------------------
+		// use relative source path
+		// -------------------------
+		if(file_exists(source) == false) {sprintf(templn, "%s/%s", html_base_path, source + 1); if(file_exists(templn)) sprintf(source, "%s", templn);}
 
 		// --------------
 		// set mount url
@@ -141,7 +140,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #ifdef OFFLINE_INGAME
 			if(mounted && (strstr(param, OFFLINE_TAG) != NULL)) net_status = 0;
 #endif
-			if(mounted && IS_ON_XMB && strstr(param, "/PSPISO") == NULL && extcmp(param, ".BIN.ENC", 8) != 0)
+			if(mounted && IS_ON_XMB && (strstr(param, "/PSPISO") == NULL) && (extcmp(param, ".BIN.ENC", 8) != 0))
 			{
 				uint8_t autoplay = webman_config->autoplay;
 
@@ -787,7 +786,7 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 						 "%s %s", STR_COPYING, source, STR_CPYDEST, basepath);
 			show_msg(msg);
 
-			copy_in_progress = true; copied_count = 1;
+			copy_in_progress = true, copied_count = 1;
 			file_copy(source, target, COPY_WHOLE_FILE);
 			copy_in_progress = false;
 
@@ -1122,7 +1121,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		if(file_exists(PS2_CLASSIC_PLACEHOLDER))
 		{
 			sprintf(temp, "PS2 Classic\n%s", strrchr(_path, '/') + 1);
-			copy_in_progress = true; copied_count = 0;
+			copy_in_progress = true, copied_count = 0;
 			show_msg(temp);
 
  #ifndef LITE_EDITION
@@ -1233,7 +1232,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		// ----------
 		if(!isDir(_path))
 		{
-			if( strstr(_path, "/PSXISO") || strstr(_path, "/PSXGAMES") || !extcmp(_path, ".ntfs[PSXISO]", 13) ) select_ps1emu();
+			if( strstr(_path, "/PSXISO") || strstr(_path, "/PSXGAMES") || !extcmp(_path, ".ntfs[PSXISO]", 13) || mount_unk == EMU_PSX) select_ps1emu();
 
 			//if(_next || _prev)
 				sys_timer_sleep(1);
@@ -1286,14 +1285,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					char *rawiso_data = (char*)addr;
 					if(read_file(_path, rawiso_data, _64KB_, 0) > _4KB_)
 					{
-/*
-					int fdw;
-					if(cellFsOpen(_path, CELL_FS_O_RDONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
-					{
-						u8* rawiso_data = (u8*)addr;
-						cellFsRead(fdw, rawiso_data, _64KB_, NULL);
-						cellFsClose(fdw);
-*/
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
 						waitfor("/dev_bdvd", 3);
@@ -1562,7 +1553,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						if(file_exists(_path) == false) sprintf(_path, "%s", cobra_iso_list[0]);}
 					}
 
-					mount_iso = mount_iso || file_exists(cobra_iso_list[0]);
+					mount_iso = mount_iso || file_exists(cobra_iso_list[0]); ret = mount_iso;
 
 					if(!extcasecmp(_path, ".cue", 4))
 					{
@@ -1593,7 +1584,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 										if(l>=msiz) break;
 										if(lp<msiz && buf[lp] && buf[lp]!='\n' && buf[lp]!='\r')
 										{
-											templn[l]=buf[lp];
+											templn[l] = buf[lp];
 											templn[l+1] = NULL;
 										}
 										else
@@ -1641,8 +1632,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						tracks[0].is_audio = 0;
 						cobra_mount_psx_disc_image_iso(cobra_iso_list[0], tracks, 1);
 					}
-					else
-						ret = false;
 				}
 
 				// -------------------

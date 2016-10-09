@@ -2566,7 +2566,7 @@ static void handleclient(u64 conn_s_p)
 						toggle_video_rec(param + 13);
 						strcat(pbuffer,	"<a class=\"f\" href=\"/dev_hdd0\">/dev_hdd0/</a><a href=\"/dev_hdd0/VIDEO\">VIDEO</a>:<p>"
 										"Video recording: <a href=\"/videorec.ps3\">");
-						strcat(pbuffer, recording?STR_ENABLED:STR_DISABLED);
+						strcat(pbuffer, recording ? STR_ENABLED : STR_DISABLED);
 						strcat(pbuffer, "</a><p>");
 						if(!recording) {sprintf(param, "<a class=\"f\" href=\"%s\">%s</a><br>", (char*)recOpt[0x6], (char*)recOpt[0x6]); strcat(pbuffer, param);}
 					}
@@ -2620,7 +2620,7 @@ static void handleclient(u64 conn_s_p)
 											{BgmPlaybackEnable(0, &arg2);  system_bgm = 1;}
 						}
 
-						sprintf(templn, "System BGM: %s", (system_bgm)?STR_ENABLED:STR_DISABLED);
+						sprintf(templn, "System BGM: %s", system_bgm ? STR_ENABLED : STR_DISABLED);
 						strcat(pbuffer, templn);
 						show_msg(templn);
 					}

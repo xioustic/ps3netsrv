@@ -159,6 +159,9 @@ int main(int argc, const char* argv[])
 
 	cobra_lib_init();
 
+	int refresh_xml = connect_to_webman();
+	if(refresh_xml >= 0) ssend(refresh_xml, "GET /mount.ps3/unmount HTTP/1.0\r\n");
+
 	mountCount = ntfsMountAll(&mounts, NTFS_DEFAULT | NTFS_RECOVER /* | NTFS_READ_ONLY */ );
 	if (mountCount <= 0) goto exit;
 
@@ -459,7 +462,6 @@ exit:
 	for (u8 u = 0; u < mountCount; u++) ntfsUnmount(mounts[u].name, 1);
 
 	//--- Force refresh xml (webMAN)
-	int refresh_xml = -1;
 	refresh_xml = connect_to_webman();
 	if(refresh_xml >= 0) ssend(refresh_xml, "GET /refresh.ps3 HTTP/1.0\r\n");
 

@@ -70,6 +70,8 @@ enum icon_type
 
 static u8 loading_games = 0;
 
+static u8 ex[4] = {0, 1, 2, 3};
+
 static const char ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
 
 static const char cpath[5][32] = {MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"};
@@ -83,8 +85,8 @@ static bool get_image_file(char *icon, int flen)
 {
 	for(u8 e = 0; e < 4; e++)
 	{
-		sprintf(icon + flen, "%s", ext[e]);
-		if(file_exists(icon)) return true;
+		sprintf(icon + flen, "%s", ext[ex[e]]);
+		if(file_exists(icon)) {if(e>0) {u8 s=ex[e];ex[e]=ex[0],ex[0]=s;}; return true;}
 	}
 	return false;
 }
@@ -583,8 +585,8 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		// cover: folder/filename.jpg
 		for(u8 e = 0; e < 4; e++)
 		{
-			sprintf(enc_dir_name, "%s/%s/%s%s", param, data[v3_entry].name, data[v3_entry].name, ext[e]);
-			if(remote_stat(ns, enc_dir_name, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) == CELL_OK) {index = e; break;}
+			sprintf(enc_dir_name, "%s/%s/%s%s", param, data[v3_entry].name, data[v3_entry].name, ext[ex[e]]);
+			if(remote_stat(ns, enc_dir_name, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) == CELL_OK) {index = ex[e]; if(e>0) {ex[e]=ex[0],ex[0]=index;}; break;}
 		}
 
 		if(index < 4)
