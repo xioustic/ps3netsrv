@@ -74,10 +74,6 @@ static void poll_thread(uint64_t poll)
 	// combos.h
 	u8 show_persistent_popup = 0;
 
-#ifdef VIRTUAL_PAD
-	u32 pad_idle = 0;
-#endif
-
 	old_fan = 0;
 	while(working)
 	{

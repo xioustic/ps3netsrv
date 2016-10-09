@@ -526,8 +526,6 @@ int npklic_struct_offset = 0; u8 klic_polling = 0;
 static bool is_mamba = false;
 static uint16_t cobra_version = 0;
 
-static u32 plugin_active = 0;
-
 static bool is_mounting = false;
 static bool copy_aborted = false;
 
@@ -650,6 +648,7 @@ static char current_file[MAX_PATH_LEN];
 #include "include/ps2_classic.h"
 #include "include/xmb_savebmp.h"
 #include "include/singstar.h"
+#include "include/autopoweroff.h"
 
 #include "include/gamedata.h"
 #include "include/psxemu.h"
@@ -868,8 +867,6 @@ static void handleclient(u64 conn_s_p)
 
 	char *file_query = param + HTML_RECV_LAST; *file_query = NULL;
 
-	plugin_active++;
-
 	if(conn_s_p == START_DAEMON || conn_s_p == REFRESH_CONTENT)
 	{
 		if(conn_s_p == START_DAEMON)
@@ -1001,7 +998,6 @@ static void handleclient(u64 conn_s_p)
  #endif
 		}
 
-		plugin_active--;
 		sys_ppu_thread_exit(0);
 	}
 
@@ -1220,6 +1216,8 @@ static void handleclient(u64 conn_s_p)
 
 				char msg[MAX_LINE_LEN], filename[MAX_PATH_LEN]; memset(msg, 0, MAX_LINE_LEN); *filename = NULL;
 
+				setPluginActive();
+
 				int ret = download_file(strchr(param_original, '%') ? (param_original + 13) : (param + 13), msg);
 
 				char *dlpath = strchr(msg, '\n'); // get path in "...\nTo: /path/"
@@ -1245,6 +1243,7 @@ static void handleclient(u64 conn_s_p)
 
 				wait_for_xml_download(filename, param);
 
+				setPluginInactive();
 				goto exit_handleclient;
 			}
 
@@ -1272,6 +1271,8 @@ static void handleclient(u64 conn_s_p)
 
 				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
 
+				setPluginActive();
+
 				int ret = installPKG(param + 12, msg);
 
 				#ifdef WM_REQUEST
@@ -1289,10 +1290,11 @@ static void handleclient(u64 conn_s_p)
 
 					wait_for_pkg_install();
 
-					plugin_active--;
+					setPluginInactive();
 					sys_ppu_thread_exit(0);
 				}
 
+				setPluginInactive();
 				goto exit_handleclient;
 			}
  #endif // #ifdef PKG_HANDLER
@@ -1346,6 +1348,42 @@ static void handleclient(u64 conn_s_p)
 					show_idps(header);
 				}
 				else
+/*
+				if(islike(param2, "$registryInt(0x"))
+				{
+					int id, value;
+					id = convertH(param2 + 15);
+
+					char *pos = strstr(param2 + 16, "=");
+					if(pos)
+					{
+						value = val(pos + 1);
+						xsetting_D0261D72()->saveRegistryIntValue(id, value);
+					}
+
+					xsetting_D0261D72()->loadRegistryIntValue(id, &value);
+					sprintf(param2 + strlen(param2), " => %i", value);
+				}
+				else
+				if(islike(param2, "$registryString(0x"))
+				{
+					int id, len, size = 0;
+					id = convertH(param2 + 18);
+
+					char *pos = strstr(param2 + 19, "=");
+					if(pos)
+					{
+						pos++, len = strlen(pos);
+						xsetting_D0261D72()->saveRegistryStringValue(id, pos, len);
+					}
+
+					len = strlen(param2); char *value = param2 + len + 8;
+					char *pos2 = strstr(param2 + 19, ","); if(pos2) size = val(pos2 + 1); if(size <= 0) size = 0x80;
+					xsetting_D0261D72()->loadRegistryStringValue(id, value, size);
+					sprintf(param2 + len, " => %s", value);
+				}
+				else
+*/
    #ifndef LITE_EDITION
 				if(islike(param2, "$ingame_screenshot"))
 				{
@@ -1804,6 +1842,7 @@ static void handleclient(u64 conn_s_p)
 					restore_fan(1); //set ps2 fan control mode
 
 				working = plugin_active = 0;
+				setAutoPowerOff(false);
 
 				sclose(&conn_s);
 				if(sysmem) sys_memory_free(sysmem);
@@ -1823,8 +1862,9 @@ static void handleclient(u64 conn_s_p)
 				#endif
 
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
-				working = plugin_active = 0;
-				{ DELETE_TURNOFF } { BEEP1 }
+				setPluginExit();
+
+				{ BEEP1 }
 
 				if(param[13] == '?')
 					vsh_shutdown(); // shutdown using VSH
@@ -1870,9 +1910,9 @@ static void handleclient(u64 conn_s_p)
 				#endif
 
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
-				working = 0;
+				setPluginExit();
 
-				{ DELETE_TURNOFF } { BEEP2 }
+				{ BEEP2 }
 
 				char *allow_scan = strstr(param,"?0");
 				if(allow_scan) *allow_scan = NULL; else save_file(WMNOSCAN, NULL, 0);
@@ -2910,7 +2950,6 @@ exit_handleclient:
 	if(sysmem) sys_memory_free(sysmem);
 	if(loading_html) loading_html--;
 
-	plugin_active--;
 	sys_ppu_thread_exit(0);
 }
 
@@ -3107,6 +3146,8 @@ static void wwwd_stop_thread(uint64_t arg)
 	while(refreshing_xml) sys_timer_usleep(500000); // Prevent unload too fast
 
 	restore_fan(1); // restore & set static fan speed for ps2
+
+	setAutoPowerOff(false);
 
 	sys_timer_usleep(500000);
 

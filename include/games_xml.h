@@ -22,6 +22,8 @@ enum xmb_groups
 
 static void refresh_xml(char *msg)
 {
+	setPluginActive();
+
 	refreshing_xml = 1;
 	webman_config->profile = profile; save_settings();
 
@@ -35,6 +37,8 @@ static void refresh_xml(char *msg)
 
 	sprintf(msg, "%s XML%s: OK", STR_REFRESH, SUFIX2(profile));
 	show_msg(msg);
+
+	setPluginInactive();
 }
 
 static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)

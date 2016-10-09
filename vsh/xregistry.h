@@ -1,5 +1,5 @@
 // Mysis xRegistry.h v0.1
-// 3141card (C style version)
+// 3141card (C style version) source: http://www.psdevwiki.com/ps3/Talk:VSH
 #ifndef __XREGISTRY_H__
 #define __XREGISTRY_H__
 
@@ -614,132 +614,136 @@ typedef struct xsetting_D0261D72_class_t  // 11
 	uint32_t (*Getunk2)(int32_t, int32_t *);
 	uint32_t (*Setunk3)(int32_t, int32_t);
 /*
-	int loadRegistryAvcVgaLastBitrate()	{int v; loadRegistryIntValue(0x00, &v);return v;}
-	int loadRegistryGameLevel0Control()	{int v; loadRegistryIntValue(0x01, &v);return v;}
-	int loadRegistryNetworkServiceControl()	{int v; loadRegistryIntValue(0x02, &v);return v;}
-	int loadRegistryCddaServer()	{int v; loadRegistryIntValue(0x03, &v);return v;}
-	int loadRegistryGameBgmPlayback()	{int v; loadRegistryIntValue(0x04, &v);return v;}
-	int loadRegistryGameBgmVolume()	{int v; loadRegistryIntValue(0x05, &v);return v;}
-	int loadRegistryDummyBgmPlayer()	{int v; loadRegistryIntValue(0x06, &v);return v;}
-	int loadRegistryDynamicNormalizer()	{int v; loadRegistryIntValue(0x07, &v);return v;}
-	int loadRegistryNpDebug()	{int v; loadRegistryIntValue(0x08, &v);return v;}
-	int loadRegistryNpTitleId(char * titleid,int max_len)	{return loadRegistryStringValue(0x09,titleid,max_len);}
-	int loadRegistryNavOnly()	{int v; loadRegistryIntValue(0x0A, &v);return v;}
-	int loadRegistryNpAdClockDiff()	{int v; loadRegistryIntValue(0x0B, &v);return v;}
-	int loadRegistryDebugDrmError()	{int v; loadRegistryIntValue(0x0C, &v);return v;}
-	int loadRegistryDebugDrmClock()	{int v; loadRegistryIntValue(0x0D, &v);return v;}
-	int loadRegistryDebugConsoleBind()	{int v; loadRegistryIntValue(0x0E, &v);return v;}
-	int loadRegistryDebugIngameCommerce2()	{int v; loadRegistryIntValue(0x0F, &v);return v;}
-	int loadRegistryDebugSFForce()	{int v; loadRegistryIntValue(0x10, &v);return v;}
-	int loadRegistryNpGeoFiltering()	{int v; loadRegistryIntValue(0x11, &v);return v;}
-	int loadRegistryGameUpdateImposeTest()	{int v; loadRegistryIntValue(0x12, &v);return v;}
-	int loadRegistryGameUpdateForceOverwrite()	{int v; loadRegistryIntValue(0x13, &v);return v;}
-	int loadRegistryFakeNpSnsThrottle()	{int v; loadRegistryIntValue(0x14, &v);return v;}
-	int loadRegistryFakeNpSnsThrottleWaitSeconds()	{int v; loadRegistryIntValue(0x15, &v);return v;}
-	int loadRegistryTppsProxyFlag()	{int v; loadRegistryIntValue(0x16, &v);return v;}
-	int loadRegistryTppsProxyServer()	{int v; loadRegistryIntValue(0x17, &v);return v;} // questionable
-	int loadRegistryTppsProxyPort()	{int v; loadRegistryIntValue(0x18, &v);return v;}
-	int loadRegistryTppsProxyUserName(char * username,int max_len)	{return loadRegistryStringValue(0x19,username,max_len);}
-	int loadRegistryTppsProxyPassword(char * password,int max_len)	{return loadRegistryStringValue(0x1A,password,max_len);}
-	int loadRegistryRegion()	{int v; loadRegistryIntValue(0x1B, &v);return v;}
-	int loadRegistryLicenseArea()	{int v; loadRegistryIntValue(0x1C, &v);return v;}
-	int loadRegistryHddSerial(char * hddserial)	{return loadRegistryStringValue(0x1D,hddserial,0x3D);}
-	int loadRegistryCoreDump()	{int v; loadRegistryIntValue(0x1E, &v);return v;}
-	int loadRegistryCoreDumpOptionTrigger()	{int v; loadRegistryIntValue(0x1F, &v);return v;}
-	int loadRegistryCoreDumpOptionFileGen()	{int v; loadRegistryIntValue(0x20, &v);return v;}
-	int loadRegistryCoreDumpOptionExeCtrl()	{int v; loadRegistryIntValue(0x21, &v);return v;}
-	int loadRegistryMatEnable()	{int v; loadRegistryIntValue(0x22, &v);return v;}
-	int loadRegistryUpdateServerUrl(char * url,int max_len)	{return loadRegistryStringValue(0x23,url,max_len);}
-	int loadRegistryFakeLimitSize()	{int v; loadRegistryIntValue(0x24, &v);return v;}
-	int loadRegistryFakeFreeSpace()	{int v; loadRegistryIntValue(0x25, &v);return v;}
-	int loadRegistryFakeSavedataOwner()	{int v; loadRegistryIntValue(0x26, &v);return v;}
-	int loadRegistryFakeHddSpeed()	{int v; loadRegistryIntValue(0x27, &v);return v;}
-	int loadRegistryDebugGameType()	{int v; loadRegistryIntValue(0x28, &v);return v;}
-	int loadRegistryDebugBootPath()	{int v; loadRegistryIntValue(0x29, &v);return v;}
-	int loadRegistryDebugDirName(char * path,int max_len)	{return loadRegistryStringValue(0x2A,path,max_len);}
-	int loadRegistryAppHomeBootPath()	{int v; loadRegistryIntValue(0x2B, &v);return v;}
-	int loadRegistryWolDex()	{int v; loadRegistryIntValue(0x2C, &v);return v;}
-	int loadRegistryDispHddSpace()	{int v; loadRegistryIntValue(0x2D, &v);return v;}
-	int loadRegistryAutoNetworkUpdate()	{int v; loadRegistryIntValue(0x2E, &v);return v;}
-	int loadRegistryAutoPowerOff()	{int v; loadRegistryIntValue(0x2F, &v);return v;}
-	int loadRegistryAutoPowerOffEx()	{int v; loadRegistryIntValue(0x30, &v);return v;}
-	int loadRegistryAutoPowerOffDebug()	{int v; loadRegistryIntValue(0x31, &v);return v;}
-	int loadRegistryHdmiControl()	{int v; loadRegistryIntValue(0x32, &v);return v;}
-	int loadRegistryHdmiControlEx()	{int v; loadRegistryIntValue(0x33, &v);return v;}
-	int loadRegistryPowerOnDiscBoot()	{int v; loadRegistryIntValue(0x34, &v);return v;}
-	int loadRegistryPowerOnReset()	{int v; loadRegistryIntValue(0x35, &v);return v;}
-	int loadRegistryDisable15Timeout()	{int v; loadRegistryIntValue(0x36, &v);return v;}
-	int loadRegistryDebugSystemUpdate()	{int v; loadRegistryIntValue(0x37, &v);return v;}
-	int loadRegistryFakePlus()	{int v; loadRegistryIntValue(0x38, &v);return v;}
-	int loadRegistryTurnOffWarning()	{int v; loadRegistryIntValue(0x39, &v);return v;}
-	int loadRegistryBootMode(char * bootmode,int max_len)	{return loadRegistryStringValue(0x3A,bootmode,max_len);}
-	int loadRegistryCrashreportCrepo()	{int v; loadRegistryIntValue(0x3B, &v);return v;}
-	int loadRegistryCrashreportReporterStatus()	{int v; loadRegistryIntValue(0x3C, &v);return v;}
-	int loadRegistryCrashreportVshGeneratorEnableFlag()	{int v; loadRegistryIntValue(0x3D, &v);return v;}
-	int loadRegistryDateTimeAutoCorrection()	{int v; loadRegistryIntValue(0x3E, &v);return v;}
-	int loadRegistryAutobootStartTime()	{int v; loadRegistryIntValue(0x3F, &v);return v;}
-	int loadRegistryEdyDebug()	{int v; loadRegistryIntValue(0x40, &v);return v;}
-	int loadRegistryUpConvert()	{int v; loadRegistryIntValue(0x41, &v);return v;}
-	int loadRegistryFnrLevel()	{int v; loadRegistryIntValue(0x42, &v);return v;}
-	int loadRegistryBnrLevel()	{int v; loadRegistryIntValue(0x43, &v);return v;}
-	int loadRegistryMnrLevel()	{int v; loadRegistryIntValue(0x44, &v);return v;}
-	int loadRegistrySequentialPlay()	{int v; loadRegistryIntValue(0x45, &v);return v;}
-	int loadRegistryHD50HzOutput()	{int v; loadRegistryIntValue(0x46, &v);return v;}
-	int loadRegistryOutputExtMenu()	{int v; loadRegistryIntValue(0x47, &v);return v;}
-	int loadRegistryOutputExtFunc()	{int v; loadRegistryIntValue(0x48, &v);return v;}
-	int loadRegistryDtcpIpSettingMenu()	{int v; loadRegistryIntValue(0x49, &v);return v;}
-	int loadRegistryDefaultSubTitleLanguage()	{int v; loadRegistryIntValue(0x4A, &v);return v;}
-	int loadRegistryDefaultAudioLanguage()	{int v; loadRegistryIntValue(0x4B, &v);return v;}
-	int loadRegistryEmuUpConvert()	{int v; loadRegistryIntValue(0x4C, &v);return v;}
-	int loadRegistryEmuSmoothing()	{int v; loadRegistryIntValue(0x4D, &v);return v;}
-	int loadRegistryMinisUpConvert()	{int v; loadRegistryIntValue(0x4E, &v);return v;}
-	int loadRegistryPspemuViewmode()	{int v; loadRegistryIntValue(0x4F, &v);return v;}
-	int loadRegistryPspemu3dDisplay()	{int v; loadRegistryIntValue(0x50, &v);return v;}
-	int loadRegistryPspemu3dDepthAdjust()	{int v; loadRegistryIntValue(0x51, &v);return v;}
-	int loadRegistryPspemu3dMenu()	{int v; loadRegistryIntValue(0x52, &v);return v;}
-	int loadRegistryPspemuAdhocModeWlan()	{int v; loadRegistryIntValue(0x53, &v);return v;}
-	int loadRegistryPspemuAdhocModeCh()	{int v; loadRegistryIntValue(0x54, &v);return v;}
-	int loadRegistryPs2emuSaveUtility()	{int v; loadRegistryIntValue(0x55, &v);return v;}
-	int loadRegistryPs2softemuFunc()	{int v; loadRegistryIntValue(0x56, &v);return v;}
-	int loadRegistryPs2BgCaution()	{int v; loadRegistryIntValue(0x57, &v);return v;}
-	int loadRegistryCameraPlfreq()	{int v; loadRegistryIntValue(0x58, &v);return v;}
-	int loadRegistryTvCategory()	{int v; loadRegistryIntValue(0x59, &v);return v;}
-	int loadRegistryHomeInstaller()	{int v; loadRegistryIntValue(0x5A, &v);return v;}
-	int loadRegistryHomeQAMode()	{int v; loadRegistryIntValue(0x5B, &v);return v;}
-	int loadRegistryDummyInGameXMB()	{int v; loadRegistryIntValue(0x5C, &v);return v;}
-	int loadRegistryYconExplained()	{int v; loadRegistryIntValue(0x5D, &v);return v;}
-	int loadRegistryXaiDebugFlag()	{int v; loadRegistryIntValue(0x5E, &v);return v;}
-	int loadRegistryAdServerURL(char * url,int max_len)	{return loadRegistryStringValue(0x5F,url,max_len);}
-	int loadRegistryAdCatalogVersion(char * version,int max_len)	{return loadRegistryStringValue(0x60,version,max_len);}
-	int loadRegistryAdEnableNotification()	{int v; loadRegistryIntValue(0x61, &v);return v;}
-	int loadRegistryUploadDebug()	{int v; loadRegistryIntValue(0x62, &v);return v;}
-	int loadRegistryNetAutoDlDebug()	{int v; loadRegistryIntValue(0x63, &v);return v;}
-	int loadRegistryNetAutoDlFlag()	{int v; loadRegistryIntValue(0x64, &v);return v;}
-	int loadRegistryNetAutoDlTime()	{int v; loadRegistryIntValue(0x65, &v);return v;}
-	int loadRegistryNetAutoDlFunc()	{int v; loadRegistryIntValue(0x66, &v);return v;}
-	int loadRegistryNetEmulationType()	{int v; loadRegistryIntValue(0x67, &v);return v;}   // questionable
-	int loadRegistryNetAdhocSsidPrefix(char * prefix,int max_len)	{return loadRegistryStringValue(0x68,prefix,max_len);}
-	int loadRegistryPadVibrationEnable()	{int v; loadRegistryIntValue(0x69, &v);return v;}
-	int loadRegistryPadAutoPowerOff()	{int v; loadRegistryIntValue(0x6A, &v);return v;}
-	int loadRegistryPadMagnetometer()	{int v; loadRegistryIntValue(0x6B, &v);return v;}
-	int loadRegistrySound0Initial()	{int v; loadRegistryIntValue(0x6C, &v);return v;}
-	int loadRegistrySound1UsbHeadSetSound()	{int v; loadRegistryIntValue(0x6D, &v);return v;}   // questionable
-	int loadRegistryDlnaFlag()	{int v; loadRegistryIntValue(0x6E, &v);return v;}
-	int loadRegistryDlnaDtcpipDevCert()	{int v; loadRegistryIntValue(0x6F, &v);return v;}   // questionable
-	int loadRegistryBrowserTrendEula()	{int v; loadRegistryIntValue(0x70, &v);return v;}
-	int loadRegistryBrowserTrendEnable()	{int v; loadRegistryIntValue(0x71, &v);return v;}
-	int loadRegistryBrowserTrendLastTime()	{int v; loadRegistryIntValue(0x72, &v);return v;}
-	int loadRegistryBrowserTrendTtl()	{int v; loadRegistryIntValue(0x73, &v);return v;}
-	int loadRegistryBrowserTrendRegistered()	{int v; loadRegistryIntValue(0x74, &v);return v;}
-	int loadRegistryBrowserHeapSize()	{int v; loadRegistryIntValue(0x75, &v);return v;}
-	int loadRegistryBrowserDebugMenu()	{int v; loadRegistryIntValue(0x76, &v);return v;}
-	int loadRegistryBrowserType()	{int v; loadRegistryIntValue(0x77, &v);return v;}
-	int loadRegistryWboardBaseUri(char * uri,int max_len)	{return loadRegistryStringValue(0x68,uri,max_len);}
-	int loadRegistrySmssTargetServer()	{int v; loadRegistryIntValue(0x79, &v);return v;}
-	int loadRegistrySmssResultOutput()	{int v; loadRegistryIntValue(0x7A, &v);return v;}
-	int loadRegistryDisplayForceEnable3D()	{int v; loadRegistryIntValue(0x7B, &v);return v;}
-	int loadRegistryDisplayScreenSize()	{int v; loadRegistryIntValue(0x7C, &v);return v;}
-	int loadRegistryDisplayDeepColor()	{int v; loadRegistryIntValue(0x7D, &v);return v;}
+	int loadRegistryAvcVgaLastBitrate()	{int v; loadRegistryIntValue(0x00, &v);return v;}                                         //0x00 || "/setting/avc/vga/lastBitrate"
+	int loadRegistryGameLevel0Control()	{int v; loadRegistryIntValue(0x01, &v);return v;}                                         //0x01 || "/setting/parental/gameLevel0Control"
+	int loadRegistryNetworkServiceControl()	{int v; loadRegistryIntValue(0x02, &v);return v;}                                     //0x02 || "/setting/parental/networkServiceControl"
+	int loadRegistryCddaServer()	{int v; loadRegistryIntValue(0x03, &v);return v;}                                             //0x03 || "/setting/music/cddaServer"
+	int loadRegistryGameBgmPlayback()	{int v; loadRegistryIntValue(0x04, &v);return v;}                                         //0x04 || "/setting/music/gameBgmPlayback"
+	int loadRegistryGameBgmVolume()	{int v; loadRegistryIntValue(0x05, &v);return v;}                                             //0x05 || "/setting/music/gameBgmVolume"
+	int loadRegistryDummyBgmPlayer()	{int v; loadRegistryIntValue(0x06, &v);return v;}                                         //0x06 || "/setting/music/dummyBgmPlayer"
+	int loadRegistryDynamicNormalizer()	{int v; loadRegistryIntValue(0x07, &v);return v;}                                         //0x07 || "/setting/music/dynamicNormalizer"
+	int loadRegistryNpDebug()	{int v; loadRegistryIntValue(0x08, &v);return v;}                                                 //0x08 || "/setting/np/debug"
+	int loadRegistryNpTitleId(char * titleid,int max_len)	{return loadRegistryStringValue(0x09,titleid,max_len);}               //0x09 || "/setting/np/titleId"
+	int loadRegistryNavOnly()	{int v; loadRegistryIntValue(0x0A, &v);return v;}                                                 //0x0A || "/setting/np/navOnly"
+	int loadRegistryNpAdClockDiff()	{int v; loadRegistryIntValue(0x0B, &v);return v;}                                             //0x0B || "/setting/np/npAdClockDiff"
+	int loadRegistryDebugDrmError()	{int v; loadRegistryIntValue(0x0C, &v);return v;}                                             //0x0C || "/setting/np/debugDrmError"
+	int loadRegistryDebugDrmClock()	{int v; loadRegistryIntValue(0x0D, &v);return v;}                                             //0x0D || "/setting/np/debugDrmClock"
+	int loadRegistryDebugConsoleBind()	{int v; loadRegistryIntValue(0x0E, &v);return v;}                                         //0x0E || "/setting/np/debugConsoleBind"
+	int loadRegistryDebugIngameCommerce2()	{int v; loadRegistryIntValue(0x0F, &v);return v;}                                     //0x0F || "/setting/np/debugIngameCommerce2"
+	int loadRegistryDebugSFForce()	{int v; loadRegistryIntValue(0x10, &v);return v;}                                             //0x10 || "/setting/np/debugSFForce"
+	int loadRegistryDebugSFManifest()	{int v; loadRegistryIntValue(0x11, &v);return v;}                                         //0x11 || "/setting/np/debugSFManifest"
+	int loadRegistryDebugSFManifestURL()	{int v; loadRegistryIntValue(0x12, &v);return v;}                                     //0x12 || "/setting/np/debugSFManifestURL"
+	int loadRegistryNpGeoFiltering()	{int v; loadRegistryIntValue(0x13, &v);return v;}                                         //0x13 || "/setting/np/npGeoFiltering"
+	int loadRegistryGameUpdateImposeTest()	{int v; loadRegistryIntValue(0x14, &v);return v;}                                     //0x14 || "/setting/np/gameUpdateImposeTest"
+	int loadRegistryGameUpdateForceOverwrite()	{int v; loadRegistryIntValue(0x15, &v);return v;}                                 //0x15 || "/setting/np/gameUpdateForceOverwrite"
+	int loadRegistryFakeNpSnsThrottle()	{int v; loadRegistryIntValue(0x16, &v);return v;}                                         //0x16 || "/setting/np/fakeNpSnsThrottle"
+	int loadRegistryFakeNpSnsThrottleWaitSeconds()	{int v; loadRegistryIntValue(0x17, &v);return v;}                             //0x17 || "/setting/np/fakeNpSnsThrottleWaitSeconds"
+	int loadRegistryTppsProxyFlag()	{int v; loadRegistryIntValue(0x18, &v);return v;}                                             //0x18 || "/setting/np/tppsProxyFlag"
+	int loadRegistryTppsProxyServer(char * server,int max_len)	{return loadRegistryStringValue(0x19,server,max_len);}  // ???    //0x19 || "/setting/np/tppsProxyServer"
+	int loadRegistryTppsProxyPort()	{int v; loadRegistryIntValue(0x1A, &v);return v;}                                             //0x1A || "/setting/np/tppsProxyPort"
+	int loadRegistryTppsProxyUserName(char * username,int max_len)	{return loadRegistryStringValue(0x1B,username,max_len);}      //0x1B || "/setting/np/tppsProxyUserName"
+	int loadRegistryTppsProxyPassword(char * password,int max_len)	{return loadRegistryStringValue(0x1C,password,max_len);}      //0x1C || "/setting/np/tppsProxyPassword"
+	int loadRegistryRegion()	{int v; loadRegistryIntValue(0x1D, &v);return v;}                                                 //0x1D || "/setting/system/region"
+	int loadRegistryNotificationTrophy()	{int v; loadRegistryIntValue(0x1E, &v);return v;}                                     //0x1E || "/setting/system/notificationTrophy"
+	int loadRegistryLicenseArea()	{int v; loadRegistryIntValue(0x1F, &v);return v;}                                             //0x1F || "/setting/system/licenseArea"
+	int loadRegistryHddSerial(char * hddserial)	{return loadRegistryStringValue(0x20,hddserial,0x3D);}                            //0x20 || "/setting/system/hddSerial"
+	int loadRegistryCoreDump()	{int v; loadRegistryIntValue(0x21, &v);return v;}                                                 //0x21 || "/setting/system/coreDump"
+	int loadRegistryCoreDumpOptionTrigger()	{int v; loadRegistryIntValue(0x22, &v);return v;}                                     //0x22 || "/setting/system/coreDumpOptionTrigger"
+	int loadRegistryCoreDumpOptionFileGen()	{int v; loadRegistryIntValue(0x23, &v);return v;}                                     //0x23 || "/setting/system/coreDumpOptionFileGen"
+	int loadRegistryCoreDumpOptionExeCtrl()	{int v; loadRegistryIntValue(0x24, &v);return v;}                                     //0x24 || "/setting/system/coreDumpOptionExeCtrl"
+	int loadRegistryMatEnable()	{int v; loadRegistryIntValue(0x25, &v);return v;}                                                 //0x25 || "/setting/system/matEnable"
+	int loadRegistryUpdateServerUrl(char * url,int max_len)	{return loadRegistryStringValue(0x26,url,max_len);}                   //0x26 || "/setting/system/updateServerUrl"
+	int loadRegistryFakeLimitSize()	{int v; loadRegistryIntValue(0x27, &v);return v;}                                             //0x27 || "/setting/system/fakeLimitSize"
+	int loadRegistryFakeFreeSpace()	{int v; loadRegistryIntValue(0x28, &v);return v;}                                             //0x28 || "/setting/system/fakeFreeSpace"
+	int loadRegistryFakeSavedataOwner()	{int v; loadRegistryIntValue(0x29, &v);return v;}                                         //0x29 || "/setting/system/fakeSavedataOwner"
+	int loadRegistryFakeHddSpeed()	{int v; loadRegistryIntValue(0x2A, &v);return v;}                                             //0x2A || "/setting/system/fakeHddSpeed"
+	int loadRegistryDebugGameType()	{int v; loadRegistryIntValue(0x2B, &v);return v;}                                             //0x2B || "/setting/system/debugGameType"
+	int loadRegistryDebugBootPath()	{int v; loadRegistryIntValue(0x2C, &v);return v;}                                             //0x2C || "/setting/system/debugBootPath"
+	int loadRegistryDebugDirName(char * path,int max_len)	{return loadRegistryStringValue(0x2D,path,max_len);}                  //0x2D || "/setting/system/debugDirName"
+	int loadRegistryAppHomeBootPath()	{int v; loadRegistryIntValue(0x2E, &v);return v;}                                         //0x2E || "/setting/system/appHomeBootPath"
+	int loadRegistryWolDex()	{int v; loadRegistryIntValue(0x2F, &v);return v;}                                                 //0x2F || "/setting/system/wolDex"
+	int loadRegistryDispHddSpace()	{int v; loadRegistryIntValue(0x30, &v);return v;}                                             //0x30 || "/setting/system/dispHddSpace"
+	int loadRegistryAutoNetworkUpdate()	{int v; loadRegistryIntValue(0x31, &v);return v;}                                         //0x31 || "/setting/system/autoNetworkUpdate"
+	int loadRegistryAutoPowerOff()	{int v; loadRegistryIntValue(0x32, &v);return v;}                                             //0x32 || "/setting/system/autoPowerOff"
+	int loadRegistryAutoPowerOffEx()	{int v; loadRegistryIntValue(0x33, &v);return v;}                                         //0x33 || "/setting/system/autoPowerOffEx"
+	int loadRegistryAutoPowerOffDebug()	{int v; loadRegistryIntValue(0x34, &v);return v;}                                         //0x34 || "/setting/system/autoPowerOffDebug"
+	int loadRegistryHdmiControl()	{int v; loadRegistryIntValue(0x35, &v);return v;}                                             //0x35 || "/setting/system/hdmiControl"
+	int loadRegistryHdmiControlEx()	{int v; loadRegistryIntValue(0x36, &v);return v;}                                             //0x36 || "/setting/system/hdmiControlEx"
+	int loadRegistryPowerOnDiscBoot()	{int v; loadRegistryIntValue(0x37, &v);return v;}                                         //0x37 || "/setting/system/powerOnDiscBoot"
+	int loadRegistryPowerOnReset()	{int v; loadRegistryIntValue(0x38, &v);return v;}                                             //0x38 || "/setting/system/powerOnReset"
+	int loadRegistryDisable15Timeout()	{int v; loadRegistryIntValue(0x39, &v);return v;}                                         //0x39 || "/setting/system/disable15Timeout"
+	int loadRegistryDebugSystemUpdate()	{int v; loadRegistryIntValue(0x3A, &v);return v;}                                         //0x3A || "/setting/system/debugSystemUpdate"
+	int loadRegistryFakePlus()	{int v; loadRegistryIntValue(0x3B, &v);return v;}                                                 //0x3B || "/setting/system/fakePlus"
+	int loadRegistryTurnOffWarning()	{int v; loadRegistryIntValue(0x3C, &v);return v;}                                         //0x3C || "/setting/system/turnOffWarning"
+	int loadRegistryBootMode(char * bootmode,int max_len)	{return loadRegistryStringValue(0x3D,bootmode,max_len);}              //0x3D || "/setting/system/bootMode"
+	int loadRegistryCrashreportCrepo()	{int v; loadRegistryIntValue(0x3E, &v);return v;}                                         //0x3E || "/setting/system/crashreport/crepo"
+	int loadRegistryCrashreportReporterStatus()	{int v; loadRegistryIntValue(0x3F, &v);return v;}                                 //0x3F || "/setting/system/crashreport/reporterStatus"
+	int loadRegistryCrashreportVshGeneratorEnableFlag()	{int v; loadRegistryIntValue(0x40, &v);return v;}                         //0x40 || "/setting/system/crashreport/vshGeneratorEnableFlag"
+	int loadRegistryDateTimeAutoCorrection()	{int v; loadRegistryIntValue(0x41, &v);return v;}                                 //0x41 || "/setting/dateTime/autoCorrection"
+	int loadRegistryAutobootStartTime()	{int v; loadRegistryIntValue(0x42, &v);return v;}                                         //0x42 || "/setting/autoboot/startTime"
+	int loadRegistryEdyDebug()	{int v; loadRegistryIntValue(0x43, &v);return v;}                                                 //0x43 || "/setting/edy/debug"
+	int loadRegistryUpConvert()	{int v; loadRegistryIntValue(0x44, &v);return v;}                                                 //0x44 || "/setting/video/upConvert"
+	int loadRegistryFnrLevel()	{int v; loadRegistryIntValue(0x45, &v);return v;}                                                 //0x45 || "/setting/video/fnr"
+	int loadRegistryBnrLevel()	{int v; loadRegistryIntValue(0x46, &v);return v;}                                                 //0x46 || "/setting/video/bnr"
+	int loadRegistryMnrLevel()	{int v; loadRegistryIntValue(0x47, &v);return v;}                                                 //0x47 || "/setting/video/mnr"
+	int loadRegistrySequentialPlay()	{int v; loadRegistryIntValue(0x48, &v);return v;}                                         //0x48 || "/setting/video/sequentialPlay"
+	int loadRegistryHD50HzOutput()	{int v; loadRegistryIntValue(0x49, &v);return v;}                                             //0x49 || "/setting/video/hd50HzOutput"
+	int loadRegistryOutputExtMenu()	{int v; loadRegistryIntValue(0x4A, &v);return v;}                                             //0x4A || "/setting/video/outputExtMenu"
+	int loadRegistryOutputExtFunc()	{int v; loadRegistryIntValue(0x4B, &v);return v;}                                             //0x4B || "/setting/video/outputExtFunc"
+	int loadRegistryDtcpIpSettingMenu()	{int v; loadRegistryIntValue(0x4C, &v);return v;}                                         //0x4C || "/setting/video/dtcpipActMenu"
+	int loadRegistryDefaultSubTitleLanguage()	{int v; loadRegistryIntValue(0x4D, &v);return v;}                                 //0x4D || "/setting/video/hddCaptionLanguage"
+	int loadRegistryDefaultAudioLanguage()	{int v; loadRegistryIntValue(0x4E, &v);return v;}                                     //0x4E || "/setting/video/hddSoundLanguage"
+	int loadRegistryDefaultClosedCaption()	{int v; loadRegistryIntValue(0x4F, &v);return v;}                                     //0x4F || "/setting/video/closedCaption"
+	int loadRegistryEmuUpConvert()	{int v; loadRegistryIntValue(0x50, &v);return v;}                                             //0x50 || "/setting/game/emuUpConvert"
+	int loadRegistryEmuSmoothing()	{int v; loadRegistryIntValue(0x51, &v);return v;}                                             //0x51 || "/setting/game/emuSmoothing"
+	int loadRegistryMinisUpConvert()	{int v; loadRegistryIntValue(0x52, &v);return v;}                                         //0x52 || "/setting/game/minisUpConvert"
+	int loadRegistryPspemuViewmode()	{int v; loadRegistryIntValue(0x53, &v);return v;}                                         //0x53 || "/setting/game/pspemuViewmode"
+	int loadRegistryPspemu3dDisplay()	{int v; loadRegistryIntValue(0x54, &v);return v;}                                         //0x54 || "/setting/game/pspemu3dDisplay"
+	int loadRegistryPspemu3dDepthAdjust()	{int v; loadRegistryIntValue(0x55, &v);return v;}                                     //0x55 || "/setting/game/pspemu3dDepthAdjust"
+	int loadRegistryPspemu3dMenu()	{int v; loadRegistryIntValue(0x56, &v);return v;}                                             //0x56 || "/setting/game/pspemu3dMenu"
+	int loadRegistryPspemuAdhocModeWlan()	{int v; loadRegistryIntValue(0x57, &v);return v;}                                     //0x57 || "/setting/game/pspemuAdhocModeWlan"
+	int loadRegistryPspemuAdhocModeCh()	{int v; loadRegistryIntValue(0x58, &v);return v;}                                         //0x58 || "/setting/game/pspemuAdhocModeCh"
+	int loadRegistryPs2emuSaveUtility()	{int v; loadRegistryIntValue(0x59, &v);return v;}                                         //0x59 || "/setting/game/ps2emuSaveUtility"
+	int loadRegistryPs2softemuFunc()	{int v; loadRegistryIntValue(0x5A, &v);return v;}                                         //0x5A || "/setting/game/ps2softemuFunc"
+	int loadRegistryPs2BgCaution()	{int v; loadRegistryIntValue(0x5B, &v);return v;}                                             //0x5B || "/setting/game/ps2BgCaution"
+	int loadRegistryCameraPlfreq()	{int v; loadRegistryIntValue(0x5C, &v);return v;}                                             //0x5C || "/setting/camera/plfreq"
+	int loadRegistryTvCategory()	{int v; loadRegistryIntValue(0x5D, &v);return v;}                                             //0x5D || "/setting/xmb/tvCategory"
+	int loadRegistryHomeInstaller()	{int v; loadRegistryIntValue(0x5E, &v);return v;}                                             //0x5E || "/setting/xmb/homeInstaller"
+	int loadRegistryHomeQAMode()	{int v; loadRegistryIntValue(0x5F, &v);return v;}                                             //0x5F || "/setting/xmb/homeQAMode"
+	int loadRegistryDummyInGameXMB()	{int v; loadRegistryIntValue(0x60, &v);return v;}                                         //0x60 || "/setting/xmb/dummyInGameXMB"
+	int loadRegistryYconExplained()	{int v; loadRegistryIntValue(0x61, &v);return v;}                                             //0x61 || "/setting/xmb/yconExplained"
+	int loadRegistryXaiDebugFlag()	{int v; loadRegistryIntValue(0x62, &v);return v;}                                             //0x62 || "/setting/xai/debugFlag"
+	int loadRegistryAdServerURL(char * url,int max_len)	{return loadRegistryStringValue(0x63,url,max_len);}                       //0x63 || "/setting/libad/adServerURL"
+	int loadRegistryAdCatalogVersion(char * version,int max_len)	{return loadRegistryStringValue(0x64,version,max_len);}       //0x64 || "/setting/libad/adCatalogVersion"
+	int loadRegistryAdEnableNotification()	{int v; loadRegistryIntValue(0x65, &v);return v;}                                     //0x65 || "/setting/libad/adEnableNotification"
+	int loadRegistryUploadDebug()	{int v; loadRegistryIntValue(0x66, &v);return v;}                                             //0x66 || "/setting/upload/debug"
+	int loadRegistryNetAutoDlDebug()	{int v; loadRegistryIntValue(0x67, &v);return v;}                                         //0x67 || "/setting/net/autoDlDebug"
+	int loadRegistryNetAutoDlFlag()	{int v; loadRegistryIntValue(0x68, &v);return v;}                                             //0x68 || "/setting/net/autoDlFlag"
+	int loadRegistryNetAutoDlTime()	{int v; loadRegistryIntValue(0x69, &v);return v;}                                             //0x69 || "/setting/net/autoDlTime"
+	int loadRegistryNetAutoDlFunc()	{int v; loadRegistryIntValue(0x6A, &v);return v;}                                             //0x6A || "/setting/net/autoDlFunc"
+	int loadRegistryNetEmulationType()	{int v; loadRegistryIntValue(0x6B, &v);return v;}   // questionable                       //0x6B || "/setting/net/emulationType"
+	int loadRegistryNetAdhocSsidPrefix(char * prefix,int max_len)	{return loadRegistryStringValue(0x6C,prefix,max_len);}        //0x6C || "/setting/net/adhocSsidPrefix"
+	int loadRegistryPadVibrationEnable()	{int v; loadRegistryIntValue(0x6D, &v);return v;}                                     //0x6D || "/setting/pad/vibrationEnable"
+	int loadRegistryPadAutoPowerOff()	{int v; loadRegistryIntValue(0x6E, &v);return v;}                                         //0x6E || "/setting/pad/autoPowerOff"
+	int loadRegistryPadMagnetometer()	{int v; loadRegistryIntValue(0x6F, &v);return v;}                                         //0x6F || "/setting/pad/magnetometer"
+	int loadRegistrySound0Initial()	{int v; loadRegistryIntValue(0x70, &v);return v;}                                             //0x70 || "/setting/sound/0/initial"
+	int loadRegistrySound1UsbHeadSetSound()	{int v; loadRegistryIntValue(0x71, &v);return v;}   // questionable                   //0x71 || "/setting/sound/1/usbHeadsetSound"
+	int loadRegistryDlnaFlag()	{int v; loadRegistryIntValue(0x72, &v);return v;}                                                 //0x72 || "/setting/dlna/dlnaFlag"
+	int loadRegistryDlnaDtcpipDevCert()	{int v; loadRegistryIntValue(0x73, &v);return v;}   // questionable                       //0x73 || "/setting/dlna/dtcpipDevCert"
+	int loadRegistryBrowserTrendEula()	{int v; loadRegistryIntValue(0x74, &v);return v;}                                         //0x74 || "/setting/browser/trendEula"
+	int loadRegistryBrowserTrendEnable()	{int v; loadRegistryIntValue(0x75, &v);return v;}                                     //0x75 || "/setting/browser/trendEnable"
+	int loadRegistryBrowserTrendLastTime()	{int v; loadRegistryIntValue(0x76, &v);return v;}                                     //0x76 || "/setting/browser/trendLastTime"
+	int loadRegistryBrowserTrendTtl()	{int v; loadRegistryIntValue(0x77, &v);return v;}                                         //0x77 || "/setting/browser/trendTtl"
+	int loadRegistryBrowserTrendRegistered()	{int v; loadRegistryIntValue(0x78, &v);return v;}                                 //0x78 || "/setting/browser/trendRegistered"
+	int loadRegistryBrowserHeapSize()	{int v; loadRegistryIntValue(0x79, &v);return v;}                                         //0x79 || "/setting/browser/heapSize"
+	int loadRegistryBrowserDebugMenu()	{int v; loadRegistryIntValue(0x7A, &v);return v;}                                         //0x7A || "/setting/browser/debugMenu"
+	int loadRegistryBrowserType()	{int v; loadRegistryIntValue(0x7B, &v);return v;}                                             //0x7B || "/setting/browser/browserType"
+	int loadRegistryWboardBaseUri(char * uri,int max_len)	{return loadRegistryStringValue(0x7C,uri,max_len);}                   //0x7C || "/setting/wboard/baseUri"
+	int loadRegistrySmssTargetServer()	{int v; loadRegistryIntValue(0x7D, &v);return v;}                                         //0x7D || "/setting/smss/targetServer"
+	int loadRegistrySmssResultOutput()	{int v; loadRegistryIntValue(0x7E, &v);return v;}                                         //0x7E || "/setting/smss/resultOutput"
+	int loadRegistryDisplayForceEnable3D()	{int v; loadRegistryIntValue(0x7F, &v);return v;}                                     //0x7F || "/setting/display/forceEnable3D"
+	int loadRegistryDisplayScreenSize()	{int v; loadRegistryIntValue(0x80, &v);return v;}                                         //0x80 || "/setting/display/screenSize"
+	int loadRegistryDisplayDeepColor()	{int v; loadRegistryIntValue(0x81, &v);return v;}                                         //0x81 || "/setting/display/deepColor"
 */
 } xsetting_D0261D72_class;
 

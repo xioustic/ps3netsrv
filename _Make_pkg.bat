@@ -1,4 +1,6 @@
 @echo off
+title Building webMAN_MOD_1.43.xx_Updater.pkg ...
+
 move /Y webftp_server_lite.sprx updater\pkgfiles\USRDIR
 move /Y webftp_server_full.sprx updater\pkgfiles\USRDIR
 move /Y webftp_server.sprx updater\pkgfiles\USRDIR

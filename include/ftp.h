@@ -104,7 +104,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 		sys_ppu_thread_exit(0);
 	}
 
-	plugin_active++;
+	setPluginActive();
 
 	sprintf(ip_address, "%s", inet_ntoa(conn_info.local_adr));
 	for(u8 n = 0; ip_address[n]; n++) if(ip_address[n] == '.') ip_address[n] = ',';
@@ -1080,7 +1080,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	sclose(&conn_s_ftp);
 	sclose(&data_s);
 
-	plugin_active--;
+	setPluginInactive();
 
 	sys_ppu_thread_exit(0);
 }

@@ -635,6 +635,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				{sprintf(templn, "<hr>%s", STR_ERROR); strcat(buffer, templn);}
 			else
 			{
+				setPluginActive();
+
 				// show msg begin
 				sprintf(templn, "%s %s\n%s %s", STR_COPYING, source, STR_CPYDEST, target);
 				show_msg(templn);
@@ -660,6 +662,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					show_msg((char*)STR_CPYABORT);
 				else
 					show_msg((char*)STR_CPYFINISH);
+
+				setPluginInactive();
 			}
 
 			if(!copy_aborted && (cp_mode == CP_MODE_MOVE) && file_exists(target)) del(source, true);
