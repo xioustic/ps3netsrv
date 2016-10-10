@@ -64,7 +64,7 @@ static void poll_thread(uint64_t poll)
 	u32 t1 = 0, t2 = 0;
 	u8 lasttemp = 0;
 	u8 stall = 0;
-	const u8 step = 3;
+	const u8 step = 3; // polling every 3 seconds
 	const u8 step_up = 5;
 	//u8 step_down=2;
 	u8 smoothstep = 0;
@@ -169,7 +169,7 @@ static void poll_thread(uint64_t poll)
 					stall++;
 		}
 
-		// poll combos for 3 seconds
+		// Poll combos for 3 seconds
 		#include "combos.h"
 
 		// Overheat control (over 83°C)
@@ -221,7 +221,8 @@ static void poll_thread(uint64_t poll)
 		#endif
 
 		// USB Polling
-		if(poll == 0 && sec >= 120) // check USB drives each 120 seconds
+		poll = webman_config->poll;
+		if((poll == 0) && (sec >= 120)) // check USB drives each 120 seconds
 		{
 			uint8_t tmp[2048], f0 = 0;
 			uint32_t usb_handle = -1, r;
@@ -236,9 +237,9 @@ static void poll_thread(uint64_t poll)
 					//sprintf(tmp, "/dev_usb00%i: Read %i sectors @ %i offset", f0, r, to); show_msg(tmp);
 				}
 			}
-			sec=0;
+			sec = 0;
 		}
-		sec+=step;
+		sec += step;
 
 #ifdef PKG_HANDLER
 		// Poll downloaded pkg files (if is on XMB)

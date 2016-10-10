@@ -248,7 +248,7 @@
 							{
 								if(show_persistent_popup == 0)        show_persistent_popup = 1;               else
 								if(show_persistent_popup  < PERSIST) {BEEP1; show_persistent_popup = PERSIST;} else
-								if(show_persistent_popup >= PERSIST) {BEEP2; show_persistent_popup = 0;}
+																	 {BEEP2; show_persistent_popup = 0;}
 show_persistent_popup:
 								/////////////////////////////
 #if defined(FIX_GAME) || defined(COPY_PS3)

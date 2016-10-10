@@ -5,7 +5,7 @@ static int AutoPowerOffVideo = -1;
 
 static void setAutoPowerOff(bool disable)
 {
-	if(c_firmware < 4.46f) return;
+	if((c_firmware < 4.46f) || webman_config->poll) return;
 
 	if(AutoPowerOffGame < 0)
 	{

@@ -492,7 +492,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "MLSD") || _IS(cmd, "LIST") || _IS(cmd, "MLST") || _IS(cmd, "NLST"))
 				{
-					bool nolist  = _IS(cmd, "NLST"); if(IS(param, "-l") || IS(param, "-al")) {*param = NULL, nolist = false;}
+					bool nolist  = _IS(cmd, "NLST"); if(IS(param, "-l") || IS(param, "-la") || IS(param, "-al")) {*param = NULL, nolist = false;}
 					bool is_MLSD = _IS(cmd, "MLSD");
 					bool is_MLST = _IS(cmd, "MLST");
 					bool is_MLSx = is_MLSD || is_MLST;
@@ -535,7 +535,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
-							bool is_root = (strlen(d_path) < 6);
+							size_t d_path_len = sprintf(filename, "%s/", d_path);
+
+							bool is_root = (d_path_len < 6);
 
 							CellFsDirent entry; u64 read_e;
 							u16 slen; mode_t mode; char dirtype[2]; dirtype[1] = NULL;
@@ -551,7 +553,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								{
 									if(is_root && (IS(entry.d_name, "app_home") || IS(entry.d_name, "host_root"))) continue;
 
-									sprintf(filename, "%s/%s", d_path, entry.d_name);
+									sprintf(filename + d_path_len, "%s", entry.d_name);
 
 									cellFsStat(filename, &buf); mode = buf.st_mode;
 									cellRtcSetTime_t(&rDate, buf.st_mtime);
