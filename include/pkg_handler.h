@@ -425,7 +425,7 @@ static void poll_downloaded_pkg_files(char *msg)
 
 						if(pkg_dcount) pkg_dcount--;
 
-						if(pkg_auto_install) {pkg_auto_install--; installPKG(pkgfile, msg);}
+						if(pkg_auto_install) {pkg_auto_install--; installPKG(pkgfile, msg); if(pkg_delete_after_install) wait_for_pkg_install();}
 					}
 				}
 			}
