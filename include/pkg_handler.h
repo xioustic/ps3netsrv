@@ -109,13 +109,15 @@ static void wait_for_pkg_install(void)
 	sys_timer_sleep(5);
 	while (IS_INSTALLING) sys_timer_sleep(2);
 
+	time_t install_time = pkg_install_time;  // set time before install
+	get_pkg_size_and_install_time(pkg_path); // get time after install
+
 	if(pkg_delete_after_install && islike(pkg_path, "/dev_hdd0") && (strstr(pkg_path, "/GAME") == NULL))
 	{
-		time_t install_time = pkg_install_time;  // set time before install
-		get_pkg_size_and_install_time(pkg_path); // get time after install
-
 		if(pkg_install_time != install_time) cellFsUnlink(pkg_path);
 	}
+
+	if(do_restart && (pkg_install_time == install_time)) do_restart = false; // installation canceled
 }
 
 static int LoadPluginById(int id, void *handler)

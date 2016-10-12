@@ -359,6 +359,7 @@ static u8 system_bgm = 0;
 #define PERSIST  100
 
 static bool show_info_popup = false;
+static bool do_restart = false;
 
 #ifdef USE_DEBUG
  static int debug_s = -1;
@@ -1018,8 +1019,7 @@ static void handleclient(u64 conn_s_p)
 	char cmd[16], header[HTML_RECV_SIZE];
 
  #ifdef WM_REQUEST
-	struct CellFsStat buf;
-	u8 wm_request = (cellFsStat(WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);
+	struct CellFsStat buf; u8 wm_request = (cellFsStat(WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);;
 
 	if(!wm_request)
  #endif
@@ -1039,27 +1039,35 @@ static void handleclient(u64 conn_s_p)
 		if(!webman_config->bind) strcpy(webman_config->allow_ip, ip_address);
 	}
 
-	_meminfo meminfo;
-	u8 retries = 0;
-
- again3:
-	{ system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo); }
-
-	if((meminfo.avail) < ( _64KB_ + MIN_MEM )) //leave if less than min memory
+	// check available free memory
 	{
-		#ifdef USE_DEBUG
-		ssend(debug_s, "!!! NOT ENOUGH MEMORY!\r\n");
-		#endif
+		_meminfo meminfo;
+		u8 retries = 0;
 
-		retries++;
-		sys_timer_sleep(1);
-		if((retries < 5) && working) goto again3;
+again3:
+		{ system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo); }
 
-		http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
+		if((meminfo.avail) < ( _64KB_ + MIN_MEM )) //leave if less than min memory
+		{
+			#ifdef USE_DEBUG
+			ssend(debug_s, "!!! NOT ENOUGH MEMORY!\r\n");
+			#endif
 
-		goto exit_handleclient;
+			retries++;
+			sys_timer_sleep(1);
+			if((retries < 5) && working) goto again3;
+
+			http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR); BEEP3;
+
+			#ifdef WM_REQUEST
+			if(wm_request) cellFsUnlink(WMREQUEST_FILE);
+			#endif
+
+			goto exit_handleclient;
+		}
 	}
 
+  {
 	u8 served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	int8_t sort_order = 1, sort_by = 0;
 	u64 c_len = 0;
@@ -1094,8 +1102,9 @@ static void handleclient(u64 conn_s_p)
 		{
 			if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && read_file(WMREQUEST_FILE, header, buf.st_size, 0) > 4)
 			{
+				if(*header == '/') {strcpy(param, header); buf.st_size = sprintf(header, "GET %s", param);}
 				for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n] = '+';
-				if(islike(header, "/play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
+				if(islike(header, "GET /play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
 			}
 			cellFsUnlink(WMREQUEST_FILE);
 		}
@@ -1182,6 +1191,8 @@ static void handleclient(u64 conn_s_p)
 				sprintf(param, "/cpursx.ps3");
 			}
  #endif //  #ifdef VIRTUAL_PAD
+
+			{char *pos = strstr(param, "?restart.ps3"); if(pos) {*pos = NULL; do_restart = true;}}
 
 			if(islike(param, "/cpursx_ps3"))
 			{
@@ -1290,13 +1301,14 @@ static void handleclient(u64 conn_s_p)
 
 				show_msg(msg);
 
-				if(pkg_delete_after_install)
+				if(pkg_delete_after_install || do_restart)
 				{
 					if(loading_html) loading_html--;
 
 					wait_for_pkg_install();
 
 					setPluginInactive();
+					if(do_restart) goto reboot;
 					sys_ppu_thread_exit(0);
 				}
 
@@ -1495,6 +1507,7 @@ static void handleclient(u64 conn_s_p)
 			{
 				// /copy.ps3$abort
 				// /fixgame.ps3$abort
+				do_restart = false;
 
 				if(copy_in_progress) {copy_aborted = true; show_msg((char*)STR_CPYABORT);}   // /copy.ps3$abort
 				else
@@ -1672,6 +1685,18 @@ static void handleclient(u64 conn_s_p)
 
 				goto exit_handleclient;
 			}
+			if(islike(param, "/dev_blind"))
+			{
+				// /dev_blind          auto-enable & access /dev_blind
+				// /dev_blind?         shows status of /dev_blind
+				// /dev_blind?0        mounts /dev_blind
+				// /dev_blind?enable   mounts /dev_blind
+				// /dev_blind?1        unmounts /dev_blind
+				// /dev_blind?disable  unmounts /dev_blind
+
+				is_binary = FOLDER_LISTING, small_alloc = false;
+				goto html_response;
+			}
 			if(islike(param, "/netstatus.ps3"))
 			{
 				// /netstatus.ps3          toggle network access in registry
@@ -1700,18 +1725,6 @@ static void handleclient(u64 conn_s_p)
 				show_msg(param);
 
 				goto exit_handleclient;
-			}
-			if(islike(param, "/dev_blind"))
-			{
-				// /dev_blind          auto-enable & access /dev_blind
-				// /dev_blind?         shows status of /dev_blind
-				// /dev_blind?0        mounts /dev_blind
-				// /dev_blind?enable   mounts /dev_blind
-				// /dev_blind?1        unmounts /dev_blind
-				// /dev_blind?disable  unmounts /dev_blind
-
-				is_binary = FOLDER_LISTING, small_alloc = false;
-				goto html_response;
 			}
 			if(islike(param, "/edit.ps3"))
 			{
@@ -1778,23 +1791,38 @@ static void handleclient(u64 conn_s_p)
 				goto html_response;
 			}
 			else
-			if(islike(param, "/rename.ps3"))
+			if(islike(param, "/rename.ps3") || islike(param, "/swap.ps3"))
 			{
 				// /rename.ps3<path>|<target>     rename <path> to <target>
 				// /rename.ps3<path>&to=<target>  rename <path> to <target>
 				// /rename.ps3<path>.bak          removes .bak extension
+				// /swap.ps3<file1>|<file2>       swap <file1> & <file2>
+				// /swap.ps3<file1>&to=<file2>    swap <file1> & <file2>
 
-				char *source = param + 11, *target = strstr(source, "|");
+				size_t cmd_len = islike(param, "/swap.ps3") ? 9 : 11;
+
+				char *source = param + cmd_len, *target = strstr(source, "|");
 				if(target) {*target = NULL; target++;} else {target = strstr(source, "&to="); if(target) {target = NULL; target+=4;}}
 
-				if((!islike(target, "/")) && !extcmp(source, ".bak", 4)) {size_t flen = strlen(source); *target = *param + flen; strncpy(target, source, flen - 4);}
+				if((*target != '/') && !extcmp(source, ".bak", 4)) {size_t flen = strlen(source); *target = *param + flen; strncpy(target, source, flen - 4);}
 
-				if(islike(target, "/"))
+				if(*target == '/')
 				{
 					filepath_check(target);
-					cellFsRename(source, target);
+
+					if((cmd_len == 9) && file_exists(source) && file_exists(target))
+					{
+						sprintf(header, "%s.bak", source);
+						cellFsRename(source, header);
+						cellFsRename(target, source);
+						cellFsRename(header, target);
+					}
+					else
+						cellFsRename(source, target);
+
 					char *p = strrchr(target, '/'); *p = NULL;
 					sprintf(param, "%s", target);
+					if(do_restart) goto reboot;
 				}
 			}
 			else
@@ -1870,7 +1898,7 @@ static void handleclient(u64 conn_s_p)
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				setPluginExit();
 
-				{ BEEP1 }
+				{ DELETE_TURNOFF } { BEEP1 }
 
 				if(param[13] == '?')
 					vsh_shutdown(); // shutdown using VSH
@@ -1918,7 +1946,7 @@ static void handleclient(u64 conn_s_p)
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				setPluginExit();
 
-				{ BEEP2 }
+				{ DELETE_TURNOFF } { BEEP2 }
 
 				char *allow_scan = strstr(param,"?0");
 				if(allow_scan) *allow_scan = NULL; else save_file(WMNOSCAN, NULL, 0);
@@ -2739,6 +2767,8 @@ static void handleclient(u64 conn_s_p)
 
 						strcat(pbuffer, tempstr);
 						sprintf(tempstr, HTML_REDIRECT_TO_URL, param2, (is_dir | ret) ? HTML_REDIRECT_WAIT : 0); strcat(pbuffer, tempstr);
+
+						if(do_restart) goto reboot;
 					}
  #endif
 
@@ -2945,7 +2975,7 @@ send_response:
 
 		break;
 	}
-
+  }
 exit_handleclient:
 
 	#ifdef USE_DEBUG
@@ -2954,6 +2984,7 @@ exit_handleclient:
 
 	sclose(&conn_s);
 	if(sysmem) sys_memory_free(sysmem);
+
 	if(loading_html) loading_html--;
 
 	sys_ppu_thread_exit(0);

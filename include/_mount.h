@@ -661,7 +661,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				if(copy_aborted)
 					show_msg((char*)STR_CPYABORT);
 				else
+				{
 					show_msg((char*)STR_CPYFINISH);
+					if(do_restart) { { DELETE_TURNOFF } { BEEP2 } vsh_reboot();}
+				}
 
 				setPluginInactive();
 			}

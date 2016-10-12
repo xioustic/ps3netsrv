@@ -976,6 +976,12 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		int ns = -2; u8 uprofile = profile; enum icon_type default_icon;
 
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+		if(g_socket >= 0 && open_remote_dir(g_socket, "/", &abort_connection) < 0) do_umount(false);
+ #endif
+#endif
+
 		for(u8 f0 = filter0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
 		{
 			if(check_drive(f0)) continue;
