@@ -12,7 +12,7 @@
 #define HTML_ONCLICK			"onclick=\"location.href="
 #define HTML_INPUT(n, v, m, s)	"<input name=\"" n "\" type=\"text\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\">"
 #define HTML_PASSW(n, v, m, s)	"<input name=\"" n "\" type=\"password\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\">"
-#define HTML_NUMBER(n, v, m, s, min, max)	"<input name=\"" n "\" type=\"number\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\" min=\"" min "\" max=\"" max "\">"
+#define HTML_NUMBER(n, v, min, max)	"<input name=\"" n "\" type=\"number\" value=\"" v "\" min=\"" min "\" max=\"" max "\">"
 
 #define HTML_DISABLED_CHECKBOX	"1\" disabled=\"disabled"
 

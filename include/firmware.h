@@ -29,6 +29,7 @@ static void detect_firmware(void)
 		LV2_OFFSET_ON_LV1 = (uint64_t)lv2_offset * 0x1000000ULL;
 
 		if(peekq(0x80000000002ED808ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_480;  c_firmware = 4.80f;}				else
+#ifndef LAST_FIRMWARE_ONLY
 		if(peekq(0x80000000002ED818ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_475;  c_firmware = (peekq(0x80000000002FCB68ULL) == 0x323031352F31322FULL)?4.78f:(peekq(0x80000000002FCB68ULL) == 0x323031352F30382FULL)?4.76f:4.75f;} else
 		if(peekq(0x80000000002ED778ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_470;  c_firmware = 4.70f;}				else
 		if(peekq(0x80000000002ED860ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_465;  c_firmware = (peekq(0x80000000002FC938ULL) == 0x323031342F31312FULL)?4.66f:4.65f;} else
@@ -40,14 +41,16 @@ static void detect_firmware(void)
 		if(peekq(0x80000000002E8610ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_421;  c_firmware = 4.21f;}				else
 		if(peekq(0x80000000002D83D0ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_355;  c_firmware = 3.55f;}				else
 
- //No cobra cfw but as mamba compatibility
+		//No cobra cfw but as mamba compatibility
 		if(peekq(0x80000000002EA498ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_441;  c_firmware = 4.41f;}				else
 		if(peekq(0x80000000002EA488ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_440;  c_firmware = 4.40f;}				else
 		if(peekq(0x80000000002E9F18ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_431;  c_firmware = 4.31f;}				else
 		if(peekq(0x80000000002E9F08ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_430;  c_firmware = 4.30f;}				else
+#endif  // #ifndef LAST_FIRMWARE_ONLY
 
 #ifdef DEX_SUPPORT
 		if(peekq(0x800000000030F3A0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_480D; c_firmware = 4.80f; dex_mode = 2;}	else
+ #ifndef LAST_FIRMWARE_ONLY
 		if(peekq(0x800000000030F2D0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_475D; c_firmware = (peekq(0x800000000031EF48ULL) == 0x323031352F31322FULL)?4.78f:(peekq(0x800000000031EF48ULL) == 0x323031352F30382FULL)?4.76f:4.75f; dex_mode = 2;}	else
 		if(peekq(0x800000000030F240ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_470D; c_firmware = 4.70f; dex_mode = 2;}	else
 		if(peekq(0x800000000030F1A8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_465D; c_firmware = (peekq(0x800000000031EBA8ULL) == 0x323031342F31312FULL)?4.66f:4.65f; dex_mode = 2;} else
@@ -62,6 +65,7 @@ static void detect_firmware(void)
 		if(peekq(0x8000000000304630ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_430D; c_firmware = 4.30f; dex_mode = 2;}	else
 		if(peekq(0x8000000000302D88ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_421D; c_firmware = 4.21f; dex_mode = 2;}	else
 		if(peekq(0x80000000002EFE20ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_355D; c_firmware = 3.55f; dex_mode = 2;}	else
+ #endif // #ifndef LAST_FIRMWARE_ONLY
 #endif
 
 #ifdef DECR_SUPPORT
@@ -72,10 +76,13 @@ static void detect_firmware(void)
 		if(peekq(0x800000000032EB60ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_480H; c_firmware = 4.80f; dex_mode = 1;}	else
 #endif
 
-#ifndef COBRA_ONLY
+#ifndef LAST_FIRMWARE_ONLY
+ #ifndef COBRA_ONLY
 		if(peekq(0x80000000002CFF98ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_341;  c_firmware = 3.41f;} else
 		//if(peekq(0x80000000002E79C8ULL) == DEX) {c_firmware = 3.41f; dex_mode = 2;}	else
-#endif
+ #endif
+#endif // #ifndef LAST_FIRMWARE_ONLY
+
 		if(SYSCALL_TABLE) break;
 	}
 
@@ -90,6 +97,7 @@ static void detect_firmware(void)
 #ifndef COBRA_ONLY
 	if(!dex_mode)
 	{   // CEX
+ #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.41f) {base_addr = 0x2B5D30, open_hook = 0x2AAFC8;} else
 		if(c_firmware == 3.55f) {base_addr = 0x2BE0D0, open_hook = 0x2B3274;} else
 		if(c_firmware == 4.21f) {base_addr = 0x2D0C98, open_hook = 0x2C2558;} else
@@ -107,8 +115,10 @@ static void detect_firmware(void)
 		if(c_firmware == 4.70f) {base_addr = 0x2D8A70, open_hook = 0x2975C0;} else
 		if(c_firmware >= 4.75f &&
 		   c_firmware <= 4.78f) {base_addr = 0x2D8AF0, open_hook = 0x297638;} else
+ #endif  // #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 4.80f) {base_addr = 0x2D8AE0, open_hook = 0x29762C;}
 	}
+
  #ifdef DECR_SUPPORT
 	else if(dex_mode == 1)
 	{   // DECR
@@ -119,9 +129,11 @@ static void detect_firmware(void)
 		if(c_firmware == 4.80f) {base_addr = 0x3110F0, open_hook = 0x2C87D4;}
 	}
  #endif
+
  #ifdef DEX_SUPPORT
 	else if(dex_mode == 2)
 	{   // DEX
+  #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.55f) {base_addr = 0x2D5B20, open_hook = 0x2C8A94;} else
 		if(c_firmware == 4.21f) {base_addr = 0x2EB418, open_hook = 0x2D9718;} else
 		if(c_firmware == 4.30f) {base_addr = 0x2ECB48, open_hook = 0x2DAE4C;} else
@@ -138,13 +150,15 @@ static void detect_firmware(void)
 		if(c_firmware == 4.70f) {base_addr = 0x2FA540, open_hook = 0x2B2480;} else
 		if(c_firmware >= 4.75f &&
 		   c_firmware <= 4.78f) {base_addr = 0x2FA5B0, open_hook = 0x2B24F8;}
+  #endif // #ifndef LAST_FIRMWARE_ONLY
+
 		if(c_firmware == 4.80f) {base_addr = 0x2FA680, open_hook = 0x2B25C4;}
 	}
- #endif
+ #endif //#ifdef DEX_SUPPORT
 
 	base_addr |= 0x8000000000000000ULL;
 	open_hook |= 0x8000000000000000ULL;
-#endif
+#endif //#ifndef COBRA_ONLY
 
 	if(!dex_mode)
 	{ // CEX
@@ -155,6 +169,7 @@ static void detect_firmware(void)
 
 #ifdef SPOOF_CONSOLEID
 			// idps / psid cex
+ #ifndef LAST_FIRMWARE_ONLY
 			if(c_firmware == 4.55f)
 			{
 				idps_offset1 = 0x80000000003E17B0ULL;
@@ -170,15 +185,18 @@ static void detect_firmware(void)
 				idps_offset1 = 0x80000000003E2DB0ULL;
 				idps_offset2 = 0x8000000000474AF4ULL;
 			}
-			else if(c_firmware >= 4.75f && c_firmware <= 4.80f)
+			else
+ #endif //#ifndef LAST_FIRMWARE_ONLY
+			if(c_firmware >= 4.75f && c_firmware <= 4.80f)
 			{
 				idps_offset1 = 0x80000000003E2E30ULL;
 				idps_offset2 = 0x8000000000474AF4ULL;
 			}
 
 			if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
-#endif
+#endif //#ifdef SPOOF_CONSOLEID
 		}
+#ifndef LAST_FIRMWARE_ONLY
 		else if(c_firmware >= 4.21f && c_firmware <= 4.53f)
 		{
 			get_fan_policy_offset = 0x8000000000009E28ULL; // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
@@ -189,14 +207,16 @@ static void detect_firmware(void)
 			get_fan_policy_offset = 0x8000000000008CBCULL; // sys 409 get_fan_policy
 			set_fan_policy_offset = 0x80000000000091B8ULL; // sys 389 set_fan_policy
 		}
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 		else if(c_firmware == 3.41f)
 		{
 			get_fan_policy_offset = 0x8000000000008644ULL; // sys 409 get_fan_policy
 			set_fan_policy_offset = 0x8000000000008B40ULL; // sys 389 set_fan_policy
 		}
-#endif
+ #endif
+#endif //#ifndef LAST_FIRMWARE_ONLY
 	}
+
 #if defined(DEX_SUPPORT) || defined(DECR_SUPPORT)
 	else if(dex_mode)
 	{ // DEX & DEH
@@ -205,9 +225,9 @@ static void detect_firmware(void)
 				get_fan_policy_offset = 0x8000000000009EB8ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
 				set_fan_policy_offset = 0x800000000000A3B4ULL; // sys 389 set_fan_policy
 
+ #ifdef SPOOF_CONSOLEID
+  #ifdef DECR_SUPPORT
 			// idps / psid dex
-#ifdef SPOOF_CONSOLEID
-#ifdef DECR_SUPPORT
 			if(dex_mode == 1)
 			{ // DEH
 				if(c_firmware >= 4.60f && c_firmware <= 4.66f)
@@ -222,7 +242,8 @@ static void detect_firmware(void)
 				}
 			}
 			else
-#endif
+  #endif //#ifdef DECR_SUPPORT
+  #ifndef LAST_FIRMWARE_ONLY
 			if(c_firmware == 4.55f)
 			{
 				idps_offset1 = 0x8000000000407930ULL;
@@ -243,15 +264,19 @@ static void detect_firmware(void)
 				idps_offset1 = 0x8000000000409930ULL;
 				idps_offset2 = 0x800000000049CAF4ULL;
 			}
-			else if(c_firmware == 4.80f)
+			else
+  #endif //#ifndef LAST_FIRMWARE_ONLY
+			if(c_firmware == 4.80f)
 			{
 				idps_offset1 = 0x8000000000409A30ULL;
 				idps_offset2 = 0x800000000049CAF4ULL;
 			}
 
 			if(idps_offset2) psid_offset = idps_offset2 + 0x18ULL;
-#endif
+ #endif //#ifdef SPOOF_CONSOLEID
 		}
+
+ #ifndef LAST_FIRMWARE_ONLY
 		else if(c_firmware >= 4.21f && c_firmware <= 4.53f)
 		{
 				get_fan_policy_offset = 0x8000000000009EA8ULL; // sys 409 get_fan_policy  4.21/4.30/4.31/4.40/4.41/4.46/4.50/4.53
@@ -262,8 +287,10 @@ static void detect_firmware(void)
 				get_fan_policy_offset = 0x8000000000008D3CULL; // sys 409 get_fan_policy
 				set_fan_policy_offset = 0x8000000000009238ULL; // sys 389 set_fan_policy
 		}
+ #endif
+
 	}
-#endif
+#endif //#if defined(DEX_SUPPORT) || defined(DECR_SUPPORT)
 
 #ifndef COBRA_ONLY
 	install_peek_poke();
@@ -274,6 +301,7 @@ static void patch_lv2(void)
 {
 	if(!dex_mode)
 	{ // CEX
+#ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.55f)
 		{
 			pokeq(0x80000000002909B0ULL, 0x4E80002038600000ULL );
@@ -286,11 +314,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000007AF64ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000007AF78ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x325B50;
 			sc_604 = 0x325C58;
 			sc_142 = 0x2E8FF8;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.21f)
@@ -305,11 +333,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005AA54ULL, 0x2F83000060000000ULL ); // fix 80010009 error
 			pokeq(0x800000000005AA68ULL, 0x2F83000060000000ULL ); // fix 80010019 error
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33B2E0;
 			sc_604 = 0x33B448;
 			sc_142 = 0x2FD810;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.30f)
@@ -325,11 +353,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005ABA4ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005ABB8ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33D158; //35EEA0
 			sc_604 = 0x33D2C0; //35EEC0
 			sc_142 = 0x2FF460; //35E050
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.31f)
@@ -344,11 +372,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005ABACULL, 0x60000000E8610188ULL );
 			pokeq(0x800000000005ABA0ULL, 0x600000005463063EULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33D168;
 			sc_604 = 0x33D2D0;
 			sc_142 = 0x2FF470;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.40f)
@@ -363,11 +391,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059AF0ULL, 0x2F83000060000000ULL );
 			pokeq(0x8000000000059B04ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33D720;
 			sc_604 = 0x33D888;
 			sc_142 = 0x2FF9E0;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.41f)
@@ -382,11 +410,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059AF4ULL, 0x2F83000060000000ULL );
 			pokeq(0x8000000000059B08ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33D730;
 			sc_604 = 0x33D898;
 			sc_142 = 0x2FF9F0;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.46f)
@@ -401,11 +429,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059AF4ULL, 0x2F83000060000000ULL );
 			pokeq(0x8000000000059B08ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33DD40;
 			sc_604 = 0x33DEA8;
 			sc_142 = 0x2FFF58;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.50f)
@@ -420,11 +448,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059AF0ULL, 0x2F83000060000000ULL );
 			pokeq(0x8000000000059B04ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33C180;
 			sc_604 = 0x33C2E8;
 			sc_142 = 0x302100;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.53f)
@@ -439,11 +467,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059AF4ULL, 0x2F83000060000000ULL );
 			pokeq(0x8000000000059B08ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33C308;
 			sc_604 = 0x33C470;
 			sc_142 = 0x302108;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.55f)
@@ -458,11 +486,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005A2ECULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005A300ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33F5C8;
 			sc_604 = 0x33F730;
 			sc_142 = 0x3051D0;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.60f)
@@ -497,11 +525,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000055C5CULL + 0x10, 0xFB610148FB810150ULL);
 			pokeq(0x8000000000055C5CULL + 0x18, 0xFBA10158F8010180ULL);
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x340630; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 30
 			sc_604 = 0x340798; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 98
 			sc_142 = 0x306478; //0x363A18 + 142*8 = 00363E88 -> 80 00 00 00 00 30 64 78
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.65f || c_firmware == 4.66f)
@@ -559,11 +587,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000055C8CULL, 0x419E00303BA00000ULL); //Original: 0x419E00303BA00000ULL
 		 */
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x340640; //0x363A18 + 600*8 = 00364CD8 -> 80 00 00 00 00 34 06 40
 			sc_604 = 0x3407A8; //0x363A18 + 604*8 = 00364CF8 -> 80 00 00 00 00 34 07 A8
 			sc_142 = 0x306488; //0x363A18 + 142*8 = 00363E88 -> 80 00 00 00 00 30 64 88
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.70f)
@@ -585,11 +613,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000055C58ULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x8000000000058E18ULL, 0x419E0038E8610098ULL ); // just restore the original
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33FE88;
 			sc_604 = 0x33FFF0;
 			sc_142 = 0x306618;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
@@ -611,13 +639,14 @@ static void patch_lv2(void)
 			pokeq(0x8000000000055C5CULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x8000000000058E1CULL, 0x419E0038E8610098ULL ); // just restore the original
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x33FF28;
 			sc_604 = 0x340090;
 			sc_142 = 0x3066B8;
-#endif
+ #endif
 		}
 		else
+#endif //#ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 4.80f)
 		{
 			//patches by deank
@@ -660,11 +689,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000007F6D0ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000007F6E4ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x371138;
 			sc_604 = 0x371228;
 			sc_142 = 0x32FE88;
-#endif
+ #endif
 		}
 		else
 /*
@@ -683,11 +712,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059B40ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
 			pokeq(0x800000000023705CULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-01-03)		}
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x360208;
 			sc_604 = 0x388E10;
 			sc_142 = 0x34CA38;
-#endif
+ #endif
 		}
 		else
 */
@@ -706,11 +735,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059FE4ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
 			pokeq(0x800000000023740CULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 errors (ported for DEX 2015-01-03)		}
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x364628;
 			sc_604 = 0x38D2C0;
 			sc_142 = 0x350ED0;
-#endif
+ #endif
 		}
 		else
 		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
@@ -728,11 +757,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059FE8ULL, 0x386000012F830000ULL ); // ignore LIC.DAT check
 			pokeq(0x800000000022E718ULL, 0x38600000F8690000ULL ); // fix 0x8001002B / 80010017 ERROR FIX
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x38CB60; //003B28F8 + 600*8 = 003B3BB8 -> 80 00 00 00 00 38 CB 60
 			sc_604 = 0x38CC50; //003B28F8 + 604*8 = 003B3BD8 -> 80 00 00 00 00 38 CC 50
 			sc_142 = 0x34ED30; //003B28F8 + 142*8 = 003B2D68 -> 80 00 00 00 00 34 ED 30
-#endif
+ #endif
 		}
 		else
 		if(c_firmware == 4.80f)
@@ -754,17 +783,19 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059A10ULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x800000000005CBD0ULL, 0x419E0038E8610098ULL ); // just restore the original
 
-#ifndef COBRA_ONLY
+ #ifndef COBRA_ONLY
 			sc_600 = 0x38CB60; //0x3B28F8 + 600*8 = 003B3BB8 -> 80 00 00 00 00 38 CB 60
 			sc_604 = 0x38CC50; //0x3B28F8 + 604*8 = 003B3BD8 -> 80 00 00 00 00 38 CC 50
 			sc_142 = 0x34ED30; //0x3B28F8 + 142*8 = 003B2D68 -> 80 00 00 00 00 34 ED 30
-#endif
+ #endif
 		}
 	}
-#endif
+#endif //#ifdef DECR_SUPPORT
+
 #ifdef DEX_SUPPORT
 	else if(dex_mode == 2)
 	{ // DEX
+ #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.55f)
 		{
 			pokeq(0x8000000000298790ULL, 0x4E80002038600000ULL );
@@ -776,11 +807,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059804ULL, 0x2F84000448000098ULL );
 			pokeq(0x800000000007EF5CULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000007EF70ULL, 0x2F83000060000000ULL );
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x33FAC8;
 			sc_604 = 0x33FC30;
 			sc_142 = 0x3010E0;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.21f)
@@ -795,11 +826,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005E36CULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005E380ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x3583F8;
 			sc_604 = 0x3584D0;
 			sc_142 = 0x318BA0;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.30f)
@@ -814,11 +845,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005E4BCULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005E4D0ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x35A220;
 			sc_604 = 0x35A2F8;
 			sc_142 = 0x31A7A0;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.31f)
@@ -833,11 +864,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005E4C0ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005E4D4ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x35A230;
 			sc_604 = 0x35A308;
 			sc_142 = 0x31A7B0;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.40f)
@@ -852,11 +883,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005D408ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005D41CULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x35AB30;
 			sc_604 = 0x35AC08;
 			sc_142 = 0x31B050;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.41f)
@@ -871,11 +902,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005D40CULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005D420ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x35AB40;
 			sc_604 = 0x35AC18;
 			sc_142 = 0x31B060;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.46f)
@@ -890,11 +921,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005D40CULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005D420ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x35B150;
 			sc_604 = 0x35B228;
 			sc_142 = 0x31B5C8;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.50f)
@@ -909,11 +940,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005D4C0ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005D4D4ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x35EA90;
 			sc_604 = 0x35EB68;
 			sc_142 = 0x322B38;
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.53f)
@@ -928,11 +959,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005D4C4ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005D4D8ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x3602A8; //0x385108 + 600*8 = 003863C8 -> 80 00 00 00 00 36 02 A8
 			sc_604 = 0x360380; //0x385108 + 604*8 = 003863E8 -> 80 00 00 00 00 36 03 80
 			sc_142 = 0x3242F0; //0x385108 + 142*8 = 00385578 -> 80 00 00 00 00 32 42 F0
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.55f)
@@ -947,11 +978,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005DCB8ULL, 0x2F83000060000000ULL );
 			pokeq(0x800000000005DCD0ULL, 0x2F83000060000000ULL );
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x3634F8; //0x388488 + 600*8 = 00389748 -> 80 00 00 00 00 36 34 F8
 			sc_604 = 0x3635D0; //0x388488 + 604*8 = 00389768 -> 80 00 00 00 00 36 35 D0
 			sc_142 = 0x327348; //0x388488 + 142*8 = 003888F8 -> 80 00 00 00 00 32 73 48
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.60f)
@@ -972,11 +1003,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059628ULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x800000000005C77CULL, 0x419E0038E8610098ULL ); // just restore the original
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x364DE0; //0x38A120 + 600*8 = 0038B3E0 -> 80 00 00 00 00 36 4D E0
 			sc_604 = 0x364EB8; //0x38A120 + 604*8 = 0038B400 -> 80 00 00 00 00 36 4E B8
 			sc_142 = 0x328E70; //0x38A120 + 142*8 = 0038A590 -> 80 00 00 00 00 32 8E 70
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.65f || c_firmware == 4.66f)
@@ -998,11 +1029,11 @@ static void patch_lv2(void)
 			pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x800000000005C780ULL, 0x419E0038E8610098ULL ); // just restore the original
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x364DF0; //0x38A120 + 600*8 = 0038B3E0 -> 80 00 00 00 00 36 4D F0
 			sc_604 = 0x364EC8; //0x38A120 + 604*8 = 0038B400 -> 80 00 00 00 00 36 4E C8
 			sc_142 = 0x328E80; //0x38A120 + 142*8 = 0038A590 -> 80 00 00 00 00 32 8E 80
-#endif
+  #endif
 		}
 		else
 		if(c_firmware == 4.70f)
@@ -1024,11 +1055,11 @@ static void patch_lv2(void)
 			pokeq(0x8000000000059628ULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x800000000005C7E8ULL, 0x419E0038E8610098ULL ); // just restore the original
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x3647B8; //0x38A368 + 600*8 = 0038B628 -> 80 00 00 00 00 36 47 B8
 			sc_604 = 0x364890; //0x38A368 + 604*8 = 0038B648 -> 80 00 00 00 00 36 48 90
 			sc_142 = 0x329190; //0x38A368 + 142*8 = 0038A7D8 -> 80 00 00 00 00 32 91 90
-#endif
+  #endif
 		}
 		else
 		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
@@ -1050,13 +1081,14 @@ static void patch_lv2(void)
 			pokeq(0x800000000005962CULL, 0xF821FE917C0802A6ULL ); // just restore the original
 			pokeq(0x800000000005C7ECULL, 0x419E0038E8610098ULL ); // just restore the original
 
-#ifndef COBRA_ONLY
+  #ifndef COBRA_ONLY
 			sc_600 = 0x364848; //0x38A3E8 + 600*8 = 0038B6A8 -> 80 00 00 00 00 36 48 48
 			sc_604 = 0x364920; //0x38A3E8 + 604*8 = 0038B6C8 -> 80 00 00 00 00 36 49 20
 			sc_142 = 0x329220; //0x38A3E8 + 142*8 = 0038A858 -> 80 00 00 00 00 32 92 20
-#endif
+  #endif
 		}
 		else
+ #endif //#ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 4.80f)
 		{
 			//patches by deank

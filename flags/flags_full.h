@@ -11,6 +11,7 @@
 
 #define DEX_SUPPORT		1	// add support for DEX
 #define DECR_SUPPORT	1	// add support for DECR
+//#define LAST_FIRMWARE_ONLY 1	//  support only 4.80 CEX / DEX (no DECR support)
 
 //// FEATURES ////
 #define FIX_GAME		1	// Auto-Fix game

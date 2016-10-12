@@ -792,6 +792,42 @@ static int check_content(u8 f1)
 	return CELL_OK;
 }
 
+static void set_sort_key(char *skey, char *templn, int key, u8 subfolder)
+{
+	bool is_html = (key < 0);
+
+	u16 tlen = strlen(templn);
+	if(tlen < 6) strcat(templn, "      ");
+
+	u8 c = 0;
+	if(templn[4] == ']' && templn[0] == '[') {c = (templn[5]!=' ') ? 5 : 6;} // ignore tag prefixes. e.g. [PS3] [PS2] [PSX] [PSP] [DVD] [BDV] [ISO] etc.
+
+	if(is_html)
+		snprintf(skey, HTML_KEY_LEN + 1, "%s", templn);
+	else
+		sprintf(skey, "!%c%c%c%c%c%c%04i", templn[c], templn[c+1], templn[c+2], templn[c+3], templn[c+4], templn[c+5], key);
+
+	if(subfolder) {char *s = strchr(templn + 3, '/'); if(s) {skey[4]=s[1],skey[5]=s[2],skey[6]=s[3];}} else
+	if(c == 0 && templn[0] == '[') {char *s = strstr(templn + 3, "] "); if(s) {skey[4]=s[2],skey[5]=s[3],skey[6]=s[4];}}
+
+	templn[tlen] = NULL;
+
+	char *p = strstr(templn + 5, "CD");
+	if(p) {if(ISDIGIT(p[2])) skey[6] = p[2]; if(ISDIGIT(p[3])) skey[6] = p[3];} // sort by CD#
+	else
+	{
+		if(tlen > 64) tlen = 64;
+		for(u16 i = 5; i < tlen; i++)
+		{
+			if(templn[i+1]=='[') break;
+			if(templn[i]==' ') {skey[6] = templn[++i]; break;} // sort by 2nd word
+			//if(ISDIGIT(templn[i])) {skey[6]=templn[i]; break;} // sort by game number (if possible)
+		}
+	}
+
+	to_upper(skey + (is_html ? 0 : 1));
+}
+
 static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, u8 mode, bool auto_mount)
 {
 	u64 c_len = 0;
@@ -1065,7 +1101,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
-						snprintf(tempstr, HTML_KEY_LEN + 1, "%s      ", templn); to_upper(tempstr); // sort key
+						set_sort_key(tempstr, templn, -1, 0); // sort key
 
  #ifdef LAUNCHPAD
 						if(launchpad_mode)
@@ -1171,7 +1207,7 @@ next_html_entry:
 
 							if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
-							snprintf(tempstr, HTML_KEY_LEN + 1, "%s      ", templn); to_upper(tempstr); // sort key
+							set_sort_key(tempstr, templn, -1, subfolder); // sort key
 
  #ifdef LAUNCHPAD
 							if(launchpad_mode)

@@ -141,7 +141,7 @@ static void setup_parse_settings(char *param)
 	if( strstr(param, "wn=1"))  webman_config->wmstart = 1;
 	if( strstr(param, "tid=1")) webman_config->tid  = 1;
 	if(!strstr(param, "sfo=1")) webman_config->use_filename = 1; // show filename instead of title in PARAM.SFO
-	if( strstr(param, "pl=1" )) webman_config->poll = 1;
+	if( strstr(param, "pl=1" )){setAutoPowerOff(false); AutoPowerOffGame = AutoPowerOffVideo = -1; webman_config->poll = 1;}
 	if( strstr(param, "ft=1" )) webman_config->ftpd = 1;
 	if( strstr(param, "np=1" )) webman_config->nopad = 1;
 	if( strstr(param, "nc=1" )) webman_config->nocov = SHOW_ICON0;    else // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons, 3 = Online Covers)
@@ -151,6 +151,9 @@ static void setup_parse_settings(char *param)
 	else
 	if( strstr(param, "ic=3" )) webman_config->nocov = ONLINE_COVERS;
 #endif
+
+	webman_config->ftp_port = get_valuen16(param, "ff=");
+	webman_config->ftp_timeout = get_valuen(param, "tm=", 0, 255); //mins
 
 	if( strstr(param, "nd=1" )) webman_config->netd = 1;
 	webman_config->netp=get_valuen16(param, "netp=");
@@ -166,7 +169,7 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "nsp=1")) webman_config->nospoof = 1; //don't spoof fw version
 	if(c_firmware==4.53f) webman_config->nospoof = 1;
 
-	if(strstr(param, "fc=1")) webman_config->fanc = 1;
+	if(strstr(param, "fc=1") && !strstr(param, "temp=2")) webman_config->fanc = 1;
 
 	webman_config->temp1 = MY_TEMP;
 
@@ -550,11 +553,13 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 	add_check_box("pl", "1", STR_USBPOLL,  _BR_, (webman_config->poll) , buffer);
-	add_check_box("ft", "1", STR_FTPSVC,   _BR_, (webman_config->ftpd) , buffer);
+	add_check_box("ft", "1", STR_FTPSVC,   " : ", (webman_config->ftpd) , buffer);
+	sprintf(templn, HTML_NUMBER("ff", "%i", "1", "65535") " • Timeout ", webman_config->ftp_port); strcat(buffer, templn);
+	sprintf(templn, HTML_NUMBER("tm", "%i", "0", "255") " mins<br>", webman_config->ftp_timeout); strcat(buffer, templn);
  #ifdef PS3NET_SERVER
-	sprintf(templn, "%s", STR_FTPSVC); char *pos = strcasestr(templn, "FTP"); if(pos) {pos[0] = 'N'; pos[1] = 'E'; pos[2] = 'T';}
+	sprintf(templn, "%s", STR_FTPSVC); char *pos = strcasestr(templn, "FTP"); if(pos) {pos[0] = 'N', pos[1] = 'E', pos[2] = 'T';}
 	add_check_box("nd", "1", templn,   " : ", (webman_config->netd) , buffer);
-	sprintf(templn, HTML_NUMBER("ndp", "%i", "5", "6", "0", "65535") "<br>", webman_config->netp); strcat(buffer, templn);
+	sprintf(templn, HTML_NUMBER("ndp", "%i", "1", "65535") "<br>", webman_config->netp); strcat(buffer, templn);
  #endif
 
 #ifdef LITE_EDITION
@@ -619,16 +624,19 @@ static void setup_form(char *buffer, char *templn)
 	//fan control settings
 	strcat(buffer, HTML_BLU_SEPARATOR "<table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td>");
 
-	add_check_box("fc"  , "1", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
+	add_check_box("fc\" onchange=\"temp[fc.checked?0:2].checked=1;" , "1", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
 	add_check_box("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->nowarn), buffer);
 
 	strcat(buffer, "<tr class=\"propfont\"><td>");
 	add_radio_button("temp", "0", "t_0", STR_AUTOAT , " : ", (webman_config->temp0 == 0), buffer);
-	sprintf(templn, HTML_NUMBER("step\"  accesskey=\"T", "%i", "2", "3", "40", "80") " °C</td><td><label><input type=\"checkbox\"%s/> %s</label> : " HTML_NUMBER("mfan", "%i", "2", "3", "20", "95") " %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?ITEM_CHECKED:"", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
+	sprintf(templn, HTML_NUMBER("step\"  accesskey=\"T", "%i", "40", "80") " °C</td><td><label><input type=\"checkbox\"%s/> %s</label> : " HTML_NUMBER("mfan", "%i", "20", "95") " %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?ITEM_CHECKED:"", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
 
 	strcat(buffer, "<tr class=\"propfont\"><td>");
 	add_radio_button("temp", "1", "t_1", STR_MANUAL , " : ", (webman_config->temp0 != 0), buffer);
-	sprintf(templn, HTML_NUMBER("manu", "%i", "2", "3", "20", "95") " %% %s </td><td> %s : " HTML_NUMBER("fsp0", "%i", "2", "3", "20", "99") " %% %s </td></tr></table>", (webman_config->manu), STR_FANSPEED, STR_PS2EMU, webman_config->ps2temp, STR_FANSPEED); strcat(buffer, templn);
+	sprintf(templn, HTML_NUMBER("manu", "%i", "20", "95") " %% %s </td><td> %s : " HTML_NUMBER("fsp0", "%i", "20", "99") " %% %s </td></tr>", (webman_config->manu), STR_FANSPEED, STR_PS2EMU, webman_config->ps2temp, STR_FANSPEED); strcat(buffer, templn);
+	strcat(buffer, "<tr class=\"propfont\"><td>");
+	add_radio_button("temp", "2", "t_2", "SYSCON", "</table>", !(webman_config->fanc), buffer);
+
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -636,20 +644,20 @@ static void setup_form(char *buffer, char *templn)
 	char PS3NETSRV[88]; sprintf(PS3NETSRV, " &nbsp; <a href=\"/net0\" style=\"%s\">PS3NETSRV#1 IP:</a>", HTML_URL_STYLE);
 	strcat(buffer, HTML_BLU_SEPARATOR);
 	add_check_box("nd0", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd0), buffer);
-	sprintf(templn, HTML_INPUT("neth0", "%s", "15", "16") ":" HTML_NUMBER("netp0", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth0, webman_config->netp0); strcat(buffer, templn);
+	sprintf(templn, HTML_INPUT("neth0", "%s", "15", "16") ":" HTML_NUMBER("netp0", "%i", "1", "65535") "<br>", webman_config->neth0, webman_config->netp0); strcat(buffer, templn);
 	++PS3NETSRV[21], ++PS3NETSRV[75];
 	add_check_box("nd1", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd1), buffer);
-	sprintf(templn, HTML_INPUT("neth1", "%s", "15", "16") ":" HTML_NUMBER("netp1", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth1, webman_config->netp1); strcat(buffer, templn);
+	sprintf(templn, HTML_INPUT("neth1", "%s", "15", "16") ":" HTML_NUMBER("netp1", "%i", "1", "65535") "<br>", webman_config->neth1, webman_config->netp1); strcat(buffer, templn);
 	++PS3NETSRV[21], ++PS3NETSRV[75];
 	add_check_box("nd2", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd2), buffer);
-	sprintf(templn, HTML_INPUT("neth2", "%s", "15", "16") ":" HTML_NUMBER("netp2", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth2, webman_config->netp2); strcat(buffer, templn);
+	sprintf(templn, HTML_INPUT("neth2", "%s", "15", "16") ":" HTML_NUMBER("netp2", "%i", "1", "65535") "<br>", webman_config->neth2, webman_config->netp2); strcat(buffer, templn);
   #ifdef NET3NET4
 	++PS3NETSRV[21], ++PS3NETSRV[75];
 	add_check_box("nd3", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd3), buffer);
-	sprintf(templn, HTML_INPUT("neth3", "%s", "15", "16") ":" HTML_NUMBER("netp3", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth3, webman_config->netp3); strcat(buffer, templn);
+	sprintf(templn, HTML_INPUT("neth3", "%s", "15", "16") ":" HTML_NUMBER("netp3", "%i", "1", "65535") "<br>", webman_config->neth3, webman_config->netp3); strcat(buffer, templn);
 	++PS3NETSRV[21], ++PS3NETSRV[75];
 	add_check_box("nd4", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd4), buffer);
-	sprintf(templn, HTML_INPUT("neth4", "%s", "15", "16") ":" HTML_NUMBER("netp4", "%i", "5", "6", "0", "65535") "<br>", webman_config->neth4, webman_config->netp4); strcat(buffer, templn);
+	sprintf(templn, HTML_INPUT("neth4", "%s", "15", "16") ":" HTML_NUMBER("netp4", "%i", "1", "65535") "<br>", webman_config->neth4, webman_config->netp4); strcat(buffer, templn);
   #endif
  #endif
 #endif
@@ -1044,6 +1052,8 @@ static void reset_settings(void)
 	//webman_config->refr = 0;        //enable content scan on startup
 	//webman_config->ftp_password  =  "";
 
+	webman_config->ftp_port = FTPPORT;
+
 	//webman_config->netd0    = webman_config->netd1    = webman_config->netd2    = webman_config->netd3    = webman_config->netd4    = 0;
 	//webman_config->neth0[0] = webman_config->neth1[0] = webman_config->neth2[0] = webman_config->neth3[0] = webman_config->neth4[0] = NULL;
 	webman_config->netp = webman_config->netp0 = webman_config->netp1 = webman_config->netp2 = webman_config->netp3 = webman_config->netp4 = NETPORT;
@@ -1104,6 +1114,8 @@ static void reset_settings(void)
 	webman_config->minfan = RANGE(webman_config->minfan, MIN_FANSPEED, 99);   // %
 	webman_config->ps2temp = RANGE(webman_config->ps2temp, MIN_FANSPEED, 99); // %
 	webman_config->temp1 = RANGE(webman_config->temp1, 40, MAX_TEMPERATURE);  //°C
+
+	if(webman_config->ftp_port < 1 || webman_config->ftp_port == WWWPORT) webman_config->ftp_port = FTPPORT;
 
 	// settings
 	save_settings();

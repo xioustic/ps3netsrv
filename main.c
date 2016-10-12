@@ -87,6 +87,10 @@ static char search_url[50];
  #undef PS3MAPI
 #endif
 
+#ifdef LAST_FIRMWARE_ONLY
+ #undef DECR_SUPPORT
+#endif
+
 SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
@@ -490,7 +494,9 @@ typedef struct
 	uint16_t netp;
 	uint8_t  launchpad_xml;
 	char default_restart;
-	char padding[98];
+	uint8_t ftp_timeout;
+	uint16_t ftp_port;
+	char padding[95];
 } /*__attribute__((packed))*/ WebmanCfg;
 
 static u8 wmconfig[sizeof(WebmanCfg)];
@@ -3013,6 +3019,8 @@ static void wwwd_thread(uint64_t arg)
 	{sys_map_path("/app_home", NULL);}
 	{sys_map_path("/dev_bdvd/PS3_UPDATE", SYSMAP_PS3_UPDATE);} // redirect firmware update on BD disc to empty folder
 #endif
+
+	restoreAutoPowerOff();
 
 	set_buffer_sizes(webman_config->foot);
 

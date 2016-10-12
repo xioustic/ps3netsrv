@@ -1,5 +1,7 @@
 #ifdef PS3NET_SERVER
 
+// share *.iso & *.iso.0 stored on local file system (hdd0, usb, ms, cf, sd). JB games, ntfs & net are not shared.
+
 #define MAX_CLIENTS 3
 
 #define CLIENT_BUFFER_SIZE     (0x4000)
@@ -125,7 +127,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 
 				for(u8 i = 1; i < MAX_ISO_PARTS; i++)
 				{
-					filepath[fp_len] = 0; sprintf(filepath, "%s%i", filepath, i);
+					sprintf(filepath + fp_len, "%i", i);
 
 					if(cellFsStat(filepath, &st) != CELL_FS_SUCCEEDED) break;
 
@@ -526,15 +528,15 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 			if(dirpath_len + d_name_len < MAX_PATH_LEN - 1)
 			{
 				sprintf(dirpath, "%s%s/%s", drives[i], clients[index].dirpath, entry.d_name);
-				st.st_size=0;
-				st.st_mode=S_IFDIR;
-				st.st_mtime=0;
-				st.st_atime=0;
-				st.st_ctime=0;
+				st.st_mode  = S_IFDIR;
+				st.st_size  = 0;
+				st.st_mtime = 0;
+				st.st_atime = 0;
+				st.st_ctime = 0;
 				cellFsStat(dirpath, &st);
 
-				if(!st.st_mtime) st.st_mtime=st.st_ctime;
-				if(!st.st_mtime) st.st_mtime=st.st_atime;
+				if(!st.st_mtime) st.st_mtime = st.st_ctime;
+				if(!st.st_mtime) st.st_mtime = st.st_atime;
 
 				if((st.st_mode & S_IFDIR) == S_IFDIR)
 				{
@@ -704,7 +706,7 @@ relisten:
 				else {sclose(&conn_s_net); break;}
 			}
 			else
-			if((sys_net_errno==SYS_NET_EBADF) || (sys_net_errno==SYS_NET_ENETDOWN))
+			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
 				list_s=FAILED;

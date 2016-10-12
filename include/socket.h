@@ -38,10 +38,9 @@ static int connect_to_server(const char *server, uint16_t port)
 
 	struct timeval tv;
 	tv.tv_usec = 0;
-
 	tv.tv_sec = 3;
-	//setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 	setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+	//setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 	if(connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
 	{

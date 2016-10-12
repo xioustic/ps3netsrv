@@ -41,31 +41,9 @@ static void refresh_xml(char *msg)
 	setPluginInactive();
 }
 
-static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len)
+static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len, u8 subfolder)
 {
-	u16 tlen = strlen(templn);
-	if(tlen < 6) strcat(templn, "      ");
-
-	u8 c = 0;
-	if(templn[4] == ']' && templn[0] == '[') {c = (templn[5]!=' ') ? 5 : 6;} // ignore tag prefixes. e.g. [PS3] [PS2] [PSX] [PSP] [DVD] [BDV] [ISO] etc.
-	sprintf(skey, "!%c%c%c%c%c%c%04i", templn[c], templn[c+1], templn[c+2], templn[c+3], templn[c+4], templn[c+5], key);
-
-	templn[tlen] = NULL;
-
-	char *p = strstr(templn + 5, "CD");
-	if(p) {if(ISDIGIT(p[2])) skey[6] = p[2]; if(ISDIGIT(p[3])) skey[6] = p[3];} // sort by CD#
-	else
-	{
-		if(tlen > 64) tlen = 64;
-		for(u16 i = 5; i < tlen; i++)
-		{
-			if(templn[i+1]=='[') break;
-			if(templn[i]==' ') {skey[6] = templn[++i]; break;} // sort by 2nd word
-			//if(ISDIGIT(templn[i])) {skey[6]=templn[i]; break;} // sort by game number (if possible)
-		}
-	}
-
-	to_upper(skey + 1);
+	set_sort_key(skey, templn, key, subfolder);
 
 	#define ITEMS_BUFFER(a)  (64 * (item_count[a] + 8))
 
@@ -557,7 +535,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 										 key, icon,
 										 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, (u16)pTick.tick, neth, param, "");
 
-						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len)) key++;
+						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, data[v3_entry].name, item_count, xml_len, 0)) key++;
 
 						v3_entry++;
 					}
@@ -645,7 +623,7 @@ next_xml_entry:
 											 key, icon,
 											 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
 
-							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len)) key++;
+							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, entry.d_name, item_count, xml_len, subfolder)) key++;
 						}
 //////////////////////////////
 						if(subfolder) goto next_xml_entry;

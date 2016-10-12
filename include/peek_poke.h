@@ -193,7 +193,7 @@ static void Hex2Bin(const char* src, char* target)
 	char value[3]; value[2] = NULL;
 	while(*src && src[1])
 	{
-		value[0] = *src, value[1] = src[1];
+		value[0] = src[0], value[1] = src[1];
 		*(target++) = (u8)convertH(value);
 		src += 2;
 	}

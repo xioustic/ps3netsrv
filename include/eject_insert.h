@@ -63,18 +63,18 @@ static void reset_usb_ports(char *_path)
 	sys_timer_sleep(1); u8 indx = (u8)val(_path + 8);
 
 	// make the current usb device the first
-	fake_insert_event((indx<6)?USB_MASS_STORAGE_1(indx):USB_MASS_STORAGE_2(indx), DEVICE_TYPE_USB);
+	fake_insert_event((indx < 6) ? USB_MASS_STORAGE_1(indx) : USB_MASS_STORAGE_2(indx), DEVICE_TYPE_USB);
 
 	sys_timer_sleep(3);
 
 	// send fake insert event for the other usb devices
 	for(u8 f0 = 0; f0 < 8; f0++)
 	{
-		if(f0!=indx) fake_insert_event((f0<6)?USB_MASS_STORAGE_1(f0):USB_MASS_STORAGE_2(f0), DEVICE_TYPE_USB);
+		if(f0 != indx) fake_insert_event((f0 < 6) ? USB_MASS_STORAGE_1(f0) : USB_MASS_STORAGE_2(f0), DEVICE_TYPE_USB);
 	}
 
-	if((usb6 >= 8) && (indx!=usb6)) fake_insert_event(USB_MASS_STORAGE_2(usb6), DEVICE_TYPE_USB);
-	if((usb7 >= 8) && (indx!=usb7)) fake_insert_event(USB_MASS_STORAGE_2(usb7), DEVICE_TYPE_USB);
+	if((usb6 >= 8) && (indx != usb6)) fake_insert_event(USB_MASS_STORAGE_2(usb6), DEVICE_TYPE_USB);
+	if((usb7 >= 8) && (indx != usb7)) fake_insert_event(USB_MASS_STORAGE_2(usb7), DEVICE_TYPE_USB);
 }
 
 /*
@@ -105,24 +105,24 @@ static void eject_insert(u8 eject, u8 insert)
 	if(eject)
 	{
 		memset(atapi_cmnd, 0, 56);
-		atapi_cmnd[0x00]=0x1b;
-		atapi_cmnd[0x01]=0x01;
-		atapi_cmnd[0x04]=0x02;
-		atapi_cmnd[0x23]=0x0c;
+		atapi_cmnd[0x00] = 0x1b;
+		atapi_cmnd[0x01] = 0x01;
+		atapi_cmnd[0x04] = 0x02;
+		atapi_cmnd[0x23] = 0x0c;
 
 		// Eject disc
 		{system_call_7(SC_STORAGE_INSERT_EJECT, dev_id, 1, (uint64_t)(u32) atapi_cmnd, 56, NULL, 0, NULL);}
-	}
 
-	sys_timer_sleep(2);
+		if(insert) sys_timer_sleep(2);
+	}
 
 	if(insert)
 	{
 		memset(atapi_cmnd, 0, 56);
-		atapi_cmnd[0x00]=0x1b;
-		atapi_cmnd[0x01]=0x01;
-		atapi_cmnd[0x04]=0x03;
-		atapi_cmnd[0x23]=0x0c;
+		atapi_cmnd[0x00] = 0x1b;
+		atapi_cmnd[0x01] = 0x01;
+		atapi_cmnd[0x04] = 0x03;
+		atapi_cmnd[0x23] = 0x0c;
 
 		// Insert disc
 		{system_call_7(SC_STORAGE_INSERT_EJECT, dev_id, 1, (uint64_t)(u32) atapi_cmnd, 56, NULL, 0, NULL);}

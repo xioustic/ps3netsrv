@@ -113,6 +113,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	strcpy(cwd, "/");
 
+	if(webman_config->ftp_timeout > 0)
+	{
+		struct timeval tv;
+		tv.tv_usec = 0;
+		tv.tv_sec = (webman_config->ftp_timeout * 60);
+		setsockopt(conn_s_ftp, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+	}
+
 	while((connactive == 1) && working)
 	{
 		memset(buffer, 0, FTP_RECV_SIZE);
@@ -492,10 +500,12 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "MLSD") || _IS(cmd, "LIST") || _IS(cmd, "MLST") || _IS(cmd, "NLST"))
 				{
-					bool nolist  = _IS(cmd, "NLST"); if(IS(param, "-l") || IS(param, "-la") || IS(param, "-al")) {*param = NULL, nolist = false;}
+					bool nolist  = _IS(cmd, "NLST");
 					bool is_MLSD = _IS(cmd, "MLSD");
 					bool is_MLST = _IS(cmd, "MLST");
 					bool is_MLSx = is_MLSD || is_MLST;
+
+					if(IS(param, "-l") || IS(param, "-la") || IS(param, "-al")) {*param = NULL, nolist = false;}
 
 					if((data_s < 0) && (pasv_s >= 0) && !is_MLST) data_s = accept(pasv_s, NULL, NULL);
 
@@ -1062,16 +1072,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 			}
 			else
 			{
-				connactive = 0;
-				loggedin = 0;
+				loggedin = connactive = 0;
 				break;
 			}
 
 		}
 		else
 		{
-			connactive = 0;
-			loggedin = 0;
+			loggedin = connactive = 0;
 			break;
 		}
 
@@ -1092,7 +1100,7 @@ static void ftpd_thread(uint64_t arg)
 	int list_s = -1;
 
 relisten:
-	if(working) list_s = slisten(FTPPORT, 4);
+	if(working) list_s = slisten(webman_config->ftp_port, 4);
 	else goto end;
 
 	if(working && (list_s < 0))
