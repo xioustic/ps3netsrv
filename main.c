@@ -106,7 +106,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.43.36 MOD"						// webMAN version
+#define WM_VERSION			"1.45.00 MOD"						// webMAN version
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -114,7 +114,7 @@ SYS_MODULE_STOP(wwwd_stop);
 
 #define TMP_DIR				"/dev_hdd0/tmp"
 
-#define WMCONFIG			TMP_DIR "/wmconfig.bin"			// webMAN config file
+#define WMCONFIG			TMP_DIR "/wm_config.bin"		// webMAN config file
 #define WMTMP				TMP_DIR "/wmtmp"				// webMAN work/temp folder
 #define WM_LANG_PATH		TMP_DIR "/wm_lang"				// webMAN language folder
 #define WM_ICONS_PATH		TMP_DIR "/wm_icons"				// webMAN icons folder
@@ -412,92 +412,148 @@ enum cp_mode_options
 ////////////////////////////////
 typedef struct
 {
+	uint16_t version;
+
+	uint8_t padding0[14];
+
+	uint8_t lang;
+
+	// scan devices settings
+
 	uint8_t usb0;
 	uint8_t usb1;
 	uint8_t usb2;
 	uint8_t usb3;
 	uint8_t usb6;
 	uint8_t usb7;
-	uint8_t netd0;
+	uint8_t dev_sd;
+	uint8_t dev_ms;
+	uint8_t dev_cf;
+
+	uint8_t padding1[6];
+
+	// scan content settings
+
+	uint8_t refr;
+	uint8_t foot;
+	uint8_t cmask;
+
+	uint8_t nogrp;
+	uint8_t nocov;
+	uint8_t nosetup;
+	uint8_t rxvid;
+	uint8_t ps2l;
+	uint8_t pspl;
+	uint8_t tid;
+	uint8_t use_filename;
+	uint8_t launchpad_xml;
+
+	uint8_t padding2[20];
+
+	// start up settings
+
+	uint8_t wmstart;
 	uint8_t lastp;
 	uint8_t autob;
+	char    autoboot_path[256];
 	uint8_t delay;
 	uint8_t bootd;
 	uint8_t boots;
-	uint8_t blind;
-	uint8_t nogrp;
-	uint8_t nosetup;
-	uint8_t cmask;
-	uint32_t netp0;
-	char neth0[16];
-	uint8_t poll;
-	uint8_t ftpd;
-	uint8_t nowarn;
-	uint8_t fanc;
-	uint8_t temp1;
-	uint8_t rxvid;
-	uint8_t bind;
-	uint8_t refr;
-	uint8_t manu;
-	uint8_t temp0;
-	uint8_t netd1;
-	uint32_t netp1;
-	char neth1[16];
-	uint8_t foot;
-	uint8_t nopad;
-	uint8_t nocov;
 	uint8_t nospoof;
+	uint8_t blind;
+	uint8_t spp;  //disable syscalls, offline: lock PSN, offline ingame
+	uint8_t noss; //no singstar
+
+	uint8_t padding3[6];
+
+	// fan control settings
+
+	uint8_t fanc;
+	uint8_t temp0;
+	uint8_t temp1;
+	uint8_t manu;
 	uint8_t ps2temp;
-	uint8_t pspl;
+	uint8_t nowarn;
 	uint8_t minfan;
-	uint16_t combo;
+
+	uint8_t padding4[9];
+
+	// combo settings
+
+	uint8_t  nopad;
+	uint8_t  keep_ccapi;
+	uint32_t combo;
+	uint32_t combo2;
+
+	uint8_t padding5[22];
+
+	// ftp server settings
+
+	uint8_t  bind;
+	uint8_t  ftpd;
+	uint16_t ftp_port;
+	uint8_t  ftp_timeout;
+	char     ftp_password[20];
+	char     allow_ip[16];
+
+	uint8_t padding6[7];
+
+	// net server settings
+
+	uint8_t  netsrvd;
+	uint16_t netsrvp;
+
+	uint8_t padding7[13];
+
+	// net client settings
+
+	uint8_t  netd[5];
+	uint16_t netp[5];
+	char     neth[5][16];
+
+	uint8_t padding8[33];
+
+	// mount settings
+
+	uint8_t bus;
+	uint8_t fixgame;
+	uint8_t ps1emu;
+	uint8_t autoplay;
+
+	uint8_t padding9[12];
+
+	// profile settings
+
+	uint8_t profile;
+	char uaccount[9];
+
+	uint8_t padding10[6];
+
+	// misc settings
+
+	uint8_t default_restart;
+	uint8_t poll; // poll usb / auto-poweroff
+
+	uint32_t rec_video_format;
+	uint32_t rec_audio_format;
+
+	uint8_t padding12[6];
+
+	uint8_t homeb;
+	char home_url[255];
+
+	uint8_t padding11[32];
+
+	// spoof console id
+
 	uint8_t sidps;
 	uint8_t spsid;
-	uint8_t spp;
-	uint8_t lang;
 	char vIDPS1[17];
 	char vIDPS2[17];
 	char vPSID1[17];
 	char vPSID2[17];
-	uint8_t tid;
-	uint8_t wmstart;
-	char autoboot_path[256];
-	uint8_t ps2l;
-	uint32_t combo2;
-	uint8_t homeb;
-	char home_url[256];
-	uint8_t netd2;
-	uint32_t netp2;
-	char neth2[16];
-	uint8_t profile;
-	char uaccount[9];
-	char allow_ip[16];
-	uint8_t noss;
-	uint8_t fixgame;
-	uint8_t bus;
-	uint8_t dev_sd;
-	uint8_t dev_ms;
-	uint8_t dev_cf;
-	uint8_t ps1emu;
-	uint8_t autoplay;
-	uint8_t use_filename;
-	uint32_t rec_video_format;
-	uint32_t rec_audio_format;
-	uint8_t keep_ccapi;
-	uint8_t netd3;
-	uint32_t netp3;
-	char neth3[16];
-	uint8_t netd4;
-	uint32_t netp4;
-	char neth4[16];
-	char ftp_password[20];
-	uint8_t  netd;
-	uint16_t netp;
-	uint8_t  launchpad_xml;
-	char default_restart;
-	uint8_t ftp_timeout;
-	uint16_t ftp_port;
-	char padding[95];
+
+	uint8_t padding13[34];
 } /*__attribute__((packed))*/ WebmanCfg;
 
 static u8 wmconfig[sizeof(WebmanCfg)];
@@ -1035,7 +1091,7 @@ static void handleclient(u64 conn_s_p)
 			goto exit_handleclient;
 		}
 
-		if(!webman_config->netd0 && !webman_config->neth0[0]) strcpy(webman_config->neth0, ip_address); // show client IP if /net0 is empty
+		if(!webman_config->netd[0] && !webman_config->neth[0][0]) strcpy(webman_config->neth[0], ip_address); // show client IP if /net0 is empty
 		if(!webman_config->bind) strcpy(webman_config->allow_ip, ip_address);
 	}
 
@@ -1223,6 +1279,19 @@ again3:
 				send(conn_s, header, buf_len, 0);
 
 				goto exit_handleclient;
+			}
+
+			if(islike(param, "/dev_blind"))
+			{
+				// /dev_blind          auto-enable & access /dev_blind
+				// /dev_blind?         shows status of /dev_blind
+				// /dev_blind?0        mounts /dev_blind
+				// /dev_blind?enable   mounts /dev_blind
+				// /dev_blind?1        unmounts /dev_blind
+				// /dev_blind?disable  unmounts /dev_blind
+
+				is_binary = FOLDER_LISTING, small_alloc = false;
+				goto html_response;
 			}
 
  #ifdef PKG_HANDLER
@@ -1684,18 +1753,6 @@ again3:
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 
 				goto exit_handleclient;
-			}
-			if(islike(param, "/dev_blind"))
-			{
-				// /dev_blind          auto-enable & access /dev_blind
-				// /dev_blind?         shows status of /dev_blind
-				// /dev_blind?0        mounts /dev_blind
-				// /dev_blind?enable   mounts /dev_blind
-				// /dev_blind?1        unmounts /dev_blind
-				// /dev_blind?disable  unmounts /dev_blind
-
-				is_binary = FOLDER_LISTING, small_alloc = false;
-				goto html_response;
 			}
 			if(islike(param, "/netstatus.ps3"))
 			{
@@ -3062,7 +3119,7 @@ static void wwwd_thread(uint64_t arg)
 	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_64KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
 
 #ifdef PS3NET_SERVER
-	if(!webman_config->netd)
+	if(!webman_config->netsrvd)
 		sys_ppu_thread_create(&thread_id_netsvr, netsvrd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NETSVR);
 #endif
 

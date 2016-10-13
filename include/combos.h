@@ -96,11 +96,11 @@
 #ifndef LITE_EDITION
 							if(!(webman_config->combo2 & MOUNTNET0) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2))
-							{if(webman_config->netp0 && webman_config->neth0[0]) mount_with_mm((char*)"/net0", 1);} // SELECT+SQUARE+R2
+							{if(webman_config->netp[0] && webman_config->neth[0][0]) mount_with_mm((char*)"/net0", 1);} // SELECT+SQUARE+R2
 							else
 							if(!(webman_config->combo2 & MOUNTNET1) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))
-							{if(webman_config->netp1 && webman_config->neth1[0]) mount_with_mm((char*)"/net1", 1);} // SELECT+SQUARE+L2
+							{if(webman_config->netp[1] && webman_config->neth[1][0]) mount_with_mm((char*)"/net1", 1);} // SELECT+SQUARE+L2
 							else
 #endif
 							{

@@ -761,15 +761,7 @@ static int check_drive(u8 f0)
 	// is_net
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-	if(f0 == 7  && !webman_config->netd0) return FAILED; //net0
-	if(f0 == 8  && !webman_config->netd1) return FAILED; //net1
-	if(f0 == 9  && !webman_config->netd2) return FAILED; //net2
-  #ifdef NET3NET4
-	if(f0 == 10 && !webman_config->netd3) return FAILED; //net3
-	if(f0 == 11 && !webman_config->netd4) return FAILED; //net4
-  #else
-	if(f0 == 10 || f0 == 11) return FAILED;              //net3 / net4
-  #endif
+	if(f0 >= 7 && f0 <= 11 && !webman_config->netd[f0-7]) return FAILED; //net
  #else
 	if(IS_NET) return FAILED; // is_net (LITE_EDITION)
  #endif
@@ -859,7 +851,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		if(!(webman_config->cmask & BLU))   add_query_html(pbuffer, "BDISO" );
 		if(!(webman_config->cmask & DVD))   add_query_html(pbuffer, "DVDISO");
  #ifndef LITE_EDITION
-		if(webman_config->netd0 || webman_config->netd1 || webman_config->netd2 || webman_config->netd3 || webman_config->netd4) add_query_html(pbuffer, "net");
+		if(webman_config->netd[0] || webman_config->netd[1] || webman_config->netd[2] || webman_config->netd[3] || webman_config->netd[4]) add_query_html(pbuffer, "net");
  #endif
 		add_query_html(pbuffer, "hdd");
 		add_query_html(pbuffer, "usb");

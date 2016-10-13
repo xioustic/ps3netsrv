@@ -1359,36 +1359,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if( is_netsrv_enabled(netiso_svrid) )
 					{
-						if(netid == '1')
-						{
-							sprintf(_netiso_args->server, "%s", webman_config->neth1);
-							_netiso_args->port = webman_config->netp1;
-						}
-						else
-						if(netid == '2')
-						{
-							sprintf(_netiso_args->server, "%s", webman_config->neth2);
-							_netiso_args->port = webman_config->netp2;
-						}
-				#ifdef NET3NET4
-						else
-						if(netid == '3')
-						{
-							sprintf(_netiso_args->server, "%s", webman_config->neth3);
-							_netiso_args->port = webman_config->netp3;
-						}
-						else
-						if(netid == '4')
-						{
-							sprintf(_netiso_args->server, "%s", webman_config->neth4);
-							_netiso_args->port = webman_config->netp4;
-						}
-				#endif
-						else
-						{
-							sprintf(_netiso_args->server, "%s", webman_config->neth0);
-							_netiso_args->port = webman_config->netp0;
-						}
+						sprintf(_netiso_args->server, "%s", webman_config->neth[netiso_svrid]);
+						_netiso_args->port = webman_config->netp[netiso_svrid];
 					}
 					else
 					{

@@ -72,7 +72,7 @@ static void setup_parse_settings(char *param)
 #endif
 
 #ifdef COBRA_ONLY
-	webman_config->cmask=0;
+	webman_config->cmask = 0;
 	if(!strstr(param, "ps1=1")) webman_config->cmask|=PS1;
 	if(!strstr(param, "psp=1")) webman_config->cmask|=PSP;
 	if(!strstr(param, "blu=1")) webman_config->cmask|=BLU;
@@ -155,9 +155,9 @@ static void setup_parse_settings(char *param)
 	webman_config->ftp_port = get_valuen16(param, "ff=");
 	webman_config->ftp_timeout = get_valuen(param, "tm=", 0, 255); //mins
 
-	if( strstr(param, "nd=1" )) webman_config->netd = 1;
-	webman_config->netp=get_valuen16(param, "netp=");
-	if(webman_config->netp == 0) webman_config->netp = NETPORT;
+	if( strstr(param, "nd=1" )) webman_config->netsrvd = 1;
+	webman_config->netsrvp = get_valuen16(param, "netp=");
+	if(webman_config->netsrvp == 0) webman_config->netsrvp = NETPORT;
 
 #ifdef FIX_GAME
 	if(strstr(param, "fm=0")) webman_config->fixgame=FIX_GAME_AUTO;
@@ -270,62 +270,33 @@ static void setup_parse_settings(char *param)
 
 	update_language();
 #endif
-	webman_config->neth0[0] = webman_config->neth1[0] = webman_config->neth2[0] = NULL;
-	webman_config->netp0    = webman_config->netp1    = webman_config->netp2 = NETPORT;
-#ifdef NET3NET4
-	webman_config->neth3[0] = webman_config->neth4[0] = 0;
-	webman_config->netp3    = webman_config->netp4 = NETPORT;
-#endif
+
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
+	char field[8];
+	for(u8 id = 0; id < netsrvs; id++)
 	{
-		if(strstr(param, "nd0="))  webman_config->netd0 = 1;
-		if(strstr(param, "nd1="))  webman_config->netd1 = 1;
-		if(strstr(param, "nd2="))  webman_config->netd2 = 1;
-#ifdef NET3NET4
-		if(strstr(param, "nd3="))  webman_config->netd3 = 1;
-		if(strstr(param, "nd4="))  webman_config->netd4 = 1;
-#endif
-		pos = strstr(param, "neth0=");
-		if(pos)
-		{
-			get_value(webman_config->neth0, pos + 6, 16);
-			webman_config->netp0 = get_valuen16(param, "netp0=");
-		}
+		webman_config->neth[id][0] = NULL, webman_config->netp[id] = NETPORT;
 
-		pos = strstr(param, "neth1=");
-		if(pos)
-		{
-			get_value(webman_config->neth1, pos + 6, 16);
-			webman_config->netp1 = get_valuen16(param, "netp1=");
-		}
+		sprintf(field, "nd%i=", id);
+		if(strstr(param, field))  webman_config->netd[id] = 1;
 
-		pos = strstr(param, "neth2=");
+		sprintf(field, "neth%i=", id);
+		pos = strstr(param, field);
 		if(pos)
 		{
-			get_value(webman_config->neth2, pos + 6, 16);
-			webman_config->netp2 = get_valuen16(param, "netp2=");
-		}
-#ifdef NET3NET4
-		pos = strstr(param, "neth3=");
-		if(pos)
-		{
-			get_value(webman_config->neth3, pos + 6, 16);
-			webman_config->netp3 = get_valuen16(param, "netp3=");
-		}
+			get_value(webman_config->neth[id], pos + 6, 16);
 
-		pos = strstr(param, "neth4=");
-		if(pos)
-		{
-			get_value(webman_config->neth4, pos + 6, 16);
-			webman_config->netp4 = get_valuen16(param, "netp4=");
+			sprintf(field, "netp%i=", id);
+			webman_config->netp[id] = get_valuen16(param, field);
 		}
-#endif
-		pos = strstr(param, "aip=");
-		if(pos) get_value(webman_config->allow_ip, pos + 4, 16);
 	}
+
+	pos = strstr(param, "aip=");
+	if(pos) get_value(webman_config->allow_ip, pos + 4, 16);
  #endif
 #endif
+
 	pos = strstr(param, "autop=");
 	if(pos) get_value(webman_config->autoboot_path, pos + 6, 255);
 	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
@@ -558,8 +529,8 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(templn, HTML_NUMBER("tm", "%i", "0", "255") " mins<br>", webman_config->ftp_timeout); strcat(buffer, templn);
  #ifdef PS3NET_SERVER
 	sprintf(templn, "%s", STR_FTPSVC); char *pos = strcasestr(templn, "FTP"); if(pos) {pos[0] = 'N', pos[1] = 'E', pos[2] = 'T';}
-	add_check_box("nd", "1", templn,   " : ", (webman_config->netd) , buffer);
-	sprintf(templn, HTML_NUMBER("ndp", "%i", "1", "65535") "<br>", webman_config->netp); strcat(buffer, templn);
+	add_check_box("nd", "1", templn,   " : ", (webman_config->netsrvd) , buffer);
+	sprintf(templn, HTML_NUMBER("ndp", "%i", "1", "65535") "<br>", webman_config->netsrvp); strcat(buffer, templn);
  #endif
 
 #ifdef LITE_EDITION
@@ -641,24 +612,20 @@ static void setup_form(char *buffer, char *templn)
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 	//ps3netsvr settings
-	char PS3NETSRV[88]; sprintf(PS3NETSRV, " &nbsp; <a href=\"/net0\" style=\"%s\">PS3NETSRV#1 IP:</a>", HTML_URL_STYLE);
 	strcat(buffer, HTML_BLU_SEPARATOR);
-	add_check_box("nd0", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd0), buffer);
-	sprintf(templn, HTML_INPUT("neth0", "%s", "15", "16") ":" HTML_NUMBER("netp0", "%i", "1", "65535") "<br>", webman_config->neth0, webman_config->netp0); strcat(buffer, templn);
-	++PS3NETSRV[21], ++PS3NETSRV[75];
-	add_check_box("nd1", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd1), buffer);
-	sprintf(templn, HTML_INPUT("neth1", "%s", "15", "16") ":" HTML_NUMBER("netp1", "%i", "1", "65535") "<br>", webman_config->neth1, webman_config->netp1); strcat(buffer, templn);
-	++PS3NETSRV[21], ++PS3NETSRV[75];
-	add_check_box("nd2", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd2), buffer);
-	sprintf(templn, HTML_INPUT("neth2", "%s", "15", "16") ":" HTML_NUMBER("netp2", "%i", "1", "65535") "<br>", webman_config->neth2, webman_config->netp2); strcat(buffer, templn);
-  #ifdef NET3NET4
-	++PS3NETSRV[21], ++PS3NETSRV[75];
-	add_check_box("nd3", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd3), buffer);
-	sprintf(templn, HTML_INPUT("neth3", "%s", "15", "16") ":" HTML_NUMBER("netp3", "%i", "1", "65535") "<br>", webman_config->neth3, webman_config->netp3); strcat(buffer, templn);
-	++PS3NETSRV[21], ++PS3NETSRV[75];
-	add_check_box("nd4", "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd4), buffer);
-	sprintf(templn, HTML_INPUT("neth4", "%s", "15", "16") ":" HTML_NUMBER("netp4", "%i", "1", "65535") "<br>", webman_config->neth4, webman_config->netp4); strcat(buffer, templn);
-  #endif
+	char _nd[4], _neth[6], _netp[6], PS3NETSRV[88];
+	sprintf(PS3NETSRV, " &nbsp; <a href=\"/net0\" style=\"%s\">PS3NETSRV#1 IP:</a>", HTML_URL_STYLE);
+
+	for(u8 id = 0; id < netsrvs; id++)
+	{
+		sprintf(_nd, "nd%i", id); sprintf(_neth, "neth%i", id); sprintf(_netp, "netp%i", id);
+
+		add_check_box(_nd, "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd[id]), buffer);
+		sprintf(templn, HTML_INPUT("%s", "%s", "15", "16") ":" HTML_NUMBER("%s", "%i", "1", "65535") "<br>",
+				_neth, webman_config->neth[id],
+				_netp, webman_config->netp[id]); strcat(buffer, templn);
+		++PS3NETSRV[21], ++PS3NETSRV[75];
+	}
  #endif
 #endif
 
@@ -1006,6 +973,8 @@ static void reset_settings(void)
 {
 	memset(webman_config, 0, sizeof(WebmanCfg));
 
+	webman_config->version = 0x1337;
+
 	webman_config->usb0 = 1;
 	webman_config->usb1 = 1;
 	//webman_config->usb2 = 0;
@@ -1054,9 +1023,7 @@ static void reset_settings(void)
 
 	webman_config->ftp_port = FTPPORT;
 
-	//webman_config->netd0    = webman_config->netd1    = webman_config->netd2    = webman_config->netd3    = webman_config->netd4    = 0;
-	//webman_config->neth0[0] = webman_config->neth1[0] = webman_config->neth2[0] = webman_config->neth3[0] = webman_config->neth4[0] = NULL;
-	webman_config->netp = webman_config->netp0 = webman_config->netp1 = webman_config->netp2 = webman_config->netp3 = webman_config->netp4 = NETPORT;
+	for(u8 id = 0; id < 5; id++) webman_config->netp[id] = NETPORT; // webman_config->netd[id] = 0; webman_config->neth[id][0] = NULL;
 
 	webman_config->foot    = 1;       //MIN
 	webman_config->nospoof = 1;       //don't spoof fw version

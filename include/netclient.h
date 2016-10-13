@@ -1,6 +1,12 @@
 #ifndef LITE_EDITION
 #ifdef COBRA_ONLY
 
+#ifdef NET3NET4
+	const u8 netsrvs = 5;
+#else
+	const u8 netsrvs = 3;
+#endif
+
 typedef struct _netiso_args
 {
 	char server[0x40];
@@ -568,14 +574,7 @@ static void netiso_stop_thread(uint64_t arg)
 
 static bool is_netsrv_enabled(u8 server_id)
 {
-	return( (server_id == 0 && ((webman_config->netd0 == 1) && webman_config->neth0[0] && webman_config->netp0))
-		||	(server_id == 1 && ((webman_config->netd1 == 1) && webman_config->neth1[0] && webman_config->netp1))
-		||	(server_id == 2 && ((webman_config->netd2 == 1) && webman_config->neth2[0] && webman_config->netp2))
-#ifdef NET3NET4
-		||	(server_id == 3 && ((webman_config->netd3 == 1) && webman_config->neth3[0] && webman_config->netp3))
-		||	(server_id == 4 && ((webman_config->netd4 == 1) && webman_config->neth4[0] && webman_config->netp4))
-#endif
-		  );
+	return( (webman_config->netd[server_id] == 1) && webman_config->neth[server_id][0] && webman_config->netp[server_id] );
 }
 
 static int connect_to_remote_server(u8 server_id)
@@ -585,31 +584,15 @@ static int connect_to_remote_server(u8 server_id)
 	if( is_netsrv_enabled(server_id) )
 	{
 		// check duplicated connections
-		if(server_id == 1 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth1) && webman_config->netp0 == webman_config->netp1) return FAILED;
+		for(u8 n = 0; n < server_id; n++)
+			if((webman_config->netd[n] == 1) && IS(webman_config->neth[n], webman_config->neth[server_id]) && webman_config->netp[n] == webman_config->netp[server_id]) return FAILED;
 
-		if(server_id == 2 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth2) && webman_config->netp0 == webman_config->netp2) return FAILED;
-		if(server_id == 2 && (webman_config->netd1 == 1) && IS(webman_config->neth1, webman_config->neth2) && webman_config->netp1 == webman_config->netp2) return FAILED;
-#ifdef NET3NET4
-		if(server_id == 3 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth3) && webman_config->netp0 == webman_config->netp3) return FAILED;
-		if(server_id == 3 && (webman_config->netd1 == 1) && IS(webman_config->neth1, webman_config->neth3) && webman_config->netp1 == webman_config->netp3) return FAILED;
-		if(server_id == 3 && (webman_config->netd2 == 1) && IS(webman_config->neth2, webman_config->neth3) && webman_config->netp2 == webman_config->netp3) return FAILED;
-
-		if(server_id == 4 && (webman_config->netd0 == 1) && IS(webman_config->neth0, webman_config->neth4) && webman_config->netp0 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && (webman_config->netd1 == 1) && IS(webman_config->neth1, webman_config->neth4) && webman_config->netp1 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && (webman_config->netd2 == 1) && IS(webman_config->neth2, webman_config->neth4) && webman_config->netp2 == webman_config->netp4) return FAILED;
-		if(server_id == 4 && (webman_config->netd3 == 1) && IS(webman_config->neth3, webman_config->neth4) && webman_config->netp3 == webman_config->netp4) return FAILED;
-#endif
 		u8 retries = 0;
 
 	reconnect:
-		if(server_id == 0) ns = connect_to_server(webman_config->neth0, webman_config->netp0);
-		if(server_id == 1) ns = connect_to_server(webman_config->neth1, webman_config->netp1);
-		if(server_id == 2) ns = connect_to_server(webman_config->neth2, webman_config->netp2);
-#ifdef NET3NET4
-		if(server_id == 3) ns = connect_to_server(webman_config->neth3, webman_config->netp3);
-		if(server_id == 4) ns = connect_to_server(webman_config->neth4, webman_config->netp4);
-#endif
-		if(ns<0)
+		ns = connect_to_server(webman_config->neth[server_id], webman_config->netp[server_id]);
+
+		if(ns < 0)
 		{
 			if(retries < MAX_RETRIES)
 			{
@@ -618,11 +601,11 @@ static int connect_to_remote_server(u8 server_id)
 				goto reconnect;
 			}
 
-			// retry using IP of client (/net0 only) - update IP in neth0 if connection is successful
-			if(server_id == 0 && webman_config->netd0 && !IS(webman_config->allow_ip, webman_config->neth1) && !IS(webman_config->allow_ip, webman_config->neth2))
+			// retry using IP of client (/net0 only) - update IP in neth[0] if connection is successful
+			if(server_id == 0 && webman_config->netd[0] && !IS(webman_config->allow_ip, webman_config->neth[1]) && !IS(webman_config->allow_ip, webman_config->neth[2]))
 			{
-				ns = connect_to_server(webman_config->allow_ip, webman_config->netp0);
-				if(ns >= 0) strcpy(webman_config->neth0, webman_config->allow_ip);
+				ns = connect_to_server(webman_config->allow_ip, webman_config->netp[0]);
+				if(ns >= 0) strcpy(webman_config->neth[0], webman_config->allow_ip);
 			}
 		}
 	}
