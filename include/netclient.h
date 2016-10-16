@@ -574,7 +574,7 @@ static void netiso_stop_thread(uint64_t arg)
 
 static bool is_netsrv_enabled(u8 server_id)
 {
-	return( (webman_config->netd[server_id] == 1) && webman_config->neth[server_id][0] && webman_config->netp[server_id] );
+	return( (webman_config->netd[server_id] == 1) && (webman_config->neth[server_id][0] != NULL) && (webman_config->netp[server_id] > 0) && !islike(webman_config->neth[server_id], "127.") && !islike(webman_config->neth[server_id], "localhost"));
 }
 
 static int connect_to_remote_server(u8 server_id)

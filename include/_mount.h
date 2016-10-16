@@ -1104,7 +1104,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					uint64_t msiz = read_file(_path, sprx_data, _64KB_, 0);
 					if(msiz > _4KB_)
 					{
-						do_umount(false);
+						do_umount(false); if(!extcmp(_path, ".ntfs[PSXISO]", 13)) {mount_unk = EMU_PSX; select_ps1emu();}
 
 						if(cobra_load_vsh_plugin(0, (char*)raw_iso_sprx[n], (u8*)sprx_data, msiz) != CELL_OK) ret = false;
 
@@ -1239,7 +1239,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		// ----------
 		if(!isDir(_path))
 		{
-			if( strstr(_path, "/PSXISO") || strstr(_path, "/PSXGAMES") || !extcmp(_path, ".ntfs[PSXISO]", 13) || mount_unk == EMU_PSX) select_ps1emu();
+			if( strstr(_path, "/PSXISO") || strstr(_path, "/PSXGAMES") || !extcmp(_path, ".ntfs[PSXISO]", 13) || mount_unk == EMU_PSX) {mount_unk = EMU_PSX; select_ps1emu();}
 
 			//if(_next || _prev)
 				sys_timer_sleep(1);
@@ -2000,7 +2000,7 @@ exit_mount:
 
 	if(!ret && !isDir("/dev_bdvd")) {char msg[MAX_PATH_LEN]; sprintf(msg, "%s %s", STR_ERROR, _path); show_msg(msg);}
 #ifdef REMOVE_SYSCALLS
-	else
+	else if(mount_unk != EMU_PSX)
 	{
 		CellPadData pad_data = pad_read();
 		bool otag = (strcasestr(_path, ONLINE_TAG)!=NULL);

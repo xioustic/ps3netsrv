@@ -213,12 +213,14 @@ static int build_fake_iso(char *iso_path, char *src_path, int ioType, char *file
 {
 	int type = EMU_BD;
 
+	if(file_exists(src_path) == false) return FAILED;
+
+	int iso_path_len = strlen(iso_path) - 4; if(iso_path_len < 0) return FAILED;
+
 	uint8_t *plugin_args = malloc(0x20000);
 
 	if(plugin_args)
 	{
-		if(file_exists(src_path) == false) return FAILED;
-
 		u64 size;
 		size = get_filesize(src_path);
 
@@ -226,11 +228,11 @@ static int build_fake_iso(char *iso_path, char *src_path, int ioType, char *file
 		sprintf(filename, "%s", get_filename(src_path));;
 		create_fake_file_iso(iso_path, filename, size);
 
-		if(file_exists(iso_path) == false) return FAILED;
+		if(file_exists(iso_path) == false) {free(plugin_args); return FAILED;}
 
 		int r = FAILED;
 
-		uint32_t *sections	  = malloc(MAX_SECTIONS * sizeof(uint32_t));
+		uint32_t *sections      = malloc(MAX_SECTIONS * sizeof(uint32_t));
 		uint32_t *sections_size = malloc(MAX_SECTIONS * sizeof(uint32_t));
 
 		if(plugin_args && sections && sections_size)
@@ -268,12 +270,12 @@ static int build_fake_iso(char *iso_path, char *src_path, int ioType, char *file
 				memcpy(plugin_args + sizeof(rawseciso_args) + (parts*sizeof(uint32_t) + 0x200), sections_size, parts * sizeof(uint32_t));
 
 				// save sectors file
-				iso_path[strlen(iso_path)-4]=0; strcat(iso_path, file_ext);
+				iso_path[iso_path_len] = 0; strcat(iso_path, file_ext);
 
 				int fd = ps3ntfs_open(iso_path, O_WRONLY | O_CREAT | O_TRUNC, 0777);
 				if(fd >= 0)
 				{
-					if(ps3ntfs_write(fd, (void *) plugin_args, 0x10000)==0x10000) r = SUCCESS;
+					if(ps3ntfs_write(fd, (void *) plugin_args, 0x10000) == 0x10000) r = SUCCESS;
 					ps3ntfs_close(fd);
 				}
 			}
@@ -301,7 +303,7 @@ static int build_fake_iso(char *iso_path, char *src_path, int ioType, char *file
 			}
 		}
 
-		if(r==0) return SUCCESS;
+		if(r == 0) return SUCCESS;
 
 	}
 

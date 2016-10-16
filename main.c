@@ -1338,7 +1338,10 @@ again3:
 				// /install.ps3<pkg-path>  (see pkg_handler.h for details)
 				// /install.ps3<pkg-path>? conditional install
 				// /install_ps3<pkg-path>  install & keep pkg
-				// /install.ps3?url=<url>  download & auto-install pkg
+				// /install.ps3?url=<url>  download, auto-install pkg & delete pkg
+				// /install_ps3?url=<url>  download, auto-install pkg & keep pkg in /dev_hdd0/packages
+				// /install.ps3<pkg-path>?restart.ps3
+				// /install.ps3?url=<url>?restart.ps3
 
 				size_t last_char = strlen(param) - 1;
 				if(param[last_char] == '?')
@@ -1853,8 +1856,13 @@ again3:
 				// /rename.ps3<path>|<target>     rename <path> to <target>
 				// /rename.ps3<path>&to=<target>  rename <path> to <target>
 				// /rename.ps3<path>.bak          removes .bak extension
+				// /rename.ps3<path>.bak          removes .bak extension
+				// /rename.ps3<path>|<target>?restart.ps3
+				// /rename.ps3<path>&to=<target>?restart.ps3
 				// /swap.ps3<file1>|<file2>       swap <file1> & <file2>
 				// /swap.ps3<file1>&to=<file2>    swap <file1> & <file2>
+				// /swap.ps3<file1>|<file2>?restart.ps3
+				// /swap.ps3<file1>&to=<file2>?restart.ps3
 
 				size_t cmd_len = islike(param, "/swap.ps3") ? 9 : 11;
 
@@ -2572,7 +2580,8 @@ again3:
 
 					if(islike(param, "/refresh.ps3") && refreshing_xml == 0)
 					{
-						// /refresh.ps3   refresh XML
+						// /refresh.ps3               refresh XML
+						// /refresh.ps3?cover=<mode>  refresh XML using cover type (icon0, mm, disc, online)
 
 						refresh_xml(templn);
  #ifndef ENGLISH_ONLY
@@ -2763,6 +2772,9 @@ again3:
 					{
 						// /delete_ps3<path>      deletes <path>
 						// /delete.ps3<path>      deletes <path> and recursively delete subfolders
+						// /delete_ps3<path>?restart.ps3
+						// /delete.ps3<path>?restart.ps3
+
 						// /delete.ps3?wmreset    deletes wmconfig & clear /dev_hdd0/tmp/wmtmp
 						// /delete.ps3?wmconfig   deletes wmconfig
 						// /delete.ps3?wmtmp      clear /dev_hdd0/tmp/wmtmp
@@ -2948,6 +2960,7 @@ again3:
 						// /mount.ps2/<path>[?random=<x>]
 						// /mount.ps2/unmount
 						// /copy.ps3/<path>[&to=<destination>]
+						// /copy.ps3/<path>[&to=<destination>]?restart.ps3
 
 						game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount);
 					}
@@ -2961,6 +2974,7 @@ again3:
 						// /index.ps3?<query>          search game by device name, path or name of game
 						// /index.ps3?<device>?<name>  search game by device name and name
 						// /index.ps3?<query>&mobile   search game by device name, path or name of game in slider mode
+						// /index.ps3?cover=<mode>     refresh game list in HTML using cover type (icon0, mm, disc, online)
 
 						mobile_mode |= ((strstr(param, "?mob") != NULL) || (strstr(param, "&mob") != NULL));
 #ifdef LAUNCHPAD

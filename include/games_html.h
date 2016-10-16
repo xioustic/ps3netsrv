@@ -680,23 +680,23 @@ static void add_launchpad_extras(char *tempstr, char *url)
 	char icon_url[MAX_PATH_LEN]; *icon_url = NULL;
 
 	// --- launchpad extras
-	sprintf(url, "http://%s/setup.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1001);
-
 	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
 	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1002);
 
-	sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Clear Recently Played", url, (char*)"clear.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1003);
+	sprintf(url, "http://%s/setup.ps3", local_ip);
+	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1001);
+
+	//sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
+	//add_launchpad_entry(tempstr, (char*)"Clear Recently Played", url, (char*)"clear.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1003);
 
 	sprintf(url, "http://%s/index.ps3?launchpad", local_ip);
 	add_launchpad_entry(tempstr, (char*)"Refresh LaunchPad", url, (char*)"refresh.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1004);
 
-	sprintf(url, "http://%s/restart.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Restart PS3", url, (char*)"restart.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1005);
+	//sprintf(url, "http://%s/restart.ps3", local_ip);
+	//add_launchpad_entry(tempstr, (char*)"Restart PS3", url, (char*)"restart.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1005);
 
-	sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
-	add_launchpad_entry(tempstr, (char*)"Clear LaunchPad Cache", url, (char*)"cache.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1006);
+	//sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
+	//add_launchpad_entry(tempstr, (char*)"Clear LaunchPad Cache", url, (char*)"cache.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1006);
 }
 
 static void add_launchpad_footer(char *tempstr)
@@ -761,7 +761,7 @@ static int check_drive(u8 f0)
 	// is_net
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-	if(f0 >= 7 && f0 <= 11 && !webman_config->netd[f0-7]) return FAILED; //net
+	if(((f0 >= 7) && (f0 <= 11)) && !is_netsrv_enabled(f0 - 7)) return FAILED; //net
  #else
 	if(IS_NET) return FAILED; // is_net (LITE_EDITION)
  #endif
@@ -1298,6 +1298,7 @@ next_html_entry:
 		{
 			del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
 			add_launchpad_header();
+			add_launchpad_extras(tempstr, templn);
 		}
 		else
 #endif
@@ -1348,7 +1349,6 @@ next_html_entry:
 				}
 				cellFsClose(fd);
 			}
-			add_launchpad_extras(tempstr, templn);
 			add_launchpad_footer(tempstr);
 
 			loading_games = 0;
