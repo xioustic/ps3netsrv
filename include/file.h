@@ -17,6 +17,7 @@ static u32 copied_count = 0;
 #define SAVE_ALL			0
 #define APPEND_TEXT			(-0xADD0ADD0ADD000ALL)
 #define DONT_CLEAR_DATA		-1
+#define RECURSIVE_DELETE	2
 
 static int sysLv2FsLink(const char *oldpath, const char *newpath)
 {
@@ -313,14 +314,14 @@ static int folder_copy(const char *path1, char *path2)
 
 	copy_aborted = false;
 
-	if(cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
+	if(working && cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
 		CellFsDirent dir; u64 read_e;
 
 		char source[MAX_PATH_LEN];
 		char target[MAX_PATH_LEN];
 
-		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(copy_aborted) break;
 			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == NULL)) continue;
@@ -348,8 +349,11 @@ static int folder_copy(const char *path1, char *path2)
 #endif
 
 #ifndef LITE_EDITION
-static int del(const char *path, bool recursive)
+static int del(const char *path, u8 recursive)
 {
+	if(recursive == RECURSIVE_DELETE) ; else
+	if(!sys_admin) return FAILED;
+
 	if(!isDir(path)) return cellFsUnlink(path);
 
 	if(strlen(path) < 11 || islike(path, "/dev_bdvd") || islike(path, "/dev_flash") || islike(path, "/dev_blind")) return FAILED;
@@ -358,13 +362,13 @@ static int del(const char *path, bool recursive)
 
 	copy_aborted = false;
 
-	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
+	if(working && cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
 		CellFsDirent dir; u64 read_e;
 
 		char entry[MAX_PATH_LEN];
 
-		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(copy_aborted) break;
 			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == NULL)) continue;
@@ -392,16 +396,18 @@ static int del(const char *path, bool recursive)
 int waitfor(const char *path, uint8_t timeout)
 {
 	struct CellFsStat s;
-	for(uint8_t n = 0; n < (timeout * 5); n++)
+	for(uint8_t n = 0; n < (timeout * 4); n++)
 	{
 		if(*path && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return CELL_FS_SUCCEEDED;
-		sys_timer_usleep(200000); if(!working) break;
+		if(!working) break; sys_timer_usleep(250000);
 	}
 	return FAILED;
 }
 
 static void enable_dev_blind(const char *msg)
 {
+	if(!sys_admin) return;
+
 	if(!isDir("/dev_blind"))
 		{system_call_8(SC_FS_MOUNT, (u64)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (u64)(char*)"CELL_FS_FAT", (u64)(char*)"/dev_blind", 0, 0, 0, 0, 0);}
 
@@ -458,7 +464,7 @@ static void delete_history(bool delete_folders)
 	{
 		CellFsDirent dir; u64 read_e;
 
-		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/boot_history.dat");
 			unlink_file("/dev_hdd0/home", dir.d_name, "/etc/community/CI.TMP");
@@ -471,7 +477,7 @@ static void delete_history(bool delete_folders)
 	unlink_file("/dev_hdd0", "vsh/pushlist/", "game.dat");
 	unlink_file("/dev_hdd0", "vsh/pushlist/", "patch.dat");
 
-	if(!delete_folders) return;
+	if(!delete_folders || !working) return;
 
 	for(u8 p = 0; p < 10; p++)
 	{
@@ -500,7 +506,7 @@ static void import_edats(const char *path1, const char *path2)
 		char source[MAX_PATH_LEN];
 		char target[MAX_PATH_LEN];
 
-		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(copy_aborted) break;
 			if((strstr(dir.d_name, ".edat") == NULL) || !extcmp(dir.d_name, ".bak", 4)) continue;

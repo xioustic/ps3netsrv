@@ -79,7 +79,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	get_idps_psid();
 #endif
 
-	sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);
+	if(sys_admin) {sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);}
 
 	if(IS_INGAME)
 	{
@@ -87,15 +87,19 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 		if(strlen(_game_TitleID) == 9)
 		{
+			if(sys_admin)
+			{
 #ifdef GET_KLICENSEE
-			buffer += concat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
+				buffer += concat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
 #endif
 #ifdef SYS_BGM
-			buffer += concat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
+				buffer += concat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
 #endif
 #ifdef VIDEO_REC
-			buffer += concat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
+				buffer += concat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
 #endif
+			}
+
 			char path[MAX_PATH_LEN], version[8] = "01.00", *app_ver = version;
 
 			sprintf(templn, "<hr><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); buffer += concat(buffer, templn);
@@ -242,32 +246,35 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	}
 
 	// Get mac address [0xD-0x12]
-	u8 mac_address[0x13];
-	{system_call_3(SYS_NET_EURUS_POST_COMMAND, CMD_GET_MAC_ADDRESS, (u64)(u32)mac_address, 0x13);}
+	if(sys_admin)
+	{
+		u8 mac_address[0x13];
+		{system_call_3(SYS_NET_EURUS_POST_COMMAND, CMD_GET_MAC_ADDRESS, (u64)(u32)mac_address, 0x13);}
 
-	char *cfw_info = param;
-	get_cobra_version(cfw_info);
+		char *cfw_info = param;
+		get_cobra_version(cfw_info);
 
-	char net_type[8] = "", ip[ip_size] = "-";
-	get_net_info(net_type, ip);
+		char net_type[8] = "", ip[ip_size] = "-";
+		get_net_info(net_type, ip);
 
-	sprintf( templn, "<hr></font><h2><a class=\"s\" href=\"/setup.ps3\">"
-						"Firmware : %s %s<br>"
-						"%s<br>"
+		sprintf( templn, "<hr></font><h2><a class=\"s\" href=\"/setup.ps3\">"
+							"Firmware : %s %s<br>"
+							"%s<br>"
 #ifdef SPOOF_CONSOLEID
 						"PSID LV2 : %016llX%016llX<hr>"
 						"IDPS EID0: %016llX%016llX<br>"
 						"IDPS LV2 : %016llX%016llX<br>"
 #endif
 						"MAC Addr : %02X:%02X:%02X:%02X:%02X:%02X - %s %s</h2></a></b>",
-					fw_version, cfw_info,
-					(syscalls_removed) ? STR_CFWSYSALRD : "",
+						fw_version, cfw_info,
+						(syscalls_removed) ? STR_CFWSYSALRD : "",
 #ifdef SPOOF_CONSOLEID
-					PSID[0], PSID[1],
-					eid0_idps[0], eid0_idps[1],
-					IDPS[0], IDPS[1],
+						PSID[0], PSID[1],
+						eid0_idps[0], eid0_idps[1],
+						IDPS[0], IDPS[1],
 #endif
-					mac_address[13], mac_address[14], mac_address[15], mac_address[16], mac_address[17], mac_address[18], ip, net_type); buffer += concat(buffer, templn);
+						mac_address[13], mac_address[14], mac_address[15], mac_address[16], mac_address[17], mac_address[18], ip, net_type); buffer += concat(buffer, templn);
+	}
 
 	/////////////////////////////
 #ifdef COPY_PS3

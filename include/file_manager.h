@@ -122,6 +122,12 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			{
 				sprintf(fsize, HTML_URL2, templn, "?0", HTML_DIR);
 			}
+#ifndef LITE_EDITION
+			else if(sys_admin && IS(templn, "/dev_flash"))
+			{
+				sprintf(fsize, HTML_URL2, "/dev_blind", "?1", HTML_DIR);
+			}
+#endif
 			else if(show_play && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")))
 			{
 				sprintf(fsize, HTML_URL, "/play.ps3", "&lt;Play>");
@@ -400,7 +406,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 	CellRtcDateTime rDate;
 
-	if(islike(param, "/dev_blind?"))
+	if(sys_admin && islike(param, "/dev_blind?"))
 	{
 		if( param[11] & 1) enable_dev_blind(NO_MSG); else //enable
 		if(~param[11] & 1) disable_dev_blind();           //disable
@@ -592,7 +598,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		{
 			CellFsDirent entry; u64 read_e;
 
-			while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+			while(working && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 			{
 				if(entry.d_name[0] == '.' && entry.d_name[1] == 0) continue;
 				if(tlen > BUFFER_SIZE_HTML) break;
@@ -810,7 +816,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				u8 n, m;
 				for(n = 0; n < MAX_LAST_GAMES; n++)
 				{
-					if(file_exists(lastgames.game[n]) == false) *lastgames.game[n] = NULL;
+					if(lastgames.game[n][1] != 'n' && file_exists(lastgames.game[n]) == false) *lastgames.game[n] = NULL;
 				}
 
 				for(n = 0; n < (MAX_LAST_GAMES - 1); n++)
@@ -824,7 +830,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				for(n = 0; n < MAX_LAST_GAMES; n++)
 				{
-					if(*lastgames.game[n]) {sprintf(tempstr, "<a class=\"%c\" href=\"/mount.ps3%s\">%s</a><br>", isDir(lastgames.game[n]) ? 'd' : 'w', lastgames.game[n], strrchr(lastgames.game[n], '/') + 1); buffer += concat(buffer, tempstr);}
+					if(*lastgames.game[n]) {sprintf(tempstr, "<a class=\"%c\" href=\"/mount.ps3%s\">%s</a><br>", (isDir(lastgames.game[n]) || strstr(lastgames.game[n], "/GAME")) ? 'd' : 'w', lastgames.game[n], strrchr(lastgames.game[n], '/') + 1); buffer += concat(buffer, tempstr);}
 				}
 			}
 			strcat(buffer, "</div></a>");

@@ -206,7 +206,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 		uint32_t sector;
 		uint32_t r;
 
-		if(!ntfs_running) return FAILED;
+		if(!ntfs_running || !working) return FAILED;
 
 		get_next_read(offset, remaining, &pos, &readsize, &idx, size_sector);
 
@@ -263,7 +263,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 					}
 
 
-					if(x == 15 || !ntfs_running)
+					if(x == 15 || !ntfs_running || !working)
 					{
 						//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 						return FAILED;
@@ -325,7 +325,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 							x= -1; continue;
 						}
 
-						if(x == 15 || !ntfs_running)
+						if(x == 15 || !ntfs_running || !working)
 						{
 							//DPRINTF("sys_storage_read failed: %x %x -> %x\n", sector, n, ret);
 							return FAILED;
@@ -386,7 +386,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 							x= -1; continue;
 						}
 
-						if(x == 15 || !ntfs_running)
+						if(x == 15 || !ntfs_running || !working)
 						{
 							//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 							return FAILED;
@@ -1099,7 +1099,7 @@ static void rawseciso_thread(uint64_t arg)
 
 	rawseciso_loaded = ntfs_running = 1;
 
-	while(ntfs_running)
+	while(working && ntfs_running)
 	{
 		sys_event_t event;
 
@@ -1107,7 +1107,7 @@ static void rawseciso_thread(uint64_t arg)
 
 		if(command_queue_ntfs == (sys_event_queue_t)-1)
 		{
-			if(!ntfs_running) break;
+			if(!ntfs_running || !working) break;
 
 			sys_timer_usleep(100000);
 
@@ -1119,7 +1119,7 @@ static void rawseciso_thread(uint64_t arg)
 		{
 			if((command_queue_ntfs == (sys_event_queue_t)-1 || eject_running == 2) && ret !=0)
 			{
-				if(!ntfs_running) break;
+				if(!ntfs_running || !working) break;
 
 				sys_timer_usleep(100000);
 
@@ -1130,7 +1130,7 @@ static void rawseciso_thread(uint64_t arg)
 			break;
 		}
 
-		if(!ntfs_running) break;
+		if(!ntfs_running || !working) break;
 
 		do_run = 1;
 
@@ -1196,7 +1196,7 @@ static void rawseciso_thread(uint64_t arg)
 			break;
 		}
 
-		while(ntfs_running)
+		while(working && ntfs_running)
 		{
 			ret = sys_event_port_send(result_port, ret, 0, 0);
 			if(ret == 0) break;

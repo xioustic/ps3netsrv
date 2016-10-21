@@ -552,7 +552,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							CellFsDirent entry; u64 read_e;
 							u16 slen; mode_t mode; char dirtype[2]; dirtype[1] = NULL;
 
-							while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+							while(working && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 #endif
 							{
 								if(*wcard && strcasestr(entry.d_name, wcard) == NULL) continue;
@@ -706,15 +706,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 									rest = 0;
 
-									//int optval = buffer_size;
-									//setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
+									int optval = buffer_size;
+									setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 									err = CELL_FS_OK;
 
 									while(working)
 									{
-										//sys_timer_usleep(1668);
 										if(cellFsRead(fd, (void *)buffer2, buffer_size, &read_e) == CELL_FS_SUCCEEDED)
 										{
 											if(read_e > 0)
@@ -860,12 +859,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
-									//int optval = buffer_size;
-									//setsockopt(data_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
+									int optval = buffer_size;
+									setsockopt(data_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
 
 									while(working)
 									{
-										//sys_timer_usleep(1668);
 										if((read_e = (u64)recv(data_s, buffer2, buffer_size, MSG_WAITALL)) > 0)
 										{
 											if(cellFsWrite(fd, buffer2, read_e, NULL) != CELL_FS_SUCCEEDED) {err = FAILED; break;}
@@ -1118,7 +1116,7 @@ relisten:
 			int conn_s_ftp;
 			if(!working) break;
 			else
-			if(working &&(conn_s_ftp = accept(list_s, NULL, NULL)) > 0)
+			if(sys_admin && ((conn_s_ftp = accept(list_s, NULL, NULL)) > 0))
 			{
 				sys_ppu_thread_t t_id;
 				if(working) sys_ppu_thread_create(&t_id, handleclient_ftp, (u64)conn_s_ftp, THREAD_PRIO_FTP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTPD);

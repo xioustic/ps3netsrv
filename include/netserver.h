@@ -211,7 +211,7 @@ static int process_read_file_critical(u8 index, netiso_read_file_critical_cmd *c
 			cellFsRead(clients[index].fd, &buffer, read_size, &bytes_read);
 		///////////////
 
-		if(bytes_read <= 0)
+		if(!working || (bytes_read <= 0))
 		{
 			return FAILED;
 		}
@@ -252,6 +252,8 @@ static int process_read_cd_2048_critical_cmd(u8 index, netiso_read_cd_2048_criti
 	for( ; remaining > 0; remaining--)
 	{
 		///////////////
+		if(!working) return FAILED;
+
 		if(cellFsRead(fd, &buffer, clients[index].CD_SECTOR_SIZE_2352, &bytes_read) != CELL_FS_SUCCEEDED)
 		{
 			return FAILED;
@@ -506,7 +508,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 
 	for(u8 i = 0; i < 16; i++)
 	{
-		if(count >= max_entries) break;
+		if(count >= max_entries || !working) break;
 
 		if(i == 7) i = NTFS + 1; // skip range from /net0 to /ext
 
@@ -518,7 +520,7 @@ static int process_read_dir_cmd(u8 index, netiso_read_dir_entry_cmd *cmd)
 
 		dirpath_len = strlen(dirpath);
 
-		while((cellFsReaddir(dir, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(dir, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(entry.d_name[0] == '.' && (entry.d_name[1] == '.' || entry.d_name[1] == 0)) continue;
 

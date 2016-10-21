@@ -106,7 +106,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.45.00 MOD"						// webMAN version
+#define WM_VERSION			"1.45.01 MOD"						// webMAN version
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -190,6 +190,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define THREAD_NAME_NTFS		"ntfsd"
 #define THREAD_NAME_PSX_EJECT	"ntfsd_eject"
 #define THREAD_NAME_POLL		"poll_thread"
+#define THREAD_NAME_INSTALLPKG	"install_pkg"
 #define THREAD_NAME_NETSVR		"netsvr"
 #define THREAD_NAME_NETSVRD		"netsvrd"
 
@@ -345,13 +346,13 @@ typedef struct {
 	uint32_t avail;
 } _meminfo;
 
-static u8 profile = 0;
+static uint8_t profile = 0;
 
-static u8 loading_html = 0;
-static u8 refreshing_xml = 0;
+static uint8_t loading_html = 0;
+static uint8_t refreshing_xml = 0;
 
 #ifdef SYS_BGM
-static u8 system_bgm = 0;
+static uint8_t system_bgm = 0;
 #endif
 
 #define NTFS 		 	(12)
@@ -366,20 +367,27 @@ static bool do_restart = false;
  static char debug[256];
 #endif
 
-static volatile u8 wm_unload_combo = 0;
-static volatile u8 working = 1;
-static u8 max_mapped = 0;
+static volatile uint8_t wm_unload_combo = 0;
+static volatile uint8_t working = 1;
+static uint8_t max_mapped = 0;
 
 #ifdef COBRA_ONLY
- static const u8 cobra_mode = 1;
+ static const uint8_t cobra_mode = 1;
 #else
- static const u8 cobra_mode = 0;
+ static const uint8_t cobra_mode = 0;
 #endif
 
 static bool syscalls_removed = false;
 
 static float c_firmware = 0.0f;
-static u8 dex_mode = 0;
+static uint8_t dex_mode = 0;
+
+#ifdef SYS_ADMIN_MODE
+static uint8_t sys_admin = 0;
+static uint8_t pwd_tries = 0;
+#else
+static uint8_t sys_admin = 1;
+#endif
 
 #ifdef OFFLINE_INGAME
 static int32_t net_status = -1;
@@ -461,10 +469,11 @@ typedef struct
 	uint8_t boots;
 	uint8_t nospoof;
 	uint8_t blind;
-	uint8_t spp;  //disable syscalls, offline: lock PSN, offline ingame
-	uint8_t noss; //no singstar
+	uint8_t spp;    //disable syscalls, offline: lock PSN, offline ingame
+	uint8_t noss;   //no singstar
+	uint8_t nosnd0; //no snd0.at3
 
-	uint8_t padding3[6];
+	uint8_t padding3[5];
 
 	// fan control settings
 
@@ -526,18 +535,21 @@ typedef struct
 
 	uint8_t profile;
 	char uaccount[9];
+	uint8_t admin_mode;
 
-	uint8_t padding10[6];
+	uint8_t padding10[5];
 
 	// misc settings
 
 	uint8_t default_restart;
-	uint8_t poll; // poll usb / auto-poweroff
+	uint8_t poll; // poll usb
 
 	uint32_t rec_video_format;
 	uint32_t rec_audio_format;
 
-	uint8_t padding12[6];
+	uint8_t auto_power_off; // 0 = prevent auto power off on ftp, 1 = allow auto power off on ftp (also on install.ps3, download.ps3)
+
+	uint8_t padding12[5];
 
 	uint8_t homeb;
 	char home_url[255];
@@ -556,7 +568,7 @@ typedef struct
 	uint8_t padding13[34];
 } /*__attribute__((packed))*/ WebmanCfg;
 
-static u8 wmconfig[sizeof(WebmanCfg)];
+static uint8_t wmconfig[sizeof(WebmanCfg)];
 static WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
 
 static int save_settings(void);
@@ -577,7 +589,7 @@ static int save_settings(void);
 static CellRtcTick rTick, gTick;
 
 #ifdef GET_KLICENSEE
-int npklic_struct_offset = 0; u8 klic_polling = 0;
+int npklic_struct_offset = 0; uint8_t klic_polling = 0;
 
 #define KLICENSEE_SIZE          0x10
 #define KLICENSEE_OFFSET        (npklic_struct_offset)
@@ -605,8 +617,8 @@ static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_u
 static char paths [11][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
 
 #ifdef COPY_PS3
-static char cp_path[MAX_PATH_LEN];   // cut/copy/paste buffer
-static u8   cp_mode = CP_MODE_NONE;  // 0 = none / 1 = copy / 2 = cut/move
+static char    cp_path[MAX_PATH_LEN];   // cut/copy/paste buffer
+static uint8_t cp_mode = CP_MODE_NONE;  // 0 = none / 1 = copy / 2 = cut/move
 #endif
 
 #define ONLINE_TAG		"[online]"
@@ -777,13 +789,14 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 			}
 			else
 				strcat(templn, msg);
+
 			code = CODE_HTTP_OK;
 		}
 #endif
 		else
 			sprintf(templn, "%s", msg);
 
-		if(code == CODE_SERVER_BUSY || code == CODE_BAD_REQUEST) show_msg((char*)msg + 4);
+		if(ISDIGIT(*msg) && ( (code == CODE_SERVER_BUSY || code == CODE_BAD_REQUEST) )) show_msg((char*)templn + 4);
 
 #ifndef EMBED_JS
 		if(css_exists)
@@ -800,11 +813,29 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == CODE_RETURN_TO_ROOT) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(templn, header);
 
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
-								code, url, HTTP_RESPONSE_TITLE_LEN + strlen(templn), HTML_BODY, HTML_RESPONSE_TITLE, templn);
+								(code == CODE_RETURN_TO_ROOT) ? CODE_HTTP_OK : code, url, HTTP_RESPONSE_TITLE_LEN + strlen(templn), HTML_BODY, HTML_RESPONSE_TITLE, templn);
 	}
 
 	send(conn_s, header, slen, 0);
 	sclose(&conn_s);
+}
+
+static u8 check_password(char *param)
+{
+	u8 ret = 0;
+
+	if((pwd_tries < 3) && (webman_config->ftp_password[0] != NULL))
+	{
+		char *pos = strstr(param, "pwd=");
+		if(pos > param)
+		{
+			pwd_tries++;
+			if(IS(pos + 4, webman_config->ftp_password)) {pwd_tries = 0, ret = 1;}
+			pos--, *pos = NULL;
+		}
+	}
+
+	return ret;
 }
 
 static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_http, u8 is_cpursx, bool mount_ps3)
@@ -900,6 +931,9 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 
 	char slider[40]; if(file_exists(MOBILE_HTML)) sprintf(slider, " [<a href=\"/games.ps3\">Slider</a>]"); else *slider = NULL;
 
+
+	if(sys_admin)
+	{
 #ifdef PS3MAPI
 	#ifdef WEB_CHAT
 		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP);
@@ -912,6 +946,11 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 	#else
 		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP );
 	#endif
+#endif
+	}
+#ifdef SYS_ADMIN_MODE
+	else
+		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider);
 #endif
 
 	buffer += concat(buffer, templn);
@@ -998,7 +1037,7 @@ static void handleclient(u64 conn_s_p)
 #endif
 
 #ifdef NOSINGSTAR
-		if(webman_config->noss) no_singstar_icon();
+		no_singstar_icon();
 #endif
 
 		sys_ppu_thread_t t_id;
@@ -1007,7 +1046,7 @@ static void handleclient(u64 conn_s_p)
 		if(conn_s_p == START_DAEMON)
 		{
 #ifdef COBRA_ONLY
-			u8 cconfig[15];
+			uint8_t cconfig[15];
 			CobraConfig *cobra_config = (CobraConfig*) cconfig;
 			memset(cobra_config, 0, 15);
 			cobra_read_config(cobra_config);
@@ -1070,6 +1109,7 @@ static void handleclient(u64 conn_s_p)
 
 	if(loading_html > 10) loading_html = 0;
 
+	bool is_local = true;
 	sys_net_sockinfo_t conn_info_main;
 
 	char cmd[16], header[HTML_RECV_SIZE];
@@ -1083,8 +1123,10 @@ static void handleclient(u64 conn_s_p)
 		sys_net_get_sockinfo(conn_s, &conn_info_main, 1);
 
 		char *ip_address = cmd;
+		is_local = (conn_info_main.local_adr.s_addr == conn_info_main.remote_adr.s_addr);
+
 		sprintf(ip_address, "%s", inet_ntoa(conn_info_main.remote_adr));
-		if(webman_config->bind && ((conn_info_main.local_adr.s_addr!=conn_info_main.remote_adr.s_addr) && !islike(ip_address, webman_config->allow_ip)))
+		if(webman_config->bind && (!is_local) && !islike(ip_address, webman_config->allow_ip))
 		{
 			http_response(conn_s, header, param, CODE_BAD_REQUEST, STR_ERROR);
 
@@ -1140,6 +1182,9 @@ again3:
 		tv.tv_usec = 0;
 		tv.tv_sec = 3;
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+		int optval = HTML_RECV_SIZE;
+		setsockopt(conn_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
 	}
 
 //// process commands ////
@@ -1172,8 +1217,7 @@ again3:
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
 												is_ps3_http = 0;
 
-			char *p = strstr(header, "\r\n");
-			if(p) strcpy(p, "\0\0");
+			for(size_t n = 0; header[n]; n++) {if(header[n] == '\r' || header[n] == '\n' || n >= HTML_RECV_SIZE) {header[n] = 0; break;}}
 
 			ssplit(header, cmd, 15, header, HTML_RECV_LAST);
 			ssplit(header, param, HTML_RECV_LAST, cmd, 15);
@@ -1189,6 +1233,71 @@ again3:
  #ifdef USE_DEBUG
 	ssend(debug_s, param);
 	ssend(debug_s, "\r\n");
+ #endif
+
+ #ifdef SYS_ADMIN_MODE
+			if(!sys_admin)
+			{
+				bool accept = false;
+				if(*param != '/') accept = false; else
+				if(islike(param, "/admin.ps3")) accept = true; else
+				{
+					accept = ( IS(param, "/")
+
+							|| islike(param, "/cpursx")
+
+							|| islike(param, "/mount")
+							|| islike(param, "/index.ps3")
+							|| islike(param, "/games.ps3")
+							|| islike(param, "/play.ps3")
+
+							|| islike(param, "/refresh.ps3")
+							|| islike(param, "/eject.ps3")
+							|| islike(param, "/insert.ps3")
+	#ifdef EXT_GDATA
+							|| islike(param, "/extgd.ps3")
+	#endif
+	#ifdef WEB_CHAT
+							|| islike(param, "/chat.ps3")
+	#endif
+	#ifndef LITE_EDITION
+							|| islike(param, "/popup.ps3")
+	#endif
+							 );
+
+					if(!accept)
+					{
+	#ifndef LITE_EDITION
+						if(check_password(param)) {is_local = true, sys_admin = 1;}
+	#endif
+						if(is_local)
+							accept = ( islike(param, "/setup.ps3")
+	#ifdef PKG_HANDLER
+									|| islike(param, "/install")
+									|| islike(param, "/download.ps3")
+	#endif
+	#ifdef PS3_BROWSER
+									|| islike(param, "/browser.ps3")
+	#endif
+									|| islike(param, "/restart.ps3")
+									|| islike(param, "/shutdown.ps3"));
+					}
+
+					if(!accept)
+					{
+						int ext_pos = strlen(param) - 4; if(ext_pos < 0) ext_pos = 0; sys_admin = 0;
+						char *ext = param + ext_pos;
+						if(!accept && (islike(param, "/net") || file_exists(param)) && (_IS(ext, ".jpg") || _IS(ext, ".png") || IS(ext, ".css") || strstr(ext, ".js") || IS(ext, "html")) ) accept = true;
+					}
+				}
+
+				if(!accept)
+				{
+					sprintf(param, "%s\nADMIN %s", STR_ERROR, STR_DISABLED);
+					http_response(conn_s, header, param, CODE_BAD_REQUEST, param);
+					goto exit_handleclient;
+				}
+			}
  #endif
 
  #ifdef VIRTUAL_PAD
@@ -1210,7 +1319,7 @@ again3:
 				// /pad.ps3                      (see vpad.h for details)
 				// /combo.ps3                    simulates a combo without actually send the buttons
 				// /play.ps3                     start game from disc icon
-				// play.ps3?col=<col>&seg=<seg>  click item on XMB
+				// /play.ps3?col=<col>&seg=<seg>  click item on XMB
 
 				u8 ret = 0, is_combo = (param[2] == 'a') ? 0 : (param[1] == 'c') ? 2 : 1; // 0 = /pad.ps3   1 = /play.ps3   2 = /combo.ps3
 
@@ -1241,14 +1350,30 @@ again3:
 				// /play.ps3                     start game from disc icon
 
 				// default: play.ps3?col=game&seg=seg_device
-				char col[16], seg[80]; *col = *seg = NULL;
+				char col[16], seg[40]; *col = *seg = NULL;
 				launch_disc(col, seg);
 
 				sprintf(param, "/cpursx.ps3");
 			}
  #endif //  #ifdef VIRTUAL_PAD
 
-			{char *pos = strstr(param, "?restart.ps3"); if(pos) {*pos = NULL; do_restart = true;}}
+ #ifdef SYS_ADMIN_MODE
+			if(islike(param, "/admin.ps3"))
+			{
+				if(param[10] == 0 || param[11] == 0) ; else
+				if(~param[11] & 1) sys_admin = 0; else
+				{
+					sys_admin = check_password(param);
+				}
+
+				sprintf(param, "ADMIN %s", sys_admin ? STR_ENABLED : STR_DISABLED);
+
+				http_response(conn_s, header, param, CODE_RETURN_TO_ROOT, param);
+
+				goto exit_handleclient;
+			}
+ #endif
+			{char *pos = strstr(param, "?restart.ps3"); if(pos) {*pos = NULL; do_restart = sys_admin;}}
 
 			if(islike(param, "/cpursx_ps3"))
 			{
@@ -1281,7 +1406,7 @@ again3:
 				goto exit_handleclient;
 			}
 
-			if(islike(param, "/dev_blind"))
+			if(sys_admin && islike(param, "/dev_blind"))
 			{
 				// /dev_blind          auto-enable & access /dev_blind
 				// /dev_blind?         shows status of /dev_blind
@@ -1941,7 +2066,10 @@ again3:
 					restore_fan(1); //set ps2 fan control mode
 
 				working = plugin_active = 0;
+
+				#ifdef AUTO_POWER_OFF
 				setAutoPowerOff(false);
+				#endif
 
 				sclose(&conn_s);
 				if(sysmem) sys_memory_free(sysmem);
@@ -2088,74 +2216,70 @@ again3:
 			}
 			else mobile_mode = false;
 
-			if(!is_busy && (islike(param, "/index.ps3?")  ||
+			if(!is_busy && (islike(param, "/index.ps3?") || islike(param, "/refresh.ps3"))) ; else
 
+			if(!is_busy && sys_admin && (islike(param, "/mount.ps3?http")
  #ifdef DEBUG_MEM
-							islike(param, "/peek.lv2?")   ||
-							islike(param, "/poke.lv2?")   ||
-							islike(param, "/find.lv2?")   ||
-							islike(param, "/peek.lv1?")   ||
-							islike(param, "/poke.lv1?")   ||
-							islike(param, "/find.lv1?")   ||
-							islike(param, "/dump.ps3")    ||
+							|| islike(param, "/peek.lv2?")
+							|| islike(param, "/poke.lv2?")
+							|| islike(param, "/find.lv2?")
+							|| islike(param, "/peek.lv1?")
+							|| islike(param, "/poke.lv1?")
+							|| islike(param, "/find.lv1?")
+							|| islike(param, "/dump.ps3")
  #endif
 
  #ifndef LITE_EDITION
-							islike(param, "/delete.ps3")  ||
-							islike(param, "/delete_ps3")  ||
+							|| islike(param, "/delete.ps3")
+							|| islike(param, "/delete_ps3")
  #endif
 
  #ifdef PS3MAPI
-							islike(param, "/home.ps3mapi")     ||
-							islike(param, "/setmem.ps3mapi")   ||
-							islike(param, "/getmem.ps3mapi")   ||
-							islike(param, "/led.ps3mapi")      ||
-							islike(param, "/buzzer.ps3mapi")   ||
-							islike(param, "/notify.ps3mapi")   ||
-							islike(param, "/syscall.ps3mapi")  ||
-							islike(param, "/syscall8.ps3mapi") ||
-							islike(param, "/setidps.ps3mapi")  ||
-							islike(param, "/vshplugin.ps3mapi")  ||
-							islike(param, "/gameplugin.ps3mapi") ||
+							|| islike(param, "/home.ps3mapi")
+							|| islike(param, "/setmem.ps3mapi")
+							|| islike(param, "/getmem.ps3mapi")
+							|| islike(param, "/led.ps3mapi")
+							|| islike(param, "/buzzer.ps3mapi")
+							|| islike(param, "/notify.ps3mapi")
+							|| islike(param, "/syscall.ps3mapi")
+							|| islike(param, "/syscall8.ps3mapi")
+							|| islike(param, "/setidps.ps3mapi")
+							|| islike(param, "/vshplugin.ps3mapi")
+							|| islike(param, "/gameplugin.ps3mapi")
  #endif
 
  #ifdef COPY_PS3
-							islike(param, "/copy.ps3/") ||
+							|| islike(param, "/copy.ps3/")
  #endif
-
-							islike(param, "/refresh.ps3")
 			)) ;
 
-			else if(islike(param, "/cpursx.ps3")  ||
-					islike(param, "/index.ps3")   ||
-					islike(param, "/mount_ps3/")  ||
-					islike(param, "/mount.ps3/")  ||
-					islike(param, "/mount.ps3?http") ||
-
+			else if(islike(param, "/cpursx.ps3")
+				||  islike(param, "/index.ps3")
+				||  islike(param, "/mount_ps3/")
+				||  islike(param, "/mount.ps3/")
  #ifdef PS2_DISC
-					islike(param, "/mount.ps2/")  ||
-					islike(param, "/mount_ps2/")  ||
+				||  islike(param, "/mount.ps2/")
+				||  islike(param, "/mount_ps2/")
  #endif
 
  #ifdef VIDEO_REC
-					islike(param, "/videorec.ps3") ||
+				||  islike(param, "/videorec.ps3")
  #endif
 
  #ifdef EXT_GDATA
-					islike(param, "/extgd.ps3")   ||
+				||  islike(param, "/extgd.ps3")
  #endif
 
  #ifdef SYS_BGM
-					islike(param, "/sysbgm.ps3")  ||
+				||  islike(param, "/sysbgm.ps3")
  #endif
 
  #ifdef LOAD_PRX
-					islike(param, "/loadprx.ps3")   ||
-					islike(param, "/unloadprx.ps3") ||
+				||  islike(param, "/loadprx.ps3")
+				||  islike(param, "/unloadprx.ps3")
  #endif
-
-					islike(param, "/eject.ps3")   ||
-					islike(param, "/insert.ps3")) ;
+				||  islike(param, "/eject.ps3")
+				||  islike(param, "/insert.ps3")) ;
 
 			else
 			{
@@ -2362,11 +2486,12 @@ again3:
  #ifdef COPY_PS3
 										"<div id=\"rcpy\"><H1><a href=\"/copy.ps3$abort\">&#9746;</a> %s ...</H1></div>"
 										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH, STR_COPYING); strcat(pbuffer, templn);
-										"<form action=\"\">", "/cpursx.ps3", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH, STR_COPYING); pbuffer += concat(pbuffer, templn);
+										"<form action=\"\">", "/cpursx.ps3", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH, STR_COPYING);
  #else
 										//"<form action=\"\">", cpursx, STR_REFRESH, STR_REFRESH); strcat(pbuffer, templn);
-										"<form action=\"\">", "/cpursx.ps3", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH); pbuffer += concat(pbuffer, templn);
+										"<form action=\"\">", "/cpursx.ps3", cpursx, is_ps3_http ? cpursx : "<iframe src=\"/cpursx_ps3\" style=\"border:0;overflow:hidden;\" width=\"230\" height=\"23\" frameborder=\"0\" scrolling=\"no\" onload=\"no_error(this)\"></iframe>", STR_REFRESH, STR_REFRESH);
  #endif
+						pbuffer += concat(pbuffer, templn);
 					}
 
 					if((webman_config->homeb) && (strlen(webman_config->home_url)>0))
@@ -2384,7 +2509,10 @@ again3:
  #ifdef EXT_GDATA
 									, HTML_BUTTON, "gameDATA", HTML_ONCLICK, "/extgd.ps3"
  #endif
-					); pbuffer += concat(pbuffer, templn);
+					);
+
+					pbuffer += concat(pbuffer, templn);
+
  #ifdef COPY_PS3
 					if(((islike(param, "/dev_") && strlen(param) > 12 && !strstr(param,"?")) || islike(param, "/dev_bdvd")) && !strstr(param,".ps3/") && !strstr(param,".ps3?"))
 					{
@@ -2427,13 +2555,23 @@ again3:
  #endif // #ifdef COPY_PS3
 
 					sprintf(templn,  "%s%s XML%s\" %s'%s';\"> "
-									 "%s%s HTML%s\" %s'%s';\">"
-									 HTML_BUTTON_FMT
-									 HTML_BUTTON_FMT,
+									 "%s%s HTML%s\" %s'%s';\">",
 									 HTML_BUTTON, STR_REFRESH, SUFIX2(profile), HTML_ONCLICK, "/refresh.ps3';rxml.style.display='block",
-									 HTML_BUTTON, STR_REFRESH, SUFIX2(profile), HTML_ONCLICK, "/index.ps3?html';rhtm.style.display='block",
-									 HTML_BUTTON, STR_SHUTDOWN, HTML_ONCLICK, "/shutdown.ps3",
-									 HTML_BUTTON, STR_RESTART, HTML_ONCLICK, "/restart.ps3"); pbuffer += concat(pbuffer, templn);
+									 HTML_BUTTON, STR_REFRESH, SUFIX2(profile), HTML_ONCLICK, "/index.ps3?html';rhtm.style.display='block");
+
+					pbuffer += concat(pbuffer, templn);
+
+ #ifdef SYS_ADMIN_MODE
+					if(sys_admin)
+ #endif
+					{
+						sprintf(templn,  HTML_BUTTON_FMT
+										 HTML_BUTTON_FMT,
+										 HTML_BUTTON, STR_SHUTDOWN, HTML_ONCLICK, "/shutdown.ps3",
+										 HTML_BUTTON, STR_RESTART,  HTML_ONCLICK, "/restart.ps3");
+
+						pbuffer += concat(pbuffer, templn);
+					}
 
  #ifndef LITE_EDITION
 					char *nobypass = strstr(param, "$nobypass");
@@ -2817,12 +2955,12 @@ again3:
 							cellFsUnlink(WMCONFIG);
 
 							// delete folders & subfolders
-							del(WMTMP, true);
-							del(WM_LANG_PATH, true);
-							del(WM_ICONS_PATH, true);
-							del(WM_COMBO_PATH, true);
-							del(HTML_BASE_PATH, true);
-							del(VSH_MENU_IMAGES, true);
+							del(WMTMP, RECURSIVE_DELETE);
+							del(WM_LANG_PATH, RECURSIVE_DELETE);
+							del(WM_ICONS_PATH, RECURSIVE_DELETE);
+							del(WM_COMBO_PATH, RECURSIVE_DELETE);
+							del(HTML_BASE_PATH, RECURSIVE_DELETE);
+							del(VSH_MENU_IMAGES, RECURSIVE_DELETE);
 							goto reboot;
 						}
 						else
@@ -2935,9 +3073,11 @@ again3:
 
 						http_response(conn_s, header, param, CODE_CLOSE_BROWSER, HTML_CLOSE_BROWSER); //auto-close browser (don't wait for mount)
 
-						if(webman_config->autoplay && (strstr(param, ".ntfs[BD") == NULL) && (strstr(param, "/PSPISO") == NULL))
+						if(IS_ON_XMB && !(webman_config->combo2 & PLAY_DISC) && (strstr(param, ".ntfs[BD") == NULL) && (strstr(param, "/PSPISO") == NULL))
 						{
+							sys_timer_sleep(1);
 							int view = View_Find("explore_plugin");
+
 							if(view)
 							{
 								explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
@@ -3122,7 +3262,9 @@ static void wwwd_thread(uint64_t arg)
 	{sys_map_path("/dev_bdvd/PS3_UPDATE", SYSMAP_PS3_UPDATE);} // redirect firmware update on BD disc to empty folder
 #endif
 
+	#ifdef AUTO_POWER_OFF
 	restoreAutoPowerOff();
+	#endif
 
 	set_buffer_sizes(webman_config->foot);
 
@@ -3257,7 +3399,9 @@ static void wwwd_stop_thread(uint64_t arg)
 
 	restore_fan(1); // restore & set static fan speed for ps2
 
+	#ifdef AUTO_POWER_OFF
 	setAutoPowerOff(false);
+	#endif
 
 	sys_timer_usleep(500000);
 

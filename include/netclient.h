@@ -452,7 +452,7 @@ static void netiso_thread(uint64_t arg)
 
 	netiso_loaded = 1;
 
-	while(netiso_loaded)
+	while(working && netiso_loaded)
 	{
 		sys_event_t event;
 
@@ -463,7 +463,7 @@ static void netiso_thread(uint64_t arg)
 			break;
 		}
 
-		if(!netiso_loaded) break;
+		if(!netiso_loaded || !working) break;
 
 		void *buf = (void *)(uint32_t)(event.data3>>32ULL);
 		uint64_t offset = event.data2;
@@ -491,7 +491,7 @@ static void netiso_thread(uint64_t arg)
 			break;
 		}
 
-		while(netiso_loaded)
+		while(working && netiso_loaded)
 		{
 			ret = sys_event_port_send(result_port, ret, 0, 0);
 			if(ret == 0) break;
@@ -590,7 +590,8 @@ static int connect_to_remote_server(u8 server_id)
 		u8 retries = 0;
 
 	reconnect:
-		ns = connect_to_server(webman_config->neth[server_id], webman_config->netp[server_id]);
+
+		ns = connect_to_server_ex(webman_config->neth[server_id], webman_config->netp[server_id], true);
 
 		if(ns < 0)
 		{
@@ -601,12 +602,14 @@ static int connect_to_remote_server(u8 server_id)
 				goto reconnect;
 			}
 
+			if(server_id > 0 || !webman_config->netd[0] || islike(webman_config->allow_ip, "127.") || IS(webman_config->allow_ip, "localhost")) return ns;
+
+			for(u8 n = 1; n < netsrvs; n++)
+				if(IS(webman_config->neth[n], webman_config->allow_ip)) return ns;
+
 			// retry using IP of client (/net0 only) - update IP in neth[0] if connection is successful
-			if(server_id == 0 && webman_config->netd[0] && !IS(webman_config->allow_ip, webman_config->neth[1]) && !IS(webman_config->allow_ip, webman_config->neth[2]))
-			{
-				ns = connect_to_server(webman_config->allow_ip, webman_config->netp[0]);
-				if(ns >= 0) strcpy(webman_config->neth[0], webman_config->allow_ip);
-			}
+			ns = connect_to_server_ex(webman_config->allow_ip, webman_config->netp[0], true);
+			if(ns >= 0) strcpy(webman_config->neth[0], webman_config->allow_ip);
 		}
 	}
 	return ns;

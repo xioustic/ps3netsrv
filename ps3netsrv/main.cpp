@@ -258,11 +258,11 @@ static char *translate_path(char *path, int del, int *viso)
 	}
 
 #ifdef WIN32
+	file_stat_t st;
 	path_len = strlen(p);
 	for(int i = 0; i < path_len; i++) if(p[i] == '\\') p[i] = '/';
 
 	#ifdef MERGE_DRIVES
-	file_stat_t st;
 	if(stat_file(p, &st) < 0)
 	{
 		for(int drive = 'C'; drive <= 'Z'; drive++)
@@ -407,7 +407,9 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		return -1;
 	}
 
-	printf("open %s\n", filepath);
+	if(stat_file(filepath, &st) < 0) {free(filepath); return -1;}
+
+	if(viso != VISO_NONE || st.file_size > 0x400000UL) printf("open %s\n", filepath);
 
 	if(viso == VISO_NONE)
 	{
@@ -436,16 +438,17 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 			result.file_size = BE64(st.file_size);
 			result.mtime = BE64(st.mtime);
 
-			// detect cd sector size
-			if(IS_RANGE(st.file_size, 0x10000UL, 0x35000000UL))
+			// detect cd sector size (2MB - 848MB)
+			if(IS_RANGE(st.file_size, 0x200000UL, 0x35000000UL))
 			{
-				char buffer[0x10] = "";
+				char buffer[0x10] = ""; client->CD_SECTOR_SIZE = 0;
+
 				client->ro_file->seek(0x8020UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2048; else {
 				client->ro_file->seek(0x9220UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2336; else {
 				client->ro_file->seek(0x9320UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2352; else {
 				client->ro_file->seek(0x9920UL, SEEK_SET); client->ro_file->read(buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) client->CD_SECTOR_SIZE = 2448; }}}
 
-				printf("CD sector size: %i\n", client->CD_SECTOR_SIZE);
+				if(client->CD_SECTOR_SIZE > 0) printf("CD sector size: %i\n", client->CD_SECTOR_SIZE); else client->CD_SECTOR_SIZE = 2352;
 			}
 		}
 	}
@@ -1495,7 +1498,7 @@ int main(int argc, char *argv[])
 	uint32_t whitelist_end = 0;
 	uint16_t port = NETISO_PORT;
 
-	printf("ps3netsrv build 20161007 (mod by aldostools)\n");
+	printf("ps3netsrv build 20161016 (mod by aldostools)\n");
 
 #ifndef WIN32
 	if(sizeof(off_t) < 8)

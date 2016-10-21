@@ -101,33 +101,33 @@ static void poll_thread(uint64_t poll)
 
 			if((t1 >= max_temp) || (t1 >= MAX_TEMPERATURE))
 			{
-				if(delta  < 0) fan_speed += 2;
-				if(delta == 0 && t1 != (max_temp-1)) fan_speed++;
-				if(delta == 0 && t1 >= (max_temp+1)) fan_speed+=(2 + (t1 - max_temp));
-				if(delta  > 0)
+				if (delta  < 0) fan_speed += 2;
+				if((delta == 0) && (t1 != (max_temp - 1))) fan_speed++;
+				if((delta == 0) && (t1 >= (max_temp + 1))) fan_speed += (2 + (t1 - max_temp));
+				if (delta  > 0)
 				{
 					smoothstep++;
 					if(smoothstep > 1)
 					{
 						fan_speed--;
-						smoothstep=0;
+						smoothstep = 0;
 					}
 				}
-				if(t1 >= MAX_TEMPERATURE)	 fan_speed+=step_up;
-				if(delta< 0 && (t1 - max_temp)>=2) fan_speed+=step_up;
+				if(t1 >= MAX_TEMPERATURE)               fan_speed += step_up;
+				if((delta < 0) && (t1 - max_temp) >= 2) fan_speed += step_up;
 			}
 			else
 			{
-				if(delta< 0 && t1>=(max_temp-1)) fan_speed+=2;
-				if(delta==0 && t1<=(max_temp-2))
+				if((delta <  0) && (t1 >= (max_temp - 1))) fan_speed += 2;
+				if((delta == 0) && (t1 <= (max_temp - 2)))
 				{
 					smoothstep++;
-					if(smoothstep>1)
+					if(smoothstep > 1)
 					{
 						fan_speed--;
-						if(t1<=(max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // decrease fan speed faster if > 66% & cpu is cool
-						if(t1<=(max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // decrease fan speed faster if > 50% & cpu is very cool
-						smoothstep=0;
+						if(t1 <= (max_temp - 3)) {fan_speed--; if(fan_speed > 0xA8) fan_speed--;} // decrease fan speed faster if > 66% & cpu is cool
+						if(t1 <= (max_temp - 5)) {fan_speed--; if(fan_speed > 0x80) fan_speed--;} // decrease fan speed faster if > 50% & cpu is very cool
+						smoothstep = 0;
 					}
 				}
 				//if(delta==0 && t1>=(max_temp-1)) fan_speed++;
@@ -137,26 +137,26 @@ static void poll_thread(uint64_t poll)
 					//if(smoothstep)
 					{
 						fan_speed--;
-						if(t1 <= (max_temp-3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // decrease fan speed faster if > 66% & cpu is cool
-						if(t1 <= (max_temp-5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // decrease fan speed faster if > 50% & cpu is very cool
-						smoothstep=0;
+						if(t1 <= (max_temp - 3)) {fan_speed--; if(fan_speed>0xA8) fan_speed--;} // decrease fan speed faster if > 66% & cpu is cool
+						if(t1 <= (max_temp - 5)) {fan_speed--; if(fan_speed>0x80) fan_speed--;} // decrease fan speed faster if > 50% & cpu is very cool
+						smoothstep = 0;
 					}
 				}
 			}
 
-			if(t1 > 76 && old_fan < 0x66) fan_speed+=step_up; // increase fan speed faster if < 40% and cpu is too hot
+			if((t1 > 76) && (old_fan < 0x66)) fan_speed += step_up; // increase fan speed faster if < 40% and cpu is too hot
 
-			if(fan_speed < ((webman_config->minfan*255)/100)) fan_speed = (webman_config->minfan*255)/100;
+			if(fan_speed < ((webman_config->minfan * 255) / 100)) fan_speed = (webman_config->minfan * 255) / 100;
 			if(fan_speed > MAX_FANSPEED) fan_speed = MAX_FANSPEED;
 
 			//sprintf(debug, "OFAN: %x | CFAN: %x | TEMP: %i | STALL: %i\r\n", old_fan, fan_speed, t1, stall);	ssend(data_s, mytxt);
 			//if(abs(old_fan-fan_speed)>=0x0F || stall>35 || (abs(old_fan-fan_speed) /*&& webman_config->aggr*/))
 			if(old_fan!=fan_speed || stall>35)
 			{
-				//if(t1>76 && fan_speed<0x50) fan_speed=0x50;
-				//if(t1>77 && fan_speed<0x58) fan_speed=0x58;
-				if(t1>78 && fan_speed < 0x50) fan_speed += 2; // <31%
-				if(old_fan!=fan_speed)
+				//if(t1>76 && fan_speed < 0x50) fan_speed=0x50;
+				//if(t1>77 && fan_speed < 0x58) fan_speed=0x58;
+				if(t1 > 78 && fan_speed < 0x50) fan_speed += 2; // <31%
+				if(old_fan != fan_speed)
 				{
 					old_fan = fan_speed;
 					fan_control(fan_speed, 1);
@@ -165,7 +165,7 @@ static void poll_thread(uint64_t poll)
 				}
 			}
 			else
-				if( (old_fan > fan_speed) && ((old_fan - fan_speed) > 8) && (t1 < (max_temp-3)) )
+				if( (old_fan > fan_speed) && ((old_fan - fan_speed) > 8) && (t1 < (max_temp - 3)) )
 					stall++;
 		}
 

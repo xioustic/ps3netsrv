@@ -32,7 +32,7 @@ static bool pkg_delete_after_install = true;
 static char install_path[64];
 static time_t pkg_install_time = 0;
 
-static void unload_web_plugins(void);
+static bool install_in_progress = false;
 
 #define INT_HDD_ROOT_PATH		"/dev_hdd0/"
 #define DEFAULT_PKG_PATH		"/dev_hdd0/packages/"
@@ -90,7 +90,7 @@ static void wait_for_xml_download(char *filename, char *param)
 		struct CellFsStat s; u64 size = 475000; if(xml) size = val(xml + 1); else xml = strstr(filename, ".xm!");
 
 		for(u8 retry = 0; retry < 15; retry++)
-			{sys_timer_sleep(2); if(cellFsStat(filename, &s) == CELL_FS_SUCCEEDED && s.st_size >= size) break;}
+			{if(!working || (cellFsStat(filename, &s) == CELL_FS_SUCCEEDED && s.st_size >= size)) break; sys_timer_sleep(2);}
 
 		if(s.st_size < size) {cellFsUnlink(filename); return;}
 
@@ -107,12 +107,12 @@ static void wait_for_xml_download(char *filename, char *param)
 static void wait_for_pkg_install(void)
 {
 	sys_timer_sleep(5);
-	while (IS_INSTALLING) sys_timer_sleep(2);
+	while (working && IS_INSTALLING) sys_timer_sleep(2);
 
 	time_t install_time = pkg_install_time;  // set time before install
 	get_pkg_size_and_install_time(pkg_path); // get time after install
 
-	if(pkg_delete_after_install && islike(pkg_path, "/dev_hdd0") && (strstr(pkg_path, "/GAME") == NULL))
+	if(working && pkg_delete_after_install && islike(pkg_path, "/dev_hdd0") && (strstr(pkg_path, "/GAME") == NULL))
 	{
 		if(pkg_install_time != install_time) cellFsUnlink(pkg_path);
 	}
@@ -175,6 +175,7 @@ static void unload_web_plugins(void)
 		explore_interface->ExecXMBcommand("close_all_list", 0, 0);
 	}
 }
+
 
 static void downloadPKG_thread(void)
 {
@@ -368,9 +369,12 @@ static int installPKG(const char *pkgpath, char *msg)
 	return ret;
 }
 
-static int installPKG_combo(char *msg)
+static void installPKG_combo_thread(u64 arg)
 {
 	int fd, ret = FAILED;
+	char msg[MAX_PATH_LEN];
+
+	install_in_progress = true;
 
 	if(cellFsOpendir(DEFAULT_PKG_PATH, &fd) == CELL_FS_SUCCEEDED)
 	{
@@ -378,7 +382,7 @@ static int installPKG_combo(char *msg)
 
 		pkg_delete_after_install = true;
 
-		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(!extcasecmp(dir.d_name, ".pkg", 4))
 			{
@@ -394,7 +398,9 @@ static int installPKG_combo(char *msg)
 		if(ret == FAILED) { BEEP2 } else sys_timer_sleep(2);
 	}
 
-	return ret;
+	install_in_progress = false;
+
+	sys_ppu_thread_exit(0);
 }
 
 static void poll_downloaded_pkg_files(char *msg)
@@ -405,7 +411,7 @@ static void poll_downloaded_pkg_files(char *msg)
 
 		if(cellFsOpendir(TEMP_DOWNLOAD_PATH, &fd) == CELL_FS_SUCCEEDED)
 		{
-			while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+			while(working && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 			{
 				if(!extcmp(entry.d_name, ".pkg", 4))
 				{

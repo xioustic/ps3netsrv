@@ -1,5 +1,3 @@
-static void led(u64 color, u64 mode);
-
 #define SC_SYS_CONTROL_LED				(386)
 
 #define GREEN	1

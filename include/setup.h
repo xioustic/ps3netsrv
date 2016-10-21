@@ -12,6 +12,7 @@
 #define DISABLEFC (1<<10)
 #define MINDYNFAN (1<<11)
 #define DISACOBRA (1<<12)
+#define SYS_ADMIN (1<<13)
 
 
 //combo2
@@ -52,6 +53,12 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "ab=1")) webman_config->autob = 1;
 	if(strstr(param, "dy=1")) webman_config->delay = 1;
 
+#ifdef COBRA_ONLY
+	if(strstr(param, "sn=1")) webman_config->nosnd0 = 1;
+
+	sys_map_path((char*)"/dev_bdvd/PS3_GAME/SND0.AT3", webman_config->nosnd0 ? (char*)SYSMAP_PS3_UPDATE : NULL);
+#endif
+
 	//Wait for any USB device to be ready
 	webman_config->bootd=get_valuen(param, "&b=", 0, 30);
 
@@ -68,7 +75,8 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "ng=1")) webman_config->nogrp   = 1;
 
 #ifdef NOSINGSTAR
-	if(strstr(param, "ss=1")) {webman_config->noss = 1; no_singstar_icon();}
+	if(strstr(param, "nss=1")) webman_config->noss = 1;
+	no_singstar_icon();
 #endif
 
 #ifdef COBRA_ONLY
@@ -89,6 +97,10 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "pse=1")) webman_config->ps1emu = 1;
 
 	webman_config->combo = webman_config->combo2 = 0;
+
+#ifdef SYS_ADMIN_MODE
+	if(strstr(param, "adm=1")) {webman_config->combo|=SYS_ADMIN, sys_admin = 0;} else sys_admin = 1;
+#endif
 
 	if(!strstr(param, "pfs=1")) webman_config->combo|=FAIL_SAFE;
 	if(!strstr(param, "pss=1")) webman_config->combo|=SHOW_TEMP;
@@ -141,11 +153,14 @@ static void setup_parse_settings(char *param)
 	if( strstr(param, "wn=1"))  webman_config->wmstart = 1;
 	if( strstr(param, "tid=1")) webman_config->tid  = 1;
 	if(!strstr(param, "sfo=1")) webman_config->use_filename = 1; // show filename instead of title in PARAM.SFO
-	if( strstr(param, "pl=1" )){setAutoPowerOff(false); AutoPowerOffGame = AutoPowerOffVideo = -1; webman_config->poll = 1;}
+	if( strstr(param, "pl=1" )) webman_config->poll = 1;
+#ifdef AUTO_POWER_OFF
+	if(!strstr(param, "pw=1" )){setAutoPowerOff(false); AutoPowerOffGame = AutoPowerOffVideo = -1; webman_config->auto_power_off = 1;}
+#endif
 	if( strstr(param, "ft=1" )) webman_config->ftpd = 1;
 	if( strstr(param, "np=1" )) webman_config->nopad = 1;
-	if( strstr(param, "nc=1" )) webman_config->nocov = SHOW_ICON0;    else // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons, 3 = Online Covers)
-	if( strstr(param, "ic=1" )) webman_config->nocov = SHOW_ICON0;    else
+	if( strstr(param, "nc=1" )) webman_config->nocov = SHOW_ICON0;	else // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons, 3 = Online Covers)
+	if( strstr(param, "ic=1" )) webman_config->nocov = SHOW_ICON0;	else
 	if( strstr(param, "ic=2" )) webman_config->nocov = SHOW_DISC;
 #ifndef ENGLISH_ONLY
 	else
@@ -160,10 +175,10 @@ static void setup_parse_settings(char *param)
 	if(webman_config->netsrvp == 0) webman_config->netsrvp = NETPORT;
 
 #ifdef FIX_GAME
-	if(strstr(param, "fm=0")) webman_config->fixgame=FIX_GAME_AUTO;
-	if(strstr(param, "fm=1")) webman_config->fixgame=FIX_GAME_QUICK;
-	if(strstr(param, "fm=2")) webman_config->fixgame=FIX_GAME_FORCED;
-	if(strstr(param, "nf=3")) webman_config->fixgame=FIX_GAME_DISABLED;
+	if(strstr(param, "fm=0")) webman_config->fixgame = FIX_GAME_AUTO;
+	if(strstr(param, "fm=1")) webman_config->fixgame = FIX_GAME_QUICK;
+	if(strstr(param, "fm=2")) webman_config->fixgame = FIX_GAME_FORCED;
+	if(strstr(param, "nf=3")) webman_config->fixgame = FIX_GAME_DISABLED;
 #endif
 
 	if(strstr(param, "nsp=1")) webman_config->nospoof = 1; //don't spoof fw version
@@ -509,7 +524,13 @@ static void setup_form(char *buffer, char *templn)
 	//general settings
 	strcat(buffer, "</td></tr></table>" HTML_BLU_SEPARATOR);
 
-	add_check_box("lp", "1", STR_LPG    , _BR_, (webman_config->lastp), buffer);
+#ifdef COBRA_ONLY
+	add_check_box("lp", "1", STR_LPG   , " • ",   (webman_config->lastp),  buffer);
+	add_check_box("sn", "1", "No SND0.AT3", _BR_, (webman_config->nosnd0), buffer);
+#else
+	add_check_box("lp", "1", STR_LPG, _BR_,       (webman_config->lastp),  buffer);
+#endif
+
 	add_check_box("ab", "1", STR_AUTOB  , _BR_, (webman_config->autob), buffer);
 	add_check_box("dy", "1", STR_DELAYAB, _BR_, (webman_config->delay), buffer);
 
@@ -523,10 +544,18 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("rf", "1",  STR_CONTSCAN, _BR_, (webman_config->refr), buffer);
 #endif
 
-	add_check_box("pl", "1", STR_USBPOLL,  _BR_, (webman_config->poll) , buffer);
+	add_check_box("pl", "1", STR_USBPOLL, _BR_, (webman_config->poll) , buffer);
+
 	add_check_box("ft", "1", STR_FTPSVC,   " : ", (webman_config->ftpd) , buffer);
 	sprintf(templn, HTML_NUMBER("ff", "%i", "1", "65535") " • Timeout ", webman_config->ftp_port); strcat(buffer, templn);
+
+#ifdef AUTO_POWER_OFF
+	sprintf(templn, HTML_NUMBER("tm", "%i", "0", "255") " mins • ", webman_config->ftp_timeout); strcat(buffer, templn);
+	add_check_box("pw", "1", "No Auto Power Off",  _BR_, !(webman_config->auto_power_off), buffer);
+#else
 	sprintf(templn, HTML_NUMBER("tm", "%i", "0", "255") " mins<br>", webman_config->ftp_timeout); strcat(buffer, templn);
+#endif
+
  #ifdef PS3NET_SERVER
 	sprintf(templn, "%s", STR_FTPSVC); char *pos = strcasestr(templn, "FTP"); if(pos) {pos[0] = 'N', pos[1] = 'E', pos[2] = 'T';}
 	add_check_box("nd", "1", templn,   " : ", (webman_config->netsrvd) , buffer);
@@ -548,7 +577,7 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 #ifdef NOSINGSTAR
-	add_check_box("ss", "1", STR_NOSINGSTAR,   _BR_, (webman_config->noss), buffer);
+	add_check_box("nss", "1", STR_NOSINGSTAR,  _BR_, (webman_config->noss), buffer);
 #endif
 
 	add_check_box("np", "1", STR_COMBOS,   _BR_, (webman_config->nopad), buffer);
@@ -581,7 +610,7 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("apd", "1", STR_AUTO_PLAY, _BR_, (webman_config->autoplay), buffer);
 
 #ifdef FIX_GAME
-	if(c_firmware>=4.20f && c_firmware<=4.78f)
+	if(c_firmware >= 4.20f && c_firmware < LATEST_CFW)
 	{
 		value = webman_config->fixgame;
 		add_check_box("nf", "3", STR_FIXGAME,  " : <select name=\"fm\">", (value == FIX_GAME_DISABLED), buffer);
@@ -712,7 +741,7 @@ static void setup_form(char *buffer, char *templn)
 		{
 			CellFsDirent dir; u64 read_e;
 
-			while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+			while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 			{
 				if(dir.d_namlen == 8)
 					add_option_item(dir.d_name, dir.d_name, IS(dir.d_name, webman_config->uaccount), buffer);
@@ -826,11 +855,15 @@ static void setup_form(char *buffer, char *templn)
 	//combos
 	sprintf(templn, HTML_BLU_SEPARATOR "<b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);
 
-	add_check_box("pfs", "1", STR_FAILSAFE,   " : <b>SELECT+L3+L2+R2</b><br>"  , !(webman_config->combo & FAIL_SAFE), buffer);
-	add_check_box("pss", "1", STR_SHOWTEMP,   " : <b>SELECT+START</b><br>"     , !(webman_config->combo & SHOW_TEMP), buffer);
-	add_check_box("ppv", "1", STR_PREVGAME,   " : <b>SELECT+L1</b><br>"        , !(webman_config->combo & PREV_GAME), buffer);
-	add_check_box("pnx", "1", STR_NEXTGAME,   " : <b>SELECT+R1</b><br>"        , !(webman_config->combo & NEXT_GAME), buffer);
-	add_check_box("pdf", "1", STR_FANCTRL4,   " : <b>L3+R2+START</b><br>"      , !(webman_config->combo & DISABLEFC), buffer);
+#ifdef SYS_ADMIN_MODE
+	add_check_box("adm", "1", "ADMIN/USER MODE", " : <b>L2+R2+&#8710;</b><br>" ,  (webman_config->combo & SYS_ADMIN),  buffer);
+#endif
+
+	add_check_box("pfs", "1", STR_FAILSAFE,   " : <b>SELECT+L3+L2+R2</b><br>"  , !(webman_config->combo & FAIL_SAFE),  buffer);
+	add_check_box("pss", "1", STR_SHOWTEMP,   " : <b>SELECT+START</b><br>"     , !(webman_config->combo & SHOW_TEMP),  buffer);
+	add_check_box("ppv", "1", STR_PREVGAME,   " : <b>SELECT+L1</b><br>"        , !(webman_config->combo & PREV_GAME),  buffer);
+	add_check_box("pnx", "1", STR_NEXTGAME,   " : <b>SELECT+R1</b><br>"        , !(webman_config->combo & NEXT_GAME),  buffer);
+	add_check_box("pdf", "1", STR_FANCTRL4,   " : <b>L3+R2+START</b><br>"      , !(webman_config->combo & DISABLEFC),  buffer);
 
 	add_check_box("umt", "1", STR_UNMOUNT,    " : <b>SELECT+O</b><br>"         , !(webman_config->combo2 & UMNT_GAME), buffer);
 	add_check_box("pgd", "1", "gameDATA",     " : <b>SELECT+&#9633;</b><br>"   , !(webman_config->combo2 & EXTGAMDAT), buffer);
@@ -843,37 +876,37 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 #ifdef REX_ONLY
-	add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"             , !(webman_config->combo & SHOW_IDPS), buffer);
-	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN), buffer);
-	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS), buffer);
+	add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"             , !(webman_config->combo & SHOW_IDPS),  buffer);
+	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN),  buffer);
+	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS),  buffer);
  #ifdef WM_REQUEST
-	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>",   !(webman_config->combo2 & CUSTOMCMB), buffer);
  #else
-	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>",   !(webman_config->combo2 & CUSTOMCMB), buffer);
  #endif
 #else
  #ifdef SPOOF_CONSOLEID
-	add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"             , !(webman_config->combo & SHOW_IDPS), buffer);
+	add_check_box("pid", "1", STR_SHOWIDPS,   " : <b>R2+O</b><br>"             , !(webman_config->combo & SHOW_IDPS),  buffer);
  #endif
  #ifdef WM_REQUEST
-	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "CUSTOM COMBO", " : <b>R2+&#9633;</b></td><td>",   !(webman_config->combo2 & CUSTOMCMB), buffer);
  #else
-	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>", !(webman_config->combo2 & CUSTOMCMB), buffer);
+	add_check_box("psv", "1", "BLOCK SERVERS"," : <b>R2+&#9633;</b></td><td>",   !(webman_config->combo2 & CUSTOMCMB), buffer);
  #endif
-	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN), buffer);
-	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS), buffer);
+	add_check_box("psd", "1", STR_SHUTDOWN2,  " : <b>L3+R2+X</b><br>"          , !(webman_config->combo & SHUT_DOWN),  buffer);
+	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS),  buffer);
 #endif
-	add_check_box("puw", "1", STR_UNLOADWM,   " : <b>L3+R2+R3</b><br>"         , !(webman_config->combo & UNLOAD_WM), buffer);
-	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+"                  , !(webman_config->combo & MANUALFAN), buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
-	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+"                  , !(webman_config->combo & MINDYNFAN), buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
+	add_check_box("puw", "1", STR_UNLOADWM,   " : <b>L3+R2+R3</b><br>"         , !(webman_config->combo & UNLOAD_WM),  buffer);
+	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+"                  , !(webman_config->combo & MANUALFAN),  buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
+	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+"                  , !(webman_config->combo & MINDYNFAN),  buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
 #ifdef REMOVE_SYSCALLS
-	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> &nbsp; ("  , !(webman_config->combo & DISABLESH), buffer);
+	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> &nbsp; ("  , !(webman_config->combo & DISABLESH),  buffer);
 	add_check_box("kcc", "1", "CCAPI)", _BR_, !(webman_config->keep_ccapi), buffer);
 #endif
 
 #ifndef LITE_EDITION
  #ifdef COBRA_ONLY
-	add_check_box("pdc", "1", STR_DISCOBRA,   " : <b>L3+L2+&#8710;</b><br>"    , !(webman_config->combo & DISACOBRA), buffer);
+	add_check_box("pdc", "1", STR_DISCOBRA,   " : <b>L3+L2+&#8710;</b><br>"    , !(webman_config->combo & DISACOBRA),  buffer);
  #endif
 	add_check_box("pn0", "1", "NET0",       " : <b>SELECT+R2+&#9633;</b><br>"  , !(webman_config->combo2 & MOUNTNET0), buffer);
 	add_check_box("pn1", "1", "NET1",       " : <b>SELECT+L2+&#9633;</b><br>"  , !(webman_config->combo2 & MOUNTNET1), buffer);
@@ -1004,7 +1037,9 @@ static void reset_settings(void)
 	webman_config->cmask = (PSP | PS1 | BLU | DVD);
 #endif
 
-	webman_config->poll    = 1;       //disable USB polling
+	webman_config->poll = 1;             //disable USB polling
+	//webman_config->auto_power_off = 0; //enable prevent auto power off
+
 	//webman_config->nopad = 0;       //enable all PAD shortcuts
 	//webman_config->nocov = 0;       //enable multiMAN covers    (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons, 3 = Online Covers)
 
@@ -1083,6 +1118,10 @@ static void reset_settings(void)
 	webman_config->temp1 = RANGE(webman_config->temp1, 40, MAX_TEMPERATURE);  //°C
 
 	if(webman_config->ftp_port < 1 || webman_config->ftp_port == WWWPORT) webman_config->ftp_port = FTPPORT;
+
+#ifdef SYS_ADMIN_MODE
+	if(!(webman_config->combo & SYS_ADMIN)) sys_admin = 1; // set admin mode if ADMIN combo L2+R2+TRIANGLE is disabled
+#endif
 
 	// settings
 	save_settings();

@@ -199,7 +199,7 @@ static void fix_game_folder(char *path)
 
 	int fd;
 
-	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
+	if(working && cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
 		plevel++;
 
@@ -210,7 +210,7 @@ static void fix_game_folder(char *path)
 		struct CellFsStat s;
 		CellFsDirent dir; uint64_t read_e;
 
-		while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
 			if(fix_aborted) break;
 			if(dir.d_name[0] == '.') continue;
@@ -352,7 +352,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 				cellFsLseek(fd, pos, CELL_FS_SEEK_SET, &bytes_read);
 				cellFsRead(fd, chunk, chunk_size, &bytes_read); if(!bytes_read) break;
 
-				start = 0;
+				lba = start = 0;
 
 				while(true)
 				{

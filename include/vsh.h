@@ -104,10 +104,10 @@ static void launch_disc(char *category, char *seg_name)
 		char explore_command[128]; // info: http://www.psdevwiki.com/ps3/explore_plugin
 
 		// default category
-		if(!category[0]) sprintf(category, "game");
+		if(!*category) sprintf(category, "game");
 
 		// default segment
-		if(!seg_name[0]) sprintf(seg_name, "seg_device");
+		if(!*seg_name) sprintf(seg_name, "seg_device");
 
 		if(!IS(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{

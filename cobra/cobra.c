@@ -1564,8 +1564,8 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 
 		cobra_send_fake_disc_insert_event();
 
-		// Wait 0.5 seconds for automounter to mount iso
-		if (waitfor("/dev_bdvd", 1) == -1)
+		// Wait 3 seconds for automounter to mount iso
+		if (waitfor("/dev_bdvd", 3) == -1)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();
@@ -1594,7 +1594,7 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 
 	snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/ICON0.PNG", root);
 
-	if(file_copy(umd_file, icon_save_path, 0) == CELL_FS_SUCCEEDED)
+	if(file_copy(umd_file, icon_save_path, 0) >= CELL_FS_SUCCEEDED)
 	{
 		sys_map_path((char *)PSPL_ICON, icon_save_path);
 		snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/SYSDIR/EBOOT.OLD", root);
@@ -2021,7 +2021,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 	snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/ICON0.PNG", root);
 
-	if(file_copy(umd_file, icon_save_path, 0) == CELL_FS_SUCCEEDED)
+	if(file_copy(umd_file, icon_save_path, 0) >= CELL_FS_SUCCEEDED)
 	{
 		int fd;
 

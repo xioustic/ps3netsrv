@@ -1,13 +1,15 @@
-#define AUTO_POWER_OFF_BACKUP_FILE   WMTMP "/auto_power_off"
+static u16 plugin_active = 0;
 
-static u32 plugin_active = 0;
+#ifdef AUTO_POWER_OFF
+
+#define AUTO_POWER_OFF_BACKUP_FILE   WMTMP "/auto_power_off"
 
 static int AutoPowerOffGame = -1;
 static int AutoPowerOffVideo = -1;
 
 static void setAutoPowerOff(bool disable)
 {
-	if((c_firmware < 4.46f) || webman_config->poll) return;
+	if((c_firmware < 4.46f) || webman_config->auto_power_off) return;
 
 	if(AutoPowerOffGame < 0)
 	{
@@ -60,9 +62,18 @@ static void setPluginInactive(void)
 	}
 }
 
+#else
+ #define setPluginActive()
+ #define setPluginInactive()
+#endif
+
 static void setPluginExit(void)
 {
 	working = plugin_active = 0;
+
+	#ifdef AUTO_POWER_OFF
 	setAutoPowerOff(false);
+	#endif
+
 	{ DELETE_TURNOFF }
 }

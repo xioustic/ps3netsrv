@@ -5,7 +5,7 @@ static int ssend(int socket, const char *str)
 	return send(socket, str, strlen(str), 0);
 }
 
-static int connect_to_server(const char *server, uint16_t port)
+static int connect_to_server_ex(const char *server, uint16_t port, bool rcv_timeout)
 {
 	struct sockaddr_in sin;
 	unsigned int temp;
@@ -40,7 +40,9 @@ static int connect_to_server(const char *server, uint16_t port)
 	tv.tv_usec = 0;
 	tv.tv_sec = 3;
 	setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-	//setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+	if(rcv_timeout)
+		setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 	if(connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
 	{
@@ -52,6 +54,11 @@ static int connect_to_server(const char *server, uint16_t port)
 	setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
 	return s;
+}
+
+static int connect_to_server(const char *server, uint16_t port)
+{
+	return connect_to_server_ex(server, port, false);
 }
 
 static int slisten(int port, int backlog)

@@ -729,7 +729,7 @@ static void add_plugins_list(char *buffer, char *templn)
 		{
 			CellFsDirent dir; u64 read_e;
 
-			while((cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+			while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 			{
 				if(!extcmp(dir.d_name, ".sprx", 5))
 				{
@@ -1765,7 +1765,7 @@ static void ps3mapi_thread(u64 arg)
 				int conn_s_ps3mapi;
 				if (!working) goto end;
 				else
-				if(working && (conn_s_ps3mapi = accept(list_s, NULL, NULL)) > 0)
+				if(sys_admin && ((conn_s_ps3mapi = accept(list_s, NULL, NULL)) > 0))
 				{
 					sys_ppu_thread_t t_id;
 					if(working) sys_ppu_thread_create(&t_id, handleclient_ps3mapi, (u64)conn_s_ps3mapi, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD02_NAME_PS3MAPI);

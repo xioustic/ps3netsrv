@@ -1296,7 +1296,7 @@ next_html_entry:
 #ifdef LAUNCHPAD
 		if(launchpad_mode)
 		{
-			del("/dev_hdd0/tmp/explore/nsx/", true); // Clear LaunchPad Cache
+			del("/dev_hdd0/tmp/explore/nsx/", RECURSIVE_DELETE); // Clear LaunchPad Cache
 			add_launchpad_header();
 			add_launchpad_extras(tempstr, templn);
 		}

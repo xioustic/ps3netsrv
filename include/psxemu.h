@@ -21,8 +21,8 @@ static void select_ps1emu(void)
 	}
 	else
 	{
-		sys_map_path("/dev_flash/ps1emu/ps1_netemu.self", "//dev_flash/ps1emu/ps1_netemu.self");
-		sys_map_path("/dev_flash/ps1emu/ps1_emu.self"   , "//dev_flash/ps1emu/ps1_emu.self");
+		sys_map_path("/dev_flash/ps1emu/ps1_netemu.self", NULL);
+		sys_map_path("/dev_flash/ps1emu/ps1_emu.self"   , NULL);
 
 		sprintf(msg, "%s %s", "ps1_emu.self", STR_ENABLED);
 	}

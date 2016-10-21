@@ -189,7 +189,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				else
  #endif
 				{
-					char category[16] = "game", seg_name[80] = "seg_device";
+					char category[16], seg_name[40]; *category = *seg_name = NULL;
 					if((atag && !l2) || (!atag && l2)) {sys_timer_sleep(1); launch_disc(category, seg_name);} // L2 + X
 				}
 			}
@@ -509,7 +509,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				// ------------------
 				filepath_check(target);
 
-				bool is_error = ((islike(target, drives[usb]) && isDir(drives[usb]) == false)) || islike(target, source);
+				bool is_error = ((islike(target, drives[usb]) && isDir(drives[usb]) == false)) || islike(target, source) || !sys_admin;
 
 				// show source path
 				sprintf(tempstr, "%s ", STR_COPYING); strcat(buffer, tempstr);
@@ -629,7 +629,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// perform copy
 		// -------------
 #ifdef COPY_PS3
-		if(is_copy)
+		if(sys_admin && is_copy)
 		{
 			if(islike(target, source) || ((!islike(source, "/net")) && file_exists(source) == false) )
 				{sprintf(templn, "<hr>%s", STR_ERROR); strcat(buffer, templn);}
@@ -822,7 +822,7 @@ static void cache_icon0_and_param_sfo(char *destpath)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", destpath, _4KB_) == CELL_FS_SUCCEEDED) break;
+			if(file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", destpath, _4KB_) >= CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
@@ -833,7 +833,7 @@ static void cache_icon0_and_param_sfo(char *destpath)
 	{
 		for(u8 n = 0; n < 10; n++)
 		{
-			if(file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", destpath, COPY_WHOLE_FILE) == CELL_FS_SUCCEEDED) break;
+			if(file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", destpath, COPY_WHOLE_FILE) >= CELL_FS_SUCCEEDED) break;
 			sys_timer_usleep(500000);
 		}
 	}
@@ -939,6 +939,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 	u8 mount_unk = EMU_OFF;
 
+	led(GREEN, BLINK_FAST);
+
 	// ----------------
 	// open url & exit
 	// ----------------
@@ -960,6 +962,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 		is_mounting = false;
 
+		led(GREEN, ON);
 		return ret;
 	}
 
@@ -1069,9 +1072,9 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	}
 
 
-	// ----------------------------
-	// show start mounting message
-	// ----------------------------
+	// ----------------------------------------
+	// show start mounting message (game path)
+	// ----------------------------------------
 
 	if(do_eject) show_msg(_path);
 
@@ -1127,8 +1130,9 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 		if(file_exists(PS2_CLASSIC_PLACEHOLDER))
 		{
-			sprintf(temp, "PS2 Classic\n%s", strrchr(_path, '/') + 1);
 			copy_in_progress = true, copied_count = 0;
+
+			sprintf(temp, "PS2 Classic\n%s", strrchr(_path, '/') + 1);
 			show_msg(temp);
 
  #ifndef LITE_EDITION
@@ -1138,7 +1142,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				enable_classic_ps2_mode();
 			}
  #endif
-
 			cellFsUnlink(PS2_CLASSIC_ISO_PATH);
 			if(file_copy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
 			{
@@ -1217,7 +1220,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				set_gamedata_status(0, false);
 		}
 		 #endif //#ifdef EXT_GDATA
-
 
 	mount_again:
 
@@ -1951,6 +1953,10 @@ install_mm_payload:
 
 exit_mount:
 
+	// -------------------------------
+	// show 2nd message: "xxx" loaded
+	// -------------------------------
+
 	if(ret && *_path == '/')
 	{
 		char msg[MAX_PATH_LEN], *pos;
@@ -1969,11 +1975,18 @@ exit_mount:
 		show_msg(msg);
 	}
 
+	// ---------------
+	// delete history
+	// ---------------
+
 	delete_history(false);
 
-	if(mount_unk == EMU_PSP) {is_mounting = false; return ret;}
+	if(mount_unk == EMU_PSP) goto mounting_done;
 
-	// wait few seconds until the game is mounted
+	// -------------------------------------------
+	// wait few seconds until the bdvd is mounted
+	// -------------------------------------------
+
 	if(ret && extcmp(_path, ".BIN.ENC", 8))
 	{
 		waitfor("/dev_bdvd", (islike(_path, "/dev_hdd0") ? 6 : netid ? 20 : 15));
@@ -1981,7 +1994,10 @@ exit_mount:
 	}
 
 #ifdef FIX_GAME
+	// -------------------------------------------------------
 	// re-check PARAM.SFO to notify if game needs to be fixed
+	// -------------------------------------------------------
+
 	if(ret && (c_firmware < LATEST_CFW))
 	{
 		char filename[64];
@@ -1998,7 +2014,16 @@ exit_mount:
 	}
 #endif
 
+	// -----------------------------------
+	// show error if bdvd was not mounted
+	// -----------------------------------
+
 	if(!ret && !isDir("/dev_bdvd")) {char msg[MAX_PATH_LEN]; sprintf(msg, "%s %s", STR_ERROR, _path); show_msg(msg);}
+
+	// -------------------------------------------------------------------------------------
+	// remove syscalls hodling R2 (or prevent remove syscall if path contains [online] tag)
+	// -------------------------------------------------------------------------------------
+
 #ifdef REMOVE_SYSCALLS
 	else if(mount_unk != EMU_PSX)
 	{
@@ -2009,10 +2034,21 @@ exit_mount:
 	}
 #endif
 
+mounting_done:
+
 #ifdef COBRA_ONLY
+
+	// ------------------------------------------------------------------
+	// auto-enable gamedata on bdvd if game folder or ISO contains GAMEI
+	// ------------------------------------------------------------------
+
  #ifdef EXT_GDATA
 	if((extgd == 0) && isDir("/dev_bdvd/GAMEI")) set_gamedata_status(2, true); // auto-enable external gameDATA (if GAMEI exists on /bdvd)
  #endif
+
+	// -----------------------------------------------
+	// redirect system files (PUP, net/PKG, SND0.AT3)
+	// -----------------------------------------------
 	{
 		if(ret && file_exists("/dev_bdvd/PS3UPDAT.PUP"))
 		{
@@ -2026,14 +2062,20 @@ exit_mount:
 
 		{sys_map_path("/dev_bdvd/PS3_UPDATE", (char*)SYSMAP_PS3_UPDATE);} // redirect firmware update on BD disc to empty folder
 
-		is_mounting = false;
+		if(webman_config->nosnd0) {sys_map_path((char*)"/dev_bdvd/PS3_GAME/SND0.AT3", (char*)SYSMAP_PS3_UPDATE);} // disable SND0.AT3 on startup
+
 
 		{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 	}
-#else
-	is_mounting = false;
 #endif
 
+	// --------------
+	// exit function
+	// --------------
+
+	led(GREEN, ON);
 	max_mapped = 0;
+	is_mounting = false;
+
 	return ret;
 }
