@@ -43,6 +43,7 @@
 //#define LAUNCHPAD			1	// create /dev_hdd0/tmp/wm_lauchpad.xml
 //#define PS2_DISC			1	// uncomment to support /mount.ps2 (mount ps2 game folder as /dev_ps2disc) requires a physical PS2 disc to swap discs (thanks to WuEpE)
 //#define NOSINGSTAR		1	// remove SingStar icon from XMB  (thanks to bguerville)
+//#define CALC_MD5		1	// /md5.ps3/<file>
 
 //// TEST FEATURES ////
 //#define SYS_BGM			1	// system background music (may freeze the system when enabled)

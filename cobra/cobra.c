@@ -339,12 +339,12 @@ static KeyValue emu_by_title_name[N_TITLE_NAMES] =
 	{ "Warhammer 40,000: Squad Command", EMU_400 },
 };
 
-
 static uint8_t lambda_md5[16] =
 {
 	0xE1, 0x99, 0xCA, 0x7D, 0x48, 0x3B, 0xC0, 0x7B, 0x4D, 0xC6, 0xE7, 0x4A, 0xE5, 0x53, 0x76, 0xCE
 };
 */
+
 static int translate_type(unsigned int type)
 {
 	if (type == 0)
@@ -1914,7 +1914,7 @@ static int check_lambda(void)
 		}
 	}
 
-	//free(buf);
+	free(buf);
 	return ret;
 }
 
@@ -2388,4 +2388,3 @@ int cobra_unload_vsh_plugin(unsigned int slot)
 	system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN, slot);
 	return (int)p1;
 }
-

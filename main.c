@@ -747,6 +747,7 @@ static char current_file[MAX_PATH_LEN];
 
 #include "include/pkg_handler.h"
 #include "include/fancontrol2.h"
+#include "include/md5.h"
 
 static inline void _sys_ppu_thread_exit(uint64_t val)
 {
@@ -2170,6 +2171,28 @@ again3:
  #endif
 				goto exit_handleclient;
 			}
+
+ #ifdef CALC_MD5
+			if(islike(param, "/md5.ps3"))
+			{
+				char *filename = param + 8, *buffer = header;
+
+				sprintf(buffer, "File: ");
+				add_breadcrumb_trail(buffer, filename);
+
+				struct CellFsStat buf; cellFsStat(filename, &buf);
+				unsigned long long sz = (unsigned long long)buf.st_size;
+
+				char md5[33];
+				calc_md5(filename, md5);
+
+				sprintf(param, "%s<p>Size: %llu bytes<p>MD5: %s<p>", buffer, sz, md5);
+
+				http_response(conn_s, header, "/md5.ps3", CODE_HTTP_OK, param);
+
+				goto exit_handleclient;
+			}
+ #endif
 
  #ifdef FIX_GAME
 			if(islike(param, "/fixgame.ps3"))

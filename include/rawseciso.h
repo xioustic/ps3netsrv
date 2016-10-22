@@ -94,6 +94,7 @@ typedef struct
 
 */
 
+#ifdef RAWISO_PSX_MULTI
 typedef struct
 {
 	uint64_t device;
@@ -105,6 +106,7 @@ typedef struct
 	// sector array 8
 	// numbers sector array 8
 } __attribute__((packed)) psxseciso_args;
+#endif
 
 volatile int eject_running = 0;
 
@@ -187,7 +189,7 @@ static void get_next_read(uint64_t discoffset, uint64_t bufsize, uint64_t *offse
 }
 
 uint8_t last_sect_buf[4096] __attribute__((aligned(16)));
-uint32_t last_sect = 0xffffffff;
+uint32_t last_sect = 0xFFFFFFFF;
 
 static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size)
 {
@@ -237,7 +239,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 				if(ret == 0 && r == 1)
 					last_sect = sector;
 				else
-					last_sect = 0xffffffff;
+					last_sect = 0xFFFFFFFF;
 
 				if(ret != 0 || r != 1)
 				{
@@ -300,7 +302,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 					if(ret == 0 && r == n)
 						last_sect = sector + n - 1;
 					else
-						last_sect = 0xffffffff;
+						last_sect = 0xFFFFFFFF;
 
 					if(ret != 0 || r != n)
 					{
@@ -361,7 +363,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 					if(ret == 0 && r == 1)
 						last_sect = sector;
 					else
-						last_sect = 0xffffffff;
+						last_sect = 0xFFFFFFFF;
 
 					if(ret != 0 || r != 1)
 					{
@@ -429,6 +431,8 @@ static int process_read_file_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t siz
 		uint64_t pos, p, readsize;
 		int idx;
 		int ret;
+
+		if(!ntfs_running || !working) return FAILED;
 
 		get_next_read(offset, remaining, &pos, &readsize, &idx, CD_SECTOR_SIZE_2048);
 
@@ -529,9 +533,10 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 	{
 		uint64_t pos, p, readsize = (uint64_t) CD_SECTOR_SIZE_2352;
 
-
 		p = 0;
 		rel = 0;
+
+		if(!ntfs_running || !working) return FAILED;
 
 		pos = offset;
 		if(ssector == CD_SECTOR_SIZE_2048) { if(sect_size >= CD_SECTOR_SIZE_2352) pos += 24ULL; readsize = CD_SECTOR_SIZE_2048;}
@@ -541,7 +546,7 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 			{
 				rel = 24; readsize = CD_SECTOR_SIZE_2048;
 				memset(&buf[0], 0x0, 24);
-				memset(&buf[1], 0xff, 10);
+				memset(&buf[1], 0xFF, 10);
 				buf[0x12] = buf[0x16]= 8;
 				buf[0xf] = 2;
 
@@ -747,8 +752,8 @@ static void get_psx_track_datas(void)
 
 	discsize = ((uint64_t) psx_isos_desc[psx_indx * 2 + 1]) * (uint64_t)CD_SECTOR_SIZE_2352;
 
-	num_sections = (psx_isos_desc[psx_indx * 2 + 0] >> 16) & 0xffff;
-	sections = &psx_isos_desc[16] + (psx_isos_desc[psx_indx * 2 + 0] & 0xffff);
+	num_sections = (psx_isos_desc[psx_indx * 2 + 0] >> 16) & 0xFFFF;
+	sections = &psx_isos_desc[16] + (psx_isos_desc[psx_indx * 2 + 0] & 0xFFFF);
 	sections_size = sections + num_sections;
 }
 
@@ -911,14 +916,12 @@ static void eject_thread(uint64_t arg)
 static void rawseciso_thread(uint64_t arg)
 {
 	rawseciso_args *args;
-	psxseciso_args *psx_args;
 
 	sys_event_queue_attribute_t queue_attr;
 
 	int ret; cd_sector_size_param = 0;
 
 	args = (rawseciso_args *)(uint32_t)arg;
-	psx_args = (psxseciso_args *)(uint32_t)arg;
 
 	//DPRINTF("Hello VSH\n");
 
@@ -928,6 +931,9 @@ static void rawseciso_thread(uint64_t arg)
 	emu_mode = args->emu_mode & 1023;
 
 #ifdef RAWISO_PSX_MULTI
+	psxseciso_args *psx_args;
+	psx_args = (psxseciso_args *)(uint32_t)arg;
+
 	if(emu_mode == EMU_PSX_MULTI)
 		mode_file = 0;
 	else
@@ -992,13 +998,13 @@ static void rawseciso_thread(uint64_t arg)
 
 		if(num_tracks > 0xFF)
 		{
-			CD_SECTOR_SIZE_2352 = (num_tracks & 0xff00)>>4;
+			CD_SECTOR_SIZE_2352 = (num_tracks & 0xFF00)>>4;
 		}
 
 		if(CD_SECTOR_SIZE_2352 != 2352 && CD_SECTOR_SIZE_2352 != 2048 && CD_SECTOR_SIZE_2352 != 2336 && CD_SECTOR_SIZE_2352 != 2448) CD_SECTOR_SIZE_2352 = 2352;
 		if(CD_SECTOR_SIZE_2352 != 2352) cd_sector_size_param = CD_SECTOR_SIZE_2352<<4;
 
-		num_tracks &= 0xff;
+		num_tracks &= 0xFF;
 
 		if(num_tracks)
 			memcpy((void *) tracks, (void *) ((ScsiTrackDescriptor *)(sections_size + num_sections)), num_tracks * sizeof(ScsiTrackDescriptor));

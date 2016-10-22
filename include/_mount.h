@@ -1538,8 +1538,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(!extcasecmp(_path, ".cue", 4))
 					{
-						unsigned int num_tracks = 0;
-
 						sys_addr_t sysmem = 0;
 						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 						{
@@ -1547,6 +1545,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 							uint64_t msiz = read_file(_path, buf, 65535, 0);
 							if(msiz > 10)
 							{
+								unsigned int num_tracks = 0;
+
 								TrackDef tracks[32];
 								tracks[0].lba = 0;
 								tracks[0].is_audio = 0;
