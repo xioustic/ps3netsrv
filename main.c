@@ -831,7 +831,7 @@ static u8 check_password(char *param)
 		{
 			pwd_tries++;
 			if(IS(pos + 4, webman_config->ftp_password)) {pwd_tries = 0, ret = 1;}
-			pos--, *pos = NULL;
+			--pos; *pos = NULL;
 		}
 	}
 

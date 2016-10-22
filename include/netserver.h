@@ -670,7 +670,6 @@ static void handleclient_net(uint64_t arg)
 static void netsvrd_thread(uint64_t arg)
 {
 	int list_s = FAILED;
-	if(webman_config->netsrvp == 0) webman_config->netsrvp = NETPORT;
 
 relisten:
 	if(working) list_s = slisten(webman_config->netsrvp, 4);

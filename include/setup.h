@@ -34,9 +34,14 @@
 
 static void setup_parse_settings(char *param)
 {
+	char *pos;
+
+	pos = strstr(param, "autop="); if(!pos) return;
+
 	memset(webman_config, 0, sizeof(WebmanCfg));
 
-	char *pos;
+	get_value(webman_config->autoboot_path, pos + 6, 255);
+	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
 	if(strstr(param, "u0=1")) webman_config->usb0 = 1;
 	if(strstr(param, "u1=1")) webman_config->usb1 = 1;
@@ -311,10 +316,6 @@ static void setup_parse_settings(char *param)
 	if(pos) get_value(webman_config->allow_ip, pos + 4, 16);
  #endif
 #endif
-
-	pos = strstr(param, "autop=");
-	if(pos) get_value(webman_config->autoboot_path, pos + 6, 255);
-	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
 
 #ifndef LITE_EDITION
 	#ifdef USE_UACCOUNT
@@ -770,7 +771,7 @@ static void setup_form(char *buffer, char *templn)
 
 #ifndef ENGLISH_ONLY
 	//language
-	sprintf(templn, " %s: <select name=\"l\">", STR_PLANG); strcat(buffer, templn);
+	sprintf(templn, " %s: <select name=\"l\" accesskey=\"L\">", STR_PLANG); strcat(buffer, templn);
 
 	value = webman_config->lang;
 	add_option_item("0" , "English"													, (value == 0) , buffer);
@@ -1056,7 +1057,8 @@ static void reset_settings(void)
 	//webman_config->refr = 0;        //enable content scan on startup
 	//webman_config->ftp_password  =  "";
 
-	webman_config->ftp_port = FTPPORT;
+	//webman_config->netsrvp  = NETPORT;
+	//webman_config->ftp_port = FTPPORT;
 
 	for(u8 id = 0; id < 5; id++) webman_config->netp[id] = NETPORT; // webman_config->netd[id] = 0; webman_config->neth[id][0] = NULL;
 
@@ -1117,6 +1119,7 @@ static void reset_settings(void)
 	webman_config->ps2temp = RANGE(webman_config->ps2temp, MIN_FANSPEED, 99); // %
 	webman_config->temp1 = RANGE(webman_config->temp1, 40, MAX_TEMPERATURE);  //°C
 
+	if(webman_config->netsrvp  < 1)   webman_config->netsrvp = NETPORT;
 	if(webman_config->ftp_port < 1 || webman_config->ftp_port == WWWPORT) webman_config->ftp_port = FTPPORT;
 
 #ifdef SYS_ADMIN_MODE

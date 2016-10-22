@@ -322,8 +322,6 @@ struct platform_info {
 static uint8_t vsh_menu_config[sizeof(vsh_menu_Cfg)];
 static vsh_menu_Cfg *config = (vsh_menu_Cfg*) vsh_menu_config;
 
-static void stop_VSH_Menu(void);
-
 static sys_ppu_thread_t vsh_menu_tid = -1;
 static int32_t running = 1;
 static uint8_t menu_running = 0;	// vsh menu off(0) or on(1)
@@ -335,7 +333,7 @@ int32_t vsh_menu_stop(void);
 static void finalize_module(void);
 static void vsh_menu_stop_thread(uint64_t arg);
 
-static char tempstr[512] = "";
+static char tempstr[1024];
 static uint16_t t_icon_X;
 static char netstr[64] = "";
 static char cfw_str[64] = "";
@@ -356,7 +354,47 @@ static char item_size[64];
 
 char *current_file[512];
 
+static void vsh_menu_thread(uint64_t arg);
+
 extern int32_t netctl_main_9A528B81(int32_t size, const char *ip);  // get ip addr of interface "eth0"
+
+/*
+int (*View_Find)(const char *) = NULL;
+
+static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
+{
+	// 0x10000 = ELF
+	// 0x10080 = segment 2 start
+	// 0x10200 = code start
+
+	uint32_t table = (*(uint32_t*)0x1008C) + 0x984; // vsh table address
+
+	while(((uint32_t)*(uint32_t*)table) != 0)
+	{
+		uint32_t* export_stru_ptr = (uint32_t*)*(uint32_t*)table; // ptr to export stub, size 2C, "sys_io" usually... Exports:0000000000635BC0 stru_635BC0:    ExportStub_s <0x1C00, 1, 9, 0x39, 0, 0x2000000, aSys_io, ExportFNIDTable_sys_io, ExportStubTable_sys_io>
+
+		const char* lib_name_ptr =  (const char*)*(uint32_t*)((char*)export_stru_ptr + 0x10);
+
+		if(strncmp(vsh_module, lib_name_ptr, strlen(lib_name_ptr))==0)
+		{
+			// we got the proper export struct
+			uint32_t lib_fnid_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x14);
+			uint32_t lib_func_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x18);
+			uint16_t count = *(uint16_t*)((char*)export_stru_ptr + 6); // number of exports
+			for(int i = 0; i < count; i++)
+			{
+				if(fnid == *(uint32_t*)((char*)lib_fnid_ptr + i*4))
+				{
+					// take address from OPD
+					return (void**)*((uint32_t*)(lib_func_ptr) + i) + offset;
+				}
+			}
+		}
+		table += 4;
+	}
+	return 0;
+}
+*/
 
 ////////////////////////////////////////////////////////////////////////
 //			SYS_PPU_THREAD_EXIT, DIRECT OVER SYSCALL				//
@@ -453,10 +491,9 @@ static void send_wm_request(const char *cmd)
 
 	if(conn_s >= 0)
 	{
-		char wm_cmd[strlen(cmd) + 24];
+		char wm_cmd[1048];
 		int cmd_len = sprintf(wm_cmd, "GET %s HTTP/1.0\r\n", cmd);
 		send(conn_s, wm_cmd, cmd_len, 0);
-		sys_timer_sleep(2);
 		sclose(&conn_s);
 	}
 }
@@ -1074,7 +1111,9 @@ static void return_to_xmb(void)
 {
 	sys_timer_sleep(1);
 	stop_VSH_Menu();
-	if(!last_game_view) view = MAIN_MENU;
+	if(last_game_view || view == FILE_MANAGER)  return;
+
+	view = MAIN_MENU;
 }
 
 static void do_main_menu_action(void)
@@ -1152,7 +1191,7 @@ static void do_main_menu_action(void)
 			if(entry_mode[line] == 3) send_wm_request("/refresh.ps3?3"); else
 			if(entry_mode[line] == 4) send_wm_request("/refresh.ps3?4"); else
 			if(entry_mode[line] == 5) send_wm_request("/refresh.ps3?0"); else
-									send_wm_request("/refresh.ps3");
+									  send_wm_request("/refresh.ps3");
 
 			entry_mode[line] = 0; sprintf(entry_str[view][line], "3: Refresh XML");
 			break;
@@ -1380,7 +1419,7 @@ static void do_file_manager_action(uint32_t curpad)
 			// install pkg
 			if( is_file && (strcasestr(".pkg", items[cur_item] + ext_offset)!=NULL) )
 			{
-				char url[2 * MAX_PATH_LEN];
+				char url[1024];
 				sprintf(tempstr, "%s/%s", curdir, items[cur_item]);
 				urlenc(url, tempstr);
 				sprintf(tempstr, "/install.ps3%s", url);
@@ -1680,7 +1719,7 @@ static void draw_background_and_title(void)
 														(view == FILE_MANAGER && !last_game_view) ? curdir + curdir_offset :
 														(view == PLUGINS_MANAGER) ? "Plugins Manager"		:
 																					 "VSH Menu for webMAN") );
-	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.11");
+	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.12");
 }
 
 static void draw_menu_options(void)
@@ -1988,8 +2027,8 @@ static void change_main_menu_options(uint32_t curpad)
 	switch (line)
 	{
 		case 0x0: strcpy(entry_str[view][line], ((opt == 1) ? "0: Eject Disc\0"  :
-													(opt == 2) ? "0: Insert Disc\0" :
-																 "0: Unmount Game\0"));
+												 (opt == 2) ? "0: Insert Disc\0" :
+															  "0: Unmount Game\0"));
 		break;
 
 		case 0x1:	if(opt == 5)
@@ -2002,9 +2041,9 @@ static void change_main_menu_options(uint32_t curpad)
 		break;
 
 		case 0x2: strcpy(entry_str[view][line], ((opt == 1) ? "2: Fan (-)\0"	 :
-													(opt == 2) ? "2: Fan Mode\0"	:
-													(opt == 3) ? "2: System Info\0" :
-																 "2: Fan (+)\0"));
+												 (opt == 2) ? "2: Fan Mode\0"	:
+												 (opt == 3) ? "2: System Info\0" :
+															  "2: Fan (+)\0"));
 		break;
 
 		case 0x3: sprintf(entry_str[view][line], "3: Refresh XML"); if(opt) sprintf(entry_str[view][line] + 14, " (%i)", (opt==5) ? 0 : opt);
@@ -2012,18 +2051,18 @@ static void change_main_menu_options(uint32_t curpad)
 		break;
 
 		case 0x6: strcpy(entry_str[view][line], ((opt) ? "6: Screenshot (XMB + Menu)\0"  :
-															"6: Screenshot (XMB)\0"));
+														 "6: Screenshot (XMB)\0"));
 		break;
 
 		case 0x9: strcpy(entry_str[view][line], ((opt == 1) ? "9: Block PSN Servers\0"   :
-													(opt == 2) ? "9: Restore PSN Servers\0" :
-													(opt == 3) ? "9: Delete History\0"		:
-													(opt == 4) ? "9: Restore Syscalls\0"	:
-																 "9: Disable Syscalls\0"));
+												 (opt == 2) ? "9: Restore PSN Servers\0" :
+												 (opt == 3) ? "9: Delete History\0"		:
+												 (opt == 4) ? "9: Restore Syscalls\0"	:
+															  "9: Disable Syscalls\0"));
 		break;
 
 		case 0xB: strcpy(entry_str[view][line], ((opt) ? "B: Reboot PS3 (hard)\0" :
-															"B: Reboot PS3 (soft)\0"));
+														 "B: Reboot PS3 (soft)\0"));
 		break;
 	}
 }
@@ -2072,7 +2111,7 @@ static void show_icon0(uint32_t curpad)
 			}
 		}
 
-		tempstr[0]=0;
+		tempstr[0] = 0;
 	}
 }
 
@@ -2096,7 +2135,7 @@ static void vsh_menu_thread(uint64_t arg)
 	config->dnotify = 0;
 
 	// read config file
-	int fd=0;
+	int fd = 0;
 	if(cellFsOpen("/dev_hdd0/tmp/wm_vsh_menu.cfg", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		 cellFsRead(fd, (void *)vsh_menu_config, sizeof(vsh_menu_Cfg), 0);
@@ -2112,6 +2151,8 @@ static void vsh_menu_thread(uint64_t arg)
 		vshtask_notify("VSH Menu loaded.\nHold [Select] to open it.");
 	}
 
+	//View_Find = getNIDfunc("paf", 0xF21655F3, 0);
+
 	get_firmware_version();
 	get_kernel_type();
 	memset(payload_type, 0, 64);
@@ -2120,27 +2161,22 @@ static void vsh_menu_thread(uint64_t arg)
 	{
 		if(!menu_running)													 // VSH menu is not running, normal XMB execution
 		{
-			VSHPadGetData(&pdata);											// use VSHPadGetData() to check pad
+			pdata.len = 0;
+			for(uint8_t p = 0; p < 8; p++)
+				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
-			if((pdata.len > 0) && (vshmain_EB757101() == 0))					// if pad data and we are in XMB
+			if(pdata.len)					// if pad data and we are on XMB
 			{
-			curpad = (pdata.button[2] | (pdata.button[3] << 8));			// merge pad data
+				if((pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT) && (pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0)) ++show_menu; else show_menu = 0;
 
-			if(curpad != oldpad) show_menu = 0;
-			if(curpad == PAD_SELECT) ++show_menu;
+				if(show_menu > 3)			// Start VSH menu if SELECT button was pressed for few seconds
+				{
+					show_menu = 0, oldpad = PAD_SELECT;
+					if(line & 1) line = 0;	// menu on first entry in list
 
-			if(show_menu>3) // Start VSH menu if SELECT button was pressed for few seconds
-			{
-				show_menu = 0;
-				if(line & 1) line = 0;   // menu on first entry in list
-
-				start_VSH_Menu();
+					if(vshmain_EB757101() == 0) start_VSH_Menu();
+				}
 			}
-
-			oldpad = curpad;
-			}
-			else
-			oldpad = 0;
 
 			sys_timer_usleep(300000);											// vsh sync
 		}
@@ -2268,7 +2304,7 @@ static void vsh_menu_thread(uint64_t arg)
 			else
 			oldpad = 0;
 
-			sys_timer_usleep(120000); // short menu frame delay
+			sys_timer_usleep(90000); // short menu frame delay
 		}
 	}
 

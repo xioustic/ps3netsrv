@@ -2,10 +2,6 @@
 #include "include/vsh_exports.h"
 //#include "include/network.h"	// debug
 
-
-
-static void *vsh_pdata_addr = NULL;
-
 /***********************************************************************
 * search and return vsh_process toc
 * Not the best way, but it work, it's generic and it is fast enough...
@@ -46,6 +42,9 @@ static int32_t get_vsh_pad_obj(void)
 *
 * CellPadData *data = data struct for holding pad_data
 ***********************************************************************/
+/*
+static void *vsh_pdata_addr = NULL;
+
 void VSHPadGetData(CellPadData *data)
 {
 	if(!vsh_pdata_addr)        // first time, get address
@@ -59,7 +58,6 @@ void VSHPadGetData(CellPadData *data)
 			{
 				vsh_pdata_addr = (void*)(uint32_t)((int32_t)((*(uint32_t*)(pm_start + 0x234) & 0x0000FFFF) <<16) +
 				                                   (int16_t)( *(uint32_t*)(pm_start + 0x244) & 0x0000FFFF));
-
 				break;
 			}
 
@@ -67,9 +65,9 @@ void VSHPadGetData(CellPadData *data)
 		}
 	}
 
-	memcpy(data, vsh_pdata_addr, 0x80);
+	if(vsh_pdata_addr) memcpy(data, vsh_pdata_addr, 0x80);
 }
-
+*/
 /***********************************************************************
 * set/unset io_pad_library init flag
 *
