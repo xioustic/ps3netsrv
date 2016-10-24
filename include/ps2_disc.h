@@ -40,7 +40,7 @@ static bool mount_ps2disc(char *path)
 	{
 		size_t src_len, dst_len;
 
-		if(map_paths>0x80000000007FE800ULL) break;
+		if(map_paths > 0x80000000007FE800ULL) break;
 		pokeq(map_data + (n * 0x20) + 0x10, map_paths);
 		src_len = string_to_lv2(file_to_map[n].src, map_paths);
 		map_paths += (len + 8) & 0x7f8;

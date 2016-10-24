@@ -183,7 +183,7 @@ static int sys_storage_ext_umount_discfile(void)
 	system_call_2(864, func, param);
 	return (int)p1;
 } */
-
+/*
 typedef struct
 {
 	char mount_point[32];
@@ -194,7 +194,7 @@ typedef struct
 
 int cellFsUtilMount(const char *block_dev, const char *filesystem, const char *mount_point, int unk, int read_only, int unk2, char *argv[], int argc);
 int cellFsUtilUmount(const char *mount_point, uint64_t unk, int force);
-
+*/
 /* static int cellFsUtilGetMountInfo(CellFsMountInfo *info, uint64_t size, uint64_t *rsize)
 {
 	system_call_3(842, (uint64_t)(uint32_t)info, size, (uint64_t)(uint32_t)rsize);
@@ -206,7 +206,7 @@ int cellFsUtilUmount(const char *mount_point, uint64_t unk, int force);
 	system_call_1(841, (uint64_t)(uint32_t)size);
 	return (int)p1;
 } */
-
+/*
 int cellFsUtilGetSpaceInfo(const char *mount_point, uint64_t *total_size, uint64_t *free_size);
 
 static uint64_t get_device(char *name) __attribute__((unused));
@@ -281,7 +281,7 @@ static uint64_t get_device(char *name)
 
 	return 0;
 }
-
+*/
 static int sys_map_path(const char *oldpath, const char *newpath)
 {
 #if 0

@@ -89,6 +89,7 @@ static char search_url[50];
 
 #ifdef LAST_FIRMWARE_ONLY
  #undef DECR_SUPPORT
+ #undef FIX_GAME
 #endif
 
 SYS_MODULE_INFO(WWWD, 0, 1, 0);
@@ -2149,9 +2150,9 @@ again3:
 
 				char mode = 'h', *param2 = strstr(param, "?");
  #ifndef LITE_EDITION
-				if(param2) {mode = param2[1]; if(strstr(param, "$")) {webman_config->default_restart = mode; save_settings();}} else if(is_restart) mode = webman_config->default_restart;
+				if(param2) {mode = param2[1] | 0x20; if(strstr(param, "$")) {webman_config->default_restart = mode; save_settings();}} else if(is_restart) mode = webman_config->default_restart;
  #else
-				if(param2)  mode = param2[1]; else if(is_restart) mode = webman_config->default_restart;
+				if(param2)  mode = param2[1] | 0x20; else if(is_restart) mode = webman_config->default_restart;
  #endif
 				if(mode == 'q')
 					{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} // (quick reboot) load LPAR id 1

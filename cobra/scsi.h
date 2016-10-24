@@ -64,7 +64,7 @@ enum DvdBookType
 	BOOKTYPE_DVDPRWDL = 13,
 	BOOKTYPE_DVDPRDL
 };
-
+/*
 typedef struct _ScsiCmdTestUnitReady
 {
 	uint8_t opcode;
@@ -99,7 +99,7 @@ typedef struct _ScsiTocResponse
 	uint8_t first_track;
 	uint8_t last_track;
 } __attribute__((packed)) ScsiTocResponse;
-
+*/
 typedef struct _ScsiTrackDescriptor
 {
 	uint8_t reserved;
@@ -108,7 +108,7 @@ typedef struct _ScsiTrackDescriptor
 	uint8_t reserved2;
 	uint32_t track_start_addr;
 } __attribute__((packed)) ScsiTrackDescriptor;
-
+/*
 typedef struct _ScsiFullTrackDescriptor
 {
 	uint8_t session_number;
@@ -235,6 +235,7 @@ static inline uint64_t msf_to_lba(uint8_t m, uint8_t s, uint8_t f)
 	return lba;
 }
 
+
 #ifdef DEBUG
 
 static const char *get_scsi_cmd_name(uint8_t cmd) __attribute__((unused));
@@ -259,7 +260,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0x10 */
+		NULL, // 0x10 //
 		NULL,
 		"INQUIRY",
 		NULL,
@@ -275,7 +276,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		"PREVENT ALLOW MEDIUM REMOVAL",
 		NULL,
-		NULL, /* 0x20 */
+		NULL, // 0x20 //
 		NULL,
 		NULL,
 		"READ FORMAT CAPACITIES",
@@ -291,7 +292,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		"WRITE AND VERIFY (10)",
 		"VERIFY (10)",
-		NULL, /* 0x30 */
+		NULL, // 0x30 //
 		NULL,
 		NULL,
 		NULL,
@@ -307,7 +308,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0x40 */
+		NULL, // 0x40 //
 		NULL,
 		NULL,
 		"READ TOC/PMA/ATIP",
@@ -323,7 +324,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0x50 */
+		NULL, // 0x50 //
 		"READ DISC INFORMATION",
 		"READ TRACK INFORMATION",
 		"RESERVE TRACK",
@@ -339,7 +340,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		"SEND CUE SHEET",
 		NULL,
 		NULL,
-		NULL, /* 0x60 */
+		NULL, // 0x60 //
 		NULL,
 		NULL,
 		NULL,
@@ -355,7 +356,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0x70 */
+		NULL, // 0x70 //
 		NULL,
 		NULL,
 		NULL,
@@ -371,7 +372,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0x80 */
+		NULL, // 0x80 //
 		NULL,
 		NULL,
 		NULL,
@@ -387,7 +388,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0x90 */
+		NULL, // 0x90 //
 		NULL,
 		NULL,
 		NULL,
@@ -403,7 +404,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		"REPORT LUNS", /* 0xA0 */
+		"REPORT LUNS", // 0xA0 //
 		"BLANK",
 		"SECURITY PROTOCOL IN",
 		"SEND KEY",
@@ -419,7 +420,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		"READ DISC STRUCTURE",
 		NULL,
 		NULL,
-		NULL, /* 0xB0 */
+		NULL, // 0xB0 //
 		NULL,
 		NULL,
 		NULL,
@@ -435,7 +436,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		"MECHANISM STATUS",
 		"READ CD",
 		"SEND DISC STRUCTURE",
-		NULL, /* 0xC0 */
+		NULL, // 0xC0 //
 		NULL,
 		NULL,
 		NULL,
@@ -451,7 +452,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0xD0 */
+		NULL, // 0xD0 //
 		NULL,
 		NULL,
 		NULL,
@@ -467,7 +468,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0xE0 */
+		NULL, // 0xE0 //
 		NULL,
 		NULL,
 		NULL,
@@ -483,7 +484,7 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 		NULL,
 		NULL,
 		NULL,
-		NULL, /* 0xF0 */
+		NULL, // 0xF0 //
 		NULL,
 		NULL,
 		NULL,
@@ -505,6 +506,5 @@ static const char *get_scsi_cmd_name(uint8_t cmd)
 }
 
 #endif
-
+*/
 #endif /* __SCSI_H__ */
-

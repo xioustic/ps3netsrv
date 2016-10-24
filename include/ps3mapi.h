@@ -1122,44 +1122,23 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 				ssend(conn_s_ps3mapi, PS3MAPI_OK_221);
 				connactive = 0;
 			}
-			else if(_IS(cmd, "SERVER"))
+			else if(_IS(cmd, "CORE") || _IS(cmd, "SERVER"))
 			{
 				if(split)
 				{
+					bool is_core = _IS(cmd, "CORE");
 					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
 					if(_IS(cmd, "GETVERSION"))
 					{
-						sprintf(buffer, "200 %i\r\n", PS3MAPI_SERVER_VERSION);
-						ssend(conn_s_ps3mapi, buffer);
-					}
-					else if(_IS(cmd, "GETMINVERSION"))
-					{
-						sprintf(buffer, "200 %i\r\n", PS3MAPI_SERVER_MINVERSION);
-						ssend(conn_s_ps3mapi, buffer);
-					}
-					else ssend(conn_s_ps3mapi, PS3MAPI_ERROR_502);
-				}
-				else
-				{
-					ssend(conn_s_ps3mapi, PS3MAPI_ERROR_501);
-				}
-			}
-			else if(_IS(cmd, "CORE"))
-			{
-				if(split)
-				{
-					split = ssplit(param1, cmd, 19, param2, PS3MAPI_MAX_LEN);
-					if(_IS(cmd, "GETVERSION"))
-					{
-						int version = 0;
-						{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_VERSION); version = (int)(p1); }
+						int version = PS3MAPI_SERVER_VERSION;
+						if(is_core) { system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_VERSION); version = (int)(p1); }
 						sprintf(buffer, "200 %i\r\n", version);
 						ssend(conn_s_ps3mapi, buffer);
 					}
 					else if(_IS(cmd, "GETMINVERSION"))
 					{
-						int version = 0;
-						{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_MINVERSION); version = (int)(p1); }
+						int version = PS3MAPI_SERVER_MINVERSION;
+						if(is_core) { system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_MINVERSION); version = (int)(p1); }
 						sprintf(buffer, "200 %i\r\n", version);
 						ssend(conn_s_ps3mapi, buffer);
 					}

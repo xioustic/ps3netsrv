@@ -1087,16 +1087,16 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	{
 		if(!extcmp(_path, ".ntfs[PSXISO]", 13) || (strstr(_path, ".ntfs[") != NULL && strstr(_path, "[raw]") != NULL))
 		{
-			bool found = false; u8 n;
+			u8 n;
 			const char raw_iso_sprx[4][40] = {  "/dev_flash/vsh/module/raw_iso.sprx",
 												"/dev_hdd0/raw_iso.sprx",
 												"/dev_hdd0/plugins/raw_iso.sprx",
 												"/dev_hdd0/game/IRISMAN00/sprx_iso" };
 
 			for(n = 0; n < 4; n++)
-				if(file_exists(raw_iso_sprx[n])) {found = true; break;}
+				if(file_exists(raw_iso_sprx[n])) break;
 
-			if(found)
+			if(n < 4)
 			{
 				cellFsChmod(_path, MODE);
 
@@ -1114,6 +1114,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						sys_memory_free(addr);
 						goto exit_mount;
 					}
+					sys_memory_free(addr);
 				}
 			}
 		}
