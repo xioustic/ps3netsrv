@@ -706,8 +706,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 									rest = 0;
 
-									int optval = buffer_size;
-									setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
+									//int optval = buffer_size;
+									//setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 									err = CELL_FS_OK;
@@ -859,8 +859,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
-									int optval = buffer_size;
-									setsockopt(data_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
+									//int optval = buffer_size;
+									//setsockopt(data_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
 
 									while(working)
 									{
