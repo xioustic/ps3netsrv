@@ -823,6 +823,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 	sclose(&conn_s);
 }
 
+#ifdef SYS_ADMIN_MODE
 static u8 check_password(char *param)
 {
 	u8 ret = 0;
@@ -840,6 +841,7 @@ static u8 check_password(char *param)
 
 	return ret;
 }
+#endif
 
 static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_http, u8 is_cpursx, bool mount_ps3)
 {
