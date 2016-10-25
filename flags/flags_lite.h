@@ -29,7 +29,7 @@
 //#define GET_KLICENSEE	1	// /klic.ps3
 //#define PS3_BROWSER	1	// /browser.ps3 / open browser combos
 //#define EMBED_JS		1	// use embedded javascript instead of external js files
-//#define AUTO_POWER_OFF	1	// Disable temporarily the auto power off setting in xRegistry during ftp session, /install.ps3 & /download.ps3 (idea by 444nonymous)
+#define AUTO_POWER_OFF	1	// Disable temporarily the auto power off setting in xRegistry during ftp session, /install.ps3 & /download.ps3 (idea by 444nonymous)
 #define OFFLINE_INGAME	1	// allow set auto-disable network in-game (idea by 444nonymous)
 #define SYS_ADMIN_MODE	1	// Enable restricted / admin modes using L2+R2+TRIANGLE
 

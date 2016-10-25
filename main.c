@@ -699,6 +699,7 @@ static size_t get_name(char *name, const char *filename, u8 cache);
 static void add_breadcrumb_trail(char *buffer, char *param);
 static void get_cpursx(char *cpursx);
 static void get_last_game(char *last_path);
+static void add_game_info(char *buffer, char *templn, bool is_cpursx);
 
 static bool from_reboot = false;
 static bool is_busy = false;
@@ -2807,7 +2808,7 @@ again3:
 						// /unloadprx.ps3?prx=<path-sprx>
 						// /unloadprx.ps3?slot=<slot>
 
-						char *pos; unsigned int slot=7; bool prx_found;
+						char *pos; unsigned int slot = 7; bool prx_found;
 
 						if(param[12] == '/') sprintf(templn, "%s", param + 12); else
 						if(param[14] == '/') sprintf(templn, "%s", param + 14); else
@@ -2829,14 +2830,14 @@ again3:
 							if(islike(param, "/unloadprx.ps3")) prx_found = false;
 						}
   #endif
-						if(slot > 6)
+						if((slot < 1) || (slot > 6))
 						{
-							pos = strstr(param, "slot="); slot = 6; // default (last slot)
-							if(pos)
-							{
-								get_value(param, pos + 5, 2);
-								slot = RANGE((unsigned int)val(param), 1, 6);
-							}
+  #ifdef COBRA_ONLY
+							slot = get_valuen(param, "slot=", 0, 6);
+							if(!slot) slot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); // find first free slot if slot == 0
+  #else
+							slot = get_valuen(param, "slot=", 1, 6);
+  #endif
 						}
 
 						if(prx_found)

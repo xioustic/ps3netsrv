@@ -49,6 +49,49 @@ static void get_net_info(char *net_type, char *ip)
 	netctl_main_9A528B81(ip_size, ip);
 }
 
+static void add_game_info(char *buffer, char *templn, bool is_cpursx)
+{
+	if(IS_INGAME)
+	{
+		get_game_info();
+
+		if(strlen(_game_TitleID) == 9)
+		{
+			if(is_cpursx && sys_admin)
+			{
+#ifdef GET_KLICENSEE
+				buffer += concat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
+#endif
+#ifdef SYS_BGM
+				buffer += concat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
+#endif
+#ifdef VIDEO_REC
+				buffer += concat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
+#endif
+			}
+
+			char path[MAX_PATH_LEN], version[8] = "01.00", *app_ver = version;
+
+			sprintf(templn, "<hr><span style=\"position:relative;top:-20px;\"><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); buffer += concat(buffer, templn);
+
+			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
+			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
+
+			getTitleID(path, app_ver, GET_VERSION); if(*app_ver == '0') *app_ver='v'; if(strstr(_game_Title, app_ver)) *app_ver = NULL;
+
+			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); buffer += concat(buffer, templn);
+
+			sprintf(path, "%s%s", HDD0_GAME_DIR, _game_TitleID);
+			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME");
+
+			sprintf(templn, "<a href=\"%s\"><img src=\"%s/ICON0.PNG\" height=\"60\" border=0%s></a>", path, path, " style=\"position:relative;top:20px;\""); buffer += concat(buffer, templn);
+
+			buffer += concat(buffer, "</H2></span>");
+		}
+	}
+}
+
+
 static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_http)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
@@ -81,6 +124,10 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	if(sys_admin) {sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);}
 
+
+	add_game_info(buffer, templn, true);
+
+/*
 	if(IS_INGAME)
 	{
 		get_game_info();
@@ -119,7 +166,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 			buffer += concat(buffer, "</H2>");
 		}
 	}
-
+*/
 #ifdef COPY_PS3
 	if(copy_in_progress)
 	{
