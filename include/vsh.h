@@ -89,6 +89,21 @@ static void enable_ingame_screenshot(void)
 }
 #endif
 
+static void explore_exec_push(u32 usecs, u8 focus_first)
+{
+	if(explore_interface)
+	{
+		sys_timer_usleep(usecs);
+		explore_interface->ExecXMBcommand("exec_push", 0, 0);
+
+		if(focus_first)
+		{
+			sys_timer_usleep(200000);
+			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+		}
+	}
+}
+
 static void launch_disc(char *category, char *seg_name)
 {
 	u8 n;

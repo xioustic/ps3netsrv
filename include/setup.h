@@ -101,6 +101,10 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "rxv=1")) webman_config->rxvid  = 1;
 	if(strstr(param, "pse=1")) webman_config->ps1emu = 1;
 
+#ifdef PKG_LAUNCHER
+	if(strstr(param, "p3l=1")) webman_config->ps3l   = 1;
+#endif
+
 	webman_config->combo = webman_config->combo2 = 0;
 
 #ifdef SYS_ADMIN_MODE
@@ -485,7 +489,7 @@ static void setup_form(char *buffer, char *templn)
 	language("/CLOSEFILE", NULL, NULL);
  #endif
 
-	uint8_t value;
+	uint8_t value, b;
 
 	sprintf(templn, "<style>td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
@@ -507,19 +511,30 @@ static void setup_form(char *buffer, char *templn)
 	//Scan for content
 	sprintf(templn, "<td nowrap valign=top><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
-	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    , _BR_     , !(webman_config->cmask & PS3), buffer);
-	add_check_box("ps2", "1", "PLAYSTATION\xC2\xAE\x32"    , " ("     , !(webman_config->cmask & PS2), buffer);
-	add_check_box("p2l", "1", STR_PS2L                     , ")<br>"  ,  (webman_config->ps2l)       , buffer);
+#ifdef PKG_LAUNCHER
+	b = isDir("/dev_hdd0/game/PKGLAUNCH");
+	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    , b ? " (" : _BR_, !(webman_config->cmask & PS3), buffer);
+	if(b) add_check_box("p3l", "1", "PKG Launcher"         ,     ")<br>"    ,  (webman_config->ps3l)       , buffer);
+#else
+	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    ,            _BR_, !(webman_config->cmask & PS3), buffer);
+#endif
+
+	b = isDir(PS2_CLASSIC_PLACEHOLDER);
+	add_check_box("ps2", "1", "PLAYSTATION\xC2\xAE\x32"    , b ? " (" : _BR_, !(webman_config->cmask & PS2), buffer);
+	if(b) add_check_box("p2l", "1", STR_PS2L               ,     ")<br>"    ,  (webman_config->ps2l)       , buffer);
+
 #ifdef COBRA_ONLY
-	add_check_box("ps1", "1", "PLAYSTATION\xC2\xAE&nbsp;"  , " ("     , !(webman_config->cmask & PS1), buffer);
-	add_check_box("pse", "1", "ps1_netemu"                 , ")<br>"  ,  (webman_config->ps1emu)     , buffer);
+	add_check_box("ps1", "1", "PLAYSTATION\xC2\xAE&nbsp;"  ,     " ("       , !(webman_config->cmask & PS1), buffer);
+	add_check_box("pse", "1", "ps1_netemu"                 ,     ")<br>"    ,  (webman_config->ps1emu)     , buffer);
 
-    add_check_box("psp", "1", "PLAYSTATION\xC2\xAEPORTABLE", " ("     , !(webman_config->cmask & PSP), buffer);
-    add_check_box("psl", "1", STR_PSPL                     , ")<br>"    ,(webman_config->pspl)       , buffer);
-	add_check_box("blu", "1", "Blu-ray\xE2\x84\xA2"        , " ("     , !(webman_config->cmask & BLU), buffer);
-	add_check_box("rxv", "1", STR_RXVID                    , ")<br>"  ,  (webman_config->rxvid)      , buffer);
+	b = isDir("/dev_hdd0/game/PSPC66820");
+	add_check_box("psp", "1", "PLAYSTATION\xC2\xAEPORTABLE", b ? " (" : _BR_, !(webman_config->cmask & PSP), buffer);
+	if(b) add_check_box("psl", "1", STR_PSPL               ,     ")<br>"    ,  (webman_config->pspl)       , buffer);
 
-	add_check_box("dvd", "1", "DVD "                       , STR_VIDLG, !(webman_config->cmask & DVD), buffer);
+	add_check_box("blu", "1", "Blu-ray\xE2\x84\xA2"        ,       " ("     , !(webman_config->cmask & BLU), buffer);
+	add_check_box("rxv", "1", STR_RXVID                    ,       ")<br>"  ,  (webman_config->rxvid)      , buffer);
+
+	add_check_box("dvd", "1", "DVD "                       ,       STR_VIDLG, !(webman_config->cmask & DVD), buffer);
 #endif
 
 	//general settings
@@ -1124,6 +1139,10 @@ static void reset_settings(void)
 
 #ifdef SYS_ADMIN_MODE
 	if(!(webman_config->combo & SYS_ADMIN)) sys_admin = 1; // set admin mode if ADMIN combo L2+R2+TRIANGLE is disabled
+#endif
+
+#ifdef PKG_LAUNCHER
+	if(!isDir("/dev_hdd0/game/PKGLAUNCH")) webman_config->ps3l = 0;
 #endif
 
 	// settings

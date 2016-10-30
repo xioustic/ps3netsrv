@@ -1,10 +1,10 @@
-#define MIN_FANSPEED	(20)
-#define DEFAULT_MIN_FANSPEED	(25)
-#define MAX_FANSPEED	(0xF4)
-#define MAX_TEMPERATURE	(85)
-#define MY_TEMP 		(68)
+#define MIN_FANSPEED			(20) /* % */
+#define DEFAULT_MIN_FANSPEED	(25) /* % */
+#define MAX_FANSPEED			(0xF4)
+#define MAX_TEMPERATURE			(85) /* °C */
+#define MY_TEMP 				(68) /* °C */
 
-#define FAN_AUTO 		(0)
+#define FAN_AUTO 				(0)
 
 static u8 fan_speed = 0x33;
 static u8 old_fan = 0x33;

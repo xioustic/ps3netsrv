@@ -7,7 +7,7 @@
 #define IS_BLU_TYPE   ((f1<4) || (f1>=10))
 #define IS_VID_FOLDER ((f1==3) || (f1==4))
 
-#define IS_JB_FOLDER  (f1<2)
+#define IS_JB_FOLDER  ((f1<2) || (f1>=10))
 #define IS_PS3_FOLDER (f1==2)
 #define IS_BLU_FOLDER (f1==3)
 #define IS_DVD_FOLDER (f1==4)
@@ -67,6 +67,12 @@ enum icon_type
 
 #define SHOW_COVERS_OR_ICON0  (webman_config->nocov != SHOW_DISC)
 #define SHOW_COVERS          ((webman_config->nocov == SHOW_MMCOVERS) || (webman_config->nocov == ONLINE_COVERS))
+
+#ifdef PKG_LAUNCHER
+ static const u8 f1_len = 12;
+#else
+ static const u8 f1_len = 11;
+#endif
 
 static u8 loading_games = 0;
 
@@ -239,7 +245,7 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 
 	if(SHOW_COVERS_OR_ICON0)
 	{
-			if(is_dir && (webman_config->nocov == SHOW_ICON0)) {sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name); return;}
+			if(is_dir && (webman_config->nocov == SHOW_ICON0)) {sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name); if(!HAS(icon)) sprintf(icon, "%s/%s/ICON0.PNG", param, entry_name); return;}
 
 			// get path/name and remove file extension
 			int flen = sprintf(icon, "%s/%s", param, entry_name);
@@ -280,7 +286,7 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 			}
 
 			// return ICON0
-			if(is_dir) {sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name); return;}
+			if(is_dir) {sprintf(icon, "%s/%s/PS3_GAME/ICON0.PNG", param, entry_name); if(!HAS(icon)) sprintf(icon, "%s/%s/ICON0.PNG", param, entry_name); return;}
 
 			// continue searching for covers
 			if(SHOW_COVERS) return;
@@ -988,7 +994,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
  #endif
 #endif
 			ns = -2; uprofile = profile;
-			for(u8 f1 = filter1; f1 < 11; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video"
+			for(u8 f1 = filter1; f1 < f1_len; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI"
 			{
 #ifndef COBRA_ONLY
 				if(IS_ISO_FOLDER && !(IS_PS2_FOLDER)) continue; // 0="GAMES", 1="GAMEZ", 5="PS2ISO", 10="video"
@@ -996,7 +1002,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(idx >= max_entries || tlen >= BUFFER_MAXSIZE) break;
 
 				//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
-				if(f1 >= 10) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
+#ifdef PKG_LAUNCHER
+				if(f1 == 11) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
+#endif
+				if(f1 == 10) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
 				if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video"
 
 #ifdef COBRA_ONLY
@@ -1170,7 +1179,16 @@ next_html_entry:
 #endif
 						if(IS_JB_FOLDER && !is_iso)
 						{
-							sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
+#ifdef PKG_LAUNCHER
+							if(f1 == 11)
+							{
+								if(flen != 9) continue;
+								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
+								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
+							}
+							else
+#endif
+								sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
 						}
 
 						if(is_iso || (IS_JB_FOLDER && file_exists(templn)))

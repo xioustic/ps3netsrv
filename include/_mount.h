@@ -10,6 +10,8 @@
 // [PS2]     PS2 extracted folders in /PS2DISC (needs PS2_DISC compilation flag)
 
 
+char map_title_id[10];
+
 typedef struct
 {
 	uint8_t last;
@@ -152,14 +154,27 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				bool l2 = (pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)));
  #endif
 
+ #if defined(FAKEISO) || defined(PKG_LAUNCHER)
+				int view = View_Find("explore_plugin");
+				if(view) explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+ #endif
+
+ #ifdef PKG_LAUNCHER
+				if(strstr(param, "/GAMEI/"))
+				{
+					if(!(webman_config->nogrp) && webman_config->ps3l && (view != 0))
+					{
+						explore_interface->ExecXMBcommand("focus_index pkg_launcher", 0, 0);
+						explore_exec_push(200000, true); // open pkg_launcher folder
+					}
+				}
+				else
+ #endif
  #ifdef FAKEISO
 				if(!l2 && !extcmp(param, ".ntfs[BDFILE]", 13))
 				{
-					int view = View_Find("explore_plugin");
-
 					if(!(webman_config->nogrp) && webman_config->rxvid && (view != 0))
 					{
-						explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
 						if(strcasestr(param, ".pkg"))
 						{
 							explore_interface->ExecXMBcommand("close_all_list", 0, 0);
@@ -168,21 +183,11 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 						else
 						{
 							explore_interface->ExecXMBcommand("focus_index rx_video", 0, 0);
-							sys_timer_usleep(200000);
-							explore_interface->ExecXMBcommand("exec_push", 0, 0);
-							sys_timer_usleep(200000);
-							explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+							explore_exec_push(200000, true);  // open rx_video folder
 
 							if(!autoplay || strcasestr(param, ".mkv")) {is_busy = false; return;}
 
-							sys_timer_sleep(2);
-							explore_interface->ExecXMBcommand("exec_push", 0, 0);
-						}
-
-						if(autoplay)
-						{
-							sys_timer_sleep(2);
-							explore_interface->ExecXMBcommand("exec_push", 0, 0);
+							explore_exec_push(2000000, true); // open Data Disc
 						}
 					}
 				}
@@ -191,6 +196,13 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				{
 					char category[16], seg_name[40]; *category = *seg_name = NULL;
 					if((atag && !l2) || (!atag && l2)) {sys_timer_sleep(1); launch_disc(category, seg_name);} // L2 + X
+
+					autoplay = false;
+				}
+
+				if(autoplay)
+				{
+					explore_exec_push(2000000, false);
 				}
 			}
 
@@ -736,6 +748,15 @@ static void do_umount(bool clean)
 
 		sys_map_path("/dev_bdvd/PS3/UPDATE", NULL);
 
+ #ifdef PKG_LAUNCHER
+		if(*map_title_id)
+		{
+			char gamei_mapping[32];
+			sprintf(gamei_mapping, "/dev_hdd0/game/%s", map_title_id);
+			sys_map_path(gamei_mapping, NULL);
+			sys_map_path("/dev_hdd0/game/PKGLAUNCH", NULL);
+		}
+ #endif
 		{
 			sys_ppu_thread_t t_id;
 			uint64_t exit_code;
@@ -1121,6 +1142,25 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	}
  #endif
 #endif
+
+	// ------------------
+	// mount GAMEI game
+	// ------------------
+ #ifdef PKG_LAUNCHER
+	{
+		char *pos = strstr(_path, "/GAMEI/");
+		if(pos)
+		{
+			sys_map_path("/dev_hdd0/game/PKGLAUNCH", _path0);
+			strncpy(map_title_id, pos + 7, 9); map_title_id[9] = NULL;
+			sprintf(_path, "/dev_hdd0/game/%s", map_title_id);
+			sys_map_path(_path, _path0);
+
+			mount_unk = EMU_MAX;
+			goto exit_mount;
+		}
+	}
+ #endif
 
 	// ------------------
 	// mount PS2 Classic
@@ -1982,7 +2022,7 @@ exit_mount:
 
 	delete_history(false);
 
-	if(mount_unk == EMU_PSP) goto mounting_done;
+	if(mount_unk >= EMU_MAX) goto mounting_done;
 
 	// -------------------------------------------
 	// wait few seconds until the bdvd is mounted

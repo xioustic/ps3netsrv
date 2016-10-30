@@ -1009,19 +1009,21 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					ssend(conn_s_ftp, FTP_OK_USER_230); // User logged in, proceed.
 				}
 				else
-				/*if(  _IS(cmd, "OPTS") || _IS(cmd, "ACCT")
-					|| _IS(cmd, "REIN") || _IS(cmd, "ADAT")
-					|| _IS(cmd, "AUTH") || _IS(cmd, "CCC" )
+				/*if(  _IS(cmd, "AUTH") || _IS(cmd, "ADAT")
+					|| _IS(cmd, "CCC")  || _IS(cmd, "CLNT")
 					|| _IS(cmd, "CONF") || _IS(cmd, "ENC" )
 					|| _IS(cmd, "EPRT") || _IS(cmd, "EPSV")
 					|| _IS(cmd, "LANG") || _IS(cmd, "LPRT")
 					|| _IS(cmd, "LPSV") || _IS(cmd, "MIC" )
+					|| _IS(cmd, "OPTS")
 					|| _IS(cmd, "PBSZ") || _IS(cmd, "PROT")
 					|| _IS(cmd, "SMNT") || _IS(cmd, "STOU")
-					|| _IS(cmd, "STRU") || _IS(cmd, "CLNT")
 					|| _IS(cmd, "XRCP") || _IS(cmd, "XSEN")
 					|| _IS(cmd, "XSEM") || _IS(cmd, "XRSQ")
-					|| _IS(cmd, "STAT") || _IS(cmd, "ALLO") )
+					// RFC 5797 mandatory
+					|| _IS(cmd, "ACCT") || _IS(cmd, "ALLO")
+					|| _IS(cmd, "MODE") || _IS(cmd, "REIN")
+					|| _IS(cmd, "STAT") || _IS(cmd, "STRU") )
 				{
 					ssend(conn_s_ftp, FTP_ERROR_502);	// Command not implemented.
 				}

@@ -43,6 +43,7 @@ extern uint32_t paf_50CDB465(uint32_t plugin, const char *sound);  // finds/gets
 
 extern void paf_B93AFE7E(uint32_t plugin, const char* sound, float arg1, int arg2);  // Example: paf_B93AFE7E( paf_F21655F3("system_plugin"), "snd_trophy", 1, 0)
 #define PlayRCOSound paf_B93AFE7E
+//Example: PlayRCOSound( FindLoadedPlugin("system_plugin"), "snd_trophy", 1, 0)
 
 // paf_B96A18B0  // ? texture
 // paf_A499E2BE  // ? texture

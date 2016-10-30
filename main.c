@@ -456,8 +456,9 @@ typedef struct
 	uint8_t tid;
 	uint8_t use_filename;
 	uint8_t launchpad_xml;
+	uint8_t ps3l;
 
-	uint8_t padding2[20];
+	uint8_t padding2[19];
 
 	// start up settings
 
@@ -615,7 +616,7 @@ static char html_base_path[MAX_PATH_LEN];
 static char smonth[12][4]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/net2", "/net3", "/net4", "/ext", "/dev_sd", "/dev_ms", "/dev_cf"};
-static char paths [11][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video"};
+static char paths [12][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI"};
 
 #ifdef COPY_PS3
 static char    cp_path[MAX_PATH_LEN];   // cut/copy/paste buffer
@@ -3108,7 +3109,12 @@ again3:
 							if(view)
 							{
 								explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
-								explore_interface->ExecXMBcommand("close_all_list", 0, 0);
+ #ifdef PKG_LAUNCHER
+								if(webman_config->ps3l && strstr(param, "/GAMEI/"))
+									explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+								else
+ #endif
+									explore_interface->ExecXMBcommand("close_all_list", 0, 0);
 							}
 						}
 
