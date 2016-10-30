@@ -478,6 +478,14 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_eject.png"    , ICONS_DIR "/icon_wm_eject.png"   );
 //  CopyFile(APP_USRDIR "/icon_wm_root.png"     , ICONS_DIR "/icon_wm_root.png"    );
 
+	CopyFile(APP_USRDIR "/icon_lp_ps3.png"      , ICONS_DIR "/icon_lp_ps3.png");
+	CopyFile(APP_USRDIR "/icon_lp_psx.png"      , ICONS_DIR "/icon_lp_psx.png");
+	CopyFile(APP_USRDIR "/icon_lp_ps2.png"      , ICONS_DIR "/icon_lp_ps2.png");
+	CopyFile(APP_USRDIR "/icon_lp_psp.png"      , ICONS_DIR "/icon_lp_psp.png");
+	CopyFile(APP_USRDIR "/icon_lp_dvd.png"      , ICONS_DIR "/icon_lp_dvd.png");
+	CopyFile(APP_USRDIR "/icon_lp_blu.png"      , ICONS_DIR "/icon_lp_blu.png");
+	CopyFile(APP_USRDIR "/icon_lp_nocover.png"  , ICONS_DIR "/icon_lp_nocover.png");
+
 	CopyFile(APP_USRDIR "/blank.png"            , ICONS_DIR "/blank.png"    );
 
 	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, TMP_DIR "/wm_online_ids.txt");
