@@ -478,6 +478,8 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_eject.png"    , ICONS_DIR "/icon_wm_eject.png"   );
 //  CopyFile(APP_USRDIR "/icon_wm_root.png"     , ICONS_DIR "/icon_wm_root.png"    );
 
+	CopyFile(APP_USRDIR "/blank.png"            , ICONS_DIR "/blank.png"    );
+
 	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, TMP_DIR "/wm_online_ids.txt");
 
 	// XMBM+ webMAN

@@ -76,6 +76,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif
 		char enc_dir_name[1024], *source = param + plen;
 		bool mounted = false; max_mapped = 0;
+		bool is_gamei = false;
 
 		// ----------------------------
 		// remove url query parameters
@@ -132,6 +133,10 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			}
 			else
 				mounted = mount_with_mm(source, 1);
+
+#ifdef PKG_LAUNCHER
+			is_gamei = strstr(param, "/GAMEI/");
+#endif
 		}
 
 		// -----------------
@@ -160,7 +165,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
  #endif
 
  #ifdef PKG_LAUNCHER
-				if(strstr(param, "/GAMEI/"))
+				if(is_gamei)
 				{
 					if(!(webman_config->nogrp) && webman_config->ps3l && (view != 0))
 					{
@@ -579,14 +584,19 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
 
 				//if(strstr(param, "/PSX")) {sprintf(tempstr, " <font size=2>[CD %i • %s]</font>", CD_SECTOR_SIZE_2352, (webman_config->ps1emu) ? "ps1_netemu.self" : "ps1_emu.self"); strcat(buffer, tempstr);}
-
+#ifdef PKG_LAUNCHER
+				if(is_gamei)
+				{
+					char *pos = strstr(STR_PSPLOADED, "PSP Launcher"); if(pos) strcpy(pos, "PKG Launcher");
+				}
+#endif
 				if(is_movie)
 					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
 									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[strstr(param,"BDISO") ? iBDVD : iDVD], mounted ? STR_MOVIELOADED : STR_ERROR);
 				else if(!extcmp(param, ".BIN.ENC", 8))
 					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
 									 "<hr>%s", enc_dir_name, wm_icons[iPS2], 300, mounted ? STR_PS2LOADED : STR_ERROR);
-				else if((strstr(param, "/PSPISO") || strstr(param, "/ISO/")) && !extcasecmp(param, ".iso", 4))
+				else if(((strstr(param, "/PSPISO") || strstr(param, "/ISO/")) && !extcasecmp(param, ".iso", 4)) || is_gamei)
 					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
 									 "<hr>%s", enc_dir_name, wm_icons[iPSP], strcasestr(enc_dir_name,".png") ? 200 : 300, mounted ? STR_PSPLOADED : STR_ERROR);
 				else

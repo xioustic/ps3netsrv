@@ -7,13 +7,15 @@
 #define IS_BLU_TYPE   ((f1<4) || (f1>=10))
 #define IS_VID_FOLDER ((f1==3) || (f1==4))
 
-#define IS_JB_FOLDER  ((f1<2) || (f1>=10))
-#define IS_PS3_FOLDER (f1==2)
-#define IS_BLU_FOLDER (f1==3)
-#define IS_DVD_FOLDER (f1==4)
-#define IS_PS2_FOLDER (f1==5)
-#define IS_PSX_FOLDER ((f1==6) || (f1==7))
-#define IS_PSP_FOLDER ((f1==8) || (f1==9))
+#define IS_JB_FOLDER    ((f1<2) || (f1>=10))
+#define IS_PS3_FOLDER   (f1==2)
+#define IS_BLU_FOLDER   (f1==3)
+#define IS_DVD_FOLDER   (f1==4)
+#define IS_PS2_FOLDER   (f1==5)
+#define IS_PSX_FOLDER   ((f1==6) || (f1==7))
+#define IS_PSP_FOLDER   ((f1==8) || (f1==9))
+#define IS_VIDEO_FOLDER (f1==10)
+#define IS_GAMEI_FOLDER (f1==11)
 
 #define IS_HDD0       (f0 == 0)
 #define IS_NTFS       (f0 == NTFS)
@@ -707,6 +709,14 @@ static void add_launchpad_extras(char *tempstr, char *url)
 
 static void add_launchpad_footer(char *tempstr)
 {
+	char server_url[64];
+	sprintf(tempstr, "%s/blank.png", WM_ICONS_PATH);
+
+	if(file_exists(tempstr))
+		sprintf(server_url, "http://%s%s", local_ip, WM_ICONS_PATH);
+	else
+		sprintf(server_url, "%s", LAUNCHPAD_COVER_SVR);
+
 	// --- add scroller placeholder
 	u16 size = sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
 								"<desc></desc>\n"
@@ -714,7 +724,7 @@ static void add_launchpad_footer(char *tempstr)
 								"<target type=\"u\"></target>\n"
 								"<cntry agelmt=\"0\">all</cntry>\n"
 								"<lang>all</lang></mtrl>\n\n"
-								"</spc></nsx>", LAUNCHPAD_COVER_SVR);
+								"</spc></nsx>", server_url);
 
 	save_file(LAUNCHPAD_FILE_XML, tempstr, -size); // append to XML
 }
@@ -856,6 +866,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		if(!(webman_config->cmask & PS1))   add_query_html(pbuffer, "PSXISO");
 		if(!(webman_config->cmask & BLU))   add_query_html(pbuffer, "BDISO" );
 		if(!(webman_config->cmask & DVD))   add_query_html(pbuffer, "DVDISO");
+ #ifdef PKG_LAUNCHER
+		if(webman_config->ps3l)  add_query_html(pbuffer, "GAMEI");
+ #endif
  #ifndef LITE_EDITION
 		if(webman_config->netd[0] || webman_config->netd[1] || webman_config->netd[2] || webman_config->netd[3] || webman_config->netd[4]) add_query_html(pbuffer, "net");
  #endif
@@ -959,7 +972,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if(strstr(param, "ntfs")) {filter0 = NTFS, b0 = 1;} else
 #endif
 			for(u8 f0 = 0; f0 < 16; f0++) if(strstr(param, drives[f0])) {filter0 = f0, b0 = 1; break;}
-			for(u8 f1 = 0; f1 < 11; f1++) if(strstr(param, paths [f1])) {filter1 = f1, b1 = 1; break;}
+			for(u8 f1 = 0; f1 < f1_len; f1++) if(strstr(param, paths [f1])) {filter1 = f1, b1 = 1; break;}
 			if(!b0 && strstr(param, "hdd" ))  {filter0 = 0, b0 = 1;}
 			if(!b0 && strstr(param, "usb" ))  {filter0 = 1, b0 = 2;}
 			if(!b1 && strstr(param, "games")) {filter1 = 0, b1 = 2;}
@@ -1003,16 +1016,16 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 				//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
 #ifdef PKG_LAUNCHER
-				if(f1 == 11) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
+				if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
 #endif
-				if(f1 == 10) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
-				if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video"
+				if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
+				if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI"
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 				if(is_net)
 				{
-					if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video"
+					if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 				}
  #endif
 #endif
@@ -1180,9 +1193,9 @@ next_html_entry:
 						if(IS_JB_FOLDER && !is_iso)
 						{
 #ifdef PKG_LAUNCHER
-							if(f1 == 11)
+							if(IS_GAMEI_FOLDER)
 							{
-								if(flen != 9) continue;
+								if(flen != 9) continue; // is titleid?
 								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
 								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
 							}

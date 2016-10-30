@@ -451,16 +451,16 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 			//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
 #ifdef PKG_LAUNCHER
-			if(f1 == 11) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
+			if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
 #endif
-			if(f1 == 10) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
-			if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video"
+			if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
+			if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI"
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 			if(is_net)
 			{
-				if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video"
+				if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 			}
  #endif
 #endif
@@ -601,9 +601,9 @@ next_xml_entry:
 						if(IS_JB_FOLDER && !is_iso)
 						{
 #ifdef PKG_LAUNCHER
-							if(f1 == 11)
+							if(IS_GAMEI_FOLDER)
 							{
-								if(flen != 9) continue;
+								if(flen != 9) continue; // is titleid?
 								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
 								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
 							}
