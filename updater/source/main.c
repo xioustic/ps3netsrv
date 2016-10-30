@@ -543,6 +543,9 @@ int main()
 	CopyFile(APP_USRDIR "/vshmenu.png"   	, XMLMANPLS_IMAGES_DIR "/vshmenu.png");
 	CopyFile(APP_USRDIR "/webman.png"  		, XMLMANPLS_IMAGES_DIR "/webman.png");
 
+	CopyFile(APP_USRDIR "/icon_wm_eject.png", XMLMANPLS_IMAGES_DIR "/icon_wm_eject.png");
+	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  , XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
+
 	CopyFile(APP_USRDIR "/eject.png"  		, XMLMANPLS_IMAGES_DIR "/eject.png");
 	CopyFile(APP_USRDIR "/setup.png"  		, XMLMANPLS_IMAGES_DIR "/setup.png");
 	CopyFile(APP_USRDIR "/refresh.png"		, XMLMANPLS_IMAGES_DIR "/refresh.png");

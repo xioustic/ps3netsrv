@@ -902,7 +902,7 @@
 	<View id="seg_webman_unmount">
 		<Attributes>
 			<Table key="webman_unmount">
-				<Pair key="icon"><String>/dev_hdd0/tmp/wm_icons/icon_wm_ps3.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/icon_wm_eject.png</String></Pair>
 				<Pair key="title"><String>Размонтировать</String></Pair>
 				<Pair key="info"><String>Текущая смонтированная игра/папка будет выгружена [Select+O]</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
@@ -916,7 +916,7 @@
 	<View id="seg_webman_insert">
 		<Attributes>
 			<Table key="webman_insert">
-				<Pair key="icon"><String>/dev_hdd0/tmp/wm_icons/icon_wm_ps3.png</String></Pair>
+				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/icon_wm_ps3.png</String></Pair>
 				<Pair key="title"><String>Вставить диск</String></Pair>
 				<Pair key="info"><String>Диск, извлечённый из привода PS3, будет вставлен</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
