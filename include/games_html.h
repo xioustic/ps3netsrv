@@ -669,7 +669,7 @@ static int add_launchpad_entry(char *tempstr, char *templn, const char *url, cha
 								"<cntry agelmt=\"0\">all</cntry>\n"
 								"<lang>all</lang></mtrl>\n\n", (1080000000UL + append), templn, icon, url);
 
-		save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
+		save_file(LAUNCHPAD_FILE_XML, tempstr, -size); // append to XML
 	}
 	else
 		size = sprintf(tempstr, "%s</desc>\n"
@@ -710,13 +710,13 @@ static void add_launchpad_footer(char *tempstr)
 	// --- add scroller placeholder
 	u16 size = sprintf(tempstr, "<mtrl id=\"1081000000\" lastm=\"9999-12-31T23:59:00.000Z\" until=\"2100-12-31T23:59:00.000Z\">\n"
 								"<desc></desc>\n"
-								"<url type=\"2\"></url>\n"
+								"<url type=\"2\">%s/blank.png</url>\n"
 								"<target type=\"u\"></target>\n"
 								"<cntry agelmt=\"0\">all</cntry>\n"
 								"<lang>all</lang></mtrl>\n\n"
-								"</spc></nsx>");
+								"</spc></nsx>", LAUNCHPAD_COVER_SVR);
 
-	save_file(LAUNCHPAD_FILE_XML, tempstr, -size);
+	save_file(LAUNCHPAD_FILE_XML, tempstr, -size); // append to XML
 }
 #endif //#ifdef LAUNCHPAD
 
@@ -741,7 +741,7 @@ static void check_cover_folders(char *buffer)
 		netctl_main_9A528B81(ip_size, ip);
 		if(*ip == NULL) use_custom_icon_path = false;
 
-		is_xmbmods_server = islike(COVERS_PATH + 4, "://xmbmods.co/");
+		is_xmbmods_server = islike(COVERS_PATH, LAUNCHPAD_COVER_SVR);
 	}
 #endif
 }
