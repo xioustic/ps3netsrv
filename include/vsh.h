@@ -94,11 +94,17 @@ static void explore_exec_push(u32 usecs, u8 focus_first)
 	if(explore_interface)
 	{
 		sys_timer_usleep(usecs);
+
+		if(focus_first)
+		{
+			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+		}
+
 		explore_interface->ExecXMBcommand("exec_push", 0, 0);
 
 		if(focus_first)
 		{
-			sys_timer_usleep(200000);
+			sys_timer_usleep(2000000);
 			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
 		}
 	}
