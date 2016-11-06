@@ -210,6 +210,7 @@ static void setup_parse_settings(char *param)
 
 #ifdef LAUNCHPAD
 	if(strstr(param, "lx=1")) webman_config->launchpad_xml = 1;
+	if(strstr(param, "lg=1")) webman_config->launchpad_grp = 1;
 #endif
 
 	webman_config->temp0   = 0;
@@ -600,7 +601,14 @@ static void setup_form(char *buffer, char *templn)
 
 	//game listing
 	strcat(buffer, HTML_BLU_SEPARATOR);
+
+#ifdef LAUNCHPAD
+	add_check_box("ng" , "1", STR_NOGRP,       " & "   , (webman_config->nogrp  ),       buffer);
+	add_check_box("lg" , "1", "LaunchPad.xml",     _BR_, (webman_config->launchpad_grp), buffer);
+#else
 	add_check_box("ng" , "1", STR_NOGRP,     _BR_, (webman_config->nogrp  ), buffer);
+#endif
+
 	add_check_box("ns" , "1", STR_NOSETUP,   _BR_, (webman_config->nosetup), buffer);
 
 	value = webman_config->nocov;

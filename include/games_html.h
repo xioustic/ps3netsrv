@@ -37,6 +37,7 @@
 
 #define HTML_KEY_LEN  6
 
+#define HTML_KEY    -1
 #define FROM_MOUNT  -99
 
 enum nocov_options
@@ -663,7 +664,7 @@ static int add_launchpad_entry(char *tempstr, char *templn, const char *url, cha
 	}
 
 	char *pos = strstr(icon + 22, "/icon_wm_");
-	if(pos) {pos[6] = 'l', pos[7] = 'p'; if(pos[9] != 'a') {if(strstr(url, paths[3])) strcpy(pos + 9, "blu.png");}}
+	if(pos) {pos[6] = 'l', pos[7] = 'p'; if(pos[9] != 'a') {if(strstr(url, paths[3]) || strstr(url, ".ntfs[BDFILE]")) strcpy(pos + 9, "blu.png");}}
 
 	if(*icon == NULL || ((tempID[0] == 'B' || tempID[1] == 'P') && (islike(icon, "/dev_flash") || strstr(icon, "/icon_wm_")))) sprintf(icon, "/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/%s", tempID);
 
@@ -814,9 +815,9 @@ static int check_content(u8 f1)
 	return CELL_OK;
 }
 
-static void set_sort_key(char *skey, char *templn, int key, u8 subfolder)
+static void set_sort_key(char *skey, char *templn, int key, u8 subfolder, u8 f1)
 {
-	bool is_html = (key < 0);
+	bool is_html = (key <= HTML_KEY);
 
 	u16 tlen = strlen(templn);
 	if(tlen < 6) strcat(templn, "      ");
@@ -825,7 +826,19 @@ static void set_sort_key(char *skey, char *templn, int key, u8 subfolder)
 	if(templn[4] == ']' && templn[0] == '[') {c = (templn[5]!=' ') ? 5 : 6;} // ignore tag prefixes. e.g. [PS3] [PS2] [PSX] [PSP] [DVD] [BDV] [ISO] etc.
 
 	if(is_html)
+	{
+#ifdef LAUNCHPAD
+		if(webman_config->launchpad_grp || (key ==  HTML_KEY))
+			snprintf(skey, HTML_KEY_LEN + 1, "%s", templn);
+		else
+		{
+			char group = IS_BLU_FOLDER ? 10 : get_default_icon_by_type(f1);
+			snprintf(skey, HTML_KEY_LEN + 1, "%c%s", group, templn);
+		}
+#else
 		snprintf(skey, HTML_KEY_LEN + 1, "%s", templn);
+#endif
+	}
 	else
 		sprintf(skey, "!%c%c%c%c%c%c%04i", templn[c], templn[c+1], templn[c+2], templn[c+3], templn[c+4], templn[c+5], key);
 
@@ -1135,7 +1148,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
-						set_sort_key(tempstr, templn, -1, 0); // sort key
+						set_sort_key(tempstr, templn, HTML_KEY - launchpad_mode, 0, f1); // sort key
 
  #ifdef LAUNCHPAD
 						if(launchpad_mode)
@@ -1250,7 +1263,7 @@ next_html_entry:
 
 							if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
-							set_sort_key(tempstr, templn, -1, subfolder); // sort key
+							set_sort_key(tempstr, templn, HTML_KEY - launchpad_mode, subfolder, f1); // sort key
 
  #ifdef LAUNCHPAD
 							if(launchpad_mode)

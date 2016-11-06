@@ -43,7 +43,7 @@ static void refresh_xml(char *msg)
 
 static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *entry_name, u16 *item_count, u32 *xml_len, u8 subfolder)
 {
-	set_sort_key(skey, templn, key, subfolder);
+	set_sort_key(skey, templn, key, subfolder, f1);
 
 	#define ITEMS_BUFFER(a)  (64 * (item_count[a] + 8))
 

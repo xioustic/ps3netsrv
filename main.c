@@ -107,7 +107,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.45.01 MOD"						// webMAN version
+#define WM_VERSION			"1.45.02 MOD"						// webMAN version
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -456,9 +456,10 @@ typedef struct
 	uint8_t tid;
 	uint8_t use_filename;
 	uint8_t launchpad_xml;
+	uint8_t launchpad_grp;
 	uint8_t ps3l;
 
-	uint8_t padding2[19];
+	uint8_t padding2[18];
 
 	// start up settings
 
@@ -1066,8 +1067,8 @@ static void handleclient(u64 conn_s_p)
 			{   // cobra spoofer not working on 4.53
 				if(c_firmware!=4.53f)
 				{
-					cobra_config->spoof_version = 0x0480;
-					cobra_config->spoof_revision = 66412;
+					cobra_config->spoof_version = 0x0481;
+					cobra_config->spoof_revision = 66786;
 				}
 			}
 

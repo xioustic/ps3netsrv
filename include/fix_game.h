@@ -1,4 +1,4 @@
-#define LATEST_CFW	4.80f
+#define LATEST_CFW	4.81f
 #define CFW_420		0xA410ULL /* 42000 */
 #define MIN_CFW		0x2710ULL /* 10000 */
 #define MAX_CFW		0xD6D8ULL /* 55000 */

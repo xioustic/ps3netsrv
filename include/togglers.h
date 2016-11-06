@@ -155,7 +155,7 @@ static bool toggle_cobra(void)
 		cellFsRename(REBUG_COBRA_PATH "stage2.dex.bak", REBUG_COBRA_PATH "stage2.dex");
 		return true; // vsh reboot
 	}
- #else
+ #endif //#ifdef REX_ONLY
 	if(file_exists(HABIB_COBRA_PATH "stage2.cex"))
 	{
 		show_msg((char*)"COBRA is active!\n"
@@ -197,7 +197,6 @@ static bool toggle_cobra(void)
 
 		return true; // vsh reboot
 	}
- #endif //#ifdef REX_ONLY
 	return false;
 }
 
