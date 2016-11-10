@@ -114,7 +114,7 @@ static void detect_firmware(void)
 		if(c_firmware == 4.70f) {base_addr = 0x2D8A70, open_hook = 0x2975C0;} else
  #endif  // #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 4.80f) {base_addr = 0x2D8AE0, open_hook = 0x29762C;} else
-		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
+		if(c_firmware >= 4.75f && c_firmware <= 4.81f)
 								{base_addr = 0x2D8AF0, open_hook = 0x297638;}
 	}
 
@@ -147,11 +147,10 @@ static void detect_firmware(void)
 		if(c_firmware >= 4.65f && c_firmware <= 4.66f)
 								{base_addr = 0x2FA230, open_hook = 0x2BB010;} else
 		if(c_firmware == 4.70f) {base_addr = 0x2FA540, open_hook = 0x2B2480;} else
-		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
-								{base_addr = 0x2FA5B0, open_hook = 0x2B24F8;}
   #endif // #ifndef LAST_FIRMWARE_ONLY
-
-		if(c_firmware == 4.80f) {base_addr = 0x2FA680, open_hook = 0x2B25C4;}
+		if(c_firmware == 4.80f) {base_addr = 0x2FA680, open_hook = 0x2B25C4;} else
+		if(c_firmware >= 4.75f && c_firmware <= 4.81f)
+								{base_addr = 0x2FA5B0, open_hook = 0x2B24F8;}
 	}
  #endif //#ifdef DEX_SUPPORT
 
@@ -163,7 +162,7 @@ static void detect_firmware(void)
 	{ // CEX
 		if(c_firmware >= 4.55f /*&& c_firmware <= 4.80f*/)
 		{
-			get_fan_policy_offset = 0x8000000000009E38ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
+			get_fan_policy_offset = 0x8000000000009E38ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80/4.81
 			set_fan_policy_offset = 0x800000000000A334ULL; // sys 389 set_fan_policy
 
 #ifdef SPOOF_CONSOLEID
@@ -221,7 +220,7 @@ static void detect_firmware(void)
 	{ // DEX & DEH
 		if(c_firmware >= 4.55f /*&& c_firmware <= 4.80f*/)
 		{
-				get_fan_policy_offset = 0x8000000000009EB8ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80
+				get_fan_policy_offset = 0x8000000000009EB8ULL; // sys 409 get_fan_policy  4.55/4.60/4.65/4.70/4.75/4.76/4.78/4.80/4.81
 				set_fan_policy_offset = 0x800000000000A3B4ULL; // sys 389 set_fan_policy
 
  #ifdef SPOOF_CONSOLEID
