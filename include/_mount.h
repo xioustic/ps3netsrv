@@ -1958,7 +1958,7 @@ install_mm_payload:
 			sprintf(expplg, "%s/IEXP0_450.BIN", app_sys);
 		else if(c_firmware >= 4.60f && c_firmware <= 4.66f)
 			sprintf(expplg, "%s/IEXP0_460.BIN", app_sys);
-		else if(c_firmware >= 4.70f && c_firmware <= 4.80f)
+		else if(c_firmware >= 4.70f)
 			sprintf(expplg, "%s/IEXP0_470.BIN", app_sys);
 		else
 			sprintf(expplg, "%s/none", app_sys);
