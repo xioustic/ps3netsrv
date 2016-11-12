@@ -1265,7 +1265,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				}
 				else if(extgd) set_gamedata_status(0, false);
 			}
-			else if((extgd == 0) && (strstr(_path, "/PS3ISO")!=NULL) && (strstr(_path, "[gd]")!=NULL))
+			else if((extgd == 0) && (strstr(_path, "PS3ISO")!=NULL) && (strstr(_path, "[gd]")!=NULL))
 				set_gamedata_status(1, false);
 			else if(extgd)
 				set_gamedata_status(0, false);
