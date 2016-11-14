@@ -1119,7 +1119,7 @@ static void handleclient(u64 conn_s_p)
 	bool is_local = true;
 	sys_net_sockinfo_t conn_info_main;
 
-	char cmd[16], header[HTML_RECV_SIZE];
+	char cmd[16], header[HTML_RECV_SIZE], *mc = NULL;
 
  #ifdef WM_REQUEST
 	struct CellFsStat buf; u8 wm_request = (cellFsStat(WMREQUEST_FILE, &buf) == CELL_FS_SUCCEEDED);;
@@ -1172,15 +1172,6 @@ again3:
 		}
 	}
 
-  {
-	u8 served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
-	int8_t sort_order = 1, sort_by = 0;
-	u64 c_len = 0;
-
-	u8 is_cpursx = 0;
-	u8 is_popup = 0, auto_mount = 0;
-	u8 is_ps3_http = 0;
-
 	#ifdef WM_REQUEST
 	if(!wm_request)
 	#endif
@@ -1194,6 +1185,17 @@ again3:
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
 	}
 
+parse_request:
+
+  {
+	u8 served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
+	int8_t sort_order = 1, sort_by = 0;
+	u64 c_len = 0;
+
+	u8 is_cpursx = 0;
+	u8 is_popup = 0, auto_mount = 0;
+	u8 is_ps3_http = 0;
+
 //// process commands ////
 
 	while(!served && working)
@@ -1201,22 +1203,28 @@ again3:
 		served++;
 		*header = NULL;
 
-		#ifdef USE_DEBUG
-		ssend(debug_s, "ACC - ");
-		#endif
+		if(!mc)
+		{
+			#ifdef USE_DEBUG
+			ssend(debug_s, "ACC - ");
+			#endif
 
  #ifdef WM_REQUEST
-		if(wm_request)
-		{
-			if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && read_file(WMREQUEST_FILE, header, buf.st_size, 0) > 4)
+			if(wm_request)
 			{
-				if(*header == '/') {strcpy(param, header); buf.st_size = sprintf(header, "GET %s", param);}
-				for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n] = '+';
-				if(islike(header, "GET /play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
+				if(buf.st_size > 5 && buf.st_size < HTML_RECV_SIZE && read_file(WMREQUEST_FILE, header, buf.st_size, 0) > 4)
+				{
+					if(*header == '/') {strcpy(param, header); buf.st_size = sprintf(header, "GET %s", param);}
+					for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n] = '+';
+					if(islike(header, "GET /play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
+				}
+				cellFsUnlink(WMREQUEST_FILE);
 			}
-			cellFsUnlink(WMREQUEST_FILE);
-		}
  #endif
+		}
+		else sprintf(header, "GET %s", mc + 1);
+
+		mc = NULL;
 
 		if(((*header == 'G') || recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && *header == 'G' && header[4] == '/') // serve only GET /xxx requests
 		{
@@ -1234,6 +1242,7 @@ again3:
  #ifdef WM_REQUEST
 			if(wm_request) { for(size_t n = 0; param[n]; n++) {if(param[n] == 9) param[n] = ' ';} } wm_request = 0;
  #endif
+			mc = strstr(param, ";/"); if(mc) {*mc = NULL; strcpy(header, param);}
 
 			bool allow_retry_response = true, small_alloc = true; u8 mobile_mode = false;
 
@@ -1346,7 +1355,7 @@ again3:
 				{
 					if((ret == 'X') && IS_ON_XMB) goto reboot;
 
-					http_response(conn_s, header, param, CODE_VIRTUALPAD, buttons);
+					if(!mc) http_response(conn_s, header, param, CODE_VIRTUALPAD, buttons);
 
 					goto exit_handleclient;
 				}
@@ -1375,7 +1384,7 @@ again3:
 
 				sprintf(param, "ADMIN %s", sys_admin ? STR_ENABLED : STR_DISABLED);
 
-				http_response(conn_s, header, param, CODE_RETURN_TO_ROOT, param);
+				if(!mc) http_response(conn_s, header, param, CODE_RETURN_TO_ROOT, param);
 
 				goto exit_handleclient;
 			}
@@ -1454,7 +1463,7 @@ again3:
 				if(!wm_request)
 				#endif
 				{
-					http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_DOWNLOAD_FILE, msg);
+					if(!mc) http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_DOWNLOAD_FILE, msg);
 				}
 
 				show_msg(msg);
@@ -1500,7 +1509,7 @@ again3:
 				if(!wm_request)
 				#endif
 				{
-					http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_INSTALL_PKG, msg);
+					if(!mc) http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_INSTALL_PKG, msg);
 				}
 
 				show_msg(msg);
@@ -1513,6 +1522,7 @@ again3:
 
 					setPluginInactive();
 					if(do_restart) goto reboot;
+					if(mc) goto exit_handleclient;
 					sys_ppu_thread_exit(0);
 				}
 
@@ -1700,7 +1710,7 @@ again3:
 				else
  					sprintf(url, "ERROR: Not in XMB!");
 
-				http_response(conn_s, header, param, CODE_HTTP_OK, url);
+				if(!mc) http_response(conn_s, header, param, CODE_HTTP_OK, url);
 
 				goto exit_handleclient;
 			}
@@ -1885,7 +1895,21 @@ again3:
 				else
 					sprintf(param, "%s", STR_ERROR);
 
-				http_response(conn_s, header, param, CODE_HTTP_OK, param);
+				if(!mc) http_response(conn_s, header, param, CODE_HTTP_OK, param);
+
+				goto exit_handleclient;
+			}
+			if(islike(param, "/wait.ps3"))
+			{
+				// /wait.ps3?<secs>
+				// /wait.ps3/<path>
+
+				if(param[9] == '/')
+					waitfor(param + 9, 30);
+				else
+					sys_timer_sleep(val(param + 10));
+
+				if(!mc) http_response(conn_s, header, param, CODE_HTTP_OK, param);
 
 				goto exit_handleclient;
 			}
@@ -1911,7 +1935,7 @@ again3:
 				if(!wm_request)
 				#endif
 				{
-					http_response(conn_s, header, "/netstatus.ps3", CODE_HTTP_OK, param);
+					if(!mc) http_response(conn_s, header, "/netstatus.ps3", CODE_HTTP_OK, param);
 				}
 
 				show_msg(param);
@@ -2052,7 +2076,7 @@ again3:
 					goto html_response;
 				}
 				else
-					{http_response(conn_s, header, "/", CODE_GOBACK, HTML_REDIRECT_TO_BACK); goto exit_handleclient;}
+					if(!mc) {http_response(conn_s, header, "/", CODE_GOBACK, HTML_REDIRECT_TO_BACK); goto exit_handleclient;}
 			}
 	#endif // #ifdef COPY_PS3
 
@@ -3100,7 +3124,7 @@ again3:
 					{
 						// /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
 
-						http_response(conn_s, header, param, CODE_CLOSE_BROWSER, HTML_CLOSE_BROWSER); //auto-close browser (don't wait for mount)
+						if(!mc) http_response(conn_s, header, param, CODE_CLOSE_BROWSER, HTML_CLOSE_BROWSER); //auto-close browser (don't wait for mount)
 
 						if(IS_ON_XMB && !(webman_config->combo2 & PLAY_DISC) && (strstr(param, ".ntfs[BD") == NULL) && (strstr(param, "/PSPISO") == NULL))
 						{
@@ -3181,7 +3205,7 @@ again3:
 
 					is_busy = false;
 #ifdef LAUNCHPAD
-					if(mobile_mode == LAUNCHPAD_MODE) {sprintf(templn, "%s LaunchPad: OK", STR_REFRESH); http_response(conn_s, header, param, CODE_HTTP_OK, templn); show_msg(templn); goto exit_handleclient;}
+					if(mobile_mode == LAUNCHPAD_MODE) {sprintf(templn, "%s LaunchPad: OK", STR_REFRESH); if(!mc) http_response(conn_s, header, param, CODE_HTTP_OK, templn); show_msg(templn); goto exit_handleclient;}
 #endif
 				}
 
@@ -3207,12 +3231,15 @@ send_response:
 					strcat(pbuffer, HTML_BODY_END); //end-html
 				}
 
-				c_len = buf_len + strlen(buffer + buf_len);
+				if(!mc)
+				{
+					c_len = buf_len + strlen(buffer + buf_len);
 
-				header_len += sprintf(header + header_len, "Content-Length: %llu\r\n\r\n", (unsigned long long)c_len);
-				send(conn_s, header, header_len, 0);
+					header_len += sprintf(header + header_len, "Content-Length: %llu\r\n\r\n", (unsigned long long)c_len);
+					send(conn_s, header, header_len, 0);
 
-				send(conn_s, buffer, c_len, 0);
+					send(conn_s, buffer, c_len, 0);
+				}
 
 				*buffer = NULL;
 			}
@@ -3221,14 +3248,17 @@ send_response:
 		break;
 	}
   }
+
 exit_handleclient:
+
+	if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
+	if(mc) goto parse_request;
 
 	#ifdef USE_DEBUG
 	ssend(debug_s, "Request served.\r\n");
 	#endif
 
 	sclose(&conn_s);
-	if(sysmem) sys_memory_free(sysmem);
 
 	if(loading_html) loading_html--;
 
