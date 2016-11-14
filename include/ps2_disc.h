@@ -29,7 +29,6 @@ static bool mount_ps2disc(char *path)
 
 	max_mapped = 0;
 	add_to_map("/dev_ps2disc", path);
-	add_to_map("//dev_ps2disc", path);
 
 	u64 map_data  = (MAP_BASE);
 	u64 map_paths = (MAP_BASE) + (max_mapped+1) * 0x20;

@@ -2577,7 +2577,6 @@ parse_request:
 						pbuffer += concat(pbuffer, templn);
 					}
 
- #ifdef COPY_PS3
 					if((islike(param, "/dev_") && !strstr(param,"?")) && !islike(param,"/dev_flash") && !strstr(param,".ps3/") && !strstr(param,".ps3?"))
 					{	// add buttons + javascript code to handle delete / cut / copy / paste (requires fm.js)
 	#ifdef EMBED_JS
@@ -2603,7 +2602,6 @@ parse_request:
 							if(cp_mode) {char *url = tempstr, *title = tempstr + MAX_PATH_LEN; urlenc(url, param); htmlenc(title, cp_path, 0); sprintf(templn, "%s%s\" id=\"bPst\" %s'/paste.ps3%s'\" title=\"%s\">", HTML_BUTTON, "Paste", HTML_ONCLICK, url, title); pbuffer += concat(pbuffer, templn);}
 						}
 					}
- #endif
 
  #endif // #ifdef COPY_PS3
 

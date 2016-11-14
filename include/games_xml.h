@@ -451,7 +451,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 			//if(IS_PS2_FOLDER && f0>0)  continue; // PS2ISO is supported only from /dev_hdd0
 #ifdef PKG_LAUNCHER
-			if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
+			if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS)) continue;}
 #endif
 			if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
 			if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI"
@@ -606,6 +606,12 @@ next_xml_entry:
 								if(flen != 9) continue; // is titleid?
 								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
 								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
+
+								// create game folder in /dev_hdd0/game and copy PARAM.SFO to prevent deletion of XMB icon when gameDATA is disabled
+								sprintf(tempstr, "//%s/%s/PARAM.SFO", HDD0_GAME_DIR, entry.d_name);
+								if(file_exists(tempstr) == false) {mkdir_tree(tempstr); file_copy(templn, tempstr, COPY_WHOLE_FILE);}
+
+								if(!webman_config->ps3l) continue;
 							}
 							else
 #endif
