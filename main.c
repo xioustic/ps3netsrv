@@ -1242,7 +1242,7 @@ parse_request:
  #ifdef WM_REQUEST
 			if(wm_request) { for(size_t n = 0; param[n]; n++) {if(param[n] == 9) param[n] = ' ';} } wm_request = 0;
  #endif
-			mc = strstr(param, ";/"); if(mc) {*mc = NULL; strcpy(header, param);}
+			if(!islike(param, "/setup.ps3?")) { mc = strstr(param, ";/"); if(mc) {*mc = NULL; strcpy(header, param);} }
 
 			bool allow_retry_response = true, small_alloc = true; u8 mobile_mode = false;
 
