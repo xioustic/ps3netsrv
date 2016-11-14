@@ -696,26 +696,20 @@ static int add_launchpad_entry(char *tempstr, char *templn, const char *url, cha
 
 static void add_launchpad_extras(char *tempstr, char *url)
 {
+	char STR_REFRESH_LP[64];
+	sprintf(STR_REFRESH_LP, "%s LaunchPad", STR_REFRESH);
+
 	char icon_url[MAX_PATH_LEN]; *icon_url = NULL;
 
 	// --- launchpad extras
 	sprintf(url, "http://%s/mount_ps3/unmount", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Unmount", url, (char*)"eject.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1002);
+	add_launchpad_entry(tempstr, (char*)STR_UNMOUNT, url, (char*)"eject.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1002);
 
 	sprintf(url, "http://%s/setup.ps3", local_ip);
-	add_launchpad_entry(tempstr, (char*)"WebMAN Setup", url, (char*)"setup.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1001);
-
-	//sprintf(url, "http://%s/mount_ps3/303/***CLEAR RECENTLY PLAYED***", local_ip);
-	//add_launchpad_entry(tempstr, (char*)"Clear Recently Played", url, (char*)"clear.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1003);
+	add_launchpad_entry(tempstr, (char*)STR_WMSETUP, url, (char*)"setup.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1001);
 
 	sprintf(url, "http://%s/index.ps3?launchpad", local_ip);
-	add_launchpad_entry(tempstr, (char*)"Refresh LaunchPad", url, (char*)"refresh.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1004);
-
-	//sprintf(url, "http://%s/restart.ps3", local_ip);
-	//add_launchpad_entry(tempstr, (char*)"Restart PS3", url, (char*)"restart.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1005);
-
-	//sprintf(url, "http://%s/delete.ps3%s", local_ip, "/dev_hdd0/tmp/explore/nsx/");
-	//add_launchpad_entry(tempstr, (char*)"Clear LaunchPad Cache", url, (char*)"cache.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1006);
+	add_launchpad_entry(tempstr, (char*)STR_REFRESH_LP, url, (char*)"refresh.png", icon_url, LAUNCHPAD_MAX_ITEMS + 1004);
 }
 
 static void add_launchpad_footer(char *tempstr)
