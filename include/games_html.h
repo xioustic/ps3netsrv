@@ -1216,7 +1216,6 @@ next_html_entry:
 #ifdef PKG_LAUNCHER
 							if(IS_GAMEI_FOLDER)
 							{
-								if(flen != 9) continue; // is titleid?
 								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
 								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
 							}

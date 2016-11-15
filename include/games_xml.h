@@ -603,15 +603,18 @@ next_xml_entry:
 #ifdef PKG_LAUNCHER
 							if(IS_GAMEI_FOLDER)
 							{
-								if(flen != 9) continue; // is titleid?
-								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
-								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
-
 								// create game folder in /dev_hdd0/game and copy PARAM.SFO to prevent deletion of XMB icon when gameDATA is disabled
 								sprintf(tempstr, "//%s/%s/PARAM.SFO", HDD0_GAME_DIR, entry.d_name);
-								if(file_exists(tempstr) == false) {mkdir_tree(tempstr); file_copy(templn, tempstr, COPY_WHOLE_FILE);}
+								if(file_exists(tempstr) == false)
+								{
+									sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
+									mkdir_tree(tempstr); file_copy(templn, tempstr, COPY_WHOLE_FILE);
+								}
 
 								if(!webman_config->ps3l) continue;
+
+								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
+								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
 							}
 							else
 #endif
