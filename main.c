@@ -1376,6 +1376,10 @@ parse_request:
  #ifdef SYS_ADMIN_MODE
 			if(islike(param, "/admin.ps3"))
 			{
+				// /admin.ps3?enable&pwd=<password>  enable admin mode
+				// /admin.ps3?disable                disable admin mode
+				// /admin.ps3?0                      disable admin mode
+
 				if(param[10] == 0 || param[11] == 0) ; else
 				if(~param[11] & 1) sys_admin = 0; else
 				{

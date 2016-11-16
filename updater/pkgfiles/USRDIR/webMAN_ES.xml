@@ -272,7 +272,7 @@
 			<Table key="webman_refresh_xml">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/refreshxml.png</String></Pair>
 				<Pair key="title"><String>Refrescar Juegos webMAN</String></Pair>
-				<Pair key="info"><String>La lista de juegos ser· mostrada la prÛxima vez que cargue el XMB</String></Pair>
+				<Pair key="info"><String>La lista de juegos ser√° mostrada la pr√≥xima vez que cargue el XMB</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/refresh.ps3</String></Pair>
 			</Table>
@@ -286,7 +286,7 @@
 			<Table key="webman_refresh_html">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/refreshhtml.png</String></Pair>
 				<Pair key="title"><String>Refrescar Lista de Juegos Web</String></Pair>
-				<Pair key="info"><String>La lista de juegos en HTML ser· actualizada en el modo web</String></Pair>
+				<Pair key="info"><String>La lista de juegos en HTML ser√° actualizada en el modo web</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/index.ps3?html</String></Pair>
 			</Table>
@@ -356,7 +356,7 @@
 		<Attributes>
 			<Table key="webman_setup">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/settings.png</String></Pair>
-				<Pair key="title"><String>PS3 webMAN [ConfiguraciÛn]</String></Pair>
+				<Pair key="title"><String>PS3 webMAN [Configuraci√≥n]</String></Pair>
 				<Pair key="info"><String>Configurar los dispositivos a escanear y las opciones de inicio</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/setup.ps3</String></Pair>
@@ -861,7 +861,7 @@
 			<Table key="webman_gamefix">
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamefix.png</String></Pair>
 				<Pair key="title"><String>Arreglar juego en BDVD</String></Pair>
-				<Pair key="info"><String>Cambiar requerimiento mÌnimo del sistema a 4.20 (sÛlo juegos JB & hdd0)</String></Pair>
+				<Pair key="info"><String>Cambiar requerimiento m√≠nimo del sistema a 4.20 (s√≥lo juegos JB & hdd0)</String></Pair>
 				<Pair key="module_name"><String>webrender_plugin</String></Pair>
 				<Pair key="module_action"><String>http://localhost/fixgame.ps3/dev_bdvd</String></Pair>
 			</Table>
