@@ -78,7 +78,13 @@ Requirements for Windows:
 - Open Source PSL1GHT SDK to compile prepNTFS and PKG Updater only
 
 Requirements for GNU/Linux:
-- Soon...
+- An x86 linux distribution, Fedora 20 is tested working
+- git, clone this repository with the following command: *git clone https://github.com/aldostools/webMAN-MOD.git*
+- Official PS3 SDK v400.001 leaked version
+- Official Cell OS Lv-2 leaked toolchain (a 4.1M patched GCC 4.1.1 version)
+- wine for the missing linux tools
+- A compiled Scetool binary, ps3 keys
+- Open Source PSL1GHT SDK to compile prepNTFS and PKG Updater only
 
 ## Credits
 - All the documentation on *http://www.psdevwiki.com*, and to all the devs who contributed
