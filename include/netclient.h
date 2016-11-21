@@ -719,49 +719,46 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	if(file_exists(local_file)) return CELL_OK; // local file already exists
 
-	int abort_connection = 0, is_directory = 0, fdw = 0; int64_t file_size; u64 mtime, ctime, atime;
-
-	if(remote_stat(ns, remote_file, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection)!=0) return FAILED;
-
-	if(file_size <= 0) return FAILED;
-
-	if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
+	int64_t file_size; int abort_connection = 0, fdw = 0, ret = FAILED;
 
 	sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
 
-	if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+	file_size = open_remote_file(ns, remote_file, &abort_connection);
+
+	if(file_size > 0)
 	{
-		char *chunk = (char*)sysmem;
-
-		if(cellFsOpen(local_file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
+		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
-			open_remote_file(ns, remote_file, &abort_connection);
+			char *chunk = (char*)sysmem;
 
-			int bytes_read, boff = 0;
-			while(boff < file_size)
+			if(cellFsOpen(local_file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
-				if(copy_aborted) break;
+				if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
 
-				bytes_read = read_remote_file(ns, (char*)chunk, boff, chunk_size, &abort_connection);
-				if(bytes_read)
-					cellFsWrite(fdw, (char*)chunk, bytes_read, NULL);
+				int bytes_read, boff = 0;
+				while(boff < file_size)
+				{
+					if(copy_aborted) break;
 
-				boff += bytes_read;
-				if((uint64_t)bytes_read < chunk_size || abort_connection) break;
+					bytes_read = read_remote_file(ns, (char*)chunk, boff, chunk_size, &abort_connection);
+					if(bytes_read)
+						cellFsWrite(fdw, (char*)chunk, bytes_read, NULL);
+
+					boff += bytes_read;
+					if((uint64_t)bytes_read < chunk_size || abort_connection) break;
+				}
+				cellFsClose(fdw);
+				cellFsChmod(local_file, MODE);
+
+				ret = CELL_OK;
 			}
-
-			open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
-			cellFsClose(fdw);
 			sys_memory_free(sysmem);
-
-			cellFsChmod(local_file, MODE);
-			return CELL_OK;
 		}
 
-		sys_memory_free(sysmem);
+		open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
 	}
 
-	return FAILED;
+	return ret;
 }
 #endif
 #endif //#ifndef LITE_EDITION
