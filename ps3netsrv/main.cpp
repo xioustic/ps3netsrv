@@ -56,8 +56,12 @@ static char root_directory[MAX_PATH_LEN];
 static size_t root_len = 0;
 
 #ifdef WIN32
+#ifdef MERGE_DRIVES
 static char *ignore_drives;
 static int ignore_drives_len = 0;
+#endif
+#else
+#undef MERGE_DRIVES
 #endif
 
 static int initialize_socket(uint16_t port)
@@ -202,26 +206,25 @@ static char *translate_path(char *path, int del, int *viso)
 	}
 
 	// check unsecure path
+	int plen = strlen(path);
+
 	p = path;
-	while ((p = strstr(p, "..")))
+	while ((plen >= 2) && (p = strstr(p, "..")))
 	{
-		if(strlen(p) >= 2)
+		if(*(p-1) == '/' || *(p-1) == '\\')
 		{
-			if(*(p-1) == '/' || *(p-1) == '\\')
+			if(p[2] == 0 || p[2] == '/' || p[2] == '\\')
 			{
-				if(p[2] == 0 || p[2] == '/' || p[2] == '\\')
+				DPRINTF("The path \"%s\" is unsecure!\n", path);
+				if(del)
 				{
-					DPRINTF("The path \"%s\" is unsecure!\n", path);
-					if(del)
-					{
-						if(path) free(path);
-					}
-					return NULL;
+					if(path) free(path);
 				}
+				return NULL;
 			}
 		}
 
-		p += 2;
+		p += 2, plen -= 2;
 	}
 
 	size_t path_len = strlen(path);
@@ -371,8 +374,6 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 	uint16_t fp_len;
 	int ret, viso = VISO_NONE;
 
-	client->CD_SECTOR_SIZE = 2352;
-
 	result.file_size = BE64(-1);
 	result.mtime = BE64(0);
 
@@ -390,8 +391,9 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		delete client->ro_file;
 	}
 
-	filepath[fp_len] = 0;
 	ret = recv_all(client->s, (void *)filepath, fp_len);
+
+	filepath[fp_len] = 0;
 
 	if((ret != fp_len) || !strcmp(filepath, "/CLOSEFILE"))
 	{
@@ -407,10 +409,6 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		return -1;
 	}
 
-	if(stat_file(filepath, &st) < 0) {free(filepath); return -1;}
-
-	if(viso != VISO_NONE || st.file_size > 0x400000UL) printf("open %s\n", filepath);
-
 	if(viso == VISO_NONE)
 	{
 		client->ro_file = new File();
@@ -420,6 +418,8 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		printf("building virtual iso...\n");
 		client->ro_file = new VIsoFile((viso == VISO_PS3));
 	}
+
+	client->CD_SECTOR_SIZE = 2352;
 
 	if(client->ro_file->open(filepath, O_RDONLY) < 0)
 	{
@@ -437,6 +437,8 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		{
 			result.file_size = BE64(st.file_size);
 			result.mtime = BE64(st.mtime);
+
+			if(viso != VISO_NONE || BE64(st.file_size) > 0x400000UL) printf("open %s\n", filepath + root_len);
 
 			// detect cd sector size (2MB - 848MB)
 			if(IS_RANGE(st.file_size, 0x200000UL, 0x35000000UL))
@@ -1498,7 +1500,7 @@ int main(int argc, char *argv[])
 	uint32_t whitelist_end = 0;
 	uint16_t port = NETISO_PORT;
 
-	printf("ps3netsrv build 20161016 (mod by aldostools)\n");
+	printf("ps3netsrv build 20161121 (mod by aldostools)\n");
 
 #ifndef WIN32
 	if(sizeof(off_t) < 8)
@@ -1508,12 +1510,23 @@ int main(int argc, char *argv[])
 	}
 #endif
 
+	file_stat_t fs;
+
+	if(argc < 2 && ((stat_file("./PS3ISO", &fs) >= 0) || (stat_file("./PSXISO", &fs) >= 0) || (stat_file("./GAMES", &fs) >= 0) || (stat_file("./GAMEZ", &fs) >= 0)  || (stat_file("./DVDISO", &fs) >= 0) || (stat_file("./BDISO", &fs) >= 0))) {argv[1] = (char *)malloc(2); sprintf(argv[1], "."); argc = 2;}
+
 	if(argc < 2)
 	{
-		printf( "Usage: %s rootdirectory [port] [whitelist]\n"
+		#ifdef MERGE_DRIVES
+		printf( "\nUsage: %s [rootdirectory] [port] [whitelist] [ignore drive letters]\n\n"
 				"Default port: %d\n"
 				"Whitelist: x.x.x.x, where x is 0-255 or *\n"
 				"(e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", argv[0], NETISO_PORT);
+		#else
+		printf( "\nUsage: %s [rootdirectory] [port] [whitelist]\n\n"
+				"Default port: %d\n"
+				"Whitelist: x.x.x.x, where x is 0-255 or *\n"
+				"(e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", argv[0], NETISO_PORT);
+		#endif
 		return -1;
 	}
 
@@ -1634,7 +1647,7 @@ int main(int argc, char *argv[])
 		DPRINTF("Whitelist: %08X-%08X\n", whitelist_start, whitelist_end);
 	}
 
-#ifdef WIN32
+#ifdef MERGE_DRIVES
 	if(argc > 4)
 	{
 		ignore_drives = argv[4];
@@ -1737,11 +1750,12 @@ int main(int argc, char *argv[])
 	}
 
 #ifdef WIN32
+	#ifdef MERGE_DRIVES
 	if(ignore_drives)
 	{
 		free(ignore_drives);
 	}
-
+	#endif
 	WSACleanup();
 #endif
 

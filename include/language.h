@@ -482,6 +482,8 @@ static bool language(const char *key_name, char *label, const char *default_str)
 #undef CHUNK_SIZE
 #undef GET_NEXT_BYTE
 
+static char TITLE_XX[12];
+
 static void update_language(void)
 {
 	fh = 0;
@@ -577,5 +579,27 @@ static void update_language(void)
 	language("/CLOSEFILE", NULL, NULL);
 
 	*html_base_path = NULL;
+
+	// TITLE_XX
+
+	*TITLE_XX = NULL; u8 id = 99, lang = webman_config->lang;
+
+	if(lang ==  1) id = 2;  // fr
+	if(lang ==  2) id = 5;  // it
+	if(lang ==  3) id = 3;  // es
+	if(lang ==  4) id = 4;  // de
+	if(lang ==  5) id = 6;  // nl
+	if(lang ==  6) id = 7;  // pt
+	if(lang ==  7) id = 8;  // ru
+	if(lang ==  9) id = 16; // pl
+	if(lang == 14) id = 19; // tr
+	if(lang == 16) id = 11; // zh
+	if(lang == 17) id = 9;  // ko
+	if(lang == 18) id = 0;  // jp
+	if(lang == 19) id = 10; // ch
+	if(lang == 20) id = 14; // da
+	if(  id == 99) return;
+
+	sprintf(TITLE_XX, "TITLE_%02i", id);
 }
 #endif //#ifndef ENGLISH_ONLY
