@@ -17,7 +17,7 @@
 
 static uint32_t vcombo = 0;
 
-static int32_t vpad_handle = -1;
+static int32_t vpad_handle = NONE;
 
 static inline void sys_pad_dbg_ldd_register_controller(uint8_t *data, int32_t *handle, uint8_t addr, uint32_t capability)
 {
@@ -67,7 +67,7 @@ static int32_t unregister_ldd_controller(void)
 	{
 		int32_t r = cellPadLddUnregisterController(vpad_handle);
 		if (r != CELL_OK) return(r);
-		vpad_handle = -1;
+		vpad_handle = NONE;
 	}
 	return(CELL_PAD_OK);
 }

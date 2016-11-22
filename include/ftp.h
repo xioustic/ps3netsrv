@@ -42,8 +42,8 @@ static int ssplit(const char* str, char* left, int lmaxlen, char* right, int rma
 static void handleclient_ftp(u64 conn_s_ftp_p)
 {
 	int conn_s_ftp = (int)conn_s_ftp_p; // main communications socket
-	int data_s = -1;			// data socket
-	int pasv_s = -1;			// passive data socket
+	int data_s = NONE;			// data socket
+	int pasv_s = NONE;			// passive data socket
 
 	int connactive = 1;			// whether the ftp connection is active or not
 	int dataactive = 0;			// prevent the data connection from being closed at the end of the loop
@@ -275,7 +275,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					if(split)
 					{
-						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN-1);
+						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN - 1);
 
 						if(_IS(cmd, "HELP"))
 						{
@@ -421,7 +421,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						else
 						if(_IS(cmd, "CHMOD"))
 						{
-							split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN-1);
+							split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN - 1);
 
 							strcpy(param, filename); absPath(filename, param, cwd);
 
@@ -606,7 +606,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 												(mode & S_IROTH) ? "r" : "-",
 												(mode & S_IWOTH) ? "w" : "-",
 												(mode & S_IXOTH) ? "x" : "-",
-												(unsigned long long)buf.st_size, smonth[rDate.month-1], rDate.day,
+												(unsigned long long)buf.st_size, smonth[rDate.month - 1], rDate.day,
 												rDate.hour, rDate.minute, entry.d_name);
 								}
 								if(send(data_s, buffer, slen, 0) < 0) break;
@@ -674,7 +674,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					{
 						ssend(conn_s_ftp, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
 						if(pasv_s >= 0) sclose(&pasv_s);
-						pasv_s = -1;
+						pasv_s = NONE;
 					}
 				}
 				else
@@ -1035,7 +1035,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				if(dataactive) dataactive = 0;
 				else
 				{
-					sclose(&data_s); data_s = -1;
+					sclose(&data_s); data_s = NONE;
 					rest = 0;
 				}
 			}
@@ -1097,7 +1097,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 static void ftpd_thread(uint64_t arg)
 {
-	int list_s = -1;
+	int list_s = NONE;
 
 relisten:
 	if(working) list_s = slisten(webman_config->ftp_port, 4);
@@ -1128,7 +1128,7 @@ relisten:
 			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s = -1;
+				list_s = NONE;
 				if(working) goto relisten;
 				else break;
 			}

@@ -85,10 +85,10 @@ static int slisten(int port, int backlog)
 
 static void sclose(int *socket_e)
 {
-	if(*socket_e != -1)
+	if(*socket_e != NONE)
 	{
 		shutdown(*socket_e, SHUT_RDWR);
 		socketclose(*socket_e);
-		*socket_e = -1;
+		*socket_e = NONE;
 	}
 }

@@ -93,7 +93,7 @@ static int process_open_cmd(u8 index, netiso_open_cmd *cmd)
 	/// init result ///
 
 	netiso_open_result result;
-	result.file_size = (int64_t)(-1);
+	result.file_size = (int64_t)(NONE);
 	result.mtime = (int64_t)(0);
 
 	int fd = 0;
@@ -367,7 +367,7 @@ static int process_stat_cmd(u8 index, netiso_stat_cmd *cmd)
 
 	if (file_exists(filepath) == false && !strstr(filepath, "/is_ps3_compat1/") && !strstr(filepath, "/is_ps3_compat2/"))
 	{
-		result.file_size = (int64_t)(-1);
+		result.file_size = (int64_t)(NONE);
 	}
 	else
 	{
@@ -453,7 +453,7 @@ static int process_open_dir_cmd(u8 index, netiso_open_dir_cmd *cmd)
 	if(isDir(dirpath) == false)
 	{
 		clients[index].dirpath[0] = NULL;
-		result.open_result = (int32_t)(-1);
+		result.open_result = (int32_t)(NONE);
 	}
 
 	/// send result ///
@@ -614,7 +614,7 @@ static void handleclient_net(uint64_t arg)
 
 	while(working)
 	{
-		if(working && (recv(clients[index].s, (void *)&cmd, sizeof(cmd), 0) > 0))
+		if(recv(clients[index].s, (void *)&cmd, sizeof(cmd), 0) > 0)
 		{
 			switch (cmd.opcode)
 			{
@@ -693,7 +693,7 @@ relisten:
 			if(working && (conn_s_net = accept(list_s, NULL, NULL)) > 0)
 			{
 				// get client slot
-				int index = -1;
+				int index = NONE;
 				for(u8 i = 0; i < MAX_CLIENTS; i++) if(!clients[i].s) {index = i; break;}
 				if(index < 0) {sclose(&conn_s_net); continue;}
 

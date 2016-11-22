@@ -231,7 +231,7 @@ static bool rec_start(const char *param)
 	// set video options
 	recOpt[1] = rec_video_format;
 	recOpt[2] = rec_audio_format;
-	recOpt[5] = (vsh_memory_container_by_id(1) == -1 ) ? vsh_memory_container_by_id(0) : vsh_memory_container_by_id(1);
+	recOpt[5] = (vsh_memory_container_by_id(1) == NONE ) ? vsh_memory_container_by_id(0) : vsh_memory_container_by_id(1);
 	recOpt[0x208] = 0x80; // 0x90 show XMB || reduce memsize // 0x80; // allow show XMB
 
 	get_game_info();
@@ -272,7 +272,7 @@ static bool rec_start(const char *param)
 	}
 	else
 	{
-		reco_open(-1); //reco_open((vsh_memory_container_by_id(1) == -1 ) ? vsh_memory_container_by_id(0) : vsh_memory_container_by_id(1));
+		reco_open(-1); //reco_open((vsh_memory_container_by_id(1) == NONE ) ? vsh_memory_container_by_id(0) : vsh_memory_container_by_id(1));
 		sys_timer_sleep(3);
 
 		if(View_Find(REC_PLUGIN) != 0)

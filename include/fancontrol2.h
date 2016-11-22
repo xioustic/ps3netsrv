@@ -15,7 +15,7 @@ static void poll_start_play_time(void)
 		{
 			xsetting_F48C0548()->GetSettingNet_enable(&status);
 			xsetting_F48C0548()->SetSettingNet_enable(net_status);
-			net_status = -1; if(net_status && !status) show_msg((char*)ONLINE_TAG);
+			net_status = NONE; if(net_status && !status) show_msg((char*)ONLINE_TAG);
 			cellFsUnlink(WMNET_DISABLED);
 		}
 	#endif
@@ -225,7 +225,7 @@ static void poll_thread(uint64_t poll)
 		if((poll == 0) && (sec >= 120)) // check USB drives each 120 seconds
 		{
 			uint8_t tmp[2048], f0 = 0;
-			uint32_t usb_handle = -1, r;
+			uint32_t usb_handle = NONE, r;
 
 			for(u8 i = 0; i < 6; i++)
 			{

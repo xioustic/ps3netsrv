@@ -27,7 +27,7 @@ static void detect_firmware(void)
 		if(SYSCALL_TABLE) break;
 
 		LV2_OFFSET_ON_LV1 = (uint64_t)lv2_offset * 0x1000000ULL;
-		if(peekq(0x80000000002ED818ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_480;  c_firmware = (peekq(0x80000000002FCB68ULL) == 0x323031362F31302FULL) ? 4.81f : (peekq(0x80000000002FCB68ULL) == 0x323031352F31322FULL) ? 4.78f : (peekq(0x80000000002FCB68ULL) == 0x323031352F30382FULL) ? 4.76f : 4.75f;} else
+		if(peekq(0x80000000002ED818ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_481;  c_firmware = (peekq(0x80000000002FCB68ULL) == 0x323031362F31302FULL) ? 4.81f : (peekq(0x80000000002FCB68ULL) == 0x323031352F31322FULL) ? 4.78f : (peekq(0x80000000002FCB68ULL) == 0x323031352F30382FULL) ? 4.76f : 4.75f;} else
 		if(peekq(0x80000000002ED808ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_480;  c_firmware = 4.80f;}				else
 #ifndef LAST_FIRMWARE_ONLY
 		if(peekq(0x80000000002ED778ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_470;  c_firmware = 4.70f;}				else
@@ -50,9 +50,9 @@ static void detect_firmware(void)
 #ifdef DEX_SUPPORT
 		if(peekq(0x800000000030F3A0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_480D; c_firmware = 4.80f; dex_mode = 2;}	else
  #ifndef LAST_FIRMWARE_ONLY
-		if(peekq(0x800000000030F2D0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_475D; c_firmware = (peekq(0x800000000031EF48ULL) == 0x323031352F31322FULL)?4.78f:(peekq(0x800000000031EF48ULL) == 0x323031352F30382FULL)?4.76f:4.75f; dex_mode = 2;}	else
+		if(peekq(0x800000000030F2D0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_475D; c_firmware = (peekq(0x800000000031EF48ULL) == 0x323031362F31302FULL) ? 4.81f : (peekq(0x800000000031EF48ULL) == 0x323031352F31322FULL) ? 4.78f : (peekq(0x800000000031EF48ULL) == 0x323031352F30382FULL) ? 4.76f : 4.75f; dex_mode = 2;}	else
 		if(peekq(0x800000000030F240ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_470D; c_firmware = 4.70f; dex_mode = 2;}	else
-		if(peekq(0x800000000030F1A8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_465D; c_firmware = (peekq(0x800000000031EBA8ULL) == 0x323031342F31312FULL)?4.66f:4.65f; dex_mode = 2;} else
+		if(peekq(0x800000000030F1A8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_465D; c_firmware = (peekq(0x800000000031EBA8ULL) == 0x323031342F31312FULL) ? 4.66f : 4.65f; dex_mode = 2;} else
 		if(peekq(0x800000000030F198ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_460D; c_firmware = 4.60f; dex_mode = 2;}	else
 		if(peekq(0x800000000030D6A8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_455D; c_firmware = 4.55f; dex_mode = 2;}	else
 		if(peekq(0x800000000030AEA8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_453D; c_firmware = 4.53f; dex_mode = 2;}	else
@@ -233,7 +233,7 @@ static void detect_firmware(void)
 					idps_offset1 = 0x8000000000432430ULL;
 					idps_offset2 = 0x80000000004C4F1CULL;
 				}
-				else if(c_firmware >= 4.75f && c_firmware <= 4.80f)
+				else if(c_firmware >= 4.75f && c_firmware <= 4.81f)
 				{
 					idps_offset1 = 0x80000000004326B0ULL;
 					idps_offset2 = 0x80000000004C4AF4ULL;

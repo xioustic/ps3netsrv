@@ -22,6 +22,7 @@
 #define TYPE_HOST2DEV (USB_REQTYPE_DIR_TO_DEVICE|USB_REQTYPE_TYPE_VENDOR)
 #define TYPE_DEV2HOST (USB_REQTYPE_DIR_TO_HOST|USB_REQTYPE_TYPE_VENDOR)
 
+#define FAILED		-1
 
 #define SWAP32(x) ((((x) & 0xff) << 24) | (((x) & 0xff00) << 8) | (((x) & 0xff0000) >> 8) | (((x) >> 24) & 0xff))
 
@@ -955,7 +956,7 @@ int cobra_mount_ps2_disc_image(char *files[], int num, TrackDef *tracks, unsigne
 int cobra_umount_disc_image(void)
 {
 	int ret = sys_storage_ext_umount_discfile();
-	if (ret == -1)
+	if (ret == FAILED)
 		ret = ENODEV;
 
 	return ret;
@@ -1577,7 +1578,7 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		cobra_send_fake_disc_insert_event();
 
 		// Wait 3 seconds for automounter to mount iso
-		if (waitfor("/dev_bdvd", 3) == -1)
+		if (waitfor("/dev_bdvd", 3) == FAILED)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();
@@ -2002,7 +2003,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		cobra_send_fake_disc_insert_event();
 
 		// Wait 0.5 seconds for automounter to mount iso
-		if (waitfor("/dev_bdvd", 1) == -1)
+		if (waitfor("/dev_bdvd", 1) == FAILED)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();

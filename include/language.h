@@ -258,14 +258,14 @@ static const char *STR_RBGMENU		= "MENU TOGGLE";
 /*
 static uint32_t get_xreg_value(const char *key, u32 default_value)
 {
-	int reg = -1;
+	int reg = NONE;
 	u32 reg_value = default_value;
 	u16 off_string, len_data, len_string;
 	u64 read, pos, off_val_data;
 	CellFsStat stat;
 	char string[256];
 
-	if(cellFsOpen("/dev_flash2/etc/xRegistry.sys", CELL_FS_O_RDONLY, &reg, NULL, 0) != CELL_FS_SUCCEEDED || reg == -1)
+	if(cellFsOpen("/dev_flash2/etc/xRegistry.sys", CELL_FS_O_RDONLY, &reg, NULL, 0) != CELL_FS_SUCCEEDED || reg == NONE)
 	{
 		return reg_value;
 	}

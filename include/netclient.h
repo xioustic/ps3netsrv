@@ -18,8 +18,8 @@ typedef struct _netiso_args
 	ScsiTrackDescriptor tracks[1];
 } __attribute__((packed)) netiso_args;
 
-static int g_socket = -1;
-static sys_event_queue_t command_queue_net = -1;
+static int g_socket = NONE;
+static sys_event_queue_t command_queue_net = NONE;
 
 #define MAX_RETRIES    3
 
@@ -27,7 +27,7 @@ static sys_event_queue_t command_queue_net = -1;
 #define PLAYSTATION      "PLAYSTATION "
 
 static u8 netiso_loaded = 0;
-static int netiso_svrid = -1;
+static int netiso_svrid = NONE;
 
 static int read_remote_file(int s, void *buf, uint64_t offset, uint32_t size, int *abort_connection)
 {
@@ -113,7 +113,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 		return FAILED;
 	}
 
-	if(res.file_size == -1)
+	if(res.file_size == NONE)
 	{
 		//DPRINTF("Remote file %s doesn't exist!\n", path);
 		return FAILED;
@@ -338,7 +338,7 @@ static int remote_stat(int s, const char *path, int *is_directory, int64_t *file
 	*abort_connection = 0;
 
 	*file_size = (res.file_size);
-	if(*file_size == -1)
+	if(*file_size == NONE)
 		return FAILED;
 
 	*is_directory = res.is_directory;
@@ -452,7 +452,7 @@ static void netiso_thread(uint64_t arg)
 
 	netiso_loaded = 1;
 
-	while(working && netiso_loaded)
+	while(netiso_loaded)
 	{
 		sys_event_t event;
 
@@ -463,7 +463,7 @@ static void netiso_thread(uint64_t arg)
 			break;
 		}
 
-		if(!netiso_loaded || !working) break;
+		if(!netiso_loaded) break;
 
 		void *buf = (void *)(uint32_t)(event.data3>>32ULL);
 		uint64_t offset = event.data2;
@@ -491,7 +491,7 @@ static void netiso_thread(uint64_t arg)
 			break;
 		}
 
-		while(working && netiso_loaded)
+		while(netiso_loaded)
 		{
 			ret = sys_event_port_send(result_port, ret, 0, 0);
 			if(ret == 0) break;
@@ -527,7 +527,7 @@ static void netiso_thread(uint64_t arg)
 	{
 		shutdown(g_socket, SHUT_RDWR);
 		socketclose(g_socket);
-		g_socket = -1;
+		g_socket = NONE;
 	}
 
 	sys_event_port_disconnect(result_port);
@@ -538,7 +538,7 @@ static void netiso_thread(uint64_t arg)
 
 	//DPRINTF("Exiting main thread!\n");
 	netiso_loaded = 0;
-	netiso_svrid = -1;
+	netiso_svrid = NONE;
 
 	sys_ppu_thread_exit(0);
 }
@@ -547,16 +547,16 @@ static void netiso_stop_thread(uint64_t arg)
 {
 	uint64_t exit_code;
 	netiso_loaded = 0;
-	netiso_svrid = -1;
+	netiso_svrid = NONE;
 
 	if(g_socket >= 0)
 	{
 		shutdown(g_socket, SHUT_RDWR);
 		socketclose(g_socket);
-		g_socket = -1;
+		g_socket = NONE;
 	}
 
-	if(command_queue_net != (sys_event_queue_t)-1)
+	if(command_queue_net != SYS_EVENT_QUEUE_NONE)
 	{
 		if(sys_event_queue_destroy(command_queue_net, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
 		{

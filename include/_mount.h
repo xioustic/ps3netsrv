@@ -262,7 +262,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, FROM_MOUNT, strlen(d_name), tempstr);
 				}
 #endif
-				default_icon = get_default_icon(icon, _path, d_name, is_dir, tempID, -1, 0, f0, f1);
+				default_icon = get_default_icon(icon, _path, d_name, is_dir, tempID, NONE, 0, f0, f1);
 
 				*filename = '/';
 			}
@@ -926,7 +926,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		syscalls_removed = true;
 		{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
-		int ret_val = -1; { system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); ret_val = (int)p1;}
+		int ret_val = NONE; { system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); ret_val = (int)p1;}
 
 		if(ret_val < 0) { show_msg((char*)STR_CFWSYSALRD); { PS3MAPI_DISABLE_ACCESS_SYSCALL8 } return false; }
 		if(ret_val > 1) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 1); }
@@ -1405,7 +1405,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 			if(netid >= '0' && netid <= '4')
 			{
-				sys_addr_t sysmem = 0; netiso_svrid = -1;
+				sys_addr_t sysmem = 0; netiso_svrid = NONE;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 				{
 					netiso_svrid = netid - '0';

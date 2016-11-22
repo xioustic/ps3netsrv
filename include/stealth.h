@@ -186,7 +186,7 @@ static void block_online_servers(bool notify)
 			{
 				mem = peek_lv1(addr);
 
-				if(mem      == 0x733A2F2F61757468ULL)  // s://auth
+				if(     mem == 0x733A2F2F61757468ULL)  // s://auth
 					{if(!block_url(addr,   0x733A2F2F00000000ULL)) break;}
 				else if(mem == 0x2E7073332E757064ULL)  // .ps3.upd
 					{if(!block_url(addr-8, 0x3A2F2F0000000000ULL)) break;}

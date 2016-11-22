@@ -139,6 +139,12 @@ SYS_MODULE_STOP(wwwd_stop);
 #define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
 
+#define NONE -1
+#define SYS_PPU_THREAD_NONE        (sys_ppu_thread_t)NONE
+#define SYS_EVENT_QUEUE_NONE       (sys_event_queue_t)NONE
+#define SYS_DEVICE_HANDLE_NONE     (sys_device_handle_t)NONE
+#define SYS_MEMORY_CONTAINER_NONE  (sys_memory_container_t)NONE
+
 ///////////// PS3MAPI BEGIN //////////////
 #ifdef COBRA_ONLY
  #define SYSCALL8_OPCODE_PS3MAPI					0x7777
@@ -149,7 +155,7 @@ SYS_MODULE_STOP(wwwd_stop);
  #define PS3MAPI_OPCODE_PDISABLE_SYSCALL8 			0x0093
 
 // static uint64_t ps3mapi_key = 0;
- static int pdisable_sc8 = -1;
+ static int pdisable_sc8 = NONE;
  #define PS3MAPI_ENABLE_ACCESS_SYSCALL8		//if(syscalls_removed) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_REQUEST_ACCESS, ps3mapi_key); }
  #define PS3MAPI_DISABLE_ACCESS_SYSCALL8	//if(syscalls_removed && !is_mounting) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_ACCESS_KEY, ps3mapi_key); }
 
@@ -322,7 +328,6 @@ static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 #define IS_INGAME		(View_Find("game_plugin") != 0)
 
 ////////////
-#define SYS_PPU_THREAD_NONE (sys_ppu_thread_t)-1
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -391,7 +396,7 @@ static uint8_t sys_admin = 1;
 #endif
 
 #ifdef OFFLINE_INGAME
-static int32_t net_status = -1;
+static int32_t net_status = NONE;
 #endif
 
 static u64 SYSCALL_TABLE = 0;
