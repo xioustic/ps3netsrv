@@ -319,7 +319,7 @@ static int64_t calculate_directory_size(char *path)
 	{
 		if(IS_PARENT_DIR(entry->d_name)) continue;
 
-		d_name_len = entry->d_namlen; //strlen(entry->d_name);
+		d_name_len = strlen(entry->d_name);
 
 		if(IS_RANGE(d_name_len, 1, 65535))
 		{
@@ -988,7 +988,7 @@ static int process_read_dir_entry_cmd(client_t *client, netiso_read_dir_entry_cm
 	{
 		if(IS_PARENT_DIR(entry->d_name)) continue;
 
-		d_name_len = entry->d_namlen; //strlen(entry->d_name);
+		d_name_len = strlen(entry->d_name);
 
 		if(IS_RANGE(d_name_len, 1, 65535)) break;
 	}
@@ -1142,7 +1142,7 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 		if(!entry) break;
 		if(IS_PARENT_DIR(entry->d_name)) continue;
 
-		d_name_len = entry->d_namlen; //strlen(entry->d_name);
+		d_name_len = strlen(entry->d_name);
 
 		if(IS_RANGE(d_name_len, 1, MAX_PATH_LEN))
 		{
