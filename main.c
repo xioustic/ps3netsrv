@@ -92,6 +92,10 @@ static char search_url[50];
  #undef FIX_GAME
 #endif
 
+#ifdef PKG_LAUNCHER
+ #define MOUNT_ROMS 1
+#endif
+
 SYS_MODULE_INFO(WWWD, 0, 1, 0);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
@@ -107,7 +111,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.45.02 MOD"						// webMAN version
+#define WM_VERSION			"1.45.03 MOD"						// webMAN version
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -295,6 +299,10 @@ static u32 BUFFER_SIZE_PSP	= (  _32KB_);
 static u32 BUFFER_SIZE_PS2	= (  _64KB_);
 static u32 BUFFER_SIZE_DVD	= ( _192KB_);
 
+#ifdef MOUNT_ROMS
+static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
+#endif
+
 #define MAX_PAGES   (BUFFER_SIZE_ALL / _64KB_)
 
 ////////////
@@ -463,8 +471,9 @@ typedef struct
 	uint8_t launchpad_xml;
 	uint8_t launchpad_grp;
 	uint8_t ps3l;
+	uint8_t roms;
 
-	uint8_t padding2[18];
+	uint8_t padding2[17];
 
 	// start up settings
 
@@ -622,7 +631,7 @@ static char html_base_path[MAX_PATH_LEN];
 static char smonth[12][4]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/net2", "/net3", "/net4", "/ext", "/dev_sd", "/dev_ms", "/dev_cf"};
-static char paths [12][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI"};
+static char paths [13][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI", "ROMS"};
 
 #ifdef COPY_PS3
 static char    cp_path[MAX_PATH_LEN];   // cut/copy/paste buffer
@@ -654,7 +663,7 @@ static bool use_custom_icon_path = false, use_icon_region = false;
 static bool is_xmbmods_server = false;
 #endif
 
-static bool covers_exist[7];
+static bool covers_exist[8];
 static char fw_version[8] = "4.xx";
 static char local_ip[16] = "127.0.0.1";
 

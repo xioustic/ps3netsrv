@@ -467,6 +467,7 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_album_ps2.png", ICONS_DIR "/icon_wm_album_ps2.png");
 	CopyFile(APP_USRDIR "/icon_wm_album_psp.png", ICONS_DIR "/icon_wm_album_psp.png");
 	CopyFile(APP_USRDIR "/icon_wm_album_dvd.png", ICONS_DIR "/icon_wm_album_dvd.png");
+	CopyFile(APP_USRDIR "/icon_wm_album_emu.png", ICONS_DIR "/icon_wm_album_emu.png");
 
 	CopyFile(APP_USRDIR "/icon_wm_ps3.png"      , ICONS_DIR "/icon_wm_ps3.png");
 	CopyFile(APP_USRDIR "/icon_wm_psx.png"      , ICONS_DIR "/icon_wm_psx.png");

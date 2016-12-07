@@ -159,7 +159,8 @@ static void launch_disc(char *category, char *seg_name)
 				sys_timer_usleep(100000);
 				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
 				sys_timer_usleep(250000);
-				sprintf(explore_command, "focus_category %s", category); explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
+				sprintf(explore_command, "focus_category %s", category);
+				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
 				sys_timer_usleep(250000);
 				sprintf(explore_command, "focus_segment_index %s", seg_name);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);

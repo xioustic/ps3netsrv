@@ -101,8 +101,9 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "rxv=1")) webman_config->rxvid  = 1;
 	if(strstr(param, "pse=1")) webman_config->ps1emu = 1;
 
-#ifdef PKG_LAUNCHER
+#if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
 	if(strstr(param, "p3l=1")) webman_config->ps3l   = 1;
+	if(strstr(param, "rom=1")) webman_config->roms   = 1;
 #endif
 
 	webman_config->combo = webman_config->combo2 = 0;
@@ -236,7 +237,7 @@ static void setup_parse_settings(char *param)
 	webman_config->nowarn = 0;
 	if(strstr(param, "warn=1")) webman_config->nowarn = 1;
 
-	webman_config->foot=get_valuen(param, "fp=", 0, 6);
+	webman_config->foot=get_valuen(param, "fp=", 0, 7);
 
 	webman_config->spp = 0;
 #ifdef COBRA_ONLY
@@ -512,10 +513,11 @@ static void setup_form(char *buffer, char *templn)
 	//Scan for content
 	sprintf(templn, "<td nowrap valign=top><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
 
-#ifdef PKG_LAUNCHER
+#if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
 	b = isDir("/dev_hdd0/game/PKGLAUNCH");
 	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    , b ? " (" : _BR_, !(webman_config->cmask & PS3), buffer);
-	if(b) add_check_box("p3l", "1", "PKG Launcher"         ,     ")<br>"    ,  (webman_config->ps3l)       , buffer);
+	if(b) add_check_box("p3l", "1", "PKG Launcher"         ,     " & "      ,  (webman_config->ps3l)       , buffer);
+	if(b) add_check_box("rom", "1", "ROMS"                 ,     ")<br>"    ,  (webman_config->roms)       , buffer);
 #else
 	add_check_box("ps3", "1", "PLAYSTATION\xC2\xAE\x33"    ,            _BR_, !(webman_config->cmask & PS3), buffer);
 #endif
@@ -790,6 +792,7 @@ static void setup_form(char *buffer, char *templn)
 	add_option_item("4", "Max PS3+ (1088K PS3)"            , (value == 4), buffer);
 	add_option_item("5", "Max PSX+ ( 368K PS3 + 720K PSX)" , (value == 5), buffer);
 	add_option_item("6", "Max BLU+ ( 368K PS3 + 720K BLU)" , (value == 6), buffer);
+	add_option_item("7", "Max PSP+ ( 368K PS3 + 720K PSP)" , (value == 6), buffer);
 	strcat(buffer, "</select><p>");
 
 #ifndef ENGLISH_ONLY
@@ -1149,8 +1152,8 @@ static void reset_settings(void)
 	if(!(webman_config->combo & SYS_ADMIN)) sys_admin = 1; // set admin mode if ADMIN combo L2+R2+TRIANGLE is disabled
 #endif
 
-#ifdef PKG_LAUNCHER
-	if(!isDir("/dev_hdd0/game/PKGLAUNCH")) webman_config->ps3l = 0;
+#if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
+	if(!isDir("/dev_hdd0/game/PKGLAUNCH")) {webman_config->ps3l = webman_config->roms = 0; f1_len = 11;}
 #endif
 
 	// settings

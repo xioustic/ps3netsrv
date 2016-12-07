@@ -1,10 +1,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <lv2/sysfs.h>
+#include <sys/stat.h>
 #include <sys/file.h>
-#include <dirent.h>
-#include <unistd.h>
 #include <sys/process.h>
+
+#define RETROARCH	"/dev_hdd0/game/SSNE10000/USRDIR/cores"
+#define SHOWTIME	"/dev_hdd0/game/HTSS00003/USRDIR/movian.self"
+
+#define VIDEO_EXTENSIONS ".MKV|.MP4|.AVI|.MPG|.MPEG|.MOV|.M2TS|.VOB|.FLV|.WMV|.ASF|.DIVX|.XVID|.PAM|.BIK|.BINK|.VP6|.MTH|.3GP|.RMVB|.OGM|.OGV|.M2T|.MTS|.TS|.TSV|.TSA|.TTS|.RM|.RV|.VP3|.VP5|.VP8|.264|.M1V|.M2V|.M4B|.M4P|.M4R|.M4V|.MP4V|.MPE|.BDMV|.DVB|.WEBM|.NSV"
+#define AUDIO_EXTENSIONS ".MP3|.WAV|.WMA|.AAC|.AC3|.AT3|.OGG|.OGA|.MP2|.MPA|.M4A|.FLAC|.RA|.RAM|.AIF|.AIFF|.MOD|.S3M|.XM|.IT|.MTM|.STM|.UMX|.MO3|.NED|.669|.MP1|.M1A|.M2A|.M4B|.AA3|.OMA|.AIFC"
 
 #include <arpa/inet.h>
 
@@ -63,72 +68,112 @@ static void urlenc(char *dst, char *src)
 		else dst[j] = src[i];
 	}
 	dst[j] = '\0';
+
+	sprintf(src, "%s", dst);
 }
 
 int main(int argc, const char* argv[])
 {
-	int n;
-
-	char path[2048] = "";
-	char url[2048] = "GET /refresh.ps3 HTTP/1.0\r\n";
-
-	if(argc > 0 && argv)
-	{
-		if(strncmp(argv[0], "/dev_hdd0/game/", 15)) return 0;
-
-		strcpy(path, argv[0]);
-
-		n = 15; while(path[n] != '/' && path[n] != 0) n++;
-
-		if(path[n] == '/') path[n] = 0;
-
-		strcat(path, "/USRDIR/wm_request\0");
-	}
+	char path[2048], param[2048], url[2048];
 
 	FILE *fp;
 
-	fp = fopen(path, "rb");
+	fp = fopen("/dev_hdd0/game/PKGLAUNCH/USRDIR/launch.txt", "rb");
+
+	memset(path, 2048, 0);
+	memset(param, 2048, 0);
 
 	if (fp)
 	{
-		memset(path, 2048, 0);
-
 		fread((void *) path, 1, 2048, fp);
 		fclose(fp);
 
 		if(path[0])
 		{
-			if(!strstr(path, "%")) {urlenc(url, path); strcpy(path, url);}
-
 			char *p;
+			p = strstr(path, "\n"); if(p) {sprintf(param, "%s", p + 1); p[0] = 0;}
 			p = strstr(path, "\r"); if(p) p[0] = 0;
-			p = strstr(path, "\n"); if(p) p[0] = 0;
 
-			if(!strncmp(path, "/dev_", 5) || !strncmp(path, "/net", 4))
-				sprintf(url, "GET /mount_ps3%s\r\n", path);
-			else
-			if(path[0]=='/')
-				sprintf(url, "GET %s HTTP/1.0\r\n", path);
-			else
+			p = strstr(param, "\n"); if(p) p[0] = 0;
+			p = strstr(param, "\r"); if(p) p[0] = 0;
+
 			if(!strncmp(path, "GET ", 4))
-				sprintf(url, "%s HTTP/1.0\r\n", path);
+				{urlenc(url, path); sprintf(url, "%s HTTP/1.0\r\n", path);}
+			else
+			if(!strncmp(path, "http://127.0.0.1/", 17) || !strncmp(path, "http://localhost/", 17))
+				{urlenc(url, path); sprintf(url, "GET %s HTTP/1.0\r\n", path + 16);}
+			else
+			if((path[0]=='/') && (strstr(path, ".ps3") != NULL))
+				{urlenc(url, path); sprintf(url, "GET %s HTTP/1.0\r\n", path);}
+			else
+			if((!strncmp(path, "/dev_", 5) || !strncmp(path, "/net", 4)) && ((strstr(path, "/GAME") != NULL) || (strstr(path, "/PS3ISO") != NULL) || (strstr(path, "/PSXISO") != NULL) || (strstr(path, "/PS2ISO") != NULL) || (strstr(path, "/PSPISO") != NULL) || (strstr(path, "/DVDISO") != NULL) || (strstr(path, "/BDISO") != NULL) || (strstr(path, ".ntfs[") != NULL)))
+				{urlenc(url, path); sprintf(url, "GET /mount_ps3%s HTTP/1.0\r\n", path);}
 		}
 	}
 
-	if(!strncmp(url, "GET /mount", 10))
+	if(*url)
 	{
-		fp = fopen("/dev_hdd0/tmp/wm_request", "wb");
-		if (fp)
+		int s=-1;
+		s = connect_to_webman();
+		if(s >= 0) ssend(s, url);
+
+		fp = fopen("/dev_hdd0/game/PKGLAUNCH/USRDIR/url.txt", "wb");
+		fwrite((void *) url, 1, strlen(url), fp);
+		fclose(fp);
+
+		return 0;
+	}
+
+	if(*param == 0)
+	{
+		if(strcasestr(path, "/ROMS/SNES/"))
 		{
-			fwrite((void *) url, 1, strlen(url), fp);
-			fclose(fp);
-			return 0;
+			struct stat s;
+			sprintf(param, "%s", path);
+			sprintf(path, "%s/snes9x2010_libretro_ps3.SELF", RETROARCH);
+			if(stat(path, &s) != 0) sprintf(path, "%s/snes9x_next_libretro_ps3.SELF", RETROARCH);
+		}
+		else
+		if(strcasestr(path, "/ROMS/NES/"))  {sprintf(param, "%s", path); sprintf(path, "%s/fceumm_libretro_ps3.SELF", RETROARCH);}            else
+		if(strcasestr(path, "/ROMS/GEN/"))  {sprintf(param, "%s", path); sprintf(path, "%s/genesis_plus_gx_libretro_ps3.SELF", RETROARCH);}   else
+		if(strcasestr(path, "/ROMS/GBA/"))  {sprintf(param, "%s", path); sprintf(path, "%s/vba_next_libretro_ps3.SELF", RETROARCH);}          else
+		if(strcasestr(path, "/ROMS/GB/"))   {sprintf(param, "%s", path); sprintf(path, "%s/gambatte_libretro_ps3.SELF", RETROARCH);}          else
+		if(strcasestr(path, "/ROMS/GBC/"))  {sprintf(param, "%s", path); sprintf(path, "%s/gambatte_libretro_ps3.SELF", RETROARCH);}          else
+		if(strcasestr(path, "/ROMS/FBA/"))  {sprintf(param, "%s", path); sprintf(path, "%s/fb_alpha_libretro_ps3.SELF", RETROARCH);}          else
+		if(strcasestr(path, "/ROMS/PCE/"))  {sprintf(param, "%s", path); sprintf(path, "%s/mednafen_pce_fast_libretro_ps3.SELF", RETROARCH);} else
+		if(strcasestr(path, "/ROMS/NGP/"))  {sprintf(param, "%s", path); sprintf(path, "%s/mednafen_ngp_libretro_ps3.SELF", RETROARCH);}      else
+		if(strcasestr(path, "/ROMS/VBOY/")) {sprintf(param, "%s", path); sprintf(path, "%s/mednafen_vb_libretro_ps3.SELF", RETROARCH);}       else
+		if(strcasestr(path, "/ROMS/WSWAM/")){sprintf(param, "%s", path); sprintf(path, "%s/mednafen_wswan_libretro_ps3.SELF", RETROARCH);}    else
+		if(strcasestr(path, "/ROMS/ATARI/")){sprintf(param, "%s", path); sprintf(path, "%s/stella_libretro_ps3.SELF", RETROARCH);}            else
+		if(strcasestr(path, "/ROMS/MAME/")) {sprintf(param, "%s", path); sprintf(path, "%s/mame078_libretro_ps3.SELF", RETROARCH);}           else
+		if(strcasestr(path, "/ROMS/QUAKE/")){sprintf(param, "%s", path); sprintf(path, "%s/tyrquake_libretro_ps3.SELF", RETROARCH);}          else
+		if(strcasestr(path, "/ROMS/DOOM/")) {sprintf(param, "%s", path); sprintf(path, "%s/prboom_libretro_ps3.SELF", RETROARCH);}            else
+		{
+			char extension[8]; int plen = strlen(path);
+			if(plen > 4)
+			{
+				sprintf(extension, "%s", path + plen - 4);
+				if(strcasestr(VIDEO_EXTENSIONS, extension)) {sprintf(param, "%s", path); sprintf(path, "%s", SHOWTIME);}
+				if(strcasestr(AUDIO_EXTENSIONS, extension)) {sprintf(param, "%s", path); sprintf(path, "%s", SHOWTIME);}
+			}
 		}
 	}
 
-	int s=-1;
-	s=connect_to_webman();
-	if(s>=0) ssend(s, url);
+	if(*param)
+	{
+		char* launchargv[2];
+		memset(launchargv, 0, sizeof(launchargv));
+
+		launchargv[0] = (char*)malloc(strlen(param) + 1); strcpy(launchargv[0], param);
+		launchargv[1] = NULL;
+
+		sysProcessExitSpawn2((const char*)path, (char const**)launchargv, NULL, NULL, 0, 3071, SYS_PROCESS_SPAWN_STACK_SIZE_1M);
+	}
+	else
+	if(*path)
+	{
+		sysProcessExitSpawn2((const char*)path, NULL, NULL, NULL, 0, 1001, SYS_PROCESS_SPAWN_STACK_SIZE_1M);
+	}
 
 	return 0;
 }

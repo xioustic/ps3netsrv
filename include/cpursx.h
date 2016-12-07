@@ -124,49 +124,8 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	if(sys_admin) {sprintf(templn, " [<a href=\"/shutdown.ps3\">%s</a>] [<a href=\"/restart.ps3\">%s</a>]", STR_SHUTDOWN, STR_RESTART ); buffer += concat(buffer, templn);}
 
-
 	add_game_info(buffer, templn, true);
 
-/*
-	if(IS_INGAME)
-	{
-		get_game_info();
-
-		if(strlen(_game_TitleID) == 9)
-		{
-			if(sys_admin)
-			{
-#ifdef GET_KLICENSEE
-				buffer += concat(buffer, " [<a href=\"/klic.ps3\">KLIC</a>]");
-#endif
-#ifdef SYS_BGM
-				buffer += concat(buffer, " [<a href=\"/sysbgm.ps3\">BGM</a>]");
-#endif
-#ifdef VIDEO_REC
-				buffer += concat(buffer, " [<a href=\"/videorec.ps3\">REC</a>]");
-#endif
-			}
-
-			char path[MAX_PATH_LEN], version[8] = "01.00", *app_ver = version;
-
-			sprintf(templn, "<hr><H2><a href=\"%s/%s/%s-ver.xml\" target=\"_blank\">%s</a>", "https://a0.ww.np.dl.playstation.net/tpl/np", _game_TitleID, _game_TitleID, _game_TitleID); buffer += concat(buffer, templn);
-
-			sprintf(path, "%s%s/PARAM.SFO", HDD0_GAME_DIR, _game_TitleID);
-			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME/PARAM.SFO");
-
-			getTitleID(path, app_ver, GET_VERSION); if(*app_ver == '0') *app_ver='v'; if(strstr(_game_Title, app_ver)) *app_ver = NULL;
-
-			sprintf(templn, " <a href=\"%s%s\">%s %s</a> &nbsp; ", search_url, _game_Title, _game_Title, app_ver); buffer += concat(buffer, templn);
-
-			sprintf(path, "%s%s", HDD0_GAME_DIR, _game_TitleID);
-			if(file_exists(path) == false) sprintf(path, "/dev_bdvd/PS3_GAME");
-
-			sprintf(templn, "<a href=\"%s\"><img src=\"%s/ICON0.PNG\" border=0 %s></a>", path, path, "height=\"60\" style=\"position:absolute;top:65px;\""); buffer += concat(buffer, templn);
-
-			buffer += concat(buffer, "</H2>");
-		}
-	}
-*/
 #ifdef COPY_PS3
 	if(copy_in_progress)
 	{

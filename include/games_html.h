@@ -2,7 +2,9 @@
 #define SUFIX2(a)	((a==1)?" (1)":(a==2)?" (2)":(a==3)?" (3)":(a==4)?" (4)":"")
 #define SUFIX3(a)	((a==1)?" (1).ntfs[":(a==2)?" (2).ntfs[":(a==3)?" (3).ntfs[":(a==4)?" (4).ntfs[":"")
 
-#define IS_ISO_FOLDER ((f1>1) && (f1<10))
+#define ROMS_EXTENSIONS ".ZIP.GBA.NES.UNIF.GB.GBC.DMG.MD.SMD.GEN.SMS.GG.SG.BIN.CUE.IOS.FLAC.NGP.NGC.PCE.SGX.CUE.VB.VBOY.BIN.WS.WSC.FDS.EXE.WAD.IWAD.SMC.FIG.SFC.GD3.GD7.DX2.BSX.SWC.A26.BIN.PAK"
+
+#define IS_ISO_FOLDER (((f1>1) && (f1<10)) || (f1 == 12))
 #define IS_PS3_TYPE   ((f1<3) || (f1>=10))
 #define IS_BLU_TYPE   ((f1<4) || (f1>=10))
 #define IS_VID_FOLDER ((f1==3) || (f1==4))
@@ -16,6 +18,7 @@
 #define IS_PSP_FOLDER   ((f1==8) || (f1==9))
 #define IS_VIDEO_FOLDER (f1==10)
 #define IS_GAMEI_FOLDER (f1==11)
+#define IS_ROMS_FOLDER  (f1==12)
 
 #define IS_HDD0       (f0 == 0)
 #define IS_NTFS       (f0 == NTFS)
@@ -56,6 +59,7 @@ enum icon_type
 	iPSP  = 8,
 	iDVD  = 9,
 	iBDVD = 5,
+	iROM  = 9,
 };
 
 #define LAUNCHPAD_MODE			2
@@ -71,8 +75,8 @@ enum icon_type
 #define SHOW_COVERS_OR_ICON0  (webman_config->nocov != SHOW_DISC)
 #define SHOW_COVERS          ((webman_config->nocov == SHOW_MMCOVERS) || (webman_config->nocov == ONLINE_COVERS))
 
-#ifdef PKG_LAUNCHER
- static const u8 f1_len = 12;
+#if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
+ static u8 f1_len = 13; //11 + GAMEI + ROMS
 #else
  static const u8 f1_len = 11;
 #endif
@@ -387,11 +391,14 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 
 static enum icon_type get_default_icon_by_type(u8 f1)
 {
-	return  IS_PS3_TYPE   ? iPS3 :
-			IS_PSX_FOLDER ? iPSX :
-			IS_PS2_FOLDER ? iPS2 :
-			IS_PSP_FOLDER ? iPSP :
-			IS_DVD_FOLDER ? iDVD : iBDVD;
+	return  IS_PS3_TYPE    ? iPS3 :
+			IS_PSX_FOLDER  ? iPSX :
+			IS_PS2_FOLDER  ? iPS2 :
+			IS_PSP_FOLDER  ? iPSP :
+#ifdef MOUNT_ROMS
+			IS_ROMS_FOLDER ? iROM :
+#endif
+			IS_DVD_FOLDER  ? iDVD : iBDVD;
 }
 
 static enum icon_type get_default_icon(char *icon, const char *param, char *file, int is_dir, char *tempID, int ns, int abort_connection, u8 f0, u8 f1)
@@ -760,6 +767,10 @@ static void check_cover_folders(char *buffer)
 	}
 #endif
 
+#ifdef MOUNT_ROMS
+	covers_exist[7] = file_exists(WM_ICONS_PATH "/icon_wm_album_emu.png");
+#endif
+
 #ifdef LAUNCHPAD
 	nocover_exists = file_exists(WM_ICONS_PATH "/icon_lp_nocover.png");
 #endif
@@ -805,7 +816,9 @@ static int check_content(u8 f1)
 	if( (webman_config->cmask & PS2) && IS_PS2_FOLDER ) return FAILED;
 	if( (webman_config->cmask & PS1) && IS_PSX_FOLDER ) return FAILED;
 	if( (webman_config->cmask & PSP) && IS_PSP_FOLDER ) return FAILED;
-
+#ifdef MOUNT_ROMS
+	if((!webman_config->roms)        && IS_ROMS_FOLDER) return FAILED;
+#endif
 	return CELL_OK;
 }
 
@@ -887,8 +900,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		if(!(webman_config->cmask & PS1))   add_query_html(pbuffer, "PSXISO");
 		if(!(webman_config->cmask & BLU))   add_query_html(pbuffer, "BDISO" );
 		if(!(webman_config->cmask & DVD))   add_query_html(pbuffer, "DVDISO");
- #ifdef PKG_LAUNCHER
-		if(webman_config->ps3l)  add_query_html(pbuffer, "GAMEI");
+ #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
+		if(webman_config->ps3l) {add_query_html(pbuffer, "GAMEI");}
+		if(webman_config->roms) {add_query_html(pbuffer, "ROMS");}
  #endif
  #ifndef LITE_EDITION
 		if(webman_config->netd[0] || webman_config->netd[1] || webman_config->netd[2] || webman_config->netd[3] || webman_config->netd[4]) add_query_html(pbuffer, "net");
@@ -909,9 +923,12 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	else
 		buf_len += concat(buffer, " <br>");
 
-	c_len = 0; while(loading_games && working && (c_len < 500)) {sys_timer_usleep(200000); c_len++;}
 
-	if(c_len >= 500 || !working) return false;
+	// --- wait until 120 seconds if server is busy loading games ---
+	c_len = 0; while(loading_games && working && (c_len < 600)) {sys_timer_usleep(200000); c_len++;}
+
+	if(c_len >= 600 || !working) return false;
+	// ---
 
 /*
 	CellRtcTick pTick, pTick2;
@@ -981,6 +998,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		u8 div_size = mobile_mode ? 0 : GAME_DIV_SIZE;
 
+#if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
+		f1_len = webman_config->roms ? 13 : webman_config->ps3l ? 12 : 11;
+#endif
+
 #ifdef LAUNCHPAD
 		if(launchpad_mode)
 		{
@@ -1028,7 +1049,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
  #endif
 #endif
 			ns = -2; uprofile = profile;
-			for(u8 f1 = filter1; f1 < f1_len; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI"
+			for(u8 f1 = filter1; f1 < f1_len; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 			{
 #ifndef COBRA_ONLY
 				if(IS_ISO_FOLDER && !(IS_PS2_FOLDER)) continue; // 0="GAMES", 1="GAMEZ", 5="PS2ISO", 10="video"
@@ -1040,7 +1061,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
 #endif
 				if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
-				if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI"
+				if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -1199,6 +1220,11 @@ next_html_entry:
 						flen = entry.d_namlen;
 
 #ifdef COBRA_ONLY
+	#ifdef MOUNT_ROMS
+						if(IS_ROMS_FOLDER)
+							is_iso = (flen > 4) && (strcasestr(ROMS_EXTENSIONS, entry.d_name + flen - 4) != NULL);
+						else
+	#endif
 						if(IS_NTFS)
 							is_iso = (flen > 13) && (strstr(entry.d_name + flen - 13, ".ntfs[") != NULL);
 						else

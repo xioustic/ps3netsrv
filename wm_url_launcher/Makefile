@@ -11,8 +11,8 @@ endif
 #  TITLE, APPID, CONTENTID, ICON0 SFOXML before ppu_rules.
 #---------------------------------------------------------------------------------
 
-TITLE		:=	WM Launcher
-APPID		:=	LINK00000
+TITLE		:=	PKG Launcher
+APPID		:=	PKGLAUNCH
 CONTENTID	:=	UP0001-$(APPID)_00-0000000000000000
 
 include $(PSL1GHT)/ppu_rules

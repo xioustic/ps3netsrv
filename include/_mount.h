@@ -20,8 +20,6 @@ typedef struct
 
 #define IS_COPY		9
 
-#define PLAYSTATION      "PLAYSTATION "
-
 // /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_emu.self}][offline={0/1}]
 // /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_emu.self}][offline={0/1}]
 // /mount.ps3/unmount
@@ -356,7 +354,16 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					}
 					else
  #endif // #ifdef SWAP_KERNEL
-					if(IS(ext4, ".pkg"))
+					if(strstr(source, "/***PS3***/"))
+					{
+						sprintf(target, "/dev_hdd0/PS3ISO%s.iso", filename); // /copy.ps3/net0/***PS3***/GAMES/BLES12345  -> /dev_hdd0/PS3ISO/BLES12345.iso
+					}
+					else
+					if(strstr(source, "/***DVD***/"))
+					{
+						sprintf(target, "/dev_hdd0/DVDISO%s.iso", filename); // /copy.ps3/net0/***DVD***/folder  -> /dev_hdd0/DVDISO/folder.iso
+					}
+					else if(IS(ext4, ".pkg"))
 					{
 						if(is_copying_from_hdd)
 							sprintf(target, "%s/Packages", drives[usb]);
@@ -1152,6 +1159,27 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	}
  #endif
 #endif
+
+	// ------------------
+	// mount ROMS game
+	// ------------------
+ #ifdef MOUNT_ROMS
+	{
+		int plen = strlen(_path) - 4; if(plen < 0) plen = 0;
+
+		if(strstr(_path, "/ROMS/") || strcasestr(_path, ".SELF") || strcasestr(ROMS_EXTENSIONS, _path + plen))
+		{
+			sys_map_path("/dev_hdd0/game/PKGLAUNCH", NULL);
+			sys_map_path("/dev_hdd0/game/PKGLAUNCH/PS3_GAME/USRDIR/cores", "/dev_hdd0/game/SSNE10000/USRDIR/cores");
+
+			cobra_map_game("/dev_hdd0/game/PKGLAUNCH", "PKGLAUNCH", 0);
+
+			save_file("/dev_hdd0/game/PKGLAUNCH/USRDIR/launch.txt", _path, 0);
+			mount_unk = EMU_MAX;
+			goto exit_mount;
+		}
+	}
+ #endif
 
 	// ------------------
 	// mount GAMEI game

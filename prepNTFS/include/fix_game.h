@@ -46,6 +46,8 @@ static void get_titleid(char *filename, char *titleID)
 
 static bool need_fix(char *filename)
 {
+	if(c_firmware >= FW_VERSION) return false;
+
 	char paramsfo[_4KB_];
 	unsigned char *mem = (u8*)paramsfo;
 
@@ -79,6 +81,8 @@ static bool need_fix(char *filename)
 
 static bool fix_param_sfo(unsigned char *mem, char *titleID)
 {
+	if(c_firmware >= FW_VERSION) return false;
+
 	READ_SFO_HEADER(false)
 
 	memset(titleID, 0, 10);

@@ -7,6 +7,10 @@ static uint64_t sc_604 = 0;
 static uint64_t sc_142 = 0;
 #endif
 
+#define IS_CEX (dex_mode == 0)
+#define IS_DEH (dex_mode == 1)
+#define IS_DEX (dex_mode == 2)
+
 static void detect_firmware(void)
 {
 	if((c_firmware > 3.40f) || SYSCALL_TABLE || syscalls_removed) return;
@@ -48,9 +52,10 @@ static void detect_firmware(void)
 #endif  // #ifndef LAST_FIRMWARE_ONLY
 
 #ifdef DEX_SUPPORT
+		if(peekq(0x800000000030F3B0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_481D; c_firmware = 4.81f; dex_mode = 2;}	else
 		if(peekq(0x800000000030F3A0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_480D; c_firmware = 4.80f; dex_mode = 2;}	else
  #ifndef LAST_FIRMWARE_ONLY
-		if(peekq(0x800000000030F2D0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_475D; c_firmware = (peekq(0x800000000031EF48ULL) == 0x323031362F31302FULL) ? 4.81f : (peekq(0x800000000031EF48ULL) == 0x323031352F31322FULL) ? 4.78f : (peekq(0x800000000031EF48ULL) == 0x323031352F30382FULL) ? 4.76f : 4.75f; dex_mode = 2;}	else
+		if(peekq(0x800000000030F2D0ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_475D; c_firmware = (peekq(0x800000000031EF48ULL) == 0x323031352F31322FULL) ? 4.78f : (peekq(0x800000000031EF48ULL) == 0x323031352F30382FULL) ? 4.76f : 4.75f; dex_mode = 2;}	else
 		if(peekq(0x800000000030F240ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_470D; c_firmware = 4.70f; dex_mode = 2;}	else
 		if(peekq(0x800000000030F1A8ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_465D; c_firmware = (peekq(0x800000000031EBA8ULL) == 0x323031342F31312FULL) ? 4.66f : 4.65f; dex_mode = 2;} else
 		if(peekq(0x800000000030F198ULL) == DEX) {SYSCALL_TABLE = SYSCALL_TABLE_460D; c_firmware = 4.60f; dex_mode = 2;}	else
@@ -94,7 +99,7 @@ static void detect_firmware(void)
 	sys_get_version2(&cobra_version);
 
 #ifndef COBRA_ONLY
-	if(!dex_mode)
+	if(IS_CEX)
 	{   // CEX
  #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.41f) {base_addr = 0x2B5D30, open_hook = 0x2AAFC8;} else
@@ -119,7 +124,7 @@ static void detect_firmware(void)
 	}
 
  #ifdef DECR_SUPPORT
-	else if(dex_mode == 1)
+	else if(IS_DEH)
 	{   // DECR
 		if(c_firmware == 3.55f) {base_addr = 0x2F5320, open_hook = 0x2E31F4;} else
 	  //if(c_firmware == 4.50f) {base_addr = 0x30D2C0, open_hook = 0x2CEF08;} else
@@ -130,7 +135,7 @@ static void detect_firmware(void)
  #endif
 
  #ifdef DEX_SUPPORT
-	else if(dex_mode == 2)
+	else if(IS_DEX)
 	{   // DEX
   #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.55f) {base_addr = 0x2D5B20, open_hook = 0x2C8A94;} else
@@ -147,10 +152,11 @@ static void detect_firmware(void)
 		if(c_firmware >= 4.65f && c_firmware <= 4.66f)
 								{base_addr = 0x2FA230, open_hook = 0x2BB010;} else
 		if(c_firmware == 4.70f) {base_addr = 0x2FA540, open_hook = 0x2B2480;} else
+		if(c_firmware >= 4.75f && c_firmware <= 4.78f)
+								{base_addr = 0x2FA5B0, open_hook = 0x2B24F8;} else
   #endif // #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 4.80f) {base_addr = 0x2FA680, open_hook = 0x2B25C4;} else
-		if(c_firmware >= 4.75f && c_firmware <= 4.81f)
-								{base_addr = 0x2FA5B0, open_hook = 0x2B24F8;}
+		if(c_firmware == 4.81f) {base_addr = 0x2FA690, open_hook = 0x2B25D0;}
 	}
  #endif //#ifdef DEX_SUPPORT
 
@@ -158,7 +164,7 @@ static void detect_firmware(void)
 	open_hook |= 0x8000000000000000ULL;
 #endif //#ifndef COBRA_ONLY
 
-	if(!dex_mode)
+	if(IS_CEX)
 	{ // CEX
 		if(c_firmware >= 4.55f /*&& c_firmware <= 4.80f*/)
 		{
@@ -226,7 +232,7 @@ static void detect_firmware(void)
  #ifdef SPOOF_CONSOLEID
   #ifdef DECR_SUPPORT
 			// idps / psid dex
-			if(dex_mode == 1)
+			if(IS_DEH)
 			{ // DEH
 				if(c_firmware >= 4.60f && c_firmware <= 4.66f)
 				{
@@ -327,7 +333,7 @@ static void new_poke_patches(u64 addr_3C, u64 addr_3D, u64 addr_3E,
 
 static void patch_lv2(void)
 {
-	if(!dex_mode)
+	if(IS_CEX)
 	{ // CEX
 #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.55f)
@@ -508,8 +514,8 @@ static void patch_lv2(void)
 			sc_142 = 0x306618;
  #endif
 		}
-#endif //#ifndef LAST_FIRMWARE_ONLY
 		else
+#endif //#ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 4.80f)
 		{
 			new_poke_patches(0x8000000000267144ULL, 0x800000000005688CULL, 0x800000000005664CULL,
@@ -538,7 +544,7 @@ static void patch_lv2(void)
 	}
 
 #ifdef DECR_SUPPORT
-	else if(dex_mode == 1)
+	else if(IS_DEH)
 	{ // DEH
 		if(c_firmware == 3.55f)
 		{
@@ -604,7 +610,7 @@ static void patch_lv2(void)
 #endif //#ifdef DECR_SUPPORT
 
 #ifdef DEX_SUPPORT
-	else if(dex_mode == 2)
+	else if(IS_DEX)
 	{ // DEX
  #ifndef LAST_FIRMWARE_ONLY
 		if(c_firmware == 3.55f)
@@ -777,9 +783,18 @@ static void patch_lv2(void)
 							 0x8000000000059C00ULL, 0x800000000022DAD0ULL,
 							 0x800000000005962CULL, 0x800000000005C7ECULL);
   #ifndef COBRA_ONLY
-			sc_600 = 0x364848; //0x38A3E8 + 600*8 = 0038B6A8 -> 80 00 00 00 00 36 48 48
-			sc_604 = 0x364920; //0x38A3E8 + 604*8 = 0038B6C8 -> 80 00 00 00 00 36 49 20
-			sc_142 = 0x329220; //0x38A3E8 + 142*8 = 0038A858 -> 80 00 00 00 00 32 92 20
+			if(c_firmware == 4.81f)
+			{
+				sc_600 = 0x364928;
+				sc_604 = 0x364A00;
+				sc_142 = 0x329300;
+			}
+			else
+			{
+				sc_600 = 0x364848; //0x38A3E8 + 600*8 = 0038B6A8 -> 80 00 00 00 00 36 48 48
+				sc_604 = 0x364920; //0x38A3E8 + 604*8 = 0038B6C8 -> 80 00 00 00 00 36 49 20
+				sc_142 = 0x329220; //0x38A3E8 + 142*8 = 0038A858 -> 80 00 00 00 00 32 92 20
+			}
   #endif
 		}
 	}
