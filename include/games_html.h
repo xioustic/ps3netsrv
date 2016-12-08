@@ -2,7 +2,7 @@
 #define SUFIX2(a)	((a==1)?" (1)":(a==2)?" (2)":(a==3)?" (3)":(a==4)?" (4)":"")
 #define SUFIX3(a)	((a==1)?" (1).ntfs[":(a==2)?" (2).ntfs[":(a==3)?" (3).ntfs[":(a==4)?" (4).ntfs[":"")
 
-#define ROMS_EXTENSIONS ".ZIP.GBA.NES.UNIF.GB.GBC.DMG.MD.SMD.GEN.SMS.GG.SG.BIN.CUE.IOS.FLAC.NGP.NGC.PCE.SGX.CUE.VB.VBOY.BIN.WS.WSC.FDS.EXE.WAD.IWAD.SMC.FIG.SFC.GD3.GD7.DX2.BSX.SWC.A26.BIN.PAK"
+#define ROMS_EXTENSIONS ".ZIP.GBA.NES.UNIF.GB.GBC.DMG.MD.SMD.GEN.SMS.GG.SG.IOS.FLAC.NGP.NGC.PCE.SGX.VB.VBOY.WS.WSC.FDS.EXE.WAD.IWAD.SMC.FIG.SFC.GD3.GD7.DX2.BSX.SWC.A26.PAK"
 
 #define IS_ISO_FOLDER (((f1>1) && (f1<10)) || (f1 == 12))
 #define IS_PS3_TYPE   ((f1<3) || (f1>=10))
@@ -359,6 +359,7 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 		{
 			if(webman_config->nocov == SHOW_DISC) return; // no icon0
 			sprintf(remote_file, "%s/%s/PS3_GAME/ICON0.PNG", param, file);
+			flen = get_name(icon, file, GET_WMTMP); sprintf(icon + flen, ".png");
 
 			copy_net_file(icon, remote_file, ns, COPY_WHOLE_FILE);
 			if(file_exists(icon)) return;
