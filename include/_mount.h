@@ -1183,8 +1183,12 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// mount ROMS game
 	// ------------------
  #ifdef MOUNT_ROMS
+	if(isDir("/dev_hdd0/game/PKGLAUNCH"))
 	{
-		int plen = strlen(_path) - 4; if(plen < 0) plen = 0;
+		int plen = strlen(_path) - 4;
+		if(plen < 0) plen = 0;
+		else if(_path[plen + 2] == '.') plen+=2;
+		else if(_path[plen + 1] == '.') plen++;
 
 		if((strstr(_path, "/ROMS/") != NULL) || (strcasestr(_path, ".SELF") != NULL) || (strcasestr(ROMS_EXTENSIONS, _path + plen) != NULL))
 		{

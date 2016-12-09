@@ -221,6 +221,8 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 #endif
 
 #ifdef PKG_HANDLER
+	else if( (f1_len > 11) && ((strstr(templn, "/ROMS/") != NULL) || (strcasestr(templn, ".SELF") != NULL) || (strcasestr(ROMS_EXTENSIONS, ext) != NULL)) )
+			sprintf(fsize, "<a href=\"/mount.ps3%s\" title=\"%'llu %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, sz, sf);
 	else if( IS(ext, ".pkg") || IS(ext, ".PKG") || IS(ext, ".p3t") )
 			sprintf(fsize, "<a href=\"/install.ps3%s\">%'llu %s</a>", templn, sz, sf);
 #endif
