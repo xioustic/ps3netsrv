@@ -532,9 +532,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 				if(IS_NTFS)
 					sprintf(param, "%s", WMTMP);
 				else
+				{
 					sprintf(param, "%s/%s%s", drives[f0], paths[f1], SUFIX(uprofile));
-
-				if(li == 99) sprintf(param, "%s/%s%s", drives[f0], paths[f1], AUTOPLAY_TAG);
+					if(li == 99) sprintf(param, "%s/%s%s", drives[f0], paths[f1], AUTOPLAY_TAG);
+				}
 			}
 
 #ifdef COBRA_ONLY
@@ -724,7 +725,10 @@ next_xml_entry:
 continue_reading_folder_xml:
 
 			if((uprofile > 0) && (f1 < 9)) {subfolder = uprofile = 0; goto read_folder_xml;}
-			if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_xml;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_xml;}
+			if(!IS_NTFS)
+			{
+				if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_xml;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_xml;}
+			}
 //
 		}
 #ifdef COBRA_ONLY
@@ -733,7 +737,6 @@ continue_reading_folder_xml:
  #endif
 #endif
 	}
-
 
 	if( !(webman_config->nogrp))
 	{

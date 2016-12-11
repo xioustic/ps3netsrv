@@ -582,7 +582,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 									boff+=bytes_read;
 									if((uint32_t)bytes_read < _64KB_ || boff >= file_size) break;
 								}
-								open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
+								open_remote_file(ns, "/CLOSEFILE", &abort_connection);
 								shutdown(ns, SHUT_RDWR); socketclose(ns);
 								sclose(&conn_s);
 

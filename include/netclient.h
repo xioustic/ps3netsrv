@@ -719,21 +719,30 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	if(file_exists(local_file)) return CELL_OK; // local file already exists
 
-	int64_t file_size; int abort_connection = 0, fdw = 0, ret = FAILED;
+	int64_t file_size = 0; int abort_connection = 0;
 
-	sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
+	//
+	int is_directory = 0; u64 mtime, ctime, atime;
+	if(remote_stat(ns, remote_file, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) != CELL_OK || file_size <= 0) return FAILED;
+	//
+
+	int ret = FAILED;
 
 	file_size = open_remote_file(ns, remote_file, &abort_connection);
 
 	if(file_size > 0)
 	{
+		sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
+
 		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
-			char *chunk = (char*)sysmem;
+			char *chunk = (char*)sysmem; int fdw;
 
 			if(cellFsOpen(local_file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
 				if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
+
+				if(chunk_size > file_size) chunk_size = file_size;
 
 				int bytes_read, boff = 0;
 				while(boff < file_size)
@@ -745,7 +754,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 						cellFsWrite(fdw, (char*)chunk, bytes_read, NULL);
 
 					boff += bytes_read;
-					if((uint64_t)bytes_read < chunk_size || abort_connection) break;
+					if(((uint64_t)bytes_read < chunk_size) || abort_connection) break;
 				}
 				cellFsClose(fdw);
 				cellFsChmod(local_file, MODE);
@@ -754,9 +763,9 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 			}
 			sys_memory_free(sysmem);
 		}
-
-		open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
 	}
+
+	open_remote_file(ns, "/CLOSEFILE", &abort_connection);
 
 	return ret;
 }

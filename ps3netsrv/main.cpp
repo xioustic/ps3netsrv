@@ -395,7 +395,13 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 
 	filepath[fp_len] = 0;
 
-	if((ret != fp_len) || !strcmp(filepath, "/CLOSEFILE"))
+	if(!strcmp(filepath, "/CLOSEFILE"))
+	{
+		free(filepath);
+		return 0;
+	}
+
+	if(ret != fp_len)
 	{
 		DPRINTF("recv failed, getting filename for open: %d %d\n", ret, get_network_error());
 		free(filepath);
@@ -1500,7 +1506,7 @@ int main(int argc, char *argv[])
 	uint32_t whitelist_end = 0;
 	uint16_t port = NETISO_PORT;
 
-	printf("ps3netsrv build 20161121 (mod by aldostools)\n");
+	printf("ps3netsrv build 20161211 (mod by aldostools)\n");
 
 #ifndef WIN32
 	if(sizeof(off_t) < 8)

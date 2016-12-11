@@ -588,7 +588,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 		get_title_and_id_from_sfo(templn, tempID, data[v3_entry].name, icon, tempstr, 0);
 	}
 	else
-		{get_name(enc_dir_name, data[v3_entry].name, NO_EXT); htmlenc(templn, enc_dir_name, 1);}
+		{get_name(enc_dir_name, data[v3_entry].name, NO_EXT); if(is_html) htmlenc(templn, enc_dir_name, 1);}
 
 	if(data[v3_entry].is_directory && IS_ISO_FOLDER)
 	{
@@ -901,10 +901,12 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		if(!(webman_config->cmask & PS1))   add_query_html(pbuffer, "PSXISO");
 		if(!(webman_config->cmask & BLU))   add_query_html(pbuffer, "BDISO" );
 		if(!(webman_config->cmask & DVD))   add_query_html(pbuffer, "DVDISO");
+
  #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
 		if(webman_config->ps3l) {add_query_html(pbuffer, "GAMEI");}
 		if(webman_config->roms) {add_query_html(pbuffer, "ROMS");}
  #endif
+
  #ifndef LITE_EDITION
 		if(webman_config->netd[0] || webman_config->netd[1] || webman_config->netd[2] || webman_config->netd[3] || webman_config->netd[4]) add_query_html(pbuffer, "net");
  #endif
@@ -1107,9 +1109,10 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					if(IS_NTFS) //ntfs
 						sprintf(param, "%s", WMTMP);
 					else
+					{
 						sprintf(param, "%s/%s%s", drives[f0], paths[f1], SUFIX(uprofile));
-
-					if(li == 99) sprintf(param, "%s/%s%s", drives[f0], paths[f1], AUTOPLAY_TAG);
+						if(li == 99) sprintf(param, "%s/%s%s", drives[f0], paths[f1], AUTOPLAY_TAG);
+					}
 				}
 
 #ifdef COBRA_ONLY
@@ -1342,7 +1345,10 @@ next_html_entry:
 	continue_reading_folder_html:
 
 				if((uprofile > 0) && (f1 < 9)) {subfolder = uprofile = 0; goto read_folder_html;}
-				if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_html;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_html;}
+				if(!IS_NTFS)
+				{
+					if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_html;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_html;}
+				}
 //
 			}
 

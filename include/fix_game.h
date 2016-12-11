@@ -82,6 +82,7 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 
 		if(!memcmp((char *) &mem[str], TITLE_XX, 9))
 		{
 			strncpy(title, (char *)mem + pos, 63);
+			if(++fcount > 2) break;
 		}
 #endif
 		READ_NEXT_SFO_FIELD()
