@@ -587,8 +587,10 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 
 		get_title_and_id_from_sfo(templn, tempID, data[v3_entry].name, icon, tempstr, 0);
 	}
+	else if(is_html)
+		{get_name(enc_dir_name, data[v3_entry].name, NO_EXT); htmlenc(templn, enc_dir_name, 1);}
 	else
-		{get_name(enc_dir_name, data[v3_entry].name, NO_EXT); if(is_html) htmlenc(templn, enc_dir_name, 1);}
+		{get_name(templn, data[v3_entry].name, NO_EXT);}
 
 	if(data[v3_entry].is_directory && IS_ISO_FOLDER)
 	{

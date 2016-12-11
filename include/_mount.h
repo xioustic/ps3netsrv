@@ -811,6 +811,7 @@ static void do_umount(bool clean)
 #endif //#ifdef COBRA_ONLY
 }
 
+#ifdef COBRA_ONLY
 static void do_umount_eject(void)
 {
 	do_umount(false);
@@ -821,6 +822,7 @@ static void do_umount_eject(void)
 
 	sys_timer_usleep(4000);
 }
+#endif //#ifdef COBRA_ONLY
 
 static void get_last_game(char *last_path)
 {
@@ -1170,7 +1172,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		}
 	}
  #endif
-#endif
 
 	// ------------------
 	// mount GAMEI game
@@ -1217,6 +1218,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		}
 	}
  #endif
+#endif
 
 	// ------------------
 	// mount PS2 Classic

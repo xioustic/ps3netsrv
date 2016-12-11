@@ -265,12 +265,12 @@ static void detect_firmware(void)
 			}
 			else
   #endif //#ifndef LAST_FIRMWARE_ONLY
-			if(c_firmware == 4.80f)
+			if(c_firmware >= 4.80f && c_firmware <= 4.81f)
 			{
 				idps_offset1 = 0x8000000000409A30ULL;
 				idps_offset2 = 0x800000000049CAF4ULL;
 			}
-			else if(c_firmware >= 4.75f && c_firmware <= 4.81f)
+			else if(c_firmware >= 4.75f && c_firmware <= 4.78f)
 			{
 				idps_offset1 = 0x8000000000409930ULL;
 				idps_offset2 = 0x800000000049CAF4ULL;
