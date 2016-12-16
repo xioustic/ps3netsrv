@@ -742,7 +742,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 			{
 				if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
 
-				if(chunk_size > file_size) chunk_size = file_size;
+				if(chunk_size > (uint64_t)file_size) chunk_size = (uint64_t)file_size;
 
 				int bytes_read, boff = 0;
 				while(boff < file_size)

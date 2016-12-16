@@ -22,7 +22,7 @@ DATA		:=	data
 INCLUDES	:=	include
 PKGFILES	:=	$(CURDIR)/pkgfiles
 
-TITLE		:=	webMAN MOD 1.45.04 Updater                               [Hold R1 for VSH Menu, L1 for Full Edition, X for Lite Edition]
+TITLE		:=	webMAN MOD 1.45.05 Updater                               [Hold R1 for VSH Menu, L1 for Full Edition, X for Lite Edition]
 APPID		:=	UPDWEBMOD
 CONTENTID	:=	EP0001-$(APPID)_00-0000000000000000
 

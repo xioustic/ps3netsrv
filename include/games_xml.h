@@ -1051,7 +1051,7 @@ continue_reading_folder_xml:
 	}
 
 #ifdef LAUNCHPAD
-	bool launchpad_xml = isDir("/dev_flash/rebug") && !(webman_config->launchpad_xml);
+	bool launchpad_xml = /*isDir("/dev_flash/rebug") &&*/ !(webman_config->launchpad_xml);
 
 	if(launchpad_xml)
 	{
