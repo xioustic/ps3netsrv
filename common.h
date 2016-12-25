@@ -40,6 +40,7 @@
 #define HVSC_SYSCALL_ADDR_480		0x80000000002A0F4CULL	// where above syscall is in lv2 4.80     <- peek( SYSCALL_TABLE_480  + HVSC_SYSCALL*8)
 #define HVSC_SYSCALL_ADDR_480D		0x80000000002BC1C8ULL	// where above syscall is in lv2 4.80 DEX <- peek( SYSCALL_TABLE_480D + HVSC_SYSCALL*8)
 #define HVSC_SYSCALL_ADDR_481		0x80000000002A0F58ULL	// where above syscall is in lv2 4.81     <- peek( SYSCALL_TABLE_481  + HVSC_SYSCALL*8)
+#define HVSC_SYSCALL_ADDR_481D		0x80000000002BC1D4ULL	// where above syscall is in lv2 4.81 DEX <- peek( SYSCALL_TABLE_481D + HVSC_SYSCALL*8)
 
 #define NEW_POKE_SYSCALL			813                  	// which syscall to overwrite with new poke
 #define NEW_POKE_SYSCALL_ADDR_341	0x80000000001BB93CULL	// where above syscall is in lv2 3.41
@@ -73,6 +74,7 @@
 #define NEW_POKE_SYSCALL_ADDR_480	0x80000000002A1474ULL	// where above syscall is in lv2 4.80     <- peek( SYSCALL_TABLE_480  + NEW_POKE_SYSCALL*8)
 #define NEW_POKE_SYSCALL_ADDR_480D	0x80000000002BC6F0ULL	// where above syscall is in lv2 4.80     <- peek( SYSCALL_TABLE_480D + NEW_POKE_SYSCALL*8)
 #define NEW_POKE_SYSCALL_ADDR_481	0x80000000002A1480ULL	// where above syscall is in lv2 4.81     <- peek( SYSCALL_TABLE_481  + NEW_POKE_SYSCALL*8)
+#define NEW_POKE_SYSCALL_ADDR_481D	0x80000000002BC6FCULL	// where above syscall is in lv2 4.81 DEX <- peek( SYSCALL_TABLE_481D + NEW_POKE_SYSCALL*8)
 */
 
 #define SYSCALL_TABLE_341			0x80000000002EB128ULL	// 3.41
@@ -202,6 +204,7 @@
 #define HTAB_LV2_START_480			(0x01000000ULL)
 #define HTAB_LV2_START_480D			(0x08000000ULL)
 #define HTAB_LV2_START_481			(0x01000000ULL)
+#define HTAB_LV2_START_481D			(0x08000000ULL)
 */
 #define MAP_BASE (0x80000000007FAE00ULL)		// lv2 memory area to store path redirections table
 #define	MAP_ADDR (0xE8)							// address in lv2 to store MAP_BASE address (0x0000 ---> 0xFFFF)

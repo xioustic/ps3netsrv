@@ -161,11 +161,11 @@ static bool urlenc(char *dst, const char *src)
 			dst[j++] = h2a((unsigned char)src[i]>>4);
 			dst[j] = h2a(src[i] & 0xf);
 		}
-		else if(src[i]=='?' || (src[i]==':' && (i >= pos)))
+		else if(src[i]=='?' || ((src[i]==':') && (i >= pos)))
 		{
 			dst[j++] = '%';
 			dst[j++] = '3';
-			dst[j] = (src[i] & 0xf) + 7;
+			dst[j] = (src[i] & 0xf) + '7'; // A | F
 		}
 		else if(src[i]==' ' || src[i]=='\'' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
     		{
