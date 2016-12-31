@@ -336,11 +336,13 @@ static int installPKG(const char *pkgpath, char *msg)
 
 	if (pkg_path_len < MAX_PKGPATH_LEN)
 	{
+#ifdef COBRA_ONLY
 		if(islike(pkgpath, "/net"))
 		{
 			cache_file_to_hdd((char*)pkgpath, pkg_path, "/tmp/downloader", msg); pkg_dcount++;
 		}
 		else
+#endif
 		if(*pkgpath == '?')
 		{
 			pkg_auto_install++;

@@ -76,7 +76,7 @@ static void detect_firmware(void)
 		if(peekq(0x8000000000319F78ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_355H; c_firmware = 3.55f; dex_mode = 1;}	else
 	  //if(peekq(0x800000000032B270ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_450H; c_firmware = 4.50f; dex_mode = 1;}	else
 		if(peekq(0x800000000032EDC8ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_460H; c_firmware = 4.60f; dex_mode = 1;}	else
-		if(peekq(0x800000000032EB60ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_475H; c_firmware = (peekq(0x8000000000344B70ULL) == 0x323031352F31322FULL)?4.78f:(peekq(0x8000000000344B70ULL) == 0x323031352F30382FULL)?4.76f:4.75f; dex_mode = 1;}	else
+		if(peekq(0x800000000032EB60ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_475H; c_firmware = (peekq(0x8000000000344B70ULL) == 0x323031362F31302FULL) ? 4.81f : (peekq(0x8000000000344B70ULL) == 0x323031352F31322FULL)? 4.78f : (peekq(0x8000000000344B70ULL) == 0x323031352F30382FULL) ? 4.76f : 4.75f; dex_mode = 1;}	else
 		if(peekq(0x800000000032EB60ULL) == DEH) {SYSCALL_TABLE = SYSCALL_TABLE_480H; c_firmware = 4.80f; dex_mode = 1;}	else
 #endif
 
@@ -129,8 +129,9 @@ static void detect_firmware(void)
 		if(c_firmware == 3.55f) {base_addr = 0x2F5320, open_hook = 0x2E31F4;} else
 	  //if(c_firmware == 4.50f) {base_addr = 0x30D2C0, open_hook = 0x2CEF08;} else
 		if(c_firmware == 4.60f) {base_addr = 0x310EE0, open_hook = 0x2D1464;} else
-		if(c_firmware == 4.78f) {base_addr = 0x3110F0, open_hook = 0x2C87E0;} else
-		if(c_firmware == 4.80f) {base_addr = 0x3110F0, open_hook = 0x2C87D4;}
+		if(c_firmware == 4.80f) {base_addr = 0x3110F0, open_hook = 0x2C87D4;} else
+		if(c_firmware >= 4.75f && c_firmware <= 4.81f)
+								{base_addr = 0x3110F0, open_hook = 0x2C87E0;}
 	}
  #endif
 

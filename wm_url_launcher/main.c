@@ -187,10 +187,6 @@ int main(int argc, const char* argv[])
 				if(strcasestr(".J64|.JAG", extension)) {sprintf(param, "%s", path); sprintf(path, "%s/virtualjaguar_libretro_ps3.SELF", RETROARCH);} else
 				if(strcasestr(VIDEO_EXTENSIONS, extension)) {sprintf(param, "%s", path); sprintf(path, "%s", SHOWTIME);} else
 				if(strcasestr(AUDIO_EXTENSIONS, extension)) {sprintf(param, "%s", path); sprintf(path, "%s", SHOWTIME);}
-
-
-#define ROMS_EXTENSIONS  ".CUE|.IOS|.FLAC|||.SGX|.CUE||.EXE|||||"
-
 			}
 		}
 	}

@@ -48,14 +48,12 @@ static bool file_exists(const char* path)
 	return (cellFsStat(path, &s) == CELL_FS_SUCCEEDED);
 }
 
-#ifndef LITE_EDITION
 static void mkdir_tree(char *path)
 {
 	size_t path_len = strlen(path);
 	for(u16 p = 12; p < path_len; p++)
 		if(path[p] == '/') {path[p] = NULL; cellFsMkdir((char*)path, MODE); path[p] = '/';}
 }
-#endif
 
 size_t read_file(const char *file, char *data, size_t size, int32_t offset)
 {

@@ -502,13 +502,18 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 
 		if(ntfs_sufix)
 		{
-			// skip extended content of ntfs cached in /wmtmp if current user profile is 0
-			if(uprofile == 0) return FAILED;
+			ntfs_sufix--; u8 fprofile = (u8)(*ntfs_sufix); ntfs_sufix -= 2;
 
-			ntfs_sufix--; u8 fprofile = (u8)(*ntfs_sufix); if(fprofile >= '0') fprofile -= '0';
+			if((fprofile >= '1') && (fprofile <= '4') && islike(ntfs_sufix, " ("))
+			{
+				// skip extended content of ntfs cached in /wmtmp if current user profile is 0
+				if(uprofile == 0) return FAILED;
 
-			// skip non-matching extended content
-			if((uprofile  > 0) && (uprofile != fprofile)) return FAILED;
+				fprofile -= '0';
+
+				// skip non-matching extended content
+				if(uprofile != fprofile) return FAILED;
+			}
 		}
 
 		flen-=13; if(flen < 0) return FAILED;

@@ -479,6 +479,11 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_eject.png"    , ICONS_DIR "/icon_wm_eject.png"   );
 //  CopyFile(APP_USRDIR "/icon_wm_root.png"     , ICONS_DIR "/icon_wm_root.png"    );
 
+	CopyFile(APP_USRDIR "/blank.png"            , ICONS_DIR "/blank.png"    );
+
+	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, TMP_DIR "/wm_online_ids.txt");
+
+	// webMAN LaunchPad icons
 	CopyFile(APP_USRDIR "/icon_lp_ps3.png"      , ICONS_DIR "/icon_lp_ps3.png");
 	CopyFile(APP_USRDIR "/icon_lp_psx.png"      , ICONS_DIR "/icon_lp_psx.png");
 	CopyFile(APP_USRDIR "/icon_lp_ps2.png"      , ICONS_DIR "/icon_lp_ps2.png");
@@ -487,9 +492,12 @@ int main()
 	CopyFile(APP_USRDIR "/icon_lp_blu.png"      , ICONS_DIR "/icon_lp_blu.png");
 	CopyFile(APP_USRDIR "/icon_lp_nocover.png"  , ICONS_DIR "/icon_lp_nocover.png");
 
-	CopyFile(APP_USRDIR "/blank.png"            , ICONS_DIR "/blank.png"    );
-
-	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, TMP_DIR "/wm_online_ids.txt");
+	CopyFile(APP_USRDIR "/eject.png"  			, XMLMANPLS_IMAGES_DIR "/eject.png");
+	CopyFile(APP_USRDIR "/setup.png"  			, XMLMANPLS_IMAGES_DIR "/setup.png");
+	CopyFile(APP_USRDIR "/refresh.png"			, XMLMANPLS_IMAGES_DIR "/refresh.png");
+	//CopyFile(APP_USRDIR "/clear.png"  		, XMLMANPLS_IMAGES_DIR "/clear.png");
+	//CopyFile(APP_USRDIR "/cache.png"  		, XMLMANPLS_IMAGES_DIR "/cache.png");
+	//CopyFile(APP_USRDIR "/restart.png"		, XMLMANPLS_IMAGES_DIR "/restart.png");
 
 	// XMBM+ webMAN
 	sysLv2FsMkdir(XMLMANPLS_DIR, 0777);
@@ -554,14 +562,6 @@ int main()
 
 	CopyFile(APP_USRDIR "/icon_wm_eject.png", XMLMANPLS_IMAGES_DIR "/icon_wm_eject.png");
 	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  , XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
-
-	CopyFile(APP_USRDIR "/eject.png"  		, XMLMANPLS_IMAGES_DIR "/eject.png");
-	CopyFile(APP_USRDIR "/setup.png"  		, XMLMANPLS_IMAGES_DIR "/setup.png");
-	CopyFile(APP_USRDIR "/refresh.png"		, XMLMANPLS_IMAGES_DIR "/refresh.png");
-	//CopyFile(APP_USRDIR "/clear.png"  		, XMLMANPLS_IMAGES_DIR "/clear.png");
-	//CopyFile(APP_USRDIR "/cache.png"  		, XMLMANPLS_IMAGES_DIR "/cache.png");
-	//CopyFile(APP_USRDIR "/restart.png"  	, XMLMANPLS_IMAGES_DIR "/restart.png");
-
 
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 
