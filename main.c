@@ -111,7 +111,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.45.06 MOD"						// webMAN version
+#define WM_VERSION			"1.45.07 MOD"						// webMAN version
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -545,8 +545,9 @@ typedef struct
 	uint8_t fixgame;
 	uint8_t ps1emu;
 	uint8_t autoplay;
+	uint8_t ps2emu;
 
-	uint8_t padding9[12];
+	uint8_t padding9[11];
 
 	// profile settings
 

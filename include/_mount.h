@@ -8,6 +8,7 @@
 // [gd]      Auto-enable external gameDATA
 // [raw]     Use raw_iso.sprx to mount the ISO (ntfs)
 // [PS2]     PS2 extracted folders in /PS2DISC (needs PS2_DISC compilation flag)
+// [netemu]  Mount ps2/psx game with netemu
 
 
 char map_title_id[10];
@@ -20,8 +21,8 @@ typedef struct
 
 #define IS_COPY		9
 
-// /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_emu.self}][offline={0/1}]
-// /mount.ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_emu.self}][offline={0/1}]
+// /mount_ps3/<path>[?random=<x>[&emu={ ps1_netemu.self / ps1_emu.self / ps2_netemu.self / ps2_emu.self }][offline={0/1}]
+// /mount.ps3/<path>[?random=<x>[&emu={ ps1_netemu.self / ps1_emu.self / ps2_netemu.self / ps2_emu.self }][offline={0/1}]
 // /mount.ps3/unmount
 // /mount.ps2/<path>[?random=<x>]
 // /mount.ps2/unmount
@@ -79,10 +80,14 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// ----------------------------
 		// remove url query parameters
 		// ----------------------------
-		char *purl = strstr(source, "emu="); // e.g. ?emu=ps1_netemu.self / ps1_netemu.self
+		char *purl = strstr(source, "emu="); // e.g. ?emu=ps1_netemu.self / ps1_emu.self / ps2_netemu.self / ps2_emu.self
 		if(purl)
 		{
-			webman_config->ps1emu = strstr(purl, "net") ? 1 : 0;
+			char *is_netemu = strstr(purl, "net");
+			if(strcasestr(source, "ps2"))
+				webman_config->ps2emu = is_netemu ? 1 : 0;
+			else
+				webman_config->ps1emu = is_netemu ? 1 : 0;
 			purl--, *purl = NULL;
 		}
 
@@ -1159,7 +1164,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					uint64_t msiz = read_file(_path, sprx_data, _64KB_, 0);
 					if(msiz > _4KB_)
 					{
-						do_umount(false); if(!extcmp(_path, ".ntfs[PSXISO]", 13)) {mount_unk = EMU_PSX; select_ps1emu();}
+						do_umount(false); if(!extcmp(_path, ".ntfs[PSXISO]", 13)) {mount_unk = EMU_PSX; select_ps1emu(_path);}
 
 						if(cobra_load_vsh_plugin(0, (char*)raw_iso_sprx[n], (u8*)sprx_data, msiz) != CELL_OK) ret = false;
 
@@ -1335,7 +1340,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		// ----------
 		if(!isDir(_path))
 		{
-			if( strstr(_path, "/PSXISO") || strstr(_path, "/PSXGAMES") || !extcmp(_path, ".ntfs[PSXISO]", 13) || mount_unk == EMU_PSX) {mount_unk = EMU_PSX; select_ps1emu();}
+			if( strstr(_path, "/PSXISO") || strstr(_path, "/PSXGAMES") || !extcmp(_path, ".ntfs[PSXISO]", 13) || mount_unk == EMU_PSX) {mount_unk = EMU_PSX; select_ps1emu(_path);}
 
 			//if(_next || _prev)
 				sys_timer_sleep(1);
@@ -1586,6 +1591,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	copy_ps2iso_to_hdd0:
 						cache_file_to_hdd(_path, iso_list[0], "/PS2ISO", templn);
 					}
+
+					if(webman_config->ps2emu || strstr(_path, "[netemu]")) enable_netemu_cobra();
 
 					if(file_exists(iso_list[0]))
 					{

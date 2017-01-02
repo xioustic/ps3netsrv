@@ -1,7 +1,9 @@
 #ifdef COBRA_ONLY
-static void select_ps1emu(void)
+static void select_ps1emu(char *path)
 {
 	CellPadData pad_data = pad_read();
+
+	if(strstr(path, "[netemu]")) webman_config->ps1emu = 1;
 
 	if(pad_data.len > 0)
 	{

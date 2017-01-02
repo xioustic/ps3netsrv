@@ -8,11 +8,11 @@ u64 blocked_url[MAX_BLOCKED_URL][2]; u8 url_count = 0;
 
 #ifdef PS3MAPI
 
-u64 sc_backup[13];
+u64 sc_backup[14];
 
 static void backup_cfw_syscalls(void)
 {
-	for(u8 sc = 0; sc < 13; sc++)
+	for(u8 sc = 0; sc < 14; sc++)
 		sc_backup[sc] = peekq( SYSCALL_PTR(sc_disable[sc]) );
 }
 
@@ -26,7 +26,7 @@ static void restore_cfw_syscalls(void)
 
 	{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 0); }
 
-	for(u8 sc = 0; sc < 13; sc++)
+	for(u8 sc = 0; sc < 14; sc++)
 		pokeq( SYSCALL_PTR(sc_disable[sc]), sc_backup[sc] );
 
 	//ps3mapi_key = 0;
@@ -77,12 +77,12 @@ static void remove_cfw_syscalls(bool keep_ccapi)
 	u32 initial_sc = keep_ccapi ? 4 : 0;
 
 	#ifdef COBRA_ONLY
-	for(u8 sc = initial_sc; sc < 13; sc++)
+	for(u8 sc = initial_sc; sc < 14; sc++)
 	{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_DISABLE_SYSCALL, (u64)sc_disable[sc]); }
 	{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 1); } // Partial disable syscall8 (Keep cobra/mamba+ps3mapi features only)
 	#endif
 
-	for(u8 sc = initial_sc; sc < 14; sc++)
+	for(u8 sc = initial_sc; sc < 15; sc++)
 		pokeq(SYSCALL_PTR( sc_disable[sc] ), sc_null);
 
 	u64 sc9  = peekq(SYSCALL_PTR( 9));
