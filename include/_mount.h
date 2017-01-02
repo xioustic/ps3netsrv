@@ -1592,7 +1592,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						cache_file_to_hdd(_path, iso_list[0], "/PS2ISO", templn);
 					}
 
-					if(webman_config->ps2emu || strstr(_path, "[netemu]")) enable_netemu_cobra();
+					if(webman_config->ps2emu || strstr(_path, "[netemu]")) enable_netemu_cobra(1); else enable_netemu_cobra(0);
 
 					if(file_exists(iso_list[0]))
 					{

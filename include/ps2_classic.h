@@ -1,9 +1,9 @@
 #ifdef COBRA_ONLY
 #define SYSCALL8_OPCODE_ENABLE_PS2NETEMU	0x1ee9	/* Cobra 7.50 */
 
-static void enable_netemu_cobra()
+static void enable_netemu_cobra(int param)
 {
-	system_call_1(SC_COBRA_SYSCALL8, (uint64_t) SYSCALL8_OPCODE_ENABLE_PS2NETEMU);
+	system_call_2(SC_COBRA_SYSCALL8, (uint64_t) SYSCALL8_OPCODE_ENABLE_PS2NETEMU, (uint64_t)param);
 }
 #endif
 
