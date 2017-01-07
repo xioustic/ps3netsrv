@@ -44,10 +44,9 @@ typedef struct _client_t
 	char *dirpath;
 	uint8_t *buf;
 	int connected;
-	int restarted;
 	struct in_addr ip_addr;
 	thread_t thread;
-	uint32_t CD_SECTOR_SIZE;
+	uint16_t CD_SECTOR_SIZE;
 } client_t;
 
 static client_t clients[MAX_CLIENTS];
@@ -188,12 +187,21 @@ static void finalize_client(client_t *client)
 		free(client->buf);
 	}
 
+	client->ro_file = NULL;
+	client->wo_file = NULL;
+	client->dir = NULL;
+	client->dirpath = NULL;
+	client->connected = 0;
+	client->CD_SECTOR_SIZE = 2352;
+
 	memset(client, 0, sizeof(client_t));
 }
 
 static char *translate_path(char *path, int del, int *viso)
 {
 	char *p;
+
+	if(!path) return NULL;
 
 	if(path[0] != '/')
 	{
@@ -206,25 +214,26 @@ static char *translate_path(char *path, int del, int *viso)
 	}
 
 	// check unsecure path
-	int plen = strlen(path);
-
 	p = path;
-	while ((plen >= 2) && (p = strstr(p, "..")))
+	while ((p = strstr(p, "..")))
 	{
-		if(*(p-1) == '/' || *(p-1) == '\\')
+		if(strlen(p) >= 2)
 		{
-			if(p[2] == 0 || p[2] == '/' || p[2] == '\\')
+			if(*(p-1) == '/' || *(p-1) == '\\')
 			{
-				DPRINTF("The path \"%s\" is unsecure!\n", path);
-				if(del)
+				if(p[2] == 0 || p[2] == '/' || p[2] == '\\')
 				{
-					if(path) free(path);
+					DPRINTF("The path \"%s\" is unsecure!\n", path);
+					if(del)
+					{
+						if(path) free(path);
+					}
+					return NULL;
 				}
-				return NULL;
 			}
 		}
 
-		p += 2, plen -= 2;
+		p += 2;
 	}
 
 	size_t path_len = strlen(path);
@@ -250,7 +259,7 @@ static char *translate_path(char *path, int del, int *viso)
 		}
 		else if(strstr(q, "/***DVD***/") == q)
 		{
-			memmove(q, q + 10, strlen(q + 10)+1);
+			memmove(q, q + 10, strlen(q + 10) + 1);
 			DPRINTF("p -> %s\n", p);
 			*viso = VISO_ISO;
 		}
@@ -301,12 +310,11 @@ static int64_t calculate_directory_size(char *path)
 	int64_t result = 0;
 	DIR *d;
 	struct dirent *entry;
-	char *newpath;
 
 	//DPRINTF("Calculate %s\n", path);
 
-	file_stat_t st;
-	if(stat_file(path, &st) < 0) return -1;
+	//file_stat_t st;
+	//if(stat_file(path, &st) < 0) return -1;
 
 	d = opendir(path);
 	if(!d)
@@ -319,14 +327,18 @@ static int64_t calculate_directory_size(char *path)
 	{
 		if(IS_PARENT_DIR(entry->d_name)) continue;
 
+		#ifdef WIN32
+		d_name_len = entry->d_namlen;
+		#else
 		d_name_len = strlen(entry->d_name);
+		#endif
 
 		if(IS_RANGE(d_name_len, 1, 65535))
 		{
 			//DPRINTF("name: %s\n", entry->d_name);
 
-			newpath = (char *)malloc(path_len + d_name_len + 2);
-			if(!newpath) break;
+			file_stat_t st;
+			char newpath[path_len + d_name_len + 2];
 
 			sprintf(newpath, "%s/%s", path, entry->d_name);
 
@@ -352,12 +364,8 @@ static int64_t calculate_directory_size(char *path)
 			{
 				result += st.file_size;
 			}
-
-			free(newpath);
 		}
 	}
-
-	if(newpath) free(newpath);
 
 	closedir(d);
 	return result;
@@ -378,28 +386,22 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 	result.mtime = BE64(0);
 
 	fp_len = BE16(cmd->fp_len);
+	if(fp_len == 0)
+	{
+		DPRINTF("ERROR: invalid path length for open command\n");
+		return -1;
+	}
+
 	//DPRINTF("fp_len = %d\n", fp_len);
-	filepath = (char *)malloc(fp_len+1);
+	filepath = (char *)malloc(fp_len + 1);
 	if(!filepath)
 	{
 		DPRINTF("CRITICAL: memory allocation error\n");
 		return -1;
 	}
 
-	if(client->ro_file)
-	{
-		delete client->ro_file;
-	}
-
 	ret = recv_all(client->s, (void *)filepath, fp_len);
-
 	filepath[fp_len] = 0;
-
-	if(!strcmp(filepath, "/CLOSEFILE"))
-	{
-		free(filepath);
-		return 0;
-	}
 
 	if(ret != fp_len)
 	{
@@ -408,11 +410,22 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		return -1;
 	}
 
+	if((fp_len >= 10) && !strcmp(filepath, "/CLOSEFILE"))
+	{
+		free(filepath);
+		return 0;
+	}
+
 	filepath = translate_path(filepath, 1, &viso);
 	if(!filepath)
 	{
 		DPRINTF("Path cannot be translated. Connection with this client will be aborted.\n");
 		return -1;
+	}
+
+	if(client->ro_file)
+	{
+		delete client->ro_file;
 	}
 
 	if(viso == VISO_NONE)
@@ -888,10 +901,10 @@ static int process_open_dir_cmd(client_t *client, netiso_open_dir_cmd *cmd)
 {
 	netiso_open_dir_result result;
 	char *dirpath;
-
+	uint16_t dp_len;
 	int ret;
 
-	uint16_t dp_len = BE16(cmd->dp_len);
+	dp_len = BE16(cmd->dp_len);
 
 	dirpath = (char *)malloc(dp_len+1);
 	if(!dirpath)
@@ -994,7 +1007,11 @@ static int process_read_dir_entry_cmd(client_t *client, netiso_read_dir_entry_cm
 	{
 		if(IS_PARENT_DIR(entry->d_name)) continue;
 
+		#ifdef WIN32
+		d_name_len = entry->d_namlen;
+		#else
 		d_name_len = strlen(entry->d_name);
+		#endif
 
 		if(IS_RANGE(d_name_len, 1, 65535)) break;
 	}
@@ -1148,7 +1165,11 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 		if(!entry) break;
 		if(IS_PARENT_DIR(entry->d_name)) continue;
 
+		#ifdef WIN32
+		d_name_len = entry->d_namlen;
+		#else
 		d_name_len = strlen(entry->d_name);
+		#endif
 
 		if(IS_RANGE(d_name_len, 1, MAX_PATH_LEN))
 		{
@@ -1225,7 +1246,11 @@ static int process_read_dir_cmd(client_t *client, netiso_read_dir_entry_cmd *cmd
 				if(!entry) break;
 				if(IS_PARENT_DIR(entry->d_name)) continue;
 
-				d_name_len = entry->d_namlen; //strlen(entry->d_name);
+				#ifdef WIN32
+				d_name_len = entry->d_namlen;
+				#else
+				d_name_len = strlen(entry->d_name);
+				#endif
 
 				if(IS_RANGE(d_name_len, 1, MAX_PATH_LEN))
 				{
@@ -1506,7 +1531,24 @@ int main(int argc, char *argv[])
 	uint32_t whitelist_end = 0;
 	uint16_t port = NETISO_PORT;
 
-	printf("ps3netsrv build 20161211 (mod by aldostools)\n");
+#ifdef WIN32
+	CONSOLE_SCREEN_BUFFER_INFO console_info;
+	GetConsoleScreenBufferInfo( GetStdHandle( STD_OUTPUT_HANDLE ), &console_info );
+
+	SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 0x0F );
+#endif
+
+	printf("ps3netsrv build 20170106");
+
+#ifdef WIN32
+	SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 0x04 );
+#endif
+
+	printf(" (mod by aldostools)\n");
+
+#ifdef WIN32
+	SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), console_info.wAttributes );
+#endif
 
 #ifndef WIN32
 	if(sizeof(off_t) < 8)
@@ -1518,22 +1560,53 @@ int main(int argc, char *argv[])
 
 	file_stat_t fs;
 
-	if(argc < 2 && ((stat_file("./PS3ISO", &fs) >= 0) || (stat_file("./PSXISO", &fs) >= 0) || (stat_file("./GAMES", &fs) >= 0) || (stat_file("./GAMEZ", &fs) >= 0)  || (stat_file("./DVDISO", &fs) >= 0) || (stat_file("./BDISO", &fs) >= 0))) {argv[1] = (char *)malloc(2); sprintf(argv[1], "."); argc = 2;}
-
 	if(argc < 2)
 	{
+		char *filename = strrchr(argv[0], '/');
+		if(filename) filename++; else {filename = strrchr(argv[0], '\\'); if(filename) filename++;}
+
+		if((stat_file("./PS3ISO", &fs) >= 0) || (stat_file("./PSXISO", &fs) >= 0) || (stat_file("./GAMES", &fs) >= 0) || (stat_file("./GAMEZ", &fs) >= 0)  || (stat_file("./DVDISO", &fs) >= 0) || (stat_file("./BDISO", &fs) >= 0) || (stat_file("./PS3_NET_Server.cfg", &fs) >= 0))
+		{
+			argv[1] = argv[0];
+			*(filename - 1) = 0;
+			argc = 2;
+		#ifdef WIN32
+			file_t fd = open_file("./PS3_NET_Server.cfg", O_RDONLY);
+			if (FD_OK(fd))
+			{
+				char buf[2048];
+				read_file(fd, buf, 2048);
+				close_file(fd);
+
+				char *path = strstr(buf, "path0=\"");
+				if(path)
+				{
+					argv[1] = path + 7;
+					char *pos  = strchr(path + 7, '"');
+					if(pos) *pos = 0;
+				}
+			}
+		#endif
+		}
+		else
+		{
 		#ifdef MERGE_DRIVES
 		printf( "\nUsage: %s [rootdirectory] [port] [whitelist] [ignore drive letters]\n\n"
-				"Default port: %d\n"
-				"Whitelist: x.x.x.x, where x is 0-255 or *\n"
-				"(e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", argv[0], NETISO_PORT);
+				" Default port: %d\n\n"
+				" Whitelist: x.x.x.x, where x is 0-255 or *\n"
+				" (e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", filename, NETISO_PORT);
 		#else
 		printf( "\nUsage: %s [rootdirectory] [port] [whitelist]\n\n"
-				"Default port: %d\n"
-				"Whitelist: x.x.x.x, where x is 0-255 or *\n"
-				"(e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", argv[0], NETISO_PORT);
+				" Default port: %d\n\n"
+				" Whitelist: x.x.x.x, where x is 0-255 or *\n"
+				" (e.g 192.168.1.* to allow only connections from 192.168.1.0-192.168.1.255)\n", filename, NETISO_PORT);
+		#endif
+		#ifdef WIN32
+		printf("\n\nPress ENTER to continue...");
+		getchar();
 		#endif
 		return -1;
+		}
 	}
 
 	if(strlen(argv[1]) >= sizeof(root_directory))

@@ -8,7 +8,7 @@ static int get_cobra_ps2netemu_status(void)
 	return (int)p1;
 }
 
-static void enable_netemu_cobra(int param)
+static void enable_ps2netemu_cobra(int param)
 {
 	int status = get_cobra_ps2netemu_status();
 

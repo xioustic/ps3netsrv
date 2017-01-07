@@ -38,7 +38,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 	// ---------------------
 	// unmount current game
 	// ---------------------
-	if(strstr(param, "ps3/unmount"))
+	if(strstr(param, "ps3/unmount") || strstr(param, "ps3/dev_bdvd") || strstr(param, "ps3/app_home"))
 	{
 		do_umount(true);
 
@@ -1592,7 +1592,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						cache_file_to_hdd(_path, iso_list[0], "/PS2ISO", templn);
 					}
 
-					if(webman_config->ps2emu || strstr(_path, "[netemu]")) enable_netemu_cobra(1); else enable_netemu_cobra(0);
+					if(webman_config->ps2emu || strstr(_path, "[netemu]")) enable_ps2netemu_cobra(1); else enable_ps2netemu_cobra(0);
 
 					if(file_exists(iso_list[0]))
 					{

@@ -14,14 +14,16 @@ File::File()
 File::~File()
 {
 	DPRINTF("File destructor.\n");
-
-	this->close();
+	
+	if (FD_OK(fd))
+		this->close();
 }
 
 int File::open(const char *path, int flags)
 {
-	this->close();
-
+	if (FD_OK(fd))
+		this->close();
+	
 	fd = open_file(path, flags);
 	if (!FD_OK(fd))
 		return -1;

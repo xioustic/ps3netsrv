@@ -53,9 +53,9 @@
 ///////////// PS3MAPI END //////////////
 
 #if defined(COBRA_ONLY) || defined(PS3MAPI)
-u16 sc_disable[15] = {200, 201, 203, 204, 1022, 6, 7, 10, 11, 15, 35, 36, 38, 9, 9};  // 9 should be twice (instead of 8, 9)
+u16 sc_disable[17] = {200, 201, 202, 203, 204, 1022, 6, 7, 10, 11, 15, 20, 35, 36, 38, 9, 9};  // 9 should be twice (instead of 8, 9)
 #else
-u16 sc_disable[15] = {200, 201, 203, 204, 1022, 6, 7, 10, 11, 15, 35, 36, 38, 8, 9};
+u16 sc_disable[17] = {200, 201, 202, 203, 204, 1022, 6, 7, 10, 11, 15, 20, 35, 36, 38, 8, 9};
 #endif
 
 #ifdef PS3MAPI
@@ -287,7 +287,7 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 
 	if(strstr(param, ".ps3mapi?"))
 	{
-		for(u8 sc = 0; sc < 15; sc++)
+		for(u8 sc = 0; sc < 17; sc++)
 		{
 			sprintf(templn, "sc%i=1", sc_disable[sc]);
 			if(strstr(param, templn))   { pokeq(SYSCALL_PTR(sc_disable[sc]), sc_null); system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_DISABLE_SYSCALL, (u64)sc_disable[sc]); }
@@ -366,6 +366,10 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 	ret_val = is_syscall_disabled(201);
 	if( ret_val != 0 )  add_check_box("sc201", HTML_DISABLED_CHECKBOX, "[201]sys_dbg_write_process_memory", _BR_, true, buffer);
 	else {/*ret_val = NONE;*/ add_check_box("sc201", "1", "[201]sys_dbg_write_process_memory", _BR_, false, buffer);}
+
+	ret_val = is_syscall_disabled(202);
+	if( ret_val != 0 )  add_check_box("sc202", HTML_DISABLED_CHECKBOX, "[202]Free - Payloader3", _BR_, true, buffer);
+	else {/*ret_val = NONE;*/ add_check_box("sc202", "1", "[202]Free - Payloader3", _BR_, false, buffer);}
 
 	ret_val = is_syscall_disabled(203);
 	if( ret_val != 0 )  add_check_box("sc203", HTML_DISABLED_CHECKBOX, "[203]LV2 Peek CCAPI", _BR_, true, buffer);

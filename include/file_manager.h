@@ -118,17 +118,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 		{
 			bool show_play = ((flen == 8) && IS(templn, "/dev_bdvd") && IS_ON_XMB);
 
-			if(IS(templn, "/dev_blind"))
-			{
-				sprintf(fsize, HTML_URL2, templn, "?0", HTML_DIR);
-			}
-#ifndef LITE_EDITION
-			else if(sys_admin && IS(templn, "/dev_flash"))
-			{
-				sprintf(fsize, HTML_URL2, "/dev_blind", "?1", HTML_DIR);
-			}
-#endif
-			else if(show_play && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")))
+			if(show_play && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF")))
 			{
 				sprintf(fsize, HTML_URL, "/play.ps3", "&lt;Play>");
 			}
@@ -157,11 +147,19 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 				unsigned long long	free_mb    = (unsigned long long)(freeSize>>20),
 									free_kb    = (unsigned long long)(freeSize>>10),
 									devsize_mb = (unsigned long long)(devSize >>20);
+#ifndef LITE_EDITION
+				if(sys_admin && IS(templn, "/dev_flash"))
+					sprintf(tempstr, "%s%s", "/dev_blind", "?1");
+				else if(IS(templn, "/dev_blind"))
+					sprintf(tempstr, "%s%s", "/dev_blind", "?0");
+				else
+#endif
+					sprintf(tempstr, "/mount.ps3%s", templn);
 
 				// show graphic of device size & free space
 				sprintf(fsize,  "<div class='bf' style='height:18px;text-align:left;overflow:hidden;'><div class='bu' style='height:18px;width:%i%%'></div><div style='position:relative;top:-%ipx;text-align:right'>"
-								"<a href=\"/mount.ps3%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
-								"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), is_ps3_http ? 20 : 18, templn, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
+								"<a href=\"%s\" title=\"%'llu %s (%'llu %s) / %'llu %s (%'llu %s)\">&nbsp; %'8llu %s &nbsp;</a>"
+								"</div></div>", (int)(100.0f * (float)(devSize - freeSize) / (float)devSize), is_ps3_http ? 20 : 18, tempstr, free_mb, STR_MBFREE, freeSize, STR_BYTE, devsize_mb, STR_MEGABYTE, devSize, STR_BYTE, (freeSize < _2MB_) ? free_kb : free_mb, (freeSize < _2MB_) ? STR_KILOBYTE : STR_MEGABYTE);
 			}
 #else
 				sprintf(fsize, "<a href=\"/mount.ps3%s\">%s</a>", templn, HTML_DIR);
@@ -412,6 +410,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	{
 		if( param[11] & 1) enable_dev_blind(NO_MSG); else //enable
 		if(~param[11] & 1) disable_dev_blind();           //disable
+
+		if( param[11] ) {sprintf(templn, HTML_REDIRECT_TO_URL, "/", HTML_REDIRECT_WAIT); strcat(buffer, templn);}
 
 		sprintf(templn, "/dev_blind: %s", isDir("/dev_blind")?STR_ENABLED:STR_DISABLED); strcat(buffer, templn); return true; //goto send_response;
 	}

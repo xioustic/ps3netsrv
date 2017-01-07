@@ -15,5 +15,7 @@ move /Y webftp_server_rebug_cobra_multi23.sprx updater\pkgfiles\USRDIR
 cls
 cd updater
 call Make_PKG.bat
+call Make_PKG_rebugification_theme.bat
 
 move webMAN_MOD_1.45.xx_Updater.pkg ..
+move webMAN_MOD_1.45.xx_Updater_rebugification_theme.pkg ..

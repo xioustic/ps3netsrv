@@ -6,7 +6,7 @@ static void poll_start_play_time(void)
 
 	if(IS_ON_XMB)
 	{
-		if(gTick.tick != rTick.tick) vshnet_setUpdateUrl("http://127.0.0.1/dev_hdd0/ps3-updatelist.txt"); // custom update file
+		//if(gTick.tick != rTick.tick) vshnet_setUpdateUrl("http://127.0.0.1/dev_hdd0/ps3-updatelist.txt"); // re-apply redirection of custom update file returning to XMB
 
 		gTick = rTick;
 

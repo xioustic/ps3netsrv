@@ -477,7 +477,11 @@ int main()
 
 	CopyFile(APP_USRDIR "/icon_wm_settings.png" , ICONS_DIR "/icon_wm_settings.png");
 	CopyFile(APP_USRDIR "/icon_wm_eject.png"    , ICONS_DIR "/icon_wm_eject.png"   );
-//  CopyFile(APP_USRDIR "/icon_wm_root.png"     , ICONS_DIR "/icon_wm_root.png"    );
+
+	if((sysLv2FsStat(APP_USRDIR "/multiman.png", &stat) == SUCCESS) && (stat.st_size == 9894))
+		CopyFile(APP_USRDIR "/icon_wm_root.png" , ICONS_DIR "/icon_wm_root.png"    );
+	else
+		sysLv2FsUnlink(ICONS_DIR "/icon_wm_root.png");
 
 	CopyFile(APP_USRDIR "/blank.png"            , ICONS_DIR "/blank.png"    );
 
@@ -538,12 +542,10 @@ int main()
 	CopyFile(APP_USRDIR "/bd.png"        	, XMLMANPLS_IMAGES_DIR "/bd.png");
 	CopyFile(APP_USRDIR "/blockpsn.png"  	, XMLMANPLS_IMAGES_DIR "/blockpsn.png");
 	CopyFile(APP_USRDIR "/cachefiles.png"	, XMLMANPLS_IMAGES_DIR "/cachefiles.png");
-	CopyFile(APP_USRDIR "/devflash.png"  	, XMLMANPLS_IMAGES_DIR "/devflash.png");
 	CopyFile(APP_USRDIR "/filemanager.png"	, XMLMANPLS_IMAGES_DIR "/filemanager.png");
 	CopyFile(APP_USRDIR "/gamedata.png"  	, XMLMANPLS_IMAGES_DIR "/gamedata.png");
 	CopyFile(APP_USRDIR "/gamefix.png"   	, XMLMANPLS_IMAGES_DIR "/gamefix.png");
 	CopyFile(APP_USRDIR "/gamesbrowser.png"	, XMLMANPLS_IMAGES_DIR "/gamesbrowser.png");
-	CopyFile(APP_USRDIR "/homebrew.png"  	, XMLMANPLS_IMAGES_DIR "/homebrew.png");
 	CopyFile(APP_USRDIR "/multiman.png"  	, XMLMANPLS_IMAGES_DIR "/multiman.png");
 	CopyFile(APP_USRDIR "/network.png"   	, XMLMANPLS_IMAGES_DIR "/network.png");
 	CopyFile(APP_USRDIR "/pkgmanager.png"	, XMLMANPLS_IMAGES_DIR "/pkgmanager.png");
@@ -552,7 +554,6 @@ int main()
 	CopyFile(APP_USRDIR "/restartps3.png"	, XMLMANPLS_IMAGES_DIR "/restartps3.png");
 	CopyFile(APP_USRDIR "/settings.png"  	, XMLMANPLS_IMAGES_DIR "/settings.png");
 	CopyFile(APP_USRDIR "/shutdownps3.png"	, XMLMANPLS_IMAGES_DIR "/shutdownps3.png");
-	CopyFile(APP_USRDIR "/sysfiles.png"  	, XMLMANPLS_IMAGES_DIR "/sysfiles.png");
 	CopyFile(APP_USRDIR "/sysinfo.png"   	, XMLMANPLS_IMAGES_DIR "/sysinfo.png");
 	CopyFile(APP_USRDIR "/tools.png"  		, XMLMANPLS_IMAGES_DIR "/tools.png");
 	CopyFile(APP_USRDIR "/unload.png"  		, XMLMANPLS_IMAGES_DIR "/unload.png");
@@ -578,6 +579,8 @@ int main()
 		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_4.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_4.png", PLUGINS_DIR "/images/wm_vsh_menu_4.png");
 		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_5.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_5.png", PLUGINS_DIR "/images/wm_vsh_menu_5.png");
 		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_6.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_6.png", PLUGINS_DIR "/images/wm_vsh_menu_6.png");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_5.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_7.png", PLUGINS_DIR "/images/wm_vsh_menu_7.png");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_6.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_8.png", PLUGINS_DIR "/images/wm_vsh_menu_8.png");
 
 		// append path if installing for first time
 		if(sysLv2FsStat(PLUGINS_DIR "/wm_vsh_menu.sprx", &stat) != SUCCESS)
