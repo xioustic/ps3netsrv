@@ -8,7 +8,7 @@ u64 blocked_url[MAX_BLOCKED_URL][2]; u8 url_count = 0;
 
 #ifdef PS3MAPI
 
-u64 sc_backup[14];
+u64 sc_backup[17];
 
 static void backup_cfw_syscalls(void)
 {

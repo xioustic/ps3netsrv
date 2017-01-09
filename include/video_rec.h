@@ -1,8 +1,8 @@
 #include "../vsh/vshmain.h"
+#include "../vsh/vsh.h"
 
 #ifdef VIDEO_REC
 
-#include "../vsh/vsh.h"
 #include "../vsh/rec_plugin.h"
 
 #define REC_PLUGIN "rec_plugin"

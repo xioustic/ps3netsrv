@@ -111,7 +111,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.45.08 MOD"						// webMAN version
+#define WM_VERSION			"1.45.09 MOD"						// webMAN version
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -1546,6 +1546,7 @@ parse_request:
 				}
 
 				setPluginInactive();
+
 				goto exit_handleclient;
 			}
  #endif // #ifdef PKG_HANDLER

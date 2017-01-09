@@ -192,7 +192,9 @@ static void installPKG_thread(void)
 	if(game_ext_interface == 0) // test if game_ext_plugin is loaded for interface access
 	{
 		game_ext_interface = (game_ext_plugin_interface *)plugin_GetInterface(View_Find("game_ext_plugin"), 1);
+		if(game_ext_interface == 0) return;
 	}
+
 	game_ext_interface->LoadPage();
 
 	if(!extcasecmp(pkg_path, ".p3t", 4))
@@ -358,11 +360,12 @@ static int installPKG(const char *pkgpath, char *msg)
 				unload_web_plugins();
 
 				LoadPluginById(0x16, (void *)installPKG_thread);
-				ret = CELL_OK;
 
 				get_pkg_size_and_install_time(pkg_path); // set original pkg_install_time
 
 				sprintf(msg, "%s%s\nTo: %s", "Installing ", pkg_path, install_path);
+
+				ret = CELL_OK;
 			}
 		}
 	}
