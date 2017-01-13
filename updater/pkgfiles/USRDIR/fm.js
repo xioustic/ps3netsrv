@@ -34,6 +34,7 @@ document.write( "<div id='mnu' style='position:fixed;width:180px;background:#333
 				"<a id='ms'>Game Info<br></a>" +
 				"<hr>" +
 				"<a id='m3'>Delete<br></a>" +
+				"<a id='m7'>Rename<br></a>" +
 				"<a id='mf' href=\"javascript:t=prompt('New Folder', self.location.pathname);if(t.indexOf('/dev_')==0)self.location='/mkdir.ps3'+t\">New Folder</a>" +
 				"<hr>" +
 				"<a id='m4'>Cut<br></a>" +
@@ -44,7 +45,6 @@ document.write( "<div id='mnu' style='position:fixed;width:180px;background:#333
 				"<a id='ss'>Dir by Size<br></a>" +
 				"<a id='sd'>Dir by Date<br></a>" +
 				"<hr>" +
-				"<a id='m7'>Rename<br></a>" +
 				"<a id='m8'>Copy To</a><br>" +
 				"<a id='m9'>Copy & overwrite<br></a>"+
 				"</div>");

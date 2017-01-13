@@ -131,6 +131,8 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "pdc=1")) webman_config->combo|=DISACOBRA;
  #endif
 
+	if(strstr(param, "sc8=0")) webman_config->sc8mode = 4; else webman_config->sc8mode = 1;
+
 	if(strstr(param, "bus=1")) webman_config->bus = 1;
 #endif
 	if(strstr(param, "apd=1")) webman_config->autoplay = 1;
@@ -558,7 +560,8 @@ static void setup_form(char *buffer, char *templn)
 
 #ifdef LAUNCHPAD
 	add_check_box("rf", "1", STR_CONTSCAN, " & ", (webman_config->refr), buffer);
-	add_check_box("lx", "1", "LaunchPad.xml", _BR_, (webman_config->launchpad_xml), buffer);
+	if(file_exists(LAUNCHPAD_FILE_XML))
+		add_check_box("lx", "1", "LaunchPad.xml", _BR_, (webman_config->launchpad_xml), buffer);
 #else
 	add_check_box("rf", "1",  STR_CONTSCAN, _BR_, (webman_config->refr), buffer);
 #endif
@@ -743,7 +746,6 @@ static void setup_form(char *buffer, char *templn)
 	add_option_item("2", STR_GAMES,     (webman_config->spp & 4), buffer);
 	#endif
 	strcat(buffer, "</select>");
-
 #endif
 	strcat(buffer, HTML_BLU_SEPARATOR);
 
@@ -927,8 +929,13 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+"                  , !(webman_config->combo & MANUALFAN),  buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
 	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+"                  , !(webman_config->combo & MINDYNFAN),  buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
 #ifdef REMOVE_SYSCALLS
-	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> &nbsp; ("  , !(webman_config->combo & DISABLESH),  buffer);
-	add_check_box("kcc", "1", "CCAPI)", _BR_, !(webman_config->keep_ccapi), buffer);
+	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> ("         , !(webman_config->combo & DISABLESH),  buffer);
+	add_check_box("kcc", "1", "CCAPI • PS3MAPI", " ",  !(webman_config->keep_ccapi), buffer);
+
+	strcat(buffer, "<select name=\"sc8\">");
+	add_option_item("1", STR_ENABLED, (webman_config->sc8mode != 4), buffer);
+	add_option_item("0", STR_DISABLED,          (webman_config->sc8mode == 4), buffer);
+	strcat(buffer, "</select>)<br>");
 #endif
 
 #ifndef LITE_EDITION
@@ -1133,6 +1140,8 @@ static void reset_settings(void)
 
 	#ifndef COBRA_ONLY
 	webman_config->spp = 0; //disable removal of syscalls on nonCobra
+	#else
+	if(webman_config->sc8mode < 1 || webman_config->sc8mode > 4) webman_config->sc8mode = 4; // default: disable all syscalls (including sc8)
 	#endif
 
 	// set default autoboot path

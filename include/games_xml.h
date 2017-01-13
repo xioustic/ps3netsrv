@@ -150,13 +150,13 @@ static void set_buffer_sizes(int footprint)
 	BUFFER_SIZE_PS2	= (  _64KB_);
 	BUFFER_SIZE_DVD	= (  _64KB_);
 
-	if(footprint==1) //MIN
+	if(footprint == 1) //MIN
 	{
 		//BUFFER_SIZE	= ( _128KB_);
 		BUFFER_SIZE_PSX	= (  _32KB_);
 	}
 	else
-	if(footprint==2) //MAX
+	if(footprint == 2) //MAX
 	{
 		BUFFER_SIZE_FTP	= ( _256KB_);
 		//BUFFER_SIZE	= ( 512*KB);
@@ -170,26 +170,26 @@ static void set_buffer_sizes(int footprint)
 		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (_64KB_);
 	}
 	else
-	if(footprint==3) //MIN+
+	if(footprint == 3) //MIN+
 	{
 		//BUFFER_SIZE	= ( 320*KB);
 		BUFFER_SIZE_PSX	= (  _32KB_);
 	}
 	else
-	if(footprint==4) //MAX PS3+
+	if(footprint == 4) //MAX PS3+
 	{
 		//BUFFER_SIZE	= ( 1088*KB);
 		BUFFER_SIZE_PSX	= (  _32KB_);
 	}
 	else
-	if(footprint==5) //MAX PSX+
+	if(footprint == 5) //MAX PSX+
 	{
 		//BUFFER_SIZE	= (  368*KB);
 		BUFFER_SIZE_PSX	= (  720*KB);
 		BUFFER_SIZE_PSP	= (  _64KB_);
 	}
 	else
-	if(footprint==6) //MAX BLU+
+	if(footprint == 6) //MAX BLU+
 	{
 		//BUFFER_SIZE	= (  368*KB);
 		BUFFER_SIZE_PSX	= (  _64KB_);
@@ -197,7 +197,7 @@ static void set_buffer_sizes(int footprint)
 		BUFFER_SIZE_DVD	= (  720*KB);
 	}
 	else
-	if(footprint==7) //MAX PSP+
+	if(footprint == 7) //MAX PSP+
 	{
 		//BUFFER_SIZE	= (  368*KB);
 		BUFFER_SIZE_PSX	= (  _64KB_);
@@ -218,7 +218,7 @@ static void set_buffer_sizes(int footprint)
 	BUFFER_SIZE = BUFFER_SIZE_ALL - (BUFFER_SIZE_PSX + BUFFER_SIZE_PSP + BUFFER_SIZE_PS2 + BUFFER_SIZE_DVD);
 
 #ifdef MOUNT_ROMS
-	BUFFER_SIZE_ROM = (footprint==7) ? 640*KB : BUFFER_SIZE_PSP / 2;
+	BUFFER_SIZE_ROM = (footprint == 7) ? 640*KB : BUFFER_SIZE_PSP / 2;
 #endif
 }
 
@@ -1051,7 +1051,7 @@ continue_reading_folder_xml:
 	}
 
 #ifdef LAUNCHPAD
-	bool launchpad_xml = /*isDir("/dev_flash/rebug") &&*/ !(webman_config->launchpad_xml);
+	bool launchpad_xml = !(webman_config->launchpad_xml) && file_exists(LAUNCHPAD_FILE_XML);
 
 	if(launchpad_xml)
 	{

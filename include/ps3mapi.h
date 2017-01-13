@@ -53,9 +53,11 @@
 ///////////// PS3MAPI END //////////////
 
 #if defined(COBRA_ONLY) || defined(PS3MAPI)
-u16 sc_disable[17] = {200, 201, 202, 203, 204, 1022, 6, 7, 10, 11, 15, 20, 35, 36, 38, 9, 9};  // 9 should be twice (instead of 8, 9)
+#define CFW_SYSCALLS 16
+static u16 sc_disable[CFW_SYSCALLS] = {200, 201, 202, 203, 204, 1022, 6, 7, 10, 11, 15, 20, 35, 36, 38, 9};
 #else
-u16 sc_disable[17] = {200, 201, 202, 203, 204, 1022, 6, 7, 10, 11, 15, 20, 35, 36, 38, 8, 9};
+#define CFW_SYSCALLS 17
+static u16 sc_disable[CFW_SYSCALLS] = {200, 201, 202, 203, 204, 1022, 6, 7, 10, 11, 15, 20, 35, 36, 38, 8, 9};
 #endif
 
 #ifdef PS3MAPI
@@ -287,7 +289,7 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 
 	if(strstr(param, ".ps3mapi?"))
 	{
-		for(u8 sc = 0; sc < 17; sc++)
+		for(u8 sc = 0; sc < CFW_SYSCALLS; sc++)
 		{
 			sprintf(templn, "sc%i=1", sc_disable[sc]);
 			if(strstr(param, templn))   { pokeq(SYSCALL_PTR(sc_disable[sc]), sc_null); system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_DISABLE_SYSCALL, (u64)sc_disable[sc]); }
@@ -429,6 +431,7 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "CFW syscall 8", HTML_FORM_METHOD); strcat(buffer, templn);
 
 	{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); ret_val = (int)p1;}
+
 	if(ret_val < 0)
 	{
 		add_radio_button("mode\" disabled=\"disabled", "0", "sc8_0", "Fully enabled", _BR_, false, buffer);
@@ -438,6 +441,8 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 	}
 	else
 	{
+		if(syscalls_removed && (ret_val == 0)) ret_val = 1;
+
 		add_radio_button("mode", "0", "sc8_0", "Fully enabled", _BR_, (ret_val == 0), buffer);
 		add_radio_button("mode", "1", "sc8_1", "Partially disabled : Keep only COBRA/MAMBA/PS3MAPI features", _BR_, (ret_val == 1), buffer);
 		add_radio_button("mode", "2", "sc8_2", "Partially disabled : Keep only PS3MAPI features", _BR_, (ret_val == 2), buffer);

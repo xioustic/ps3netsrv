@@ -64,7 +64,7 @@ enum icon_type
 
 #define LAUNCHPAD_MODE			2
 #define LAUNCHPAD_FILE_XML		"/dev_hdd0/tmp/wm_launchpad.xml"
-#define LAUNCHPAD_MAX_ITEMS		500
+#define LAUNCHPAD_MAX_ITEMS		300
 #define LAUNCHPAD_COVER_SVR		"http://xmbmods.co/wmlp/covers"
 //#define LAUNCHPAD_COVER_SVR	"http://ps3extra.free.fr/covers"
 
@@ -1179,7 +1179,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
  #ifdef LAUNCHPAD
 						if(launchpad_mode)
 						{
-							sprintf(line_entry[idx].path, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
+							flen = sprintf(tempstr, "http://%s/mount_ps3%s%s/%s", local_ip, neth, param, enc_dir_name);
+							if(flen >= MAX_LINE_LEN) continue; //ignore lines too long
+							sprintf(line_entry[idx].path, "%s", tempstr);
 							flen = add_launchpad_entry(tempstr + HTML_KEY_LEN, templn, line_entry[idx].path, tempID, icon, false);
 						}
 						else
@@ -1203,7 +1205,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						v3_entry++;
 						if((flen + HTML_KEY_LEN) > MAX_LINE_LEN) continue; //ignore lines too long
-						strcpy(line_entry[idx].path, tempstr); idx++;
+						sprintf(line_entry[idx].path, "%s", tempstr); idx++;
 						tlen += (flen + div_size);
 					}
 					else
@@ -1298,7 +1300,9 @@ next_html_entry:
  #ifdef LAUNCHPAD
 							if(launchpad_mode)
 							{
-								sprintf(line_entry[idx].path, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
+								flen = sprintf(tempstr, "http://%s/mount_ps3%s/%s", local_ip, param, enc_dir_name);
+								if(flen >= MAX_LINE_LEN) continue; //ignore lines too long
+								sprintf(line_entry[idx].path, "%s", tempstr);
 								flen = add_launchpad_entry(tempstr + HTML_KEY_LEN, templn, line_entry[idx].path, tempID, icon, false);
 							}
 							else
@@ -1328,8 +1332,7 @@ next_html_entry:
 							}
 
 							if(flen > MAX_LINE_LEN) continue; //ignore lines too long
-
-							strcpy(line_entry[idx].path, tempstr); idx++;
+							sprintf(line_entry[idx].path, "%s", tempstr); idx++;
 							tlen += (flen + div_size);
 
 							cellRtcGetCurrentTick(&pTick);
@@ -1441,7 +1444,6 @@ next_html_entry:
 				cellFsClose(fd);
 			}
 			add_launchpad_footer(tempstr);
-
 			loading_games = 0;
 			return true;
 		}

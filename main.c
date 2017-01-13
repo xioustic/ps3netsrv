@@ -111,7 +111,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.45.09 MOD"						// webMAN version
+#define WM_VERSION			"1.45.10 MOD"						// webMAN version
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -510,8 +510,9 @@ typedef struct
 	uint8_t  keep_ccapi;
 	uint32_t combo;
 	uint32_t combo2;
+	uint8_t  sc8mode;
 
-	uint8_t padding5[22];
+	uint8_t padding5[21];
 
 	// ftp server settings
 
@@ -816,7 +817,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 		else
 			sprintf(templn, "%s", msg);
 
-		if(ISDIGIT(*msg) && ( (code == CODE_SERVER_BUSY || code == CODE_BAD_REQUEST) )) show_msg((char*)templn + 4);
+		//if(ISDIGIT(*msg) && ( (code == CODE_SERVER_BUSY || code == CODE_BAD_REQUEST) )) show_msg((char*)templn + 4);
 
 #ifndef EMBED_JS
 		if(css_exists)
