@@ -16,6 +16,8 @@ cls
 cd updater
 call Make_PKG.bat
 call Make_PKG_rebugification_theme.bat
+call Make_PKG_metalification_theme.bat
 
 move webMAN_MOD_1.45.xx_Updater.pkg ..
 move webMAN_MOD_1.45.xx_Updater_rebugification_theme.pkg ..
+move webMAN_MOD_1.45.xx_Updater_metalification_theme.pkg ..

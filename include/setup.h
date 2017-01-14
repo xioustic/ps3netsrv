@@ -559,9 +559,9 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("wn", "1", STR_NOWMDN,  _BR_, (webman_config->wmstart), buffer);
 
 #ifdef LAUNCHPAD
-	add_check_box("rf", "1", STR_CONTSCAN, " & ", (webman_config->refr), buffer);
+	add_check_box("rf", "1", STR_CONTSCAN, " ", (webman_config->refr), buffer);
 	if(file_exists(LAUNCHPAD_FILE_XML))
-		add_check_box("lx", "1", "LaunchPad.xml", _BR_, (webman_config->launchpad_xml), buffer);
+		add_check_box("lx", "1", "& LaunchPad.xml", _BR_, (webman_config->launchpad_xml), buffer);
 #else
 	add_check_box("rf", "1",  STR_CONTSCAN, _BR_, (webman_config->refr), buffer);
 #endif
