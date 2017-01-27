@@ -135,14 +135,18 @@ int main(int argc, const char* argv[])
 		}
 		else
 		if(strcasestr(path, "/ROMS/NES/"))  {sprintf(param, "%s", path); sprintf(path, "%s/fceumm_libretro_ps3.SELF", RETROARCH);}              else
+		if(strcasestr(path, "/ROMS/QNES/"))  {sprintf(param, "%s", path); sprintf(path, "%s/quicknes_libretro_ps3.SELF", RETROARCH);}           else
+		if(strcasestr(path, "/ROMS/NESTOPIA/"))  {sprintf(param, "%s", path); sprintf(path, "%s/nestopia_libretro_ps3.SELF", RETROARCH);}       else
 		if(strcasestr(path, "/ROMS/GEN/"))  {sprintf(param, "%s", path); sprintf(path, "%s/genesis_plus_gx_libretro_ps3.SELF", RETROARCH);}     else
 		if(strcasestr(path, "/ROMS/GBA/"))  {sprintf(param, "%s", path); sprintf(path, "%s/vba_next_libretro_ps3.SELF", RETROARCH);}            else
 		if(strcasestr(path, "/ROMS/GB/"))   {sprintf(param, "%s", path); sprintf(path, "%s/gambatte_libretro_ps3.SELF", RETROARCH);}            else
 		if(strcasestr(path, "/ROMS/GBC/"))  {sprintf(param, "%s", path); sprintf(path, "%s/gambatte_libretro_ps3.SELF", RETROARCH);}            else
 		if(strcasestr(path, "/ROMS/PCE/"))  {sprintf(param, "%s", path); sprintf(path, "%s/mednafen_pce_fast_libretro_ps3.SELF", RETROARCH);}   else
+		if(strcasestr(path, "/ROMS/PCFX/"))  {sprintf(param, "%s", path); sprintf(path, "%s/mednafen_pcfx_libretro_ps3.SELF", RETROARCH);}      else
 		if(strcasestr(path, "/ROMS/ATARI/")){sprintf(param, "%s", path); sprintf(path, "%s/stella_libretro_ps3.SELF", RETROARCH);}              else
 		if(strcasestr(path, "/ROMS/FBA/"))  {sprintf(param, "%s", path); sprintf(path, "%s/fb_alpha_libretro_ps3.SELF", RETROARCH);}            else
 		if(strcasestr(path, "/ROMS/MAME/")) {sprintf(param, "%s", path); sprintf(path, "%s/mame078_libretro_ps3.SELF", RETROARCH);}             else
+		if(strcasestr(path, "/ROMS/MAME2003/")) {sprintf(param, "%s", path); sprintf(path, "%s/mame2003_libretro_ps3.SELF", RETROARCH);}        else
 		if(strcasestr(path, "/ROMS/QUAKE/")){sprintf(param, "%s", path); sprintf(path, "%s/tyrquake_libretro_ps3.SELF", RETROARCH);}            else
 		if(strcasestr(path, "/ROMS/DOOM/")) {sprintf(param, "%s", path); sprintf(path, "%s/prboom_libretro_ps3.SELF", RETROARCH);}              else
 		if(strcasestr(path, "/ROMS/NGP/"))  {sprintf(param, "%s", path); sprintf(path, "%s/mednafen_ngp_libretro_ps3.SELF", RETROARCH);}        else
@@ -152,6 +156,10 @@ int main(int argc, const char* argv[])
 		if(strcasestr(path, "/ROMS/ATARI2600/")){sprintf(param, "%s", path); sprintf(path, "%s/stella_libretro_ps3.SELF", RETROARCH);}          else
 		if(strcasestr(path, "/ROMS/ATARI7800/")){sprintf(param, "%s", path); sprintf(path, "%s/prosystem_libretro_ps3.SELF", RETROARCH);}       else
 		if(strcasestr(path, "/ROMS/GW/"))   {sprintf(param, "%s", path); sprintf(path, "%s/gw_libretro_ps3.SELF", RETROARCH);}                  else
+		if(strcasestr(path, "/ROMS/O2EM"))  {sprintf(param, "%s", path); sprintf(path, "%s/o2em_libretro_ps3.SELF", RETROARCH);}                else
+		if(strcasestr(path, "/ROMS/LYNX"))  {sprintf(param, "%s", path); sprintf(path, "%s/mednafen_lynx_libretro_ps3.SELF", RETROARCH);}       else
+		if(strcasestr(path, "/ROMS/HANDY"))  {sprintf(param, "%s", path); sprintf(path, "%s/handy_libretro_ps3.SELF", RETROARCH);}              else
+		if(strcasestr(path, "/ROMS/NXENGINE"))  {sprintf(param, "%s", path); sprintf(path, "%s/nxengine_libretro_ps3.SELF", RETROARCH);}        else
 		{
 			char extension[8]; int plen = strlen(path);
 			if(plen > 4)
@@ -185,6 +193,7 @@ int main(int argc, const char* argv[])
 				if(strcasestr(".VEC", extension)) {sprintf(param, "%s", path); sprintf(path, "%s/vecx_libretro_ps3.SELF", RETROARCH);}               else
 				if(strcasestr(".P|.TZX|.T81", extension)) {sprintf(param, "%s", path); sprintf(path, "%s/81_libretro_ps3.SELF", RETROARCH);}         else
 				if(strcasestr(".J64|.JAG", extension)) {sprintf(param, "%s", path); sprintf(path, "%s/virtualjaguar_libretro_ps3.SELF", RETROARCH);} else
+				if(strcasestr(".EXE", extension)) {sprintf(param, "%s", path); sprintf(path, "%s/nxengine_libretro_ps3.SELF", RETROARCH);}           else
 				if(strcasestr(VIDEO_EXTENSIONS, extension)) {sprintf(param, "%s", path); sprintf(path, "%s", SHOWTIME);} else
 				if(strcasestr(AUDIO_EXTENSIONS, extension)) {sprintf(param, "%s", path); sprintf(path, "%s", SHOWTIME);}
 			}
