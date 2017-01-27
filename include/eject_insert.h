@@ -15,6 +15,7 @@
 
 #define USB_MASS_STORAGE_1(n)	(0x10300000000000AULL+n) /* For 0-5 */
 #define USB_MASS_STORAGE_2(n)	(0x10300000000001FULL+(n-6)) /* For 6-127 */
+#define USB_MASS_STORAGE(n)		(((n) < 6) ? USB_MASS_STORAGE_1(n) : USB_MASS_STORAGE_2(n))
 
 #define	HDD_PARTITION(n)	(ATA_HDD | ((uint64_t)n<<32))
 #define FLASH_PARTITION(n)	(BUILTIN_FLASH | ((uint64_t)n<<32))
@@ -55,7 +56,7 @@ static void reset_usb_ports(char *_path)
 	u8 usb7 = (u8)val(drives[6] + 8);
 
 	// eject all usb devices
-	for(u8 f0 = 0; f0 < 8; f0++) fake_eject_event((f0<6)?USB_MASS_STORAGE_1(f0):USB_MASS_STORAGE_2(f0));
+	for(u8 f0 = 0; f0 < 8; f0++) fake_eject_event(USB_MASS_STORAGE(f0));
 
 	if(usb6 >= 8) fake_eject_event(USB_MASS_STORAGE_2(usb6));
 	if(usb7 >= 8) fake_eject_event(USB_MASS_STORAGE_2(usb7));
@@ -63,14 +64,14 @@ static void reset_usb_ports(char *_path)
 	sys_timer_sleep(1); u8 indx = (u8)val(_path + 8);
 
 	// make the current usb device the first
-	fake_insert_event((indx < 6) ? USB_MASS_STORAGE_1(indx) : USB_MASS_STORAGE_2(indx), DEVICE_TYPE_USB);
+	fake_insert_event(USB_MASS_STORAGE(indx), DEVICE_TYPE_USB);
 
 	sys_timer_sleep(3);
 
 	// send fake insert event for the other usb devices
 	for(u8 f0 = 0; f0 < 8; f0++)
 	{
-		if(f0 != indx) fake_insert_event((f0 < 6) ? USB_MASS_STORAGE_1(f0) : USB_MASS_STORAGE_2(f0), DEVICE_TYPE_USB);
+		if(f0 != indx) fake_insert_event(USB_MASS_STORAGE(f0), DEVICE_TYPE_USB);
 	}
 
 	if((usb6 >= 8) && (indx != usb6)) fake_insert_event(USB_MASS_STORAGE_2(usb6), DEVICE_TYPE_USB);

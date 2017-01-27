@@ -54,6 +54,10 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "x1=1")) webman_config->dev_ms = 1;
 	if(strstr(param, "x2=1")) webman_config->dev_cf = 1;
 
+#ifdef USE_NTFS
+	if(strstr(param, "xn=1")) webman_config->ntfs = 1;
+#endif
+
 	if(strstr(param, "lp=1")) webman_config->lastp = 1;
 	if(strstr(param, "ab=1")) webman_config->autob = 1;
 	if(strstr(param, "dy=1")) webman_config->delay = 1;
@@ -339,7 +343,6 @@ static void setup_parse_settings(char *param)
 
 #ifdef COBRA_ONLY
  #ifdef BDVD_REGION
-	//if(cobra_mode)
 	{
 		u8 cconfig[15];
 		CobraConfig *cobra_config = (CobraConfig*) cconfig;
@@ -511,6 +514,10 @@ static void setup_form(char *buffer, char *templn)
 	if(isDir(drives[11])) add_check_box("x0", "1", drives[11], _BR_, (webman_config->dev_sd), buffer);
 	if(isDir(drives[12])) add_check_box("x1", "1", drives[12], _BR_, (webman_config->dev_ms), buffer);
 	if(isDir(drives[13])) add_check_box("x2", "1", drives[13], _BR_, (webman_config->dev_cf), buffer);
+
+#ifdef USE_NTFS
+	add_check_box("xn", "1", "/dev_ntfs", _BR_, (webman_config->ntfs), buffer);
+#endif
 
 	//Scan for content
 	sprintf(templn, "<td nowrap valign=top><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
@@ -930,12 +937,15 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+"                  , !(webman_config->combo & MINDYNFAN),  buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
 #ifdef REMOVE_SYSCALLS
 	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> ("         , !(webman_config->combo & DISABLESH),  buffer);
-	add_check_box("kcc", "1", "CCAPI • PS3MAPI", " ",  !(webman_config->keep_ccapi), buffer);
+	add_check_box("kcc", "1", "CCAPI", " ",  !(webman_config->keep_ccapi), buffer);
 
-	strcat(buffer, "<select name=\"sc8\">");
-	add_option_item("1", STR_ENABLED, (webman_config->sc8mode != 4), buffer);
-	add_option_item("0", STR_DISABLED,          (webman_config->sc8mode == 4), buffer);
-	strcat(buffer, "</select>)<br>");
+ #ifdef COBRA_ONLY
+	strcat(buffer, "• PS3MAPI <select name=\"sc8\">");
+	add_option_item("1", STR_ENABLED,  (webman_config->sc8mode != 4), buffer);
+	add_option_item("0", STR_DISABLED, (webman_config->sc8mode == 4), buffer);
+	strcat(buffer, "</select>");
+ #endif
+	strcat(buffer, ")<br>");
 #endif
 
 #ifndef LITE_EDITION
@@ -1052,6 +1062,10 @@ static void reset_settings(void)
 	//webman_config->dev_sd = 0;
 	//webman_config->dev_ms = 0;
 	//webman_config->dev_cf = 0;
+
+#ifdef USE_NTFS
+	webman_config->ntfs = 1;
+#endif
 
 	//webman_config->lastp = 0;       //disable last play
 	//webman_config->autob = 0;       //disable check for AUTOBOOT.ISO

@@ -19,6 +19,32 @@ static u32 copied_count = 0;
 #define DONT_CLEAR_DATA		-1
 #define RECURSIVE_DELETE	2
 
+#ifdef USE_NTFS
+static void unmount_all_ntfs_volumes(void)
+{
+	if(mounts && mountCount)
+		for (uint8_t u = 0; u < mountCount; u++) ntfsUnmount(mounts[u].name, 1);
+
+	if(mounts) free(mounts);
+}
+
+static void mount_all_ntfs_volumes(void)
+{
+	unmount_all_ntfs_volumes();
+	mountCount = ntfsMountAll(&mounts, NTFS_SU | NTFS_FORCE );
+	if (mountCount <= 0) {mountCount = -2;}
+}
+
+static DIR_ITER *ps3ntfs_opendir(char *path)
+{
+	if(mountCount <= 0) mount_all_ntfs_volumes();
+
+	path[10] = ':';
+	if(path[11] != '/') {path[11] = '/', path[12] = 0;}
+	return ps3ntfs_diropen(path + 5);  // /dev_ntfs1v -> ntfs1:
+}
+#endif
+
 static int sysLv2FsLink(const char *oldpath, const char *newpath)
 {
 	system_call_2(SC_FS_LINK, (u64)(u32)oldpath, (u64)(u32)newpath);
@@ -27,6 +53,16 @@ static int sysLv2FsLink(const char *oldpath, const char *newpath)
 
 static uint64_t get_free_space(const char *dev_name)
 {
+#ifdef USE_NTFS
+	if(islike(dev_name, "/dev_ntfs"))
+	{
+		struct statvfs vbuf;
+		char tmp[MAX_PATH_LEN];
+		strcpy(tmp, dev_name); tmp[10] = ':', tmp[12] = 0;
+		ps3ntfs_statvfs(tmp + 5, &vbuf);
+		return ((u64)vbuf.f_bfree * (u64)vbuf.f_bsize);
+	}
+#endif
 	uint32_t blockSize;
 	uint64_t freeSize;
 	if(cellFsGetFreeSize(dev_name, &blockSize, &freeSize)  == CELL_FS_SUCCEEDED) return (freeSize * blockSize);
@@ -35,6 +71,16 @@ static uint64_t get_free_space(const char *dev_name)
 
 static int isDir(const char* path)
 {
+#ifdef USE_NTFS
+	if(islike(path, "/dev_ntfs"))
+	{
+		char tmp[MAX_PATH_LEN];
+		strcpy(tmp, path); tmp[10] = ':';
+		struct stat bufn;
+		return ((ps3ntfs_stat(tmp + 5, &bufn) >= 0) && (bufn.st_mode & S_IFDIR));
+	}
+#endif
+
 	struct CellFsStat s;
 	if(cellFsStat(path, &s) == CELL_FS_SUCCEEDED)
 		return ((s.st_mode & CELL_FS_S_IFDIR) != 0);
@@ -44,6 +90,16 @@ static int isDir(const char* path)
 
 static bool file_exists(const char* path)
 {
+#ifdef USE_NTFS
+	if(islike(path, "/dev_ntfs"))
+	{
+		char tmp[MAX_PATH_LEN];
+		strcpy(tmp, path); tmp[10] = ':';
+		struct stat bufn;
+		return (ps3ntfs_stat(tmp + 5, &bufn) >= 0);
+	}
+#endif
+
 	struct CellFsStat s;
 	return (cellFsStat(path, &s) == CELL_FS_SUCCEEDED);
 }
@@ -51,8 +107,19 @@ static bool file_exists(const char* path)
 static void mkdir_tree(char *path)
 {
 	size_t path_len = strlen(path);
-	for(u16 p = 12; p < path_len; p++)
-		if(path[p] == '/') {path[p] = NULL; cellFsMkdir((char*)path, MODE); path[p] = '/';}
+#ifdef USE_NTFS
+	if(islike(path, "/dev_ntfs"))
+	{
+		path[10] = ':';
+		for(u16 p = 12; p < path_len; p++)
+			if(path[p] == '/') {path[p] = NULL; ps3ntfs_mkdir(path + 5, MODE); path[p] = '/';}
+	}
+	else
+#endif
+	{
+		for(u16 p = 12; p < path_len; p++)
+			if(path[p] == '/') {path[p] = NULL; cellFsMkdir(path, MODE); path[p] = '/';}
+	}
 }
 
 size_t read_file(const char *file, char *data, size_t size, int32_t offset)
@@ -98,9 +165,13 @@ int save_file(const char *file, const char *mem, int64_t size)
 
 static void filepath_check(char *file)
 {
-	if(file[5] == 'u' && islike(file, "/dev_usb"))
+	if((file[5] == 'u' && islike(file, "/dev_usb"))
+#ifdef USE_NTFS
+	|| (file[5] == 'n' && islike(file, "/dev_ntfs"))
+#endif
+	)
 	{
-		u16 n = 8, c = 8;
+		u16 n = 11, c = 11;
 		// remove invalid chars
 		while(true)
 		{
@@ -109,6 +180,9 @@ static void filepath_check(char *file)
 			if(!file[c++]) break;
 		}
 	}
+#ifdef USE_NTFS
+	if(islike(file, "/dev_ntfs")) {file[10] = ':'; if(mountCount == -2) mount_all_ntfs_volumes();}
+#endif
 }
 
 /*
@@ -183,10 +257,24 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 
 	if(IS(file1, file2)) return FAILED;
 
+#ifdef USE_NTFS
+	bool is_ntfs1 = islike(file1, "/dev_ntfs"), is_ntfs2 = false;
+#else
+	bool is_ntfs1 = false, is_ntfs2 = false;
+#endif
+
 #ifdef COPY_PS3
 	sprintf(current_file, "%s", file2);
 #endif
 
+#ifdef USE_NTFS
+	if(is_ntfs1)
+	{
+		struct stat bufn;
+		if(ps3ntfs_stat(file1 + 5, &bufn) >= 0) buf.st_size = bufn.st_size; else return FAILED;
+	}
+	else
+#endif
 	if(cellFsStat(file1, &buf) != CELL_FS_SUCCEEDED)
 	{
 #ifndef LITE_EDITION
@@ -204,15 +292,28 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 		return FAILED;
 	}
 
-	if(islike(file1, "/dev_hdd0/") && islike(file2, "/dev_hdd0/"))
+	if(islike(file2, "/dev_hdd0/"))
 	{
-		cellFsUnlink(file2); copied_count++;
-		return sysLv2FsLink(file1, file2);
+		if(islike(file1, "/dev_hdd0/"))
+		{
+			cellFsUnlink(file2); copied_count++;
+			return sysLv2FsLink(file1, file2);
+		}
+
+		if(buf.st_size > get_free_space("/dev_hdd0")) return FAILED;
 	}
 
 	if(islike(file1, "/dvd_bdvd"))
 		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
+#ifdef USE_NTFS
+	if(is_ntfs1)
+	{
+		fd1 = ps3ntfs_open(file1 + 5, O_RDONLY, 0);
+		if(fd1 < 0) is_ntfs1 = false;
+	}
+	else
+#endif
 	// skip if file already exists with same size
 	if(dont_copy_same_size && (cellFsStat(file2, &buf2) == CELL_FS_SUCCEEDED) && (buf2.st_size == buf.st_size))
 	{
@@ -220,9 +321,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 		return buf.st_size;
 	}
 
-	if(buf.st_size > get_free_space("/dev_hdd0")) return FAILED;
-
-	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
+	if(is_ntfs1 || cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
 
@@ -241,18 +340,46 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 			char *chunk = (char*)sysmem;
 			u16 flen = strlen(file2);
 next_part:
+
+#ifdef USE_NTFS
+			is_ntfs2 = islike(file2, "/dev_ntfs");
+			if(is_ntfs2)
+			{
+				fd2 = ps3ntfs_open(file2 + 5, O_CREAT | O_WRONLY | O_TRUNC, MODE);
+				if(fd2 < 0) is_ntfs2 = false;
+			}
+#endif
 			// copy_file
-			if(cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd2, 0, 0) == CELL_FS_SUCCEEDED)
+			if(is_ntfs2 || cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_WRONLY | CELL_FS_O_TRUNC, &fd2, 0, 0) == CELL_FS_SUCCEEDED)
 			{
 				while(size > 0)
 				{
 					if(copy_aborted) break;
 
-					cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &read);
-					cellFsRead(fd1, chunk, chunk_size, &read);
+#ifdef USE_NTFS
+					if(is_ntfs1)
+					{
+						ps3ntfs_seek64(fd1, pos, SEEK_SET);
+						read = ps3ntfs_read(fd1, chunk, chunk_size);
+					}
+					else
+#endif
+					{
+						cellFsLseek(fd1, pos, CELL_FS_SEEK_SET, &read);
+						cellFsRead(fd1, chunk, chunk_size, &read);
+					}
+
 					if(!read) break;
 
+#ifdef USE_NTFS
+					if(is_ntfs2)
+					{
+						written = ps3ntfs_write(fd2, chunk, read);
+					}
+					else
+#endif
 					cellFsWrite(fd2, chunk, read, &written);
+
 					if(!written) break;
 
 					pos  += written;
@@ -265,10 +392,22 @@ next_part:
 
 					sys_timer_usleep(1000);
 				}
+
+
+#ifdef USE_NTFS
+				if(is_ntfs2) ps3ntfs_close(fd2);
+				else
+#endif
 				cellFsClose(fd2);
 
 				if(copy_aborted)
+				{
+#ifdef USE_NTFS
+					if(is_ntfs2) ps3ntfs_unlink(file2 + 5);
+					else
+#endif
 					cellFsUnlink(file2); //remove incomplete file
+				}
 				else if((part > 0) && (size > 0))
 				{
 					if(part < 10)
@@ -294,6 +433,11 @@ next_part:
 			}
 			sys_memory_free(sysmem);
 		}
+
+#ifdef USE_NTFS
+		if(is_ntfs2) ps3ntfs_close(fd2);
+		else
+#endif
 		cellFsClose(fd1);
 	}
 
@@ -305,22 +449,47 @@ static int folder_copy(const char *path1, char *path2)
 {
 	filepath_check(path2);
 
-	cellFsChmod(path1, DMODE);
-	cellFsMkdir(path2, DMODE);
-
-	int fd;
+	int fd; bool is_ntfs = false;
 
 	copy_aborted = false;
 
-	if(working && cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
+#ifdef USE_NTFS
+	struct stat bufn;
+	DIR_ITER *pdir = NULL;
+
+	if(islike(path1, "/dev_ntfs"))
+	{
+		pdir = ps3ntfs_opendir((char*)path1);
+		if(pdir) is_ntfs = true;
+
+		ps3ntfs_mkdir(path2 + 5, MODE);
+	}
+	else
+#endif
+	{
+		cellFsChmod(path1, DMODE);
+		cellFsMkdir(path2, DMODE);
+	}
+
+	if(is_ntfs || cellFsOpendir(path1, &fd) == CELL_FS_SUCCEEDED)
 	{
 		CellFsDirent dir; u64 read_e;
 
 		char source[MAX_PATH_LEN];
 		char target[MAX_PATH_LEN];
 
-		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working)
 		{
+#ifdef USE_NTFS
+			if(is_ntfs)
+			{
+				if(ps3ntfs_dirnext(pdir, dir.d_name, &bufn)) break;
+				if(dir.d_name[0]=='$' && path1[12] == 0) continue;
+			}
+			else
+#endif
+			if((cellFsReaddir(fd, &dir, &read_e) != CELL_FS_SUCCEEDED) || (read_e == 0)) break;
+
 			if(copy_aborted) break;
 			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == NULL)) continue;
 
@@ -335,6 +504,11 @@ static int folder_copy(const char *path1, char *path2)
 			else
 				file_copy(source, target, COPY_WHOLE_FILE);
 		}
+
+#ifdef USE_NTFS
+		if(is_ntfs) ps3ntfs_dirclose(pdir);
+		else
+#endif
 		cellFsClosedir(fd);
 
 		if(copy_aborted) return FAILED;
@@ -350,24 +524,55 @@ static int folder_copy(const char *path1, char *path2)
 static int del(const char *path, u8 recursive)
 {
 	if(recursive == RECURSIVE_DELETE) ; else
-	if(!sys_admin) return FAILED;
+	if(!sys_admin || !working) return FAILED;
 
+#ifdef USE_NTFS
+	if(!isDir(path))
+	{
+		if(islike(path, "/dev_ntfs"))
+			return ps3ntfs_unlink(path + 5);
+		else
+			return cellFsUnlink(path);
+	}
+#else
 	if(!isDir(path)) return cellFsUnlink(path);
+#endif
 
 	if(strlen(path) < 11 || islike(path, "/dev_bdvd") || islike(path, "/dev_flash") || islike(path, "/dev_blind")) return FAILED;
 
-	int fd;
+	int fd; bool is_ntfs = false;
 
 	copy_aborted = false;
 
-	if(working && cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
+#ifdef USE_NTFS
+	struct stat bufn;
+	DIR_ITER *pdir;
+
+	if(islike(path, "/dev_ntfs"))
+	{
+		pdir = ps3ntfs_opendir((char*)path);
+		if(pdir) is_ntfs = true;
+	}
+#endif
+
+	if(is_ntfs || cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
 		CellFsDirent dir; u64 read_e;
 
 		char entry[MAX_PATH_LEN];
 
-		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+		while(working)
 		{
+#ifdef USE_NTFS
+			if(is_ntfs)
+			{
+				if(ps3ntfs_dirnext(pdir, dir.d_name, &bufn)) break;
+				if(dir.d_name[0]=='$' && path[12] == 0) continue;
+			}
+			else
+#endif
+			if((cellFsReaddir(fd, &dir, &read_e) != CELL_FS_SUCCEEDED) || (read_e == 0)) break;
+
 			if(copy_aborted) break;
 			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == NULL)) continue;
 
@@ -375,9 +580,18 @@ static int del(const char *path, u8 recursive)
 
 			if(isDir(entry))
 				{if(recursive) del(entry, recursive);}
+#ifdef USE_NTFS
+			else if(is_ntfs)
+				ps3ntfs_unlink(entry + 5);
+#endif
 			else
 				cellFsUnlink(entry);
 		}
+
+#ifdef USE_NTFS
+		if(is_ntfs) ps3ntfs_dirclose(pdir);
+		else
+#endif
 		cellFsClosedir(fd);
 
 		if(copy_aborted) return FAILED;
@@ -385,7 +599,14 @@ static int del(const char *path, u8 recursive)
 	else
 		return FAILED;
 
-	if(recursive) cellFsRmdir(path);
+	if(recursive)
+	{
+#ifdef USE_NTFS
+		if(is_ntfs) ps3ntfs_unlink(path + 5);
+		else
+#endif
+		cellFsRmdir(path);
+	}
 
 	return CELL_FS_SUCCEEDED;
 }

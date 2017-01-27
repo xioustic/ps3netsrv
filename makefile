@@ -15,26 +15,24 @@ CRT_TAIL                += $(shell ppu-lv2-gcc -print-file-name'='crtend.o)
 CRT_HEAD                += $(shell ppu-lv2-gcc -print-file-name'='ecrtn.o)
 
 PPU_SRCS = printf.c libc.c main.c cobra/cobra.c
-PPU_PRX_TARGET = webftp_server.elf
+PPU_PRX_TARGET = webftp_server.prx
 PPU_PRX_LDFLAGS += $(PRX_LDFLAGS_EXTRA)
 PPU_PRX_STRIP_FLAGS = -s
-PPU_PRX_LDLIBS 	= -lfs_stub -lnet_stub -lrtc_stub -lio_stub
+PPU_PRX_LDLIBS 	= -lfs_stub -lnet_stub -lrtc_stub -lio_stub -lgcm_sys_stub
+PPU_PRX_LDLIBS 	+= -lallocator_export_stub -lstdc_export_stub
+PPU_PRX_LDLIBS 	+= -lntfs_prx
 PPU_PRX_LDLIBS 	+= -lnetctl_stub -lsysmodule_stub -lhttp_util_stub -lhttp_stub 
-#-lgcm_sys_stub
 PPU_PRX_LDLIBS 	+= -lcrashdump_system_export_stub \
                    -lsysPrxForUser_export_stub \
                    -lvsh_export_stub \
                    -lpaf_export_stub \
                    -lvshmain_export_stub \
                    -lvshtask_export_stub \
-                   -lallocator_export_stub \
                    -lsdk_export_stub \
-                   -lstdc_export_stub \
                    -lpngdec_ppuonly_export_stub \
                    -lxsetting_export_stub \
                    -lvshnet_export_stub \
                    -lnetctl_main_export_stub
-
 PPU_PRX_LDLIBS 	+= -lmd5
 
 PPU_CFLAGS += -Os -ffunction-sections -fdata-sections -fno-builtin-printf -nodefaultlibs -std=gnu99 -Wno-shadow -Wno-unused-parameter

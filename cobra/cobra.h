@@ -482,7 +482,7 @@ int cobra_umount_disc_image(void);
  *
  * Additional info: if the cue file contained wav files paths for audio tracks, the function may succeed, but those tracks won't be parsed.
  */
-//int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, char *filename, unsigned int fn_size);
+int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, char *filename, unsigned int fn_size);
 
 
 /*

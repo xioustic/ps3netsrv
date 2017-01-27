@@ -69,6 +69,8 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Support for local web chat
 - Support for edit small text files
 - Download files & install PKG remotely or with shortcut
+- Support direct access to NTFS devices through web & ftp
+- Integrated prepNTFS
 
 ## How to build
 Requirements for Windows:
@@ -99,8 +101,9 @@ Requirements for GNU/Linux:
 - Mysis, who wrote some useful libs and reverse engineering VSH Exports functions: http://www.ps3devwiki.com/ps3/VSH#Exports
 - 3141card for VSH Menu POC & Littlebalup for his enhancement/new features
 - jjolano (John Olano) for OpenFTP server
+- Estwald for NTFS library, rawseciso, etc.)
+- The team that ported NTFS library from PSL1ght to PS3 SDK (freddy38510, bguerville, Zar, deank, Joonie)
 - PSX-SCENE, PSX-PLACE, PLAYSTATIONHAX, PS3HAX & other scene websites/users, who translated, helped in the testing process
-
 
 ##License
 ###WebMAN MOD

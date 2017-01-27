@@ -110,6 +110,7 @@ int save_file(const char *file, const char *mem, int64_t size);
 
 int file_copy(const char *file1, char *file2, uint64_t maxbytes);
 int waitfor(const char *path, uint8_t timeout);
+int val(const char *c);
 
 // storage.h inline functions merged
 static int sys_storage_ext_get_emu_state(sys_emu_state_t *state)
@@ -1181,7 +1182,7 @@ int cobra_cd_read(uint32_t handle, void *buf, uint32_t sector, uint32_t count, i
 
 	return (nerrors > 0) ? EIO : 0;
 }
-
+*/
 
 int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, char *filename, unsigned int fn_size)
 {
@@ -1201,7 +1202,7 @@ int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max
 	char *p;
 	char *bin_file;
 	int read_index;
-	int ntracks;
+	uint32_t ntracks;
 	uint32_t tracks_lba[max_tracks];
 	int ret = EABORT;
 
@@ -1287,7 +1288,7 @@ continue_loop:
 
 			skip_spaces();
 
-			if (my_atoi(p) != (ntracks+1))
+			if (val(p) != (int)(ntracks+1))
 				break;
 
 			skip_spaces();
@@ -1317,13 +1318,13 @@ continue_loop:
 				p += 5;
 				skip_spaces();
 
-				if (my_atoi(p) == 1)
+				if (val(p) == 1)
 				{
 					skip_spaces();
 
 					int minutes, seconds, frames;
 
-					minutes = my_atoi(p);
+					minutes = val(p);
 					if (minutes >= 256 || minutes < 0)
 					{
 						//DPRINTF("Bad minutes format.\n");
@@ -1334,7 +1335,7 @@ continue_loop:
 						//DPRINTF("Bad index formatting (1)\n");
 					}
 
-					seconds = my_atoi(p+1);
+					seconds = val(p+1);
 					if (seconds >= 256 || seconds < 0)
 					{
 						//DPRINTF("Bad seconds format\n");
@@ -1345,7 +1346,7 @@ continue_loop:
 						//DPRINTF("Bad index formatting(2)\n");
 					}
 
-					frames = my_atoi(p+1);
+					frames = val(p+1);
 					if (frames >= 256 || frames < 0)
 					{
 						//DPRINTF("Bad frames format\n");
@@ -1393,7 +1394,7 @@ exit_loop:
 		return ret;
 	}
 
-	for (int i = 0; i < ntracks; i++)
+	for (unsigned int i = 0; i < ntracks; i++)
 	{
 		if (i < max_tracks)
 		{
@@ -1412,7 +1413,7 @@ exit_loop:
 
 	return 0;
 }
-*/
+
 /*
 int cobra_create_cue(char *path, char *filename, TrackDef *tracks, unsigned int num_tracks)
 {

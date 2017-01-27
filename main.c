@@ -26,11 +26,11 @@
 #include <netex/sockinfo.h>
 
 #include <stdarg.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "flags.h"
 
@@ -60,31 +60,37 @@ static char search_url[50];
  #include "cobra/netiso.h"
 
  #ifdef LITE_EDITION
-	#define EDITION " [Lite]"
+	#define EDITION_ " [Lite]"
  #elif defined(PS3NET_SERVER) && defined(NET3NET4) && defined(XMB_SCREENSHOT)
-	#define EDITION " [Full]"
+	#define EDITION_ " [Full]"
  #else
   #ifdef PS3MAPI
 	#ifdef REX_ONLY
-		#define EDITION " [Rebug-PS3MAPI]"
+		#define EDITION_ " [Rebug-PS3MAPI]"
 	#else
-		#define EDITION " [PS3MAPI]"
+		#define EDITION_ " [PS3MAPI]"
 	#endif
   #else
    #ifdef REX_ONLY
-	#define EDITION " [Rebug]"
+	#define EDITION_ " [Rebug]"
    #else
-	#define EDITION ""
+	#define EDITION_ ""
    #endif
   #endif
  #endif
 #else
  #ifdef CCAPI
-	#define EDITION " [CCAPI]"
+	#define EDITION_ " [CCAPI]"
  #else
-	#define EDITION " [nonCobra]"
+	#define EDITION_ " [nonCobra]"
  #endif
  #undef PS3MAPI
+#endif
+
+#ifdef USE_NTFS
+#define EDITION			" (NTFS)" EDITION_			// webMAN version (NTFS)
+#else
+#define EDITION			EDITION_					// webMAN version
 #endif
 
 #ifdef LAST_FIRMWARE_ONLY
@@ -111,7 +117,7 @@ SYS_MODULE_STOP(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.45.10 MOD"						// webMAN version
+#define WM_VERSION				"1.45.11 MOD"
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -324,6 +330,7 @@ static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
 
 #define CODE_HTTP_OK         200
 #define CODE_BAD_REQUEST     400
+#define CODE_PATH_NOT_FOUND  404
 #define CODE_SERVER_BUSY     503
 #define CODE_VIRTUALPAD     1200
 #define CODE_INSTALL_PKG    1201
@@ -385,12 +392,6 @@ static volatile uint8_t wm_unload_combo = 0;
 static volatile uint8_t working = 1;
 static uint8_t max_mapped = 0;
 
-#ifdef COBRA_ONLY
- static const uint8_t cobra_mode = 1;
-#else
- static const uint8_t cobra_mode = 0;
-#endif
-
 static bool syscalls_removed = false;
 
 static float c_firmware = 0.0f;
@@ -451,8 +452,9 @@ typedef struct
 	uint8_t dev_sd;
 	uint8_t dev_ms;
 	uint8_t dev_cf;
+	uint8_t ntfs;
 
-	uint8_t padding1[6];
+	uint8_t padding1[5];
 
 	// scan content settings
 
@@ -632,7 +634,7 @@ static char html_base_path[MAX_PATH_LEN];
 
 static char smonth[12][4]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/net2", "/net3", "/net4", "/ext", "/dev_sd", "/dev_ms", "/dev_cf"};
+static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/net2", "/net3", "/net4", "/dev_ntfs", "/dev_sd", "/dev_ms", "/dev_cf"};
 static char paths [13][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI", "ROMS"};
 
 #ifdef COPY_PS3
@@ -677,6 +679,7 @@ static int isDir(const char* path);
 size_t read_file(const char *file, char *data, size_t size, int32_t offset);
 int save_file(const char *file, const char *mem, int64_t size);
 int waitfor(const char *path, uint8_t timeout);
+int val(const char *c);
 
 #include "include/html.h"
 #include "include/peek_poke.h"
@@ -687,6 +690,12 @@ int waitfor(const char *path, uint8_t timeout);
 #include "include/language.h"
 #include "include/fancontrol.h"
 #include "include/firmware.h"
+#include "include/ntfs.h"
+
+#ifdef USE_NTFS
+static ntfs_md *mounts = NULL;
+static int mountCount = -2;
+#endif
 
 int wwwd_start(uint64_t arg);
 int wwwd_stop(void);
@@ -747,6 +756,7 @@ static char current_file[MAX_PATH_LEN];
 
 #include "include/gamedata.h"
 #include "include/psxemu.h"
+#include "include/prepntfs.h"
 
 #include "include/debug_mem.h"
 #include "include/fix_game.h"
@@ -987,6 +997,7 @@ static void handleclient(u64 conn_s_p)
 	size_t header_len;
 	sys_addr_t sysmem = NULL;
 
+	bool is_ntfs = false;
 	char param[HTML_RECV_SIZE];
 	int fd;
 
@@ -1981,7 +1992,12 @@ parse_request:
 
 				if(param[10] == '/')
 				{
-					sprintf(param, "%s", param + 10); cellFsRmdir(param);
+					sprintf(param, "%s", param + 10);
+#ifdef USE_NTFS
+					if(islike(param, "/dev_ntfs")) {param[10] = ':'; ps3ntfs_unlink(param + 5);}
+					else
+#endif
+					cellFsRmdir(param);
 					char *p = strrchr(param, '/'); *p = NULL;
 				}
 				else
@@ -2059,6 +2075,16 @@ parse_request:
 						cellFsRename(target, source);
 						cellFsRename(header, target);
 					}
+#ifdef USE_NTFS
+					else if(islike(source, "/dev_ntfs") || islike(target, "/dev_ntfs"))
+					{
+						u8 ps = 0, pt = 0;
+						if(islike(source, "/dev_ntfs")) {ps = 5; source[10] = ':';}
+						if(islike(target, "/dev_ntfs")) {pt = 5; target[10] = ':';}
+
+						ps3ntfs_rename(source + ps, target + pt);
+					}
+#endif
 					else
 						cellFsRename(source, target);
 
@@ -2358,11 +2384,36 @@ parse_request:
 			else
 			{
 				struct CellFsStat buf; bool is_net = false;
-
+#ifdef USE_NTFS
+				is_ntfs = (islike(param, "/dev_ntfs"));
+#endif
 				if(islike(param, "/net") && (param[4] >= '0' && param[4] <= '4')) //net0/net1/net2/net3/net4
 				{
 					is_binary = FOLDER_LISTING, small_alloc = false, is_net = true;
 				}
+#ifdef USE_NTFS
+				else if(is_ntfs)
+				{
+					struct stat bufn;
+
+					if(mountCount == -2) mount_all_ntfs_volumes();
+
+					param[10] = ':';
+					if(param[11] != '/') {param[11] = '/', param[12] = 0;}
+
+					if(ps3ntfs_stat(param + 5, &bufn) < 0)
+					{
+						http_response(conn_s, header, param, CODE_PATH_NOT_FOUND, "404 Path not found");
+
+						goto exit_handleclient;
+					}
+
+					buf.st_size = bufn.st_size;
+					buf.st_mode = bufn.st_mode;
+
+					if(bufn.st_mode & S_IFDIR) is_binary = FOLDER_LISTING;
+				}
+#endif
 				else
 					is_binary = (*param == '/') && (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 
@@ -2391,13 +2442,13 @@ parse_request:
 					if(islike(param, "/favicon.ico")) {sprintf(param, "%s", wm_icons[iPS3]);} else
 					if(file_exists(param) == false && *html_base_path == '/') {strcpy(header, param); sprintf(param, "%s/%s", html_base_path, header);} // use html path (if path is omitted)
 
-					is_binary = (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
+					is_binary = is_ntfs || (cellFsStat(param, &buf) == CELL_FS_SUCCEEDED);
 				}
 
 				if(is_binary)
 				{
 					c_len = buf.st_size;
-					if((buf.st_mode & S_IFDIR) != 0) {is_binary = FOLDER_LISTING, small_alloc = false;} // folder listing
+					if(buf.st_mode & S_IFDIR) {is_binary = FOLDER_LISTING, small_alloc = false;} // folder listing
 				}
 				else
 				{
@@ -2455,15 +2506,31 @@ parse_request:
 					{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
 				char *buffer = (char*)sysmem;
-				if(cellFsOpen(param, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+				int fd = -1;
+#ifdef USE_NTFS
+				if(is_ntfs)
+				{
+					fd = ps3ntfs_open(param + 5, O_RDONLY, 0);
+					if(fd <= 0) is_ntfs = false;
+				}
+#endif
+				if(is_ntfs || cellFsOpen(param, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 				{
 					u64 read_e = 0, pos;
+
+#ifdef USE_NTFS
+					if(is_ntfs) ps3ntfs_seek64(fd, 0, SEEK_SET);
+					else
+#endif
 					cellFsLseek(fd, 0, CELL_FS_SEEK_SET, &pos);
 
 					while(working)
 					{
 						//sys_timer_usleep(500);
-						if(cellFsRead(fd, (void *)buffer, buffer_size, &read_e) == CELL_FS_SUCCEEDED)
+#ifdef USE_NTFS
+						if(is_ntfs) read_e = ps3ntfs_read(fd, (void *)buffer, BUFFER_SIZE_FTP);
+#endif
+						if(is_ntfs || cellFsRead(fd, (void *)buffer, buffer_size, &read_e) == CELL_FS_SUCCEEDED)
 						{
 							if(read_e > 0)
 							{
@@ -2475,6 +2542,10 @@ parse_request:
 						else
 							break;
 					}
+#ifdef USE_NTFS
+					if(is_ntfs) ps3ntfs_close(fd);
+					else
+#endif
 					cellFsClose(fd);
 				}
 
@@ -2792,6 +2863,21 @@ parse_request:
 					{
 						// /refresh.ps3               refresh XML
 						// /refresh.ps3?cover=<mode>  refresh XML using cover type (icon0, mm, disc, online)
+						// /refresh.ps3?ntfs          refresh NTFS volumes
+						// /refresh.ps3?prepntfs      refresh NTFS volumes & scan ntfs ISOs
+#ifdef USE_NTFS
+						if(islike(param + 12, "?ntfs") || islike(param + 12, "?prepntfs"))
+						{
+							mount_all_ntfs_volumes();
+
+							if(islike(param + 12, "?prepntfs")) prepNTFS(1);
+
+							sprintf(param, "NTFS VOLUMES: %i", mountCount); is_busy = false;
+
+							http_response(conn_s, header, param, CODE_HTTP_OK, param);
+							goto exit_handleclient;
+						}
+#endif
 
 						refresh_xml(templn);
  #ifndef ENGLISH_ONLY
@@ -3444,6 +3530,7 @@ relisten:
 				#endif
 
 				sys_ppu_thread_t t_id;
+
 				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 				else {sclose(&conn_s); break;}
 			}

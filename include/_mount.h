@@ -537,6 +537,9 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				// show copying file
 				// ------------------
 				filepath_check(target);
+#ifdef USE_NTFS
+				filepath_check(source);
+#endif
 
 				bool is_error = ((islike(target, drives[usb]) && isDir(drives[usb]) == false)) || islike(target, source) || !sys_admin;
 
@@ -751,7 +754,6 @@ static void do_umount(bool clean)
 	if(fan_ps2_mode) reset_fan_mode();
 
 #ifdef COBRA_ONLY
-	//if(cobra_mode)
 	{
 		{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
@@ -902,8 +904,12 @@ static void mount_autoboot(void)
 	char path[MAX_PATH_LEN];
 
 	// get autoboot path
-	if(webman_config->autob &&
-		((cobra_mode && islike(webman_config->autoboot_path, "/net")) || islike(webman_config->autoboot_path, "http") || file_exists(webman_config->autoboot_path))) // autoboot
+	if(webman_config->autob && (
+#ifdef COBRA_ONLY
+		islike(webman_config->autoboot_path, "/net") ||
+#endif
+		islike(webman_config->autoboot_path, "http") || file_exists(webman_config->autoboot_path)
+	)) // autoboot
 		strcpy(path, (char *) webman_config->autoboot_path);
 	else if(webman_config->lastp)
 	{
@@ -921,20 +927,28 @@ static void mount_autoboot(void)
 	if(from_reboot && *path && (strstr(path, "/PS2") != NULL)) return; //avoid re-launch PS2 returning to XMB
 
 	// wait few seconds until path becomes ready
-	if((strlen(path) > 8) || (cobra_mode && islike(path, "/net")))
+#ifdef COBRA_ONLY
+	if((strlen(path) > 8) || islike(path, "/net"))
+#else
+	if(strlen(path) > 8)
+#endif
 	{
 		waitfor(path, 2 * (webman_config->boots + webman_config->bootd));
-		do_mount = ((cobra_mode && islike(path, "/net")) || islike(path, "http") || file_exists(path));
+#ifdef COBRA_ONLY
+		do_mount = ( islike(path, "/net") || islike(path, "http") || file_exists(path) );
+#else
+		do_mount = ( islike(path, "http") || file_exists(path) );
+#endif
 	}
 
 	if(do_mount)
 	{   // add some delay
-		if(webman_config->delay)      {sys_timer_sleep(10); waitfor(path, 2*(webman_config->boots+webman_config->bootd));}
+		if(webman_config->delay)      {sys_timer_sleep(10); waitfor(path, 2 * (webman_config->boots + webman_config->bootd));}
 		else if(islike(path, "/net"))  sys_timer_sleep(10);
 #ifndef COBRA_ONLY
 		if(strstr(path, ".ntfs[") == NULL)
 #endif
-		mount_with_mm(path, 1); // mount path
+		mount_with_mm(path, 1); // mount path & do eject
 	}
 }
 
@@ -1813,8 +1827,6 @@ install_mm_payload:
 
 	pokeq(0x8000000000000000ULL+MAP_ADDR, 0x0000000000000000ULL);
 	pokeq(0x8000000000000008ULL+MAP_ADDR, 0x0000000000000000ULL);
-
-	if(cobra_mode) goto exit_mount;
 
 	if(base_addr == 0 || SYSCALL_TABLE == 0) {ret = false; goto exit_mount;}
 

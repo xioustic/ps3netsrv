@@ -19,6 +19,9 @@
 #define HTML_FORM_METHOD_FMT	"%s"
 #define HTML_FORM_METHOD		".ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 
+#define HTML_ENTRY_DATE			" &nbsp; </td>" \
+								"<td>11-Nov-2006 11:11"
+
 #define _BR_					NULL
 
 #define HTML_RESPONSE_FMT		"HTTP/1.1 %i OK\r\n" \
@@ -405,7 +408,7 @@ static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 	return slen + strlen(header);
 }
 
-static int val(const char *c)
+int val(const char *c)
 {
 	int previous_result = 0, result = 0;
 	int multiplier = 1;

@@ -224,7 +224,7 @@ extern float stdc_705D9E24(float);                                              
 // stdc_71293B71  // _FLog()
 
 extern int stdc_717B2502(const char *restrict path, struct stat *restrict buf);       // stat()
-#define stat stdc_717B2502
+//#define stat stdc_717B2502
 
 extern char *stdc_73EAE03D(const char *s, int c);                                     // strrchr()
 #define strrchr stdc_73EAE03D

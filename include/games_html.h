@@ -799,8 +799,13 @@ static int check_drive(u8 f0)
 	if(!webman_config->dev_ms && (f0 == 14)) return FAILED;
 	if(!webman_config->dev_cf && (f0 == 15)) return FAILED;
 
-	if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-					  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) return FAILED;
+#ifdef COBRA_ONLY
+	//if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+	//				  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) return FAILED;
+	if(IS_NTFS && !webman_config->ntfs) return FAILED; // is_ntfs (nonCobra)
+#else
+	if(IS_NTFS) return FAILED; // is_ntfs (nonCobra)
+#endif
 
 	// is_net
 #ifdef COBRA_ONLY
@@ -1071,13 +1076,13 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
 #endif
 				if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
-				if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
+				if(IS_NTFS)  {if(f1 > 8) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 				if(is_net)
 				{
-					if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video", 11="GAMEI"
+					if(f1 > 8) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 				}
  #endif
 #endif
@@ -1364,7 +1369,7 @@ next_html_entry:
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-			if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+			if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns = -2;}
  #endif
 #endif
 		}

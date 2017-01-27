@@ -466,7 +466,14 @@ static bool update_mygames_xml(u64 conn_s_p)
 			{
 				waitfor(drives[f0], webman_config->boots);
 			}
+#ifdef USE_NTFS
+			if(IS_NTFS && webman_config->ntfs) prepNTFS(1);
+#endif
 		}
+#ifdef USE_NTFS
+		else
+			if(IS_NTFS && webman_config->ntfs) prepNTFS(0);
+#endif
 
 		is_net = IS_NET;
 
@@ -490,13 +497,13 @@ static bool update_mygames_xml(u64 conn_s_p)
 			if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS)) continue;}
 #endif
 			if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
-			if(IS_NTFS)  {if(f1 > 8 || !cobra_mode) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
+			if(IS_NTFS)  {if(f1 > 8) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
 			if(is_net)
 			{
-				if(f1 > 8 || !cobra_mode) break; // ignore 9="ISO", 10="video", 11="GAMEI"
+				if(f1 > 8) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 			}
  #endif
 #endif
