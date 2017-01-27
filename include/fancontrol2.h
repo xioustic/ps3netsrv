@@ -246,6 +246,35 @@ static void poll_thread(uint64_t poll)
 		if((sec & 1) && (gTick.tick == rTick.tick)) poll_downloaded_pkg_files(msg);
 #endif
 
+		// Auto-mount JB game found on root of USB device
+		if((webman_config->autob) && (sec & 1) && (gTick.tick == rTick.tick))
+		{
+			if(!isDir("/dev_bdvd"))
+			{
+				for(u8 f0 = 1; f0 < 16; f0++)
+				{
+					if(IS_NET || IS_NTFS) continue;
+
+					if(check_drive(f0))
+					{
+						if(automount != f0)
+						{
+							sprintf(msg, "%s/PS3_GAME/PARAM.SFO", drives[f0]);
+							if(isDir(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
+#ifdef COBRA_ONLY
+							else
+							{
+								sprintf(msg, "%s/AUTOMOUNT.ISO", drives[f0]);
+								if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
+							}
+#endif
+						}
+						else if(!isDir(drives[f0])) automount = 0;
+					}
+				}
+			}
+		}
+
 #ifdef DO_WM_REQUEST_POLLING
 		// Poll requests via local file
 		if((webman_config->combo2 & CUSTOMCMB) || ((sec & 1) && (gTick.tick > rTick.tick))) continue; // slowdown polling if ingame

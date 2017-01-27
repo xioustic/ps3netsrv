@@ -956,6 +956,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 {
 	if(is_mounting) return false;
 
+	automount = 0;
+
 	// --------------------------------------------
 	// show message if syscalls are fully disabled
 	// --------------------------------------------

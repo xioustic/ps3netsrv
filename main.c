@@ -624,6 +624,7 @@ static uint16_t cobra_version = 0;
 
 static bool is_mounting = false;
 static bool copy_aborted = false;
+static u8 automount = 0;
 
 #ifndef EMBED_JS
 static bool css_exists = false;
@@ -695,6 +696,8 @@ int val(const char *c);
 #ifdef USE_NTFS
 static ntfs_md *mounts = NULL;
 static int mountCount = -2;
+
+static void prepNTFS(u8 towait);
 #endif
 
 int wwwd_start(uint64_t arg);
@@ -756,7 +759,6 @@ static char current_file[MAX_PATH_LEN];
 
 #include "include/gamedata.h"
 #include "include/psxemu.h"
-#include "include/prepntfs.h"
 
 #include "include/debug_mem.h"
 #include "include/fix_game.h"
@@ -767,6 +769,7 @@ static char current_file[MAX_PATH_LEN];
 
 #include "include/games_html.h"
 #include "include/games_xml.h"
+#include "include/prepntfs.h"
 
 #include "include/cpursx.h"
 #include "include/setup.h"

@@ -800,9 +800,8 @@ static int check_drive(u8 f0)
 	if(!webman_config->dev_cf && (f0 == 15)) return FAILED;
 
 #ifdef COBRA_ONLY
-	//if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
-	//				  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) return FAILED;
-	if(IS_NTFS && !webman_config->ntfs) return FAILED; // is_ntfs (nonCobra)
+	if( (IS_NTFS) && (!webman_config->usb0 && !webman_config->usb1 && !webman_config->usb2 &&
+					  !webman_config->usb3 && !webman_config->usb6 && !webman_config->usb7)) return FAILED;
 #else
 	if(IS_NTFS) return FAILED; // is_ntfs (nonCobra)
 #endif

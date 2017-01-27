@@ -15,9 +15,10 @@ static void prepNTFS(u8 towait)
 	rawseciso_args *p_args;
 
 	CellFsDirent dir;
-	DIR_ITER *pdir = NULL;
+	DIR_ITER *pdir = NULL, *psubdir= NULL;
 	struct stat st;
 	char c_path[4][8] = {"PS3ISO", "BDISO", "DVDISO", "PSXISO"};
+	bool has_dirs, is_iso = false;
 
 	snprintf(path, sizeof(path), WMTMP);
 	cellFsMkdir(path, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
@@ -25,11 +26,15 @@ static void prepNTFS(u8 towait)
 	cellFsUnlink((char*)WMTMP "/games.html");
 	int fd = -1;
 	u64 read = 0;
-	char path0[MAX_PATH_LEN];
+	char path0[256], subpath[256], filename[256];
 	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
 	{
+		char *ext;
 		while(!cellFsReaddir(fd, &dir, &read) && read)
-			if(strstr(dir.d_name, ".ntfs[")) {sprintf(path0, "%s/%s", path, dir.d_name); cellFsUnlink(path0);}
+		{
+			ext = strstr(dir.d_name, ".ntfs[");
+			if(ext && !IS(ext, ".ntfs[BDFILE]")) {sprintf(path0, "%s/%s", path, dir.d_name); cellFsUnlink(path0);}
+		}
 		cellFsClosedir(fd);
 	}
 
@@ -47,22 +52,60 @@ static void prepNTFS(u8 towait)
 	uint32_t* sectionsP = (uint32_t *)malloc(_32KB_); if(!sectionsP) {free(plugin_args); return;}
 	uint32_t* sections_sizeP = (uint32_t *)malloc(_32KB_); if(!sections_sizeP) {free(sectionsP); free(plugin_args); return;}
 
-	for (i = 0; i < mountCount; i++)
+	for (u8 profile = 0; profile < 5; profile++)
 	{
+		for (i = 0; i < mountCount; i++)
 		{
 			for(u8 m = 0; m < 4; m++)
 			{
+				has_dirs = false;
+
 				snprintf(path, sizeof(path), "%s:/%s", mounts[i].name, c_path[m]);
 				pdir = ps3ntfs_diropen(path);
 				if(pdir!=NULL)
 				{
 					while(ps3ntfs_dirnext(pdir, dir.d_name, &st) == 0)
 					{
-						if( !extcasecmp(dir.d_name, ".iso", 4) ||
-							!extcasecmp(dir.d_name, ".iso.0", 6) ||
-							(m==3 && !extcasecmp(dir.d_name, ".bin", 4)))
+						is_iso = (  !extcasecmp(dir.d_name, ".iso", 4) ||
+									!extcasecmp(dir.d_name, ".iso.0", 6) ||
+									!extcasecmp(dir.d_name, ".img", 4) ||
+									!extcasecmp(dir.d_name, ".mdf", 4) ||
+									(m > 0 && !extcasecmp(dir.d_name, ".bin", 4)) );
+
+////////////////////////////////////////////////////////
+						//--- is SUBFOLDER?
+						if(!is_iso)
 						{
-							snprintf(path, sizeof(path), "%s:/%s/%s", mounts[i].name, c_path[m], dir.d_name);
+							sprintf(subpath, "%s:/%s%s/%s", mounts[i].name, c_path[m], SUFIX(profile), dir.d_name);
+							psubdir = ps3ntfs_diropen(subpath);
+							if(psubdir==NULL) continue;
+							sprintf(subpath, "%s", dir.d_name); has_dirs = true;
+next_ntfs_entry:
+							if(ps3ntfs_dirnext(psubdir, dir.d_name, &st) < 0) {has_dirs = false; continue;}
+							if(dir.d_name[0]=='.') goto next_ntfs_entry;
+
+							sprintf(path, "%s", dir.d_name);
+
+							is_iso = (  !extcasecmp(path, ".iso", 4) ||
+										!extcasecmp(path, ".iso.0", 6) ||
+										(m > 0 && !extcasecmp(path, ".bin", 4)) ||
+										!extcasecmp(path, ".img", 4) ||
+										!extcasecmp(path, ".mdf", 4) );
+
+							if(is_iso)
+							{
+								sprintf(dir.d_name, "%s/%s", subpath, path);
+								sprintf(filename, "[%s] %s", subpath, path);
+							}
+						}
+						else
+							sprintf(filename, "%s", dir.d_name);
+
+////////////////////////////////////////////////////////
+
+						if(is_iso)
+						{
+							snprintf(path, sizeof(path), "%s:/%s%s/%s", mounts[i].name, c_path[m], SUFIX(profile), dir.d_name);
 							parts = ps3ntfs_file_to_sectors(path, sectionsP, sections_sizeP, MAX_SECTIONS, 1);
 
 							// get multi-part file sectors
@@ -167,7 +210,7 @@ static void prepNTFS(u8 towait)
 									}
 								}
 
-								snprintf(path, sizeof(path), WMTMP "/%s.ntfs[%s]", dir.d_name, c_path[m]);
+								snprintf(path, sizeof(path), WMTMP "/%s%s.ntfs[%s]", filename, SUFIX2(profile), c_path[m]);
 								if(cellFsOpen(path, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 								{
 									cellFsWrite(fd, plugin_args, _64KB_, NULL);
@@ -176,6 +219,9 @@ static void prepNTFS(u8 towait)
 								}
 							}
 						}
+//////////////////////////////////////////////////////////////
+						if(has_dirs) goto next_ntfs_entry;
+//////////////////////////////////////////////////////////////
 					}
 					ps3ntfs_dirclose(pdir);
 				}
