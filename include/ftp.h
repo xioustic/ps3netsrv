@@ -349,7 +349,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							absPath(param, filename, cwd); char *msg = filename;
 
-							if(installPKG(param, msg) == 0)
+							if(installPKG(param, msg) == CELL_OK)
 								ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 							else
 								ssend(conn_s_ftp, FTP_ERROR_451); // Requested action aborted. Local error in processing.
@@ -691,8 +691,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 								if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 								{
-									char *buffer2 = (char*)sysmem;
-
 									u64 read_e = 0, pos; //, write_e
 
 									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
@@ -703,6 +701,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 									err = CELL_FS_OK;
+
+									char *buffer2 = (char*)sysmem;
 
 									while(working)
 									{
@@ -840,7 +840,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								//if(buffer_size >= _64KB_)
 								if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 								{
-									char *buffer2= (char*)sysmem;
 									u64 read_e = 0, pos = 0;
 
 									if(rest || is_append)
@@ -855,6 +854,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									//int optval = buffer_size;
 									//setsockopt(data_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
+
+									char *buffer2 = (char*)sysmem;
 
 									while(working)
 									{
@@ -1109,7 +1110,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	char buffer[FTP_RECV_SIZE];
 	char tempcwd[MAX_PATH_LEN];
-	char cmd[16], param[384], filename[384], source[384];
+	char cmd[16], param[384], filename[384], *source = cp_path;
 	struct CellFsStat buf;
 
 	struct stat bufn;
@@ -1384,7 +1385,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							absPath(param, filename, cwd); char *msg = filename;
 
-							if(installPKG(param, msg) == 0)
+							if(installPKG(param, msg) == CELL_OK)
 								ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 							else
 								ssend(conn_s_ftp, FTP_ERROR_451); // Requested action aborted. Local error in processing.
@@ -1542,7 +1543,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					{
 						bool is_MLSD = _IS(cmd, "MLSD");
 
-						int nolist = (is_MLSD || strcasecmp(cmd, "MLST") == 0);
+						int nolist = (is_MLSD || _IS(cmd, "MLST"));
 
 						strcpy(tempcwd, cwd);
 
@@ -1566,7 +1567,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(pdir)
 							{
 								ssend(conn_s_ftp, FTP_OK_150);
-								while (ps3ntfs_dirnext(pdir, filename, &bufn) == 0)
+								while (ps3ntfs_dirnext(pdir, filename, &bufn) == CELL_OK)
 								{
 									if((filename[0]=='$' && tempcwd[12] == 0) || (*wcard && strcasestr(filename, wcard) == NULL)) continue;
 
@@ -1574,21 +1575,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									if(nolist)
 									{
-										if(strcmp(filename, ".") == 0)
-										{
-											dirtype[0] = 'c';
-										}
+										if(IS(filename, "."))	dirtype[0] = 'c';
 										else
-										if(strcmp(filename, "..") == 0)
-										{
-											dirtype[0] = 'p';
-										}
-										else
-										{
-											dirtype[0] = '\0';
-										}
-
-										dirtype[1] = '\0';
+										if(IS(filename, ".."))	dirtype[0] = 'p';
+										else					dirtype[0] = '\0';
 
 										slen = sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
 												is_MLSD ? "" : " ",
@@ -1602,16 +1592,16 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									}
 									else
 										slen = sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s   1 root  root        %llu %s %02i %02i:%02i %s\r\n",
-												((mode & S_IFDIR) != 0) ? "d" : "-",
-												((mode & S_IRUSR) != 0) ? "r" : "-",
-												((mode & S_IWUSR) != 0) ? "w" : "-",
-												((mode & S_IXUSR) != 0) ? "x" : "-",
-												((mode & S_IRGRP) != 0) ? "r" : "-",
-												((mode & S_IWGRP) != 0) ? "w" : "-",
-												((mode & S_IXGRP) != 0) ? "x" : "-",
-												((mode & S_IROTH) != 0) ? "r" : "-",
-												((mode & S_IWOTH) != 0) ? "w" : "-",
-												((mode & S_IXOTH) != 0) ? "x" : "-",
+												(mode & S_IFDIR) ? "d" : "-",
+												(mode & S_IRUSR) ? "r" : "-",
+												(mode & S_IWUSR) ? "w" : "-",
+												(mode & S_IXUSR) ? "x" : "-",
+												(mode & S_IRGRP) ? "r" : "-",
+												(mode & S_IWGRP) ? "w" : "-",
+												(mode & S_IXGRP) ? "x" : "-",
+												(mode & S_IROTH) ? "r" : "-",
+												(mode & S_IWOTH) ? "w" : "-",
+												(mode & S_IXOTH) ? "x" : "-",
 												(unsigned long long)bufn.st_size, smonth[rDate.month-1], rDate.day,
 												rDate.hour, rDate.minute, filename);
 
@@ -1620,10 +1610,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								}
 								ps3ntfs_dirclose(pdir);
 
+								char *cpursx = filename;
+								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
+
 								ps3ntfs_statvfs(tempcwd + 5, &vbuf);
 								tempcwd[10] = 0;
-								sprintf(filename, "226 [%s] [ %lu MB / %lu GB free]\r\n", tempcwd, (long unsigned int)((vbuf.f_bfree * (vbuf.f_bsize>>10))>>10),(long unsigned int)((vbuf.f_bfree * (vbuf.f_bsize>>10))>>20));
-								ssend(conn_s_ftp, filename);
+								sprintf(buffer, "226 [%s] [ %lu %s %s]\r\n", tempcwd, (long unsigned int)((vbuf.f_bfree * (vbuf.f_bsize>>10))>>10), STR_MBFREE, cpursx);
+								ssend(conn_s_ftp, buffer);
 							}
 							else
 							{
@@ -1641,7 +1634,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							bool is_root = IS(tempcwd, "/");
 
-							while(cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
+							while(cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED && read_e > 0)
 							{
 								if((*wcard && strcasestr(entry.d_name, wcard) == NULL)) continue;
 
@@ -1664,12 +1657,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									if(nolist)
 									{
-										if(strcmp(entry.d_name, ".") == 0)	dirtype[0] = 'c';
+										if(IS(entry.d_name, "."))	dirtype[0] = 'c';
 										else
-										if(strcmp(entry.d_name, "..") == 0)	dirtype[0] = 'p';
-										else								dirtype[0] = '\0';
-
-										dirtype[1] = '\0';
+										if(IS(entry.d_name, ".."))	dirtype[0] = 'p';
+										else						dirtype[0] = '\0';
 
 										slen = sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
 												is_MLSD ? "" : " ",
@@ -1683,16 +1674,16 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									}
 									else
 										slen = sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s   1 root  root        %llu %s %02i %02i:%02i %s\r\n",
-												((mode & S_IFDIR) != 0) ? "d" : "-",
-												((mode & S_IRUSR) != 0) ? "r" : "-",
-												((mode & S_IWUSR) != 0) ? "w" : "-",
-												((mode & S_IXUSR) != 0) ? "x" : "-",
-												((mode & S_IRGRP) != 0) ? "r" : "-",
-												((mode & S_IWGRP) != 0) ? "w" : "-",
-												((mode & S_IXGRP) != 0) ? "x" : "-",
-												((mode & S_IROTH) != 0) ? "r" : "-",
-												((mode & S_IWOTH) != 0) ? "w" : "-",
-												((mode & S_IXOTH) != 0) ? "x" : "-",
+												(mode & S_IFDIR) ? "d" : "-",
+												(mode & S_IRUSR) ? "r" : "-",
+												(mode & S_IWUSR) ? "w" : "-",
+												(mode & S_IXUSR) ? "x" : "-",
+												(mode & S_IRGRP) ? "r" : "-",
+												(mode & S_IWGRP) ? "w" : "-",
+												(mode & S_IXGRP) ? "x" : "-",
+												(mode & S_IROTH) ? "r" : "-",
+												(mode & S_IWOTH) ? "w" : "-",
+												(mode & S_IXOTH) ? "x" : "-",
 												(unsigned long long)buf.st_size, smonth[rDate.month-1], rDate.day,
 												rDate.hour, rDate.minute, entry.d_name);
 
@@ -1706,13 +1697,15 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							{
 								uint32_t blockSize;
 								uint64_t freeSize;
-								char tempstr[128];
-								if(strchr(tempcwd + 1, '/'))
-									tempcwd[strchr(tempcwd + 1, '/') - tempcwd] = 0;
 
+								char *cpursx = filename, *slash = strchr(tempcwd + 1, '/');
+								get_cpursx(cpursx); cpursx[7] = cpursx[20] = ' ';
+
+								if(slash) tempcwd[slash - tempcwd] = 0;
 								cellFsGetFreeSize(tempcwd, &blockSize, &freeSize);
-								sprintf(tempstr, "226 [%s] [ %i MB free ]\r\n", tempcwd, (int)((blockSize*freeSize)>>20));
-								ssend(conn_s_ftp, tempstr);
+
+								sprintf(buffer, "226 [%s] [ %i %s %s]\r\n", tempcwd, (int)((blockSize*freeSize)>>20), STR_MBFREE, cpursx);
+								ssend(conn_s_ftp, buffer);
 							}
 							else
 							{
@@ -1780,9 +1773,10 @@ pasv_again:
 							int rr = -4;
 							sys_addr_t sysmem = 0;
 
-							if(sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
+							if(sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 							{
 								char *buffer2 = (char*)sysmem;
+
 								if(islike(filename, "/dev_ntfs"))
 								{
 									filepath_check(filename);
@@ -1879,7 +1873,7 @@ pasv_again:
 							if(ps3ntfs_unlink(filename + 5) >= 0) is_ntfs = true;
 						}
 
-						if(is_ntfs || cellFsUnlink(filename) == 0)
+						if(is_ntfs || cellFsUnlink(filename) == CELL_FS_SUCCEEDED)
 						{
 							ssend(conn_s_ftp, FTP_OK_250);
 						}
@@ -1904,10 +1898,10 @@ pasv_again:
 						if(islike(filename, "/dev_ntfs"))
 						{
 							filename[10] = ':';
-							if(ps3ntfs_mkdir(filename + 5, MODE) >= 0) is_ntfs = true;
+							if(ps3ntfs_mkdir(filename + 5, MODE) >= CELL_OK) is_ntfs = true;
 						}
 
-						if(is_ntfs || cellFsMkdir(filename, MODE) == 0)
+						if(is_ntfs || cellFsMkdir(filename, MODE) == CELL_FS_SUCCEEDED)
 						{
 							sprintf(buffer, "257 \"%s\" OK\r\n", param);
 							ssend(conn_s_ftp, buffer);
@@ -1932,10 +1926,10 @@ pasv_again:
 						if(islike(filename, "/dev_ntfs"))
 						{
 							filename[10] = ':';
-							if(ps3ntfs_unlink(filename + 5) >= 0) is_ntfs = true;
+							if(ps3ntfs_unlink(filename + 5) >= CELL_OK) is_ntfs = true;
 						}
 
-						if(is_ntfs || cellFsRmdir(filename) == 0)
+						if(is_ntfs || cellFsRmdir(filename) == CELL_FS_SUCCEEDED)
 						{
 							ssend(conn_s_ftp, FTP_OK_250);
 						}
@@ -1959,14 +1953,14 @@ pasv_again:
 							absPath(filename, param, cwd);
 
 							int rr = -4, is_append = _IS(cmd, "APPE");;
-							u64 pos = 0;
 							ssize_t read_e = 0;
 
 							sys_addr_t sysmem = 0;
 
-							if(sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == 0)
+							if(sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 							{
 								char *buffer2 = (char*)sysmem;
+
 								if(islike(filename, "/dev_ntfs"))
 								{
 									filepath_check(filename);
@@ -1978,9 +1972,6 @@ pasv_again:
 
 									if(fd > 0)
 									{
-
-										char *buffer2= (char*)sysmem;
-
 										ps3ntfs_seek64(fd, rest, SEEK_SET);
 
 										rest = 0;
@@ -2010,6 +2001,8 @@ pasv_again:
 								else
 								if(cellFsOpen(filename, CELL_FS_O_CREAT | CELL_FS_O_WRONLY | (is_append ? CELL_FS_O_APPEND : 0), &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 								{
+									u64 pos = 0;
+
 									if(rest | is_append)
 										cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 									else

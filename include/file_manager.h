@@ -408,6 +408,10 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 
 		urlenc(url, param); if(islike(param, "/net")) htmlenc(label, templn, 0); else strcpy(label, templn);
 
+#ifdef USE_NTFS
+		if(islike(param, "/dev_ntfs")) sprintf(swap, HTML_URL, WMTMP, label);
+		else
+#endif
 		sprintf(swap, HTML_URL2,
 						strstr(pbuffer, "To: ") ? "" :
 						islike(param + 23, "/trophy/NPWR") ? "/delete.ps3" :
@@ -515,7 +519,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #endif
 
 		// breadcrumb trail //
-		add_breadcrumb_trail(buffer, param);
+		add_breadcrumb_trail(buffer, param); if(param[10] != ':') strcat(buffer, ":");
 
 		if((param[7] == 'v' || param[1] == 'a') && IS_ON_XMB && (isDir("/dev_bdvd/PS3_GAME") || file_exists("/dev_bdvd/SYSTEM.CNF") || isDir("/dev_bdvd/BDMV") || isDir("/dev_bdvd/VIDEO_TS") || isDir("/dev_bdvd/AVCHD")))
 			strcat(buffer, " <a href=\"/play.ps3\">&lt;Play>&nbsp;</a><br>");
@@ -869,7 +873,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			if(slash) *slash = NULL;
 
 			sprintf(templn, "<hr>"
-							"<b>" HTML_URL ":", param, param);
+							"<b>" HTML_URL "%c", param, param, (param[10] == ':') ? 0 : ':');
 
 			buffer += concat(buffer, templn);
 

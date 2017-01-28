@@ -441,7 +441,7 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 	}
 	else
 	{
-		if(syscalls_removed && (ret_val == 0)) ret_val = 1;
+		if(syscalls_removed && (ret_val == 0)) ret_val = 1; if(!c_firmware) ret_val = 4;
 
 		add_radio_button("mode", "0", "sc8_0", "Fully enabled", _BR_, (ret_val == 0), buffer);
 		add_radio_button("mode", "1", "sc8_1", "Partially disabled : Keep only COBRA/MAMBA/PS3MAPI features", _BR_, (ret_val == 1), buffer);

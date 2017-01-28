@@ -11,6 +11,30 @@ static uint64_t sc_142 = 0;
 #define IS_DEH (dex_mode == 1)
 #define IS_DEX (dex_mode == 2)
 
+
+struct platform_info {
+	uint32_t firmware_version;
+} info;
+
+static int lv2_get_platform_info(struct platform_info *info)
+{
+	system_call_1(387, (uint32_t) info);
+	return (int32_t)p1;
+}
+
+static float get_firmware_version(void)
+{
+	lv2_get_platform_info(&info);
+	char FW[8]; sprintf(FW, "%02X", info.firmware_version);
+	return (float)(FW[0] - '0') + (float)(val(FW + 2))*0.00001f;
+}
+
+static int get_kernel_type(void)
+{
+	uint64_t type;
+	system_call_1(985, (uint32_t)&type); return (int)(type - 1);
+}
+
 static void detect_firmware(void)
 {
 	if((c_firmware > 3.40f) || SYSCALL_TABLE || syscalls_removed) return;
@@ -88,6 +112,46 @@ static void detect_firmware(void)
 #endif // #ifndef LAST_FIRMWARE_ONLY
 
 		if(SYSCALL_TABLE) break;
+	}
+
+	// alternative detection method
+	if(!SYSCALL_TABLE)
+	{
+		c_firmware = get_firmware_version(); dex_mode = get_kernel_type();
+
+		if(IS_CEX)
+		{
+			if(c_firmware >= 4.75f) SYSCALL_TABLE = SYSCALL_TABLE_480;
+#ifndef LAST_FIRMWARE_ONLY
+			if(c_firmware == 4.70f) SYSCALL_TABLE = SYSCALL_TABLE_470;
+			if(c_firmware >= 4.60f && c_firmware <= 4.66f) SYSCALL_TABLE = SYSCALL_TABLE_460;
+			if(c_firmware == 4.55f) SYSCALL_TABLE = SYSCALL_TABLE_455;
+			if(c_firmware == 4.53f) SYSCALL_TABLE = SYSCALL_TABLE_453;
+			if(c_firmware == 4.50f) SYSCALL_TABLE = SYSCALL_TABLE_450;
+			if(c_firmware == 4.46f) SYSCALL_TABLE = SYSCALL_TABLE_446;
+			if(c_firmware >= 4.40f && c_firmware <= 4.41f) SYSCALL_TABLE = SYSCALL_TABLE_440;
+			if(c_firmware >= 4.30f && c_firmware <= 4.31f) SYSCALL_TABLE = SYSCALL_TABLE_430;
+			if(c_firmware == 4.21f) SYSCALL_TABLE = SYSCALL_TABLE_421;
+			if(c_firmware == 3.55f) SYSCALL_TABLE = SYSCALL_TABLE_355;
+#endif
+		}
+		if(IS_DEX)
+		{
+			if(c_firmware >= 4.80f) SYSCALL_TABLE = SYSCALL_TABLE_480D;
+#ifndef LAST_FIRMWARE_ONLY
+			if(c_firmware == 4.75f) SYSCALL_TABLE = SYSCALL_TABLE_475D;
+			if(c_firmware == 4.70f) SYSCALL_TABLE = SYSCALL_TABLE_470D;
+			if(c_firmware >= 4.60f && c_firmware <= 4.66f) SYSCALL_TABLE = SYSCALL_TABLE_460D;
+			if(c_firmware == 4.55f) SYSCALL_TABLE = SYSCALL_TABLE_455D;
+			if(c_firmware == 4.53f) SYSCALL_TABLE = SYSCALL_TABLE_453D;
+			if(c_firmware == 4.50f) SYSCALL_TABLE = SYSCALL_TABLE_450D;
+			if(c_firmware == 4.46f) SYSCALL_TABLE = SYSCALL_TABLE_446D;
+			if(c_firmware >= 4.40f && c_firmware <= 4.41f) SYSCALL_TABLE = SYSCALL_TABLE_440D;
+			if(c_firmware >= 4.30f && c_firmware <= 4.31f) SYSCALL_TABLE = SYSCALL_TABLE_430D;
+			if(c_firmware == 4.21f) SYSCALL_TABLE = SYSCALL_TABLE_421D;
+			if(c_firmware == 3.55f) SYSCALL_TABLE = SYSCALL_TABLE_355D;
+#endif
+		}
 	}
 
 	if(!SYSCALL_TABLE) {c_firmware = 0.00f; return;}
@@ -800,4 +864,10 @@ static void patch_lv2(void)
 		}
 	}
 #endif
+}
+
+static uint32_t GetApplicableVersion(void * data)
+{
+	system_call_8(863, 0x6011, 1, data, 0, 0, 0, 0, 0);
+	return_to_user_prog(uint32_t);
 }

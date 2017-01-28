@@ -766,6 +766,7 @@ static char current_file[MAX_PATH_LEN];
 #include "include/ps3mapi.h"
 #include "include/stealth.h"
 #include "include/video_rec.h"
+#include "include/secure_file_id.h"
 
 #include "include/games_html.h"
 #include "include/games_xml.h"
@@ -2159,7 +2160,30 @@ parse_request:
 				sys_ppu_thread_exit(0);
 				break;
 			}
+			if(islike(param, "/minver.ps3"))
+			{
+				uint8_t data[0x20];
+				memset(data, 0, 0x20);
 
+				int ret = GetApplicableVersion(data);
+				if(ret)
+					sprintf(param, "Applicable Version failed: %x\n", ret);
+				else
+					sprintf(param, "Minimum Downgrade: %x.%02x", data[1], data[3]);
+
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
+				goto exit_handleclient;
+			}
+#ifdef SECURE_FILE_ID
+			if(islike(param, "/secureid.ps3"))
+			{
+				hook_savedata_plugin();
+				sprintf(param, "Save data plugin: %s", securfileid_hooked ? STR_ENABLED : STR_DISABLED);
+
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
+				goto exit_handleclient;
+			}
+#endif
 			if(islike(param, "/shutdown.ps3"))
 			{
 				// /shutdown.ps3        Shutsdown
