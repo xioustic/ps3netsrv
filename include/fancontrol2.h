@@ -247,7 +247,7 @@ static void poll_thread(uint64_t poll)
 #endif
 
 		// Auto-mount JB game found on root of USB device
-		if((webman_config->autob) && (sec & 1) && (gTick.tick == rTick.tick))
+		if((webman_config->autob) && (sec & 1) && (gTick.tick == rTick.tick) && (!is_mounting))
 		{
 			if(!isDir("/dev_bdvd"))
 			{
@@ -255,19 +255,19 @@ static void poll_thread(uint64_t poll)
 				{
 					if(IS_NET || IS_NTFS) continue;
 
-					if(check_drive(f0))
+					if(!check_drive(f0))
 					{
 						if(automount != f0)
 						{
-							sprintf(msg, "%s/PS3_GAME/PARAM.SFO", drives[f0]);
-							if(isDir(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
 #ifdef COBRA_ONLY
+							sprintf(msg, "%s/AUTOMOUNT.ISO", drives[f0]);
+							if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
 							else
+#endif
 							{
-								sprintf(msg, "%s/AUTOMOUNT.ISO", drives[f0]);
+								sprintf(msg, "%s/PS3_GAME/PARAM.SFO", drives[f0]);
 								if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
 							}
-#endif
 						}
 						else if(!isDir(drives[f0])) automount = 0;
 					}
