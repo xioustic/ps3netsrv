@@ -132,7 +132,7 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 		if(!IS(seg_name, "seg_device") || isDir("/dev_bdvd"))
 		{
-			u8 retry = 0, timeout = 4, icon_found = 0;
+			u8 wait, retry = 0, timeout = 4, icon_found = 0;
 
 			while(View_Find("webrender_plugin") || View_Find("webbrowser_plugin"))
 			{
@@ -156,15 +156,17 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 			{
 				if((n < icon_found) && file_exists("/dev_hdd0/tmp/game/ICON0.PNG")) n = icon_found;
 
-				if(n < icon_found) sys_timer_usleep(100000);
+				wait = (n < icon_found) || execute;
+
+				if(wait) sys_timer_usleep(100000);
 				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-				if(n < icon_found) sys_timer_usleep(250000);
+				if(wait) sys_timer_usleep(250000);
 				sprintf(explore_command, "focus_category %s", category);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-				if(n < icon_found) sys_timer_usleep(250000);
+				if(wait) sys_timer_usleep(250000);
 				sprintf(explore_command, "focus_segment_index %s", seg_name);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-				if(n < icon_found) sys_timer_usleep(150000);
+				if(wait) sys_timer_usleep(150000);
 			}
 
 			if(execute) explore_interface->ExecXMBcommand("exec_push", 0, 0);
