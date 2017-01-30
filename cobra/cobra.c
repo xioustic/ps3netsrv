@@ -30,9 +30,9 @@
 #define  _16KB_		  16384UL
 #define _128KB_		 131072UL
 
-#define PSPL_ICON		"/dev_hdd0/game/PSPC66820/ICON0.PNG"
 #define PSPL_PATH		"/dev_hdd0/game/PSPC66820"
-#define PSPL_LAMBDA		"/dev_hdd0/game/PSPC66820/USRDIR/CONTENT/lambda.db"
+#define PSPL_ICON		PSPL_PATH "/ICON0.PNG"
+#define PSPL_LAMBDA		PSPL_PATH "/USRDIR/CONTENT/lambda.db"
 #define PSPL_LAMBDA_NONCE 	0x0ab40b3bbd1f1a7bULL
 
 #define DPRINTF(...)

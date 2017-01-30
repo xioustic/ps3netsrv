@@ -1,25 +1,12 @@
 #include <sdk_version.h>
+#include <string.h>
 #include <cell/rtc.h>
 
 #include <sys/prx.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <sys/timer.h>
-#include <sys/process.h>
 
-#include <arpa/inet.h>
 #include <netinet/in.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netex/net.h>
-#include <netex/errno.h>
-#include <netex/libnetctl.h>
-#include <netex/sockinfo.h>
-
-#include <stdarg.h>
-#include <string.h>
-#include <unistd.h>
 
 #include "types.h"
 
@@ -31,7 +18,7 @@ SYS_MODULE_EXIT(prx_stop);
 int prx_start(size_t args, void *argp);
 int prx_stop(void);
 
-int (*vshtask_notify)(int, const char *) = NULL;
+static int (*vshtask_notify)(int, const char *) = NULL;
 
 static void * getNIDfunc(const char * vsh_module, uint32_t fnid)
 {
@@ -48,7 +35,7 @@ static void * getNIDfunc(const char * vsh_module, uint32_t fnid)
 			uint32_t lib_fnid_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x14);
 			uint32_t lib_func_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x18);
 			uint16_t count = *(uint16_t*)((char*)export_stru_ptr + 6); // number of exports
-			for(int i=0;i<count;i++)
+			for(int i = 0; i < count; i++)
 			{
 				if(fnid == *(uint32_t*)((char*)lib_fnid_ptr + i*4))
 				{
@@ -56,14 +43,14 @@ static void * getNIDfunc(const char * vsh_module, uint32_t fnid)
 				}
 			}
 		}
-		table=table+4;
+		table += 4;
 	}
 	return 0;
 }
 
 static void show_msg(const char* msg)
 {
-	if(!vshtask_notify)
+	//if(!vshtask_notify)
 		vshtask_notify = (void*)((int)getNIDfunc("vshtask", 0xA02D46E7));
 
 	//if(strlen(msg)>128) msg[128]=0;
@@ -113,6 +100,7 @@ static int connect_to_webman(void)
 	sin.sin_family = AF_INET;
 	sin.sin_addr.s_addr = 0x7F000001;	//127.0.0.1 (localhost)
 	sin.sin_port = htons(80);			//http port (80)
+
 	s = socket(AF_INET, SOCK_STREAM, 0);
 	if(s < 0)
 	{
@@ -138,11 +126,11 @@ static int connect_to_webman(void)
 
 static void sclose(int *socket_e)
 {
-	if(*socket_e != -1)
+	//if(*socket_e != -1)
 	{
 		shutdown(*socket_e, SHUT_RDWR);
 		socketclose(*socket_e);
-		*socket_e = -1;
+		//*socket_e = -1;
 	}
 }
 
@@ -152,34 +140,24 @@ static void wm_plugin_action(const char * action)
 	if(s >= 0)
 	{
 		char proxy_action[256];
+		memcpy(proxy_action, "GET ", 4);
 
-		u32 i = 0;
-		u32 pa = 0;
+		u32 pa = 4;
 
-		proxy_action[pa++] = 'G';
-		proxy_action[pa++] = 'E';
-		proxy_action[pa++] = 'T';
-		proxy_action[pa++] = ' ';
-
-		if(action[0] != '/') i = 16;
-		if(action[i] == '/')
+		if(*action != '/') action += 16; // using http://127.0.0.1/
+		if(*action == '/')
 		{
-			for(;(i < strlen(action)) && (pa < 250); i++)
+			for(;*action && (pa < 250); action++)
 			{
-				if(action[i] != 0x20)
-					proxy_action[pa++] = action[i];
+				if(*action != 0x20)
+					proxy_action[pa++] = *action;
 				else
 				{
-					proxy_action[pa++] = '%';
-					proxy_action[pa++] = '2';
-					proxy_action[pa++] = '0';
+					memcpy(proxy_action + pa, "%20", 3); pa += 3;
 				}
 			}
 
-			proxy_action[pa++] = '\r';
-			proxy_action[pa++] = '\n';
-			proxy_action[pa] = 0;
-
+			memcpy(proxy_action + pa, "\r\n\0", 3); pa +=2;
 			send(s, proxy_action, pa, 0);
 		}
 		sclose(&s);

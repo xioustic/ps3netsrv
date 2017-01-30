@@ -1937,10 +1937,12 @@ install_mm_payload:
 
 	// -- get TitleID from PARAM.SFO
 	#ifndef FIX_GAME
+	{
 		char filename[MAX_PATH_LEN];
 
 		sprintf(filename, "%s/PS3_GAME/PARAM.SFO", _path);
 		getTitleID(filename, titleID, GET_TITLE_ID_ONLY);
+	}
 	#else
 		fix_game(_path, titleID, webman_config->fixgame);
 	#endif //#ifndef FIX_GAME
@@ -2028,13 +2030,19 @@ install_mm_payload:
 
 		if(do_eject && file_exists(expplg))
 			add_to_map("/dev_flash/vsh/module/explore_plugin.sprx", expplg);
-	}
 
-	//---------------
-	// New libfs.sprx
-	//---------------
-	if(do_eject && (c_firmware >= 4.20f) && file_exists(NEW_LIBFS_PATH))
-		add_to_map(ORG_LIBFS_PATH, NEW_LIBFS_PATH);
+		//---------------
+		// New libfs.sprx
+		//---------------
+		if(do_eject && (c_firmware >= 4.20f))
+		{
+			sprintf(expplg, "%s/ILFS0_000.BIN", app_sys);
+			if(file_exists(NEW_LIBFS_PATH)) sprintf(expplg, "%s", NEW_LIBFS_PATH);
+
+			if(file_exists(expplg))
+				add_to_map(ORG_LIBFS_PATH, expplg);
+		}
+	}
 
 	//-----------------------------------------------//
 	uint64_t map_data  = (MAP_BASE);

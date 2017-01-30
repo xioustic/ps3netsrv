@@ -26,7 +26,7 @@ static float get_firmware_version(void)
 {
 	lv2_get_platform_info(&info);
 	char FW[8]; sprintf(FW, "%02X", info.firmware_version);
-	return (float)(FW[0] - '0') + (float)(val(FW + 2))*0.00001f;
+	return (float)(FW[0] - '0') + val(FW + 2)*0.00001f;
 }
 
 static int get_kernel_type(void)
@@ -134,6 +134,7 @@ static void detect_firmware(void)
 			if(c_firmware == 4.21f) SYSCALL_TABLE = SYSCALL_TABLE_421;
 			if(c_firmware == 3.55f) SYSCALL_TABLE = SYSCALL_TABLE_355;
 #endif
+			LV2_OFFSET_ON_LV1 = 0x01000000ULL;
 		}
 		if(IS_DEX)
 		{
@@ -151,6 +152,7 @@ static void detect_firmware(void)
 			if(c_firmware == 4.21f) SYSCALL_TABLE = SYSCALL_TABLE_421D;
 			if(c_firmware == 3.55f) SYSCALL_TABLE = SYSCALL_TABLE_355D;
 #endif
+			LV2_OFFSET_ON_LV1 = 0x08000000ULL;
 		}
 	}
 
@@ -866,8 +868,10 @@ static void patch_lv2(void)
 #endif
 }
 
+#ifndef LITE_EDITION
 static uint32_t GetApplicableVersion(void * data)
 {
 	system_call_8(863, 0x6011, 1, data, 0, 0, 0, 0, 0);
 	return_to_user_prog(uint32_t);
 }
+#endif

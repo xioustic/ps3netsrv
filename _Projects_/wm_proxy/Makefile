@@ -18,7 +18,7 @@ PPU_SRCS = libc.c main.c
 PPU_PRX_TARGET = wm_proxy.prx
 PPU_PRX_LDFLAGS += $(PRX_LDFLAGS_EXTRA)
 PPU_PRX_STRIP_FLAGS = -s
-PPU_PRX_LDLIBS 	= -lfs_stub -lnet_stub -lrtc_stub -lio_stub -lgcm_sys_stub 
+PPU_PRX_LDLIBS 	= -lnet_stub -lio_stub
 
 PPU_CFLAGS += -Os -fno-builtin-printf -nodefaultlibs -fmerge-all-constants -std=gnu99 -Wno-shadow -Wno-unused-parameter
 #-ffunction-sections -fdata-sections

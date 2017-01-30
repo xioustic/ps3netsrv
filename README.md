@@ -22,6 +22,9 @@ We would like to integrate all existing features available on the PS3 Scene like
 - PAD shortcuts (*open include/combos.h for a complete list of shortcuts)
 - Keep USB device awake
 - Mount last game or AUTOBOOT.ISO to system startup
+- Support direct access to NTFS devices through web & ftp (1.45 / 1.45.11)
+- XMB integration XMB proxy (1.46 / 1.46.00)
+- Integrated prepNTFS
 
 ### webMAN MOD additional features
 - Easy installer/updater
@@ -48,6 +51,7 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Support last_game.txt / autoboot on nonCobra edition
 - "Offline" mode (blocks some PSN/tracking servers). Game updates still work in this mode. (v1.33.03)
 - XMBM+ integration when grouping of XMB content is disabled (v1.33.03)
+- VSH Menu integration
 - Extended Content Profile Grouping (v1.33.07)
 - PS3 Manager API Support (PS3MAPI)
 - Integrated Mysis video_rec plugin and get klicensee
@@ -69,8 +73,6 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Support for local web chat
 - Support for edit small text files
 - Download files & install PKG remotely or with shortcut
-- Support direct access to NTFS devices through web & ftp (1.45.11)
-- Integrated prepNTFS
 
 ## How to build
 Requirements for Windows:

@@ -20,7 +20,6 @@ PPU_PRX_LDFLAGS += $(PRX_LDFLAGS_EXTRA)
 PPU_PRX_STRIP_FLAGS = -s
 PPU_PRX_LDLIBS 	= -lfs_stub -lnet_stub -lrtc_stub -lio_stub -lgcm_sys_stub
 PPU_PRX_LDLIBS 	+= -lallocator_export_stub -lstdc_export_stub
-PPU_PRX_LDLIBS 	+= -lntfs_prx
 PPU_PRX_LDLIBS 	+= -lnetctl_stub -lsysmodule_stub -lhttp_util_stub -lhttp_stub 
 PPU_PRX_LDLIBS 	+= -lcrashdump_system_export_stub \
                    -lsysPrxForUser_export_stub \
@@ -33,7 +32,7 @@ PPU_PRX_LDLIBS 	+= -lcrashdump_system_export_stub \
                    -lxsetting_export_stub \
                    -lvshnet_export_stub \
                    -lnetctl_main_export_stub
-
+PPU_PRX_LDLIBS 	+= -lntfs_prx
 PPU_PRX_LDLIBS 	+= -lmd5
 
 PPU_CFLAGS += -Os -ffunction-sections -fdata-sections -fno-builtin-printf -nodefaultlibs -std=gnu99 -Wno-shadow -Wno-unused-parameter
