@@ -274,6 +274,7 @@
 				<Pair key="title"><String>重新整理 "我的遊戲" </String></Pair>
 				<Pair key="info"><String>下次載入 XMB 時將顯示遊戲列表</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/refresh.ps3</String></Pair>
 			</Table>
 		</Attributes>
@@ -373,6 +374,7 @@
 				<Pair key="title"><String>掛載 net0</String></Pair>
 				<Pair key="info"><String>掛載 /net0 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/.</String></Pair>
 			</Table>
 		</Attributes>
@@ -387,6 +389,7 @@
 				<Pair key="title"><String>掛載 PKG</String></Pair>
 				<Pair key="info"><String>掛載 /net0/PKG 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/PKG</String></Pair>
 			</Table>
 		</Attributes>
@@ -401,6 +404,7 @@
 				<Pair key="title"><String>掛載 VIDEO</String></Pair>
 				<Pair key="info"><String>掛載 /net0/VIDEO 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/VIDEO</String></Pair>
 			</Table>
 		</Attributes>
@@ -415,6 +419,7 @@
 				<Pair key="title"><String>掛載 MUSIC</String></Pair>
 				<Pair key="info"><String>掛載 /net0/MUSIC 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/MUSIC</String></Pair>
 			</Table>
 		</Attributes>
@@ -429,6 +434,7 @@
 				<Pair key="title"><String>掛載 PICTURE</String></Pair>
 				<Pair key="info"><String>掛載 /net0/PICTURE 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/PICTURE</String></Pair>
 			</Table>
 		</Attributes>
@@ -443,6 +449,7 @@
 				<Pair key="title"><String>掛載 ROMS</String></Pair>
 				<Pair key="info"><String>掛載 /net0/ROMS 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/ROMS</String></Pair>
 			</Table>
 		</Attributes>
@@ -457,6 +464,7 @@
 				<Pair key="title"><String>掛載 FIRMWARE</String></Pair>
 				<Pair key="info"><String>掛載 /net0/FIRMWARE 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/FIRMWARE</String></Pair>
 			</Table>
 		</Attributes>
@@ -471,6 +479,7 @@
 				<Pair key="title"><String>掛載 net1</String></Pair>
 				<Pair key="info"><String>掛載 /net1 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/.</String></Pair>
 			</Table>
 		</Attributes>
@@ -485,6 +494,7 @@
 				<Pair key="title"><String>掛載 PKG</String></Pair>
 				<Pair key="info"><String>掛載 /net1/PKG 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/PKG</String></Pair>
 			</Table>
 		</Attributes>
@@ -499,6 +509,7 @@
 				<Pair key="title"><String>掛載 VIDEO</String></Pair>
 				<Pair key="info"><String>掛載 /net1/VIDEO 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/VIDEO</String></Pair>
 			</Table>
 		</Attributes>
@@ -513,6 +524,7 @@
 				<Pair key="title"><String>掛載 MUSIC</String></Pair>
 				<Pair key="info"><String>掛載 /net1/MUSIC 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/MUSIC</String></Pair>
 			</Table>
 		</Attributes>
@@ -527,6 +539,7 @@
 				<Pair key="title"><String>掛載 PICTURE</String></Pair>
 				<Pair key="info"><String>掛載 /net1/PICTURE 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/PICTURE</String></Pair>
 			</Table>
 		</Attributes>
@@ -541,6 +554,7 @@
 				<Pair key="title"><String>掛載 ROMS</String></Pair>
 				<Pair key="info"><String>掛載 /net1/ROMS 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/ROMS</String></Pair>
 			</Table>
 		</Attributes>
@@ -555,6 +569,7 @@
 				<Pair key="title"><String>掛載 FIRMWARE</String></Pair>
 				<Pair key="info"><String>掛載 /net1/FIRMWARE 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/FIRMWARE</String></Pair>
 			</Table>
 		</Attributes>
@@ -569,6 +584,7 @@
 				<Pair key="title"><String>掛載 net2</String></Pair>
 				<Pair key="info"><String>掛載 /net2 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/.</String></Pair>
 			</Table>
 		</Attributes>
@@ -583,6 +599,7 @@
 				<Pair key="title"><String>掛載 PKG</String></Pair>
 				<Pair key="info"><String>掛載 /net2/PKG 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/PKG</String></Pair>
 			</Table>
 		</Attributes>
@@ -597,6 +614,7 @@
 				<Pair key="title"><String>掛載 VIDEO</String></Pair>
 				<Pair key="info"><String>掛載 /net2/VIDEO 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/VIDEO</String></Pair>
 			</Table>
 		</Attributes>
@@ -611,6 +629,7 @@
 				<Pair key="title"><String>掛載 MUSIC</String></Pair>
 				<Pair key="info"><String>掛載 /net2/MUSIC 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/MUSIC</String></Pair>
 			</Table>
 		</Attributes>
@@ -625,6 +644,7 @@
 				<Pair key="title"><String>掛載 PICTURE</String></Pair>
 				<Pair key="info"><String>掛載 /net2/PICTURE 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/PICTURE</String></Pair>
 			</Table>
 		</Attributes>
@@ -639,6 +659,7 @@
 				<Pair key="title"><String>掛載 ROMS</String></Pair>
 				<Pair key="info"><String>掛載 /net2/ROMS 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/ROMS</String></Pair>
 			</Table>
 		</Attributes>
@@ -653,6 +674,7 @@
 				<Pair key="title"><String></String>掛載 FIRMWARE</Pair>
 				<Pair key="info"><String>掛載 /net2/FIRMWARE 做為 /dev_bdvd</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/FIRMWARE</String></Pair>
 			</Table>
 		</Attributes>
@@ -667,6 +689,7 @@
 				<Pair key="title"><String>Mount /net3/PKG as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/PKG</String></Pair>
 			</Table>
 		</Attributes>
@@ -681,6 +704,7 @@
 				<Pair key="title"><String>Mount /net3/VIDEO as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/VIDEO</String></Pair>
 			</Table>
 		</Attributes>
@@ -695,6 +719,7 @@
 				<Pair key="title"><String>Mount /net3/MUSIC as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/MUSIC</String></Pair>
 			</Table>
 		</Attributes>
@@ -709,6 +734,7 @@
 				<Pair key="title"><String>Mount /net3/PICTURE as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/PICTURE</String></Pair>
 			</Table>
 		</Attributes>
@@ -723,6 +749,7 @@
 				<Pair key="title"><String>Mount /net3/ROMS as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/ROMS</String></Pair>
 			</Table>
 		</Attributes>
@@ -737,6 +764,7 @@
 				<Pair key="title"><String>Mount /net3/FIRMWARE as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/FIRMWARE</String></Pair>
 			</Table>
 		</Attributes>
@@ -751,6 +779,7 @@
 				<Pair key="title"><String>Mount /net4/PKG as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/PKG</String></Pair>
 			</Table>
 		</Attributes>
@@ -765,6 +794,7 @@
 				<Pair key="title"><String>Mount /net4/VIDEO as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/VIDEO</String></Pair>
 			</Table>
 		</Attributes>
@@ -779,6 +809,7 @@
 				<Pair key="title"><String>Mount /net4/MUSIC as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/MUSIC</String></Pair>
 			</Table>
 		</Attributes>
@@ -793,6 +824,7 @@
 				<Pair key="title"><String>Mount /net4/PICTURE as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/PICTURE</String></Pair>
 			</Table>
 		</Attributes>
@@ -807,6 +839,7 @@
 				<Pair key="title"><String>Mount /net4/ROMS as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/ROMS</String></Pair>
 			</Table>
 		</Attributes>
@@ -821,6 +854,7 @@
 				<Pair key="title"><String>Mount /net4/FIRMWARE as /dev_bdvd</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/FIRMWARE</String></Pair>
 			</Table>
 		</Attributes>
@@ -835,6 +869,7 @@
 				<Pair key="title"><String>Block PSN Servers</String></Pair>
 				<Pair key="info"><String>Block access to PSN servers in LV1 / LV2</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/browser.ps3$block_servers</String></Pair>
 			</Table>
 		</Attributes>
@@ -849,6 +884,7 @@
 				<Pair key="title"><String>切換內置的 gameDATA</String></Pair>
 				<Pair key="info"><String>開啟/關閉 安裝遊戲資料至 USB 裝置</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/extgd.ps3</String></Pair>
 			</Table>
 		</Attributes>
@@ -877,6 +913,7 @@
 				<Pair key="title"><String>卸載光碟片</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/unmount</String></Pair>
 			</Table>
 		</Attributes>
@@ -891,6 +928,7 @@
 				<Pair key="title"><String>插入光碟片</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/insert.ps3</String></Pair>
 			</Table>
 		</Attributes>
@@ -905,6 +943,7 @@
 				<Pair key="title"><String>卸載 webMAN</String></Pair>
 				<Pair key="info"><String>從記憶體卸載 webMAN [R2+L3+R3]</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/quit.ps3</String></Pair>
 			</Table>
 		</Attributes>
@@ -918,6 +957,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/vshmenu.png</String></Pair>
 				<Pair key="title"><String>載入 VSH 選單</String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/loadprx.ps3?slot=5&prx=/dev_hdd0/plugins/wm_vsh_menu.sprx</String></Pair>
 			</Table>
 		</Attributes>
@@ -932,6 +972,7 @@
 				<Pair key="title"><String>PS3 重開機</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/restart.ps3</String></Pair>
 			</Table>
 		</Attributes>
@@ -946,6 +987,7 @@
 				<Pair key="title"><String>Shutdown PS3</String></Pair>
 				<Pair key="info"><String></String></Pair>
 				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/shutdown.ps3</String></Pair>
 			</Table>
 		</Attributes>
