@@ -3158,6 +3158,11 @@ parse_request:
 							unlink_file("/dev_hdd0", "tmp/", "wm_custom_combo");
 
 							cellFsUnlink(WMCONFIG);
+							cellFsUnlink(WMNOSCAN);
+							cellFsUnlink(WMREQUEST_FILE);
+							cellFsUnlink(WMNET_DISABLED);
+							cellFsUnlink(WMONLINE_GAMES);
+							cellFsUnlink(WMOFFLINE_GAMES);
 
 							// delete folders & subfolders
 							del(WMTMP, RECURSIVE_DELETE);
@@ -3166,6 +3171,7 @@ parse_request:
 							del(WM_COMBO_PATH, RECURSIVE_DELETE);
 							del(HTML_BASE_PATH, RECURSIVE_DELETE);
 							del(VSH_MENU_IMAGES, RECURSIVE_DELETE);
+
 							goto reboot;
 						}
 						else
