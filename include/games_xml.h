@@ -6,7 +6,9 @@
 #define XML_HEADER				"<?xml version=\"1.0\" encoding=\"UTF-8\"?><XMBML version=\"1.0\">"
 #define XML_PAIR(key, value) 	"<Pair key=\"" key "\"><String>" value "</String></Pair>"
 
+#define XAI_LINK_PAIR			XML_PAIR("module_name", WM_PROXY_SPRX) XML_PAIR("bar_action", "none")
 #define WEB_LINK_PAIR			XML_PAIR("module_name", "webbrowser_plugin")
+
 #define STR_NOITEM_PAIR			XML_PAIR("str_noitem", "msg_error_no_content") "</Table>"
 
 #define XML_KEY_LEN 7
@@ -226,7 +228,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 {
 	char xml[48]; sprintf(xml, MY_GAMES_XML);
 
-	if(conn_s_p==START_DAEMON)
+	if(conn_s_p == START_DAEMON)
 	{
 		if((webman_config->refr==1) || from_reboot)
 		{
@@ -426,9 +428,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 #endif
 	}
 
-	CellRtcTick pTick;
-	cellRtcGetCurrentTick(&pTick);
-
 	int fd;
 	char skey[max_xmb_items][12];
 
@@ -556,7 +555,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 				int fd2 = 0, flen, plen;
 				char tempID[12];
 				u8 is_iso = 0;
-				cellRtcGetCurrentTick(&pTick);
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -592,15 +590,23 @@ static bool update_mygames_xml(u64 conn_s_p)
 						if((ls == false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1]==NULL)) ls=true; // single letter folder was found
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0) == FAILED) {v3_entry++; continue;}
-
+#ifdef WM_PROXY_SPRX
 						sprintf(tempstr, "<Table key=\"%04i\">"
 										 XML_PAIR("icon","%s")
 										 XML_PAIR("title","%s") "%s"
-										 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
+										 XML_PAIR("module_action","/mount_ps3%s%s/%s")
 										 XML_PAIR("info","%s%s%s") "</Table>",
 										 key, icon,
-										 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, (u16)pTick.tick, neth, param, "");
-
+										 templn, XAI_LINK_PAIR, neth, param, enc_dir_name, neth, param, "");
+#else
+						sprintf(tempstr, "<Table key=\"%04i\">"
+										 XML_PAIR("icon","%s")
+										 XML_PAIR("title","%s") "%s"
+										 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s")
+										 XML_PAIR("info","%s%s%s") "</Table>",
+										 key, icon,
+										 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, neth, param, "");
+#endif
 						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, data[v3_entry].name, item_count, xml_len, 0)) key++;
 
 						v3_entry++;
@@ -703,15 +709,23 @@ next_xml_entry:
 								*folder_name = NULL;
 								char *p = strchr(entry.d_name, '/'); if(p) {*p = NULL; sprintf(folder_name, "/%s", entry.d_name); *p = '/';}
 							}
-
+#ifdef WM_PROXY_SPRX
 							sprintf(tempstr, "<Table key=\"%04i\">"
 											 XML_PAIR("icon","%s")
 											 XML_PAIR("title","%s") "%s"
-											 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s?random=%x")
+											 XML_PAIR("module_action","/mount_ps3%s%s/%s")
 											 XML_PAIR("info","%s%s%s") "</Table>",
 											 key, icon,
-											 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, (u16)pTick.tick, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
-
+											 templn, XAI_LINK_PAIR, "", param, enc_dir_name, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
+#else
+							sprintf(tempstr, "<Table key=\"%04i\">"
+											 XML_PAIR("icon","%s")
+											 XML_PAIR("title","%s") "%s"
+											 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s")
+											 XML_PAIR("info","%s%s%s") "</Table>",
+											 key, icon,
+											 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
+#endif
 							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, entry.d_name, item_count, xml_len, subfolder)) key++;
 						}
 //////////////////////////////
@@ -907,12 +921,21 @@ continue_reading_folder_xml:
 
 	if(!add_xmbm_plus)
 	{
+#ifdef WM_PROXY_SPRX
 		sprintf(templn, "<Table key=\"eject\">"
 						XML_PAIR("icon","%s")
 						XML_PAIR("title","%s")
 						XML_PAIR("info","%s") "%s"
-						XML_PAIR("module_action","http://%s/mount_ps3/unmount") "%s",
-						wm_icons[11], STR_EJECTDISC, STR_UNMOUNTGAME, WEB_LINK_PAIR, local_ip, "</Table>"); strcat(myxml, templn);
+						XML_PAIR("module_action","/mount_ps3/unmount") "</Table>",
+						wm_icons[11], STR_EJECTDISC, STR_UNMOUNTGAME, XAI_LINK_PAIR); strcat(myxml, templn);
+#else
+		sprintf(templn, "<Table key=\"eject\">"
+						XML_PAIR("icon","%s")
+						XML_PAIR("title","%s")
+						XML_PAIR("info","%s") "%s"
+						XML_PAIR("module_action","http://%s/mount_ps3/unmount") "</Table>",
+						wm_icons[11], STR_EJECTDISC, STR_UNMOUNTGAME, WEB_LINK_PAIR, local_ip); strcat(myxml, templn);
+#endif
 	}
 
 	if( !(webman_config->nogrp))

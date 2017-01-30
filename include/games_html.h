@@ -885,7 +885,6 @@ static void set_sort_key(char *skey, char *templn, int key, u8 subfolder, u8 f1)
 static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, u8 mode, bool auto_mount)
 {
 	u64 c_len = 0;
-	CellRtcTick pTick;
 	u32 buf_len = strlen(buffer);
 
 	struct CellFsStat buf;
@@ -943,24 +942,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 	if(c_len >= 600 || !working) return false;
 	// ---
-
-/*
-	CellRtcTick pTick, pTick2;
-	cellRtcGetCurrentTick(&pTick);
-	int upd_time=0;
-
-	if(file_exists(WMTMP "/games.html"))
-		upd_time=buf.st_mtime;
-
-	CellRtcDateTime rDate;
-	cellRtcSetTime_t(&rDate, upd_time);
-	cellRtcGetTick(&rDate, &pTick2);
-
-	sprintf(templn, "[%ull %ull %i ]<br>", pTick2, pTick, (pTick.tick-pTick2.tick)/1000000);
-	strcat(buffer, templn);
-
-	if(strstr(param, "/index.ps3?") || ((pTick.tick-pTick2.tick)/1000000)>43200) {DELETE_CACHED_GAMES}
-*/
 
 	const u32 BUFFER_MAXSIZE = (BUFFER_SIZE_ALL - _12KB_);
 
@@ -1137,7 +1118,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				int fd2 = 0, flen, slen;
 				char tempID[12];
 				u8 is_iso = 0;
-				cellRtcGetCurrentTick(&pTick);
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
@@ -1202,8 +1182,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 											*icon ? icon : wm_icons[default_icon], w, h, templn, neth, param, enc_dir_name);
 						}
 						else
-							flen = sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
-											neth, param, enc_dir_name, (u16)pTick.tick, idx,
+							flen = sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
+											neth, param, enc_dir_name, idx,
 											icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix,
 											neth, param, enc_dir_name, templn);
 
@@ -1326,8 +1306,8 @@ next_html_entry:
 								slen = strlen(templn);
 								do
 								{
-									flen = sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s?random=%x\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
-													param, "", enc_dir_name, (u16)pTick.tick, idx, icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
+									flen = sprintf(tempstr + HTML_KEY_LEN, "%s%s/%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
+													param, "", enc_dir_name, idx, icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
 
 									slen -= 4; if(slen < 32) break;
 									templn[slen] = NULL;
@@ -1338,8 +1318,6 @@ next_html_entry:
 							if(flen > MAX_LINE_LEN) continue; //ignore lines too long
 							sprintf(line_entry[idx].path, "%s", tempstr); idx++;
 							tlen += (flen + div_size);
-
-							cellRtcGetCurrentTick(&pTick);
 						}
 //////////////////////////////
 						if(subfolder) goto next_html_entry;

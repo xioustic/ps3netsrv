@@ -141,9 +141,9 @@ static sys_event_queue_t command_queue_ntfs = SYS_EVENT_QUEUE_NONE;
 static uint32_t *sections, *sections_size;
 static uint32_t num_sections;
 
-static uint64_t discsize=0;
+static uint64_t discsize = 0;
 static int is_cd2352 = 0;
-static uint8_t *cd_cache=0;
+static uint8_t *cd_cache = 0;
 
 static int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event_queue_t command_queue_ntfs, int emu_type, uint64_t disc_size_bytes, uint32_t read_size, unsigned int trackscount, ScsiTrackDescriptor *tracks)
 {
@@ -279,7 +279,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 
 			if(csize > readsize) csize = readsize;
 
-			memcpy(buf, last_sect_buf+(pos % size_sector), csize);
+			memcpy(buf, last_sect_buf + (pos % size_sector), csize);
 			buf += csize;
 			offset += csize;
 			pos += csize;

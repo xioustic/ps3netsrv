@@ -203,7 +203,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
  #endif
 				{
 					char category[16], seg_name[40]; *category = *seg_name = NULL;
-					if((atag && !l2) || (!atag && l2)) {sys_timer_sleep(1); launch_disc(category, seg_name);} // L2 + X
+					//if((atag && !l2) || (!atag && l2)) {sys_timer_sleep(1); launch_disc(category, seg_name);} // L2 + X
+					sys_timer_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
 
 					autoplay = false;
 				}

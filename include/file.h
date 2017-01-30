@@ -54,7 +54,7 @@ static int sysLv2FsLink(const char *oldpath, const char *newpath)
 static uint64_t get_free_space(const char *dev_name)
 {
 #ifdef USE_NTFS
-	if(islike(dev_name, "/dev_ntfs"))
+	if(islike(dev_name, DEV_NTFS))
 	{
 		struct statvfs vbuf;
 		char tmp[MAX_PATH_LEN];
@@ -72,7 +72,7 @@ static uint64_t get_free_space(const char *dev_name)
 static int isDir(const char* path)
 {
 #ifdef USE_NTFS
-	if(islike(path, "/dev_ntfs"))
+	if(islike(path, DEV_NTFS))
 	{
 		char tmp[MAX_PATH_LEN];
 		strcpy(tmp, path); tmp[10] = ':';
@@ -91,7 +91,7 @@ static int isDir(const char* path)
 static bool file_exists(const char* path)
 {
 #ifdef USE_NTFS
-	if(islike(path, "/dev_ntfs"))
+	if(islike(path, DEV_NTFS))
 	{
 		char tmp[MAX_PATH_LEN];
 		strcpy(tmp, path); tmp[10] = ':';
@@ -108,7 +108,7 @@ static void mkdir_tree(char *path)
 {
 	size_t path_len = strlen(path);
 #ifdef USE_NTFS
-	if(islike(path, "/dev_ntfs"))
+	if(islike(path, DEV_NTFS))
 	{
 		path[10] = ':';
 		for(u16 p = 12; p < path_len; p++)
@@ -167,7 +167,7 @@ static void filepath_check(char *file)
 {
 	if((file[5] == 'u' && islike(file, "/dev_usb"))
 #ifdef USE_NTFS
-	|| (file[5] == 'n' && islike(file, "/dev_ntfs"))
+	|| (file[5] == 'n' && islike(file, DEV_NTFS))
 #endif
 	)
 	{
@@ -181,7 +181,7 @@ static void filepath_check(char *file)
 		}
 	}
 #ifdef USE_NTFS
-	if(islike(file, "/dev_ntfs")) {file[10] = ':'; if(mountCount == -2) mount_all_ntfs_volumes();}
+	if(islike(file, DEV_NTFS)) {file[10] = ':'; if(mountCount == -2) mount_all_ntfs_volumes();}
 #endif
 }
 
@@ -258,7 +258,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 	if(IS(file1, file2)) return FAILED;
 
 #ifdef USE_NTFS
-	bool is_ntfs1 = islike(file1, "/dev_ntfs"), is_ntfs2 = false;
+	bool is_ntfs1 = islike(file1, DEV_NTFS), is_ntfs2 = false;
 #else
 	bool is_ntfs1 = false, is_ntfs2 = false;
 #endif
@@ -342,7 +342,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 next_part:
 
 #ifdef USE_NTFS
-			is_ntfs2 = islike(file2, "/dev_ntfs");
+			is_ntfs2 = islike(file2, DEV_NTFS);
 			if(is_ntfs2)
 			{
 				fd2 = ps3ntfs_open(file2 + 5, O_CREAT | O_WRONLY | O_TRUNC, MODE);
@@ -457,7 +457,7 @@ static int folder_copy(const char *path1, char *path2)
 	struct stat bufn;
 	DIR_ITER *pdir = NULL;
 
-	if(islike(path1, "/dev_ntfs"))
+	if(islike(path1, DEV_NTFS))
 	{
 		pdir = ps3ntfs_opendir((char*)path1);
 		if(pdir) is_ntfs = true;
@@ -529,7 +529,7 @@ static int del(const char *path, u8 recursive)
 #ifdef USE_NTFS
 	if(!isDir(path))
 	{
-		if(islike(path, "/dev_ntfs"))
+		if(islike(path, DEV_NTFS))
 			return ps3ntfs_unlink(path + 5);
 		else
 			return cellFsUnlink(path);
@@ -548,7 +548,7 @@ static int del(const char *path, u8 recursive)
 	struct stat bufn;
 	DIR_ITER *pdir;
 
-	if(islike(path, "/dev_ntfs"))
+	if(islike(path, DEV_NTFS))
 	{
 		pdir = ps3ntfs_opendir((char*)path);
 		if(pdir) is_ntfs = true;

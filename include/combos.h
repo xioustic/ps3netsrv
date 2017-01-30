@@ -88,7 +88,7 @@
 					if(!(webman_config->combo2 & PLAY_DISC) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L2))
 					{
 						char category[16], seg_name[40]; *category = *seg_name = NULL;
-						launch_disc(category, seg_name); // L2+START
+						launch_disc(category, seg_name, true); // L2+START
 						break;
 					}
 

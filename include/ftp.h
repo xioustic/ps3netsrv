@@ -12,16 +12,16 @@
 #define FTP_OK_REST_350		"350 REST command successful\r\n"	// Requested file action pending further information
 #define FTP_OK_RNFR_350		"350 RNFR OK\r\n"					// Requested file action pending further information
 
-#define FTP_ERROR_425		"425 Error\r\n"						// Can't open data connection.
-#define FTP_ERROR_430		"430 Error\r\n"						// Invalid username or password
-#define FTP_ERROR_450		"450 Error\r\n"						// Can't access file
-#define FTP_ERROR_451		"451 Error\r\n"						// Requested action aborted. Local error in processing.
-#define FTP_ERROR_500		"500 Error\r\n"						// Syntax error, command unrecognized and the requested	action did not take place.
-#define FTP_ERROR_501		"501 Error\r\n"						// Syntax error in parameters or arguments.
+#define FTP_ERROR_425		"425 ERR\r\n"						// Can't open data connection.
+#define FTP_ERROR_430		"430 ERR\r\n"						// Invalid username or password
+#define FTP_ERROR_450		"450 ERR\r\n"						// Can't access file
+#define FTP_ERROR_451		"451 ERR\r\n"						// Requested action aborted. Local error in processing.
+#define FTP_ERROR_500		"500 ERR\r\n"						// Syntax error, command unrecognized and the requested	action did not take place.
+#define FTP_ERROR_501		"501 ERR\r\n"						// Syntax error in parameters or arguments.
 #define FTP_ERROR_REST_501	"501 No restart point\r\n"			// Syntax error in parameters or arguments.
 #define FTP_ERROR_502		"502 Not implemented\r\n"			// Command not implemented.
-#define FTP_ERROR_530		"530 Error\r\n"						// Not logged in.
-#define FTP_ERROR_550		"550 Error\r\n"						// Requested action not taken. File unavailable (e.g., file not found, no access).
+#define FTP_ERROR_530		"530 ERR\r\n"						// Not logged in.
+#define FTP_ERROR_550		"550 ERR\r\n"						// Requested action not taken. File unavailable (e.g., file not found, no access).
 #define FTP_ERROR_RNFR_550	"550 RNFR Error\r\n"				// Requested action not taken. File unavailable
 
 #ifdef USE_NTFS
@@ -1172,7 +1172,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						absPath(tempcwd, param, cwd);
 					}
 
-					if(islike(tempcwd, "/dev_ntfs"))
+					if(islike(tempcwd, DEV_NTFS))
 					{
 						strcpy(cwd, tempcwd);
 						tempcwd[10] = ':';
@@ -1559,7 +1559,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 						char dirtype[2]; dirtype[1] = NULL; mode_t mode = NULL; u16 slen;
 
-						if(islike(tempcwd, "/dev_ntfs"))
+						if(islike(tempcwd, DEV_NTFS))
 						{
 							cellRtcSetTime_t(&rDate, 0);
 							DIR_ITER *pdir;
@@ -1777,7 +1777,7 @@ pasv_again:
 							{
 								char *buffer2 = (char*)sysmem;
 
-								if(islike(filename, "/dev_ntfs"))
+								if(islike(filename, DEV_NTFS))
 								{
 									filepath_check(filename);
 
@@ -1867,7 +1867,7 @@ pasv_again:
 					{
 						absPath(filename, param, cwd);
 
-						if(islike(filename, "/dev_ntfs"))
+						if(islike(filename, DEV_NTFS))
 						{
 							filename[10] = ':';
 							if(ps3ntfs_unlink(filename + 5) >= 0) is_ntfs = true;
@@ -1895,7 +1895,7 @@ pasv_again:
 
 						absPath(filename, param, cwd);
 
-						if(islike(filename, "/dev_ntfs"))
+						if(islike(filename, DEV_NTFS))
 						{
 							filename[10] = ':';
 							if(ps3ntfs_mkdir(filename + 5, MODE) >= CELL_OK) is_ntfs = true;
@@ -1923,7 +1923,7 @@ pasv_again:
 					{
 						absPath(filename, param, cwd);
 
-						if(islike(filename, "/dev_ntfs"))
+						if(islike(filename, DEV_NTFS))
 						{
 							filename[10] = ':';
 							if(ps3ntfs_unlink(filename + 5) >= CELL_OK) is_ntfs = true;
@@ -1961,7 +1961,7 @@ pasv_again:
 							{
 								char *buffer2 = (char*)sysmem;
 
-								if(islike(filename, "/dev_ntfs"))
+								if(islike(filename, DEV_NTFS))
 								{
 									filepath_check(filename);
 
@@ -2066,7 +2066,7 @@ pasv_again:
 					{
 						absPath(filename, param, cwd);
 
-						if(islike(filename, "/dev_ntfs"))
+						if(islike(filename, DEV_NTFS))
 						{
 							filename[10] = ':';
 							if(ps3ntfs_stat(filename + 5, &bufn) >= 0) is_ntfs = true;
@@ -2100,7 +2100,7 @@ pasv_again:
 					{
 						absPath(filename, param, cwd);
 
-						if(islike(filename, "/dev_ntfs"))
+						if(islike(filename, DEV_NTFS))
 						{
 							filename[10] = ':';
 							if(ps3ntfs_stat(filename + 5, &bufn) >= 0) is_ntfs = true;
@@ -2160,7 +2160,7 @@ dataactive = 1;
 					{
 						absPath(filename, param, cwd);
 
-						if(islike(rnfr, "/dev_ntfs") && islike(filename, "/dev_ntfs"))
+						if(islike(rnfr, DEV_NTFS) && islike(filename, DEV_NTFS))
 						{
 							rnfr[10] = ':', filename[10] = ':';
 							if(ps3ntfs_rename(rnfr + 5, filename + 5) >= 0) is_ntfs = true;

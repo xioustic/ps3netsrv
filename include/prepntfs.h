@@ -7,8 +7,7 @@ static void prepNTFS(u8 towait)
 
 	int i, parts;
 	unsigned int num_tracks;
-	u8 cue=0;
-	int emu_mode=0;
+	int emu_mode = 0;
 	TrackDef tracks[32];
 	ScsiTrackDescriptor *scsi_tracks;
 
@@ -39,22 +38,22 @@ static void prepNTFS(u8 towait)
 	}
 
 	if(mountCount == -2)
-	for (i = 0; i < 2; i++)
-	{
-		if(towait) sys_timer_sleep(2 * towait);
-		mount_all_ntfs_volumes();
-		if(mountCount) break;
-	}
+		for(i = 0; i < 2; i++)
+		{
+			if(towait) sys_timer_sleep(2 * towait);
+			mount_all_ntfs_volumes();
+			if(mountCount) break;
+		}
 
-	if (mountCount <= 0) {mountCount=-2; return;}
+	if(mountCount <= 0) {mountCount=-2; return;}
 
 	uint8_t* plugin_args = (uint8_t *)malloc(_64KB_); if(!plugin_args) return;
 	uint32_t* sectionsP = (uint32_t *)malloc(_32KB_); if(!sectionsP) {free(plugin_args); return;}
 	uint32_t* sections_sizeP = (uint32_t *)malloc(_32KB_); if(!sections_sizeP) {free(sectionsP); free(plugin_args); return;}
 
-	for (u8 profile = 0; profile < 5; profile++)
+	for(u8 profile = 0; profile < 5; profile++)
 	{
-		for (i = 0; i < mountCount; i++)
+		for(i = 0; i < mountCount; i++)
 		{
 			for(u8 m = 0; m < 4; m++)
 			{
@@ -116,7 +115,7 @@ next_ntfs_entry:
 								size_t nlen = sprintf(iso_name, "%s", path);
 								iso_name[nlen - 1] = '\0';
 
-								for (u8 o = 1; o < 64; o++)
+								for(u8 o = 1; o < 64; o++)
 								{
 									if(parts >= MAX_SECTIONS) break;
 
@@ -127,12 +126,14 @@ next_ntfs_entry:
 								}
 							}
 
-							if (parts >= MAX_SECTIONS)
+							if(parts >= MAX_SECTIONS)
 							{
 								continue;
 							}
-							else if (parts > 0)
+							else if(parts > 0)
 							{
+								u8 cue = 0;
+
 								num_tracks = 1;
 									 if(m == 0) emu_mode = EMU_PS3;
 								else if(m == 1) emu_mode = EMU_BD;
@@ -144,11 +145,12 @@ next_ntfs_entry:
 									int fd;
 
 									size_t plen = strlen(path);
-									path[plen-3]='C'; path[plen-2]='U'; path[plen-1]='E';
+									path[plen-3] = 'C', path[plen-2] = 'U', path[plen-1] = 'E';
+
 									fd = ps3ntfs_open(path, O_RDONLY, 0);
-									if(fd<0)
+									if(fd < 0)
 									{
-										path[plen-3]='c'; path[plen-2]='u'; path[plen-1]='e';
+										path[plen-3] = 'c', path[plen-2] = 'u', path[plen-1] = 'e';
 										fd = ps3ntfs_open(path, O_RDONLY, 0);
 									}
 
@@ -162,13 +164,13 @@ next_ntfs_entry:
 										{
 											char dummy[64];
 
-											if (cobra_parse_cue(cue_buf, r, tracks, 100, &num_tracks, dummy, sizeof(dummy)-1) != 0)
+											if(cobra_parse_cue(cue_buf, r, tracks, 100, &num_tracks, dummy, sizeof(dummy)-1) != 0)
 											{
-												num_tracks=1;
-												cue=0;
+												num_tracks = 1;
+												cue = 0;
 											}
 											else
-												cue=1;
+												cue = 1;
 										}
 									}
 								}
@@ -178,22 +180,22 @@ next_ntfs_entry:
 								p_args->emu_mode = emu_mode;
 								p_args->num_sections = parts;
 
-								memcpy(plugin_args+sizeof(rawseciso_args), sectionsP, parts*sizeof(uint32_t));
-								memcpy(plugin_args+sizeof(rawseciso_args)+(parts*sizeof(uint32_t)), sections_sizeP, parts*sizeof(uint32_t));
+								memcpy(plugin_args + sizeof(rawseciso_args), sectionsP, parts * sizeof(uint32_t));
+								memcpy(plugin_args + sizeof(rawseciso_args) + (parts * sizeof(uint32_t)), sections_sizeP, parts * sizeof(uint32_t));
 
 								if(emu_mode == EMU_PSX)
 								{
-									int max = MAX_SECTIONS - ((num_tracks*sizeof(ScsiTrackDescriptor)) / 8);
+									int max = MAX_SECTIONS - ((num_tracks * sizeof(ScsiTrackDescriptor)) / 8);
 
-									if (parts == max)
+									if(parts >= max)
 									{
 										continue;
 									}
 
 									p_args->num_tracks = num_tracks;
-									scsi_tracks = (ScsiTrackDescriptor *)(plugin_args+sizeof(rawseciso_args)+(2*parts*sizeof(uint32_t)));
+									scsi_tracks = (ScsiTrackDescriptor *)(plugin_args +sizeof(rawseciso_args)+(2*parts*sizeof(uint32_t)));
 
-									if (!cue)
+									if(!cue)
 									{
 										scsi_tracks[0].adr_control = 0x14;
 										scsi_tracks[0].track_number = 1;
@@ -201,7 +203,7 @@ next_ntfs_entry:
 									}
 									else
 									{
-										for (u8 j = 0; j < num_tracks; j++)
+										for(u8 j = 0; j < num_tracks; j++)
 										{
 											scsi_tracks[j].adr_control = (tracks[j].is_audio) ? 0x10 : 0x14;
 											scsi_tracks[j].track_number = j+1;
