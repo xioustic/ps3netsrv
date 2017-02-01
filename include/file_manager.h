@@ -153,7 +153,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 				uint64_t freeSize = 0, devSize = 0;
 
 #ifdef USE_NTFS
-				if(islike(templn, DEV_NTFS))
+				if(is_ntfs_path(templn))
 				{
 					struct statvfs vbuf;
 					ps3ntfs_statvfs(templn + 5, &vbuf);
@@ -186,8 +186,8 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			if(strstr(fsize, "&lt;")) strcat(fsize, " &nbsp; ");
 		}
 #ifdef COPY_PS3
- #ifdef IS_NTFS
-		else if(islike(templn, DEV_NTFS) || (!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") )))
+ #ifdef USE_NTFS
+		else if(is_ntfs_path(templn) || (!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") )))
  #else
 		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") ))
  #endif
@@ -232,8 +232,8 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 		sprintf(fsize, "%'llu %s", sz, sf);
 
 #ifdef COBRA_ONLY
- #ifdef IS_NTFS
-	else if(islike(templn, DEV_NTFS))
+ #ifdef USE_NTFS
+	else if(is_ntfs_path(templn))
 	{
 		sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", islike(templn, param) ? templn + plen : templn, sbytes, STR_BYTE, "/dev_hdd0", sz, sf);
 	}
@@ -409,7 +409,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 		urlenc(url, param); if(islike(param, "/net")) htmlenc(label, templn, 0); else strcpy(label, templn);
 
 #ifdef USE_NTFS
-		if(islike(param, DEV_NTFS)) sprintf(swap, HTML_URL, WMTMP, label);
+		if(is_ntfs_path(param)) sprintf(swap, HTML_URL, WMTMP, label);
 		else
 #endif
 		sprintf(swap, HTML_URL2,
@@ -462,7 +462,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	struct stat bufn;
 	DIR_ITER *pdir = NULL;
 
-	is_ntfs = islike(param, DEV_NTFS);
+	is_ntfs = is_ntfs_path(param);
 	if((is_root | is_ntfs) && (mountCount == -2)) mount_all_ntfs_volumes();
 
 	if(is_ntfs)
@@ -691,7 +691,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				for (uint8_t u = 0; u < ntmp; u++)
 				{
-					if(u) {sprintf(entry.d_name, "dev_%s0", mounts[u-1].name);}
+					if(u) {sprintf(entry.d_name, "dev_%s:", mounts[u-1].name);}
 #endif
 					if(is_root)
 					{

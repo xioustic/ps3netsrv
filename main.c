@@ -123,7 +123,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.46.00 MOD"
+#define WM_VERSION			"1.46.01 MOD"
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -383,7 +383,6 @@ static uint8_t system_bgm = 0;
 #endif
 
 #define NTFS 			(12)
-#define DEV_NTFS		"/dev_nt"
 
 #define PERSIST  100
 
@@ -701,6 +700,7 @@ int val(const char *c);
 #include "include/ntfs.h"
 
 #ifdef USE_NTFS
+
 static ntfs_md *mounts = NULL;
 static int mountCount = -2;
 
@@ -2014,7 +2014,7 @@ parse_request:
 				{
 					sprintf(param, "%s", param + 10);
 #ifdef USE_NTFS
-					if(islike(param, DEV_NTFS)) {param[10] = ':'; ps3ntfs_unlink(param + 5);}
+					if(is_ntfs_path(param)) {param[10] = ':'; ps3ntfs_unlink(param + 5);}
 					else
 #endif
 					cellFsRmdir(param);
@@ -2096,11 +2096,11 @@ parse_request:
 						cellFsRename(header, target);
 					}
 #ifdef USE_NTFS
-					else if(islike(source, DEV_NTFS) || islike(target, DEV_NTFS))
+					else if(is_ntfs_path(source) || is_ntfs_path(target))
 					{
 						u8 ps = 0, pt = 0;
-						if(islike(source, DEV_NTFS)) {ps = 5; source[10] = ':';}
-						if(islike(target, DEV_NTFS)) {pt = 5; target[10] = ':';}
+						if(is_ntfs_path(source)) {ps = 5; source[10] = ':';}
+						if(is_ntfs_path(target)) {pt = 5; target[10] = ':';}
 
 						ps3ntfs_rename(source + ps, target + pt);
 					}
@@ -2432,7 +2432,7 @@ parse_request:
 			{
 				struct CellFsStat buf; bool is_net = false;
 #ifdef USE_NTFS
-				is_ntfs = (islike(param, DEV_NTFS));
+				is_ntfs = is_ntfs_path(param);
 #endif
 				if(islike(param, "/net") && (param[4] >= '0' && param[4] <= '4')) //net0/net1/net2/net3/net4
 				{
