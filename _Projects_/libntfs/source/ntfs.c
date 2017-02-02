@@ -47,8 +47,11 @@
 
 #include "ext2.h"
 #include "mem_allocate.h"
+
+#ifdef WITH_EXT_SUPPORT
 #include "libext2fs/ext2fs.h"
 #include "libext2fs/ext2_fs.h"
+#endif
 
 // NTFS device driver devoptab
 static const devoptab_t devops_ntfs = {

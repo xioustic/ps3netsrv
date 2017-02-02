@@ -551,16 +551,9 @@ show_popup:
 						}
 						else if(!(webman_config->combo & UNLOAD_WM) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_R3) ) // L3+R3+R2 (quit webMAN)
 						{
-#ifdef COBRA_ONLY
-							get_vsh_plugin_slot_by_name((char *)"VSH_MENU", true); // unload vsh menu
-#endif
-							if(!webman_config->fanc || (webman_config->ps2temp < 33))
-								restore_fan(0); //restore syscon fan control mode
-							else
-								restore_fan(1); //set ps2 fan control mode
-
-							working = 0;
 							wm_unload_combo = 1;
+
+							restore_settings(!webman_config->fanc || (webman_config->ps2temp < 33));
 
 							stop_prx_module();
 							sys_ppu_thread_exit(0);

@@ -52,7 +52,7 @@
 
 ///////////// PS3MAPI END //////////////
 
-#if defined(COBRA_ONLY) || defined(PS3MAPI)
+#if defined(REMOVE_SYSCALLS) || defined(PS3MAPI)
 #define CFW_SYSCALLS 16
 static u16 sc_disable[CFW_SYSCALLS] = {200, 201, 202, 203, 204, 1022, 6, 7, 10, 11, 15, 20, 35, 36, 38, 9};
 #else

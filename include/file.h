@@ -112,6 +112,7 @@ static bool file_exists(const char* path)
 	return (cellFsStat(path, &s) == CELL_FS_SUCCEEDED);
 }
 
+#if defined(COPY_PS3) || defined(PKG_HANDLER)
 static void mkdir_tree(char *path)
 {
 	size_t path_len = strlen(path);
@@ -129,6 +130,7 @@ static void mkdir_tree(char *path)
 			if(path[p] == '/') {path[p] = NULL; cellFsMkdir(path, MODE); path[p] = '/';}
 	}
 }
+#endif
 
 size_t read_file(const char *file, char *data, size_t size, int32_t offset)
 {

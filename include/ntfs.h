@@ -102,7 +102,7 @@ typedef struct DISC_INTERFACE_STRUCT DISC_INTERFACE;
 #define EHIBERNATED                     3003 /* Volume is hibernated and NTFS_IGNORE_HIBERFILE was not specified during mount */
 
 /* NTFS cache options */
-#define CACHE_DEFAULT_PAGE_COUNT        16  /* The default number of pages in the cache */
+#define CACHE_DEFAULT_PAGE_COUNT        1  /* The default number of pages in the cache */
 #define CACHE_DEFAULT_PAGE_SIZE         8    /* The default number of sectors per cache page */
 
 /* NTFS mount flags */
@@ -287,4 +287,5 @@ extern const DISC_INTERFACE __io_ntfs_usb007;
 #endif
 
 #endif /* _LIBNTFS_H */
+
 #endif

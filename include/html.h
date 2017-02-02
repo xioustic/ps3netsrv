@@ -156,6 +156,10 @@ static bool urlenc(char *dst, const char *src)
 
 	if(islike(src, "http") && (src[4] == ':' || src[5] == ':') && (src[6] == '/') && src[7]) { for(i = 8; src[i]; i++) if(src[i] == '/') {pos = i; break;} }
 
+#ifdef USE_NTFS
+	if(islike(src + pos, "/dev_nt")) pos += 11;
+#endif
+
 	for(i = 0; src[i]; i++, j++)
 	{
 		if(src[i] & 0x80)

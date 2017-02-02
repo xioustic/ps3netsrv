@@ -34,7 +34,8 @@ static void restore_cfw_syscalls(void)
 
 	syscalls_removed = false;
 }
-#endif
+
+#endif // #ifdef PS3MAPI
 
 static void restore_blocked_urls(void)
 {
@@ -143,7 +144,8 @@ static void disable_cfw_syscalls(bool keep_ccapi)
 
 	{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 }
-#endif
+
+#endif // #ifdef REMOVE_SYSCALLS
 
 static bool block_url(u64 addr, u64 value)
 {

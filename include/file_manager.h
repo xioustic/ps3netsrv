@@ -691,7 +691,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				for (uint8_t u = 0; u < ntmp; u++)
 				{
-					if(u) {sprintf(entry.d_name, "dev_%s:", mounts[u-1].name);}
+					if(u) {sprintf(entry.d_name, "dev_%s", mounts[u-1].name);}
 #endif
 					if(is_root)
 					{
