@@ -443,6 +443,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	check_cover_folders(tempstr);
 
+#ifdef SLAUNCH_FILE
+	int fdsl = create_slaunch_file();
+#endif
+
 #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
 	f1_len = webman_config->roms ? 13 : webman_config->ps3l ? 12 : 11;
 #endif
@@ -590,6 +594,9 @@ static bool update_mygames_xml(u64 conn_s_p)
 						if((ls == false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1]==NULL)) ls=true; // single letter folder was found
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0) == FAILED) {v3_entry++; continue;}
+#ifdef SLAUNCH_FILE
+						add_slaunch_entry(fdsl, neth, param, data[v3_entry].name, icon, templn);
+#endif
 #ifdef WM_PROXY_SPRX
 						sprintf(tempstr, "<Table key=\"%04i\">"
 										 XML_PAIR("icon","%s")
@@ -697,6 +704,9 @@ next_xml_entry:
 
 							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
+#ifdef SLAUNCH_FILE
+							add_slaunch_entry(fdsl, "", param, entry.d_name, icon, templn);
+#endif
 							urlenc(enc_dir_name, entry.d_name);
 
 							// subfolder name
@@ -758,6 +768,10 @@ continue_reading_folder_xml:
  #endif
 #endif
 	}
+
+#ifdef SLAUNCH_FILE
+	close_slaunch_file(fdsl);
+#endif
 
 	if( !(webman_config->nogrp))
 	{

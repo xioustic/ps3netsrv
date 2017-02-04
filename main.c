@@ -123,7 +123,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.46.01 MOD"
+#define WM_VERSION			"1.46.02 MOD"
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -776,6 +776,7 @@ static char current_file[MAX_PATH_LEN];
 #include "include/video_rec.h"
 #include "include/secure_file_id.h"
 
+#include "include/games_slaunch.h"
 #include "include/games_html.h"
 #include "include/games_xml.h"
 #include "include/prepntfs.h"

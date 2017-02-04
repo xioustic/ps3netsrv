@@ -100,6 +100,12 @@ static void explore_exec_push(u32 usecs, u8 focus_first)
 			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
 		}
 
+		if(webman_config->autoplay)
+		{
+			CellPadData pad_data = pad_read();
+			if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2) {BEEP2; return;} // abort auto-play holding L2
+		}
+
 		explore_interface->ExecXMBcommand("exec_push", 0, 0);
 
 		if(focus_first)
@@ -169,7 +175,7 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 				if(wait) sys_timer_usleep(150000);
 			}
 
-			if(execute) explore_interface->ExecXMBcommand("exec_push", 0, 0);
+			if(execute) explore_exec_push(0, false); //explore_interface->ExecXMBcommand("exec_push", 0, 0);
 		}
 		else {BEEP3}
 	}
