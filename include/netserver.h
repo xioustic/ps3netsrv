@@ -669,7 +669,7 @@ static void handleclient_net(uint64_t arg)
 
 static void netsvrd_thread(uint64_t arg)
 {
-	int list_s = FAILED;
+	int list_s = NONE;
 
 relisten:
 	if(working) list_s = slisten(webman_config->netsrvp, 4);
@@ -710,7 +710,7 @@ relisten:
 			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s = FAILED;
+				list_s = NONE;
 				if(working) goto relisten;
 				else break;
 			}

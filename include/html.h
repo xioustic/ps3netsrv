@@ -302,101 +302,101 @@ static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 	{
 		char *ext = (char*)param + MAX(flen - 4, 0), *ext5 = (char*)param + MAX(flen - 5, 0);
 
-		if(!extcasecmp(ext, ".png", 4))
+		if(_IS(ext, ".png"))
 			strcat(header, "image/png");
 		else
-		if(!extcasecmp(ext, ".jpg", 4) || !extcasecmp(ext5, ".jpeg", 5) || !extcmp(ext, ".STH", 4))
+		if(_IS(ext, ".jpg") || _IS(ext5, ".jpeg") || IS(ext, ".STH"))
 			strcat(header, "image/jpeg");
 		else
-		if(!extcasecmp(ext, ".htm", 4) || !extcasecmp(ext5, ".html", 5) || !extcasecmp(ext5, ".shtm", 5))
+		if(_IS(ext, ".htm") || _IS(ext5, ".html") || _IS(ext5, ".shtm"))
 			{strcat(header, "text/html"); set_base_path = true;}
 		else
-		if(!extcasecmp(ext, ".js", 3))
+		if(_IS(ext, ".js"))
 			strcat(header, "text/javascript");
 		else
-		if(!extcasecmp(ext, ".css", 4))
+		if(_IS(ext, ".css"))
 			strcat(header, "text/css");
 		else
-		if(!extcasecmp(ext, ".txt", 4) || !extcasecmp(ext, ".log", 4) || !extcasecmp(ext, ".ini", 4) || !extcasecmp(ext, ".cfg", 4) || !extcmp(ext, ".HIP", 4) || !extcmp(ext, ".HIS", 4))
+		if(_IS(ext, ".txt") || _IS(ext, ".log") || _IS(ext, ".ini") || _IS(ext, ".cfg") || IS(ext, ".HIP") || IS(ext, ".HIS"))
 			strcat(header, "text/plain");
 		else
-		if(!extcasecmp(ext, ".svg", 4))
+		if(_IS(ext, ".svg"))
 			strcat(header, "image/svg+xml");
 #ifndef LITE_EDITION
 		else
-		if(!extcasecmp(ext, ".gif", 4))
+		if(_IS(ext, ".gif"))
 			strcat(header, "image/gif");
 		else
-		if(!extcasecmp(ext, ".bmp", 4))
+		if(_IS(ext, ".bmp"))
 			strcat(header, "image/bmp");
 		else
-		if(!extcasecmp(ext, ".tif", 4))
+		if(_IS(ext, ".tif"))
 			strcat(header, "image/tiff");
 		else
-		if(!extcasecmp(ext, ".avi", 4))
+		if(_IS(ext, ".avi"))
 			strcat(header, "video/x-msvideo");
 		else
-		if(!extcasecmp(ext, ".mp4", 4))
+		if(_IS(ext, ".mp4"))
 			strcat(header, "video/mp4");
 		else
-		if(!extcasecmp(ext, ".mkv", 4))
+		if(_IS(ext, ".mkv"))
 			strcat(header, "video/x-matroska");
 		else
-		if(!extcasecmp(ext, ".mpg", 4) || !extcasecmp(ext, ".mp2", 4) || strcasestr(ext5, ".mpe"))
+		if(_IS(ext, ".mpg") || _IS(ext, ".mp2") || strcasestr(ext5, ".mpe"))
 			strcat(header, "video/mpeg");
 		else
-		if(!extcasecmp(ext, ".vob", 4))
+		if(_IS(ext, ".vob"))
 			strcat(header, "video/vob");
 		else
-		if(!extcasecmp(ext, ".wmv", 4))
+		if(_IS(ext, ".wmv"))
 			strcat(header, "video/x-ms-wmv");
 		else
-		if(!extcasecmp(ext, ".flv", 4))
+		if(_IS(ext, ".flv"))
 			strcat(header, "video/x-flv");
 		else
-		if(!extcasecmp(ext, ".mov", 4))
+		if(_IS(ext, ".mov"))
 			strcat(header, "video/quicktime");
 		else
-		if(!extcasecmp(ext5, ".webm", 5))
+		if(_IS(ext5, ".webm"))
 			strcat(header, "video/webm");
 		else
-		if(!extcasecmp(ext, ".mp3", 4))
+		if(_IS(ext, ".mp3"))
 			strcat(header, "audio/mpeg");
 		else
-		if(!extcasecmp(ext, ".wav", 4))
+		if(_IS(ext, ".wav"))
 			strcat(header, "audio/x-wav");
 		else
-		if(!extcasecmp(ext, ".wma", 4))
+		if(_IS(ext, ".wma"))
 			strcat(header, "audio/x-ms-wma");
 		else
-		if(!extcasecmp(ext, ".mid", 4) || !extcasecmp(ext, ".kar", 4))
+		if(_IS(ext, ".mid") || _IS(ext, ".kar"))
 			strcat(header, "audio/midi");
 		else
-		if(!extcasecmp(ext, ".mod", 4))
+		if(_IS(ext, ".mod"))
 			strcat(header, "audio/mod");
 		else
-		if(!extcasecmp(ext, ".zip", 4))
+		if(_IS(ext, ".zip"))
 			strcat(header, "application/zip");
 		else
-		if(!extcasecmp(ext, ".pdf", 4))
+		if(_IS(ext, ".pdf"))
 			strcat(header, "application/pdf");
 		else
-		if(!extcasecmp(ext, ".doc", 4))
+		if(_IS(ext, ".doc"))
 			strcat(header, "application/msword");
 		else
-		if(!extcasecmp(ext5, ".docx", 5))
+		if(_IS(ext5, ".docx"))
 			strcat(header, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 		else
-		if(!extcasecmp(ext, ".xls", 4))
+		if(_IS(ext, ".xls"))
 			strcat(header, "application/vnd.ms-excel");
 		else
-		if(!extcasecmp(ext5, ".xlsx", 5))
+		if(_IS(ext5, ".xlsx"))
 			strcat(header, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 		else
-		if(!extcasecmp(ext, ".ppt", 4) || !extcasecmp(ext, ".pps", 4))
+		if(_IS(ext, ".ppt") || _IS(ext, ".pps"))
 			strcat(header, "application/vnd.ms-powerpoint");
 		else
-		if(!extcasecmp(ext, ".swf", 4))
+		if(_IS(ext, ".swf"))
 			strcat(header, "application/x-shockwave-flash");
 #endif
 		else

@@ -94,7 +94,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 
 #ifndef LITE_EDITION
 	// is image?
-	u8 show_img = !is_ps3_http && (!is_dir && (!strcasecmp(ext, ".png") || !strcasecmp(ext, ".jpg") || !strcasecmp(ext, ".bmp")));
+	u8 show_img = !is_ps3_http && (!is_dir && (_IS(ext, ".png") || _IS(ext, ".jpg") || _IS(ext, ".bmp")));
 #endif
 
 	char sclass = ' ', dclass = 'w'; // file class
@@ -187,9 +187,9 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 		}
 #ifdef COPY_PS3
  #ifdef USE_NTFS
-		else if(is_ntfs_path(templn) || (!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") )))
+		else if(is_ntfs_path(templn) || (!is_net && ( (flen == 5 && (_IS(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && _IS(name, "covers")) || islike(param, "/dev_hdd0/home") )))
  #else
-		else if(!is_net && ( (flen == 5 && (!strcasecmp(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && !strcasecmp(name, "covers")) || islike(param, "/dev_hdd0/home") ))
+		else if(!is_net && ( (flen == 5 && (_IS(name, "VIDEO") || strcasestr(name, "music"))) || (flen == 6 && _IS(name, "covers")) || islike(param, "/dev_hdd0/home") ))
  #endif
 		{
 			sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"copy to %s\">%s</a>", islike(templn, param) ? templn + plen : templn, islike(templn, "/dev_hdd0") ? drives[usb] : "/dev_hdd0", HTML_DIR);
@@ -259,12 +259,12 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			sprintf(fsize, "<a href=\"/rename.ps3%s|\">%'llu %s</a>", templn, sz, sf);
 	else if(   show_img
  #ifndef PKG_HANDLER
-			|| IS(ext, ".pkg") || IS(ext, ".p3t")
+			|| IS(ext,  ".pkg") ||  IS(ext, ".p3t")
  #endif
 			|| IS(ext5, ".edat")
-			|| IS(ext, ".rco") || IS(ext, ".qrc")
-			|| !strcasecmp(ext, ".mp4") || !strcasecmp(ext, ".mkv") || !strcasecmp(ext, ".avi")
-			|| !strcasecmp(ext, ".mp3")
+			|| IS(ext,  ".rco") ||  IS(ext, ".qrc")
+			|| _IS(ext, ".mp4") || _IS(ext, ".mkv") || _IS(ext, ".avi")
+			|| _IS(ext, ".mp3")
 			|| !memcmp(name, "webftp_server", 13) || !memcmp(name, "boot_plugins_", 13) || !memcmp(name, "coldboot", 8)
  #ifdef SWAP_KERNEL
 			|| !memcmp(name, "lv2_kernel", 10)
@@ -606,7 +606,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				}
 				else //may be a file
 				{
-					flen = strlen(param) - 1; if(param[flen] == '/') param[flen] = NULL;
+					if(param[plen] == '/') param[plen] = NULL;
 
 					int is_directory = 0;
 					int64_t file_size;
@@ -821,13 +821,15 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 				if(!show_icon && islike(param, "/dev_bdvd"))
 				{
+					enum icon_type dt = iPS3;
 #ifdef COBRA_ONLY
 					cobra_get_disc_type(&real_disctype, &effective_disctype, &iso_disctype);
-					if(iso_disctype == DISC_TYPE_PSX_CD) sprintf(templn, "%s", wm_icons[6]); else
-					if(iso_disctype == DISC_TYPE_PS2_DVD || iso_disctype == DISC_TYPE_PS2_CD) sprintf(templn, "%s", wm_icons[7]); else
-					if(iso_disctype == DISC_TYPE_DVD) sprintf(templn, "%s", wm_icons[9]); else
+					if(iso_disctype == DISC_TYPE_PSX_CD) dt = iPSX; else
+					if(iso_disctype == DISC_TYPE_PS2_DVD
+					|| iso_disctype == DISC_TYPE_PS2_CD) dt = iPS2; else
+					if(iso_disctype == DISC_TYPE_DVD)    dt = iDVD;
 #endif
-					sprintf(templn, "%s", wm_icons[5]); show_icon = true;
+					sprintf(templn, "%s", wm_icons[dt]); show_icon = true;
 				}
 
 				for(u16 m = idx; m < 8; m++) buffer += concat(buffer, "<BR>");

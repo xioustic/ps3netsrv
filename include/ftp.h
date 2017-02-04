@@ -155,7 +155,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 			int split = ssplit(buffer, cmd, 15, param, MAX_PATH_LEN - 1);
 
-			if(working && loggedin == 1)
+			if(!working || _IS(cmd, "QUIT") || _IS(cmd, "BYE"))
+			{
+				if(working) ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
+				connactive = 0;
+				break;
+			}
+			else
+			if(loggedin)
 			{
 				if(_IS(cmd, "CWD") || _IS(cmd, "XCWD"))
 				{
@@ -165,18 +172,17 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						absPath(tempcwd, param, cwd);
 					}
 					else
-						strcpy(tempcwd, cwd);
+						sprintf(tempcwd, "%s", cwd);
 #ifdef USE_NTFS
 					if(is_ntfs_path(tempcwd))
 					{
-						strcpy(cwd, tempcwd);
 						tempcwd[10] = ':';
 						if(strlen(tempcwd) < 13 || (ps3ntfs_stat(tempcwd + 5, &bufn) >= 0 && (bufn.st_mode & S_IFDIR))) is_ntfs = true;
 					}
 #endif
 					if(is_ntfs || isDir(tempcwd))
 					{
-						strcpy(cwd, tempcwd);
+						sprintf(cwd, "%s", tempcwd);
 						ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 
 						dataactive = 1;
@@ -230,12 +236,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					{
 						ssend(conn_s_ftp, FTP_ERROR_REST_501); // Syntax error in parameters or arguments.
 					}
-				}
-				else
-				if(_IS(cmd, "QUIT") || _IS(cmd, "BYE"))
-				{
-					ssend(conn_s_ftp, FTP_OK_221);
-					connactive = 0;
 				}
 				else
 				if(_IS(cmd, "FEAT"))
@@ -858,86 +858,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(_IS(cmd, "DELE"))
-				{
-					if(split)
-					{
-						absPath(filename, param, cwd);
-#ifdef USE_NTFS
-						if(is_ntfs_path(filename))
-						{
-							filename[10] = ':';
-							if(ps3ntfs_unlink(filename + 5) >= 0) is_ntfs = true;
-						}
-#endif
-						if(is_ntfs || cellFsUnlink(filename) == CELL_FS_SUCCEEDED)
-						{
-							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
-						}
-						else
-						{
-							ssend(conn_s_ftp, FTP_ERROR_550); // Requested action not taken. File unavailable (e.g., file not found, no access).
-						}
-					}
-					else
-					{
-						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
-					}
-				}
-				else
-				if(_IS(cmd, "MKD") || _IS(cmd, "XMKD"))
-				{
-					if(split)
-					{
-						absPath(filename, param, cwd);
-#ifdef USE_NTFS
-						if(is_ntfs_path(filename))
-						{
-							filename[10] = ':';
-							if(ps3ntfs_mkdir(filename + 5, MODE) >= CELL_OK) is_ntfs = true;
-						}
-#endif
-						if(is_ntfs || cellFsMkdir(filename, MODE) == CELL_FS_SUCCEEDED)
-						{
-							sprintf(buffer, "257 \"%s\" OK\r\n", param);
-							ssend(conn_s_ftp, buffer);
-						}
-						else
-						{
-							ssend(conn_s_ftp, FTP_ERROR_550); // Requested action not taken. File unavailable (e.g., file not found, no access).
-						}
-					}
-					else
-					{
-						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
-					}
-				}
-				else
-				if(_IS(cmd, "RMD") || _IS(cmd, "XRMD"))
-				{
-					if(split)
-					{
-						absPath(filename, param, cwd);
-
-#ifndef LITE_EDITION
-						if(del(filename, true) == CELL_FS_SUCCEEDED)
-#else
-						if(cellFsRmdir(filename) == CELL_FS_SUCCEEDED)
-#endif
-						{
-							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
-						}
-						else
-						{
-							ssend(conn_s_ftp, FTP_ERROR_550); // Requested action not taken. File unavailable (e.g., file not found, no access).
-						}
-					}
-					else
-					{
-						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
-					}
-				}
-				else
 				if(_IS(cmd, "STOR") || _IS(cmd, "APPE"))
 				{
 					if(data_s < 0 && pasv_s >= 0) data_s = accept(pasv_s, NULL, NULL);
@@ -1056,7 +976,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(is_ntfs_path(filename))
 						{
 							filename[10] = ':';
-							if(ps3ntfs_stat(filename + 5, &bufn) >= 0) is_ntfs = true;
+							if(ps3ntfs_stat(filename + 5, &bufn) >= 0) {is_ntfs = true; buf.st_size = bufn.st_size;}
 						}
 #endif
 						if(is_ntfs || cellFsStat(filename, &buf) == CELL_FS_SUCCEEDED)
@@ -1064,6 +984,33 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							sprintf(buffer, "213 %llu\r\n", (unsigned long long)buf.st_size);
 							ssend(conn_s_ftp, buffer);
 							dataactive = 1;
+						}
+						else
+						{
+							ssend(conn_s_ftp, FTP_ERROR_550); // Requested action not taken. File unavailable (e.g., file not found, no access).
+						}
+					}
+					else
+					{
+						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
+					}
+				}
+				else
+				if(_IS(cmd, "DELE"))
+				{
+					if(split)
+					{
+						absPath(filename, param, cwd);
+#ifdef USE_NTFS
+						if(is_ntfs_path(filename))
+						{
+							filename[10] = ':';
+							if(ps3ntfs_unlink(filename + 5) >= 0) is_ntfs = true;
+						}
+#endif
+						if(is_ntfs || cellFsUnlink(filename) == CELL_FS_SUCCEEDED)
+						{
+							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
 						}
 						else
 						{
@@ -1167,7 +1114,59 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 					*source = NULL;
 				}
+				else
+				if(_IS(cmd, "MKD") || _IS(cmd, "XMKD"))
+				{
+					if(split)
+					{
+						absPath(filename, param, cwd);
+#ifdef USE_NTFS
+						if(is_ntfs_path(filename))
+						{
+							filename[10] = ':';
+							if(ps3ntfs_mkdir(filename + 5, MODE) >= CELL_OK) is_ntfs = true;
+						}
+#endif
+						if(is_ntfs || cellFsMkdir(filename, MODE) == CELL_FS_SUCCEEDED)
+						{
+							sprintf(buffer, "257 \"%s\" OK\r\n", param);
+							ssend(conn_s_ftp, buffer);
+						}
+						else
+						{
+							ssend(conn_s_ftp, FTP_ERROR_550); // Requested action not taken. File unavailable (e.g., file not found, no access).
+						}
+					}
+					else
+					{
+						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
+					}
+				}
+				else
+				if(_IS(cmd, "RMD") || _IS(cmd, "XRMD"))
+				{
+					if(split)
+					{
+						absPath(filename, param, cwd);
 
+#ifndef LITE_EDITION
+						if(del(filename, true) == CELL_FS_SUCCEEDED)
+#else
+						if(cellFsRmdir(filename) == CELL_FS_SUCCEEDED)
+#endif
+						{
+							ssend(conn_s_ftp, FTP_OK_250); // Requested file action okay, completed.
+						}
+						else
+						{
+							ssend(conn_s_ftp, FTP_ERROR_550); // Requested action not taken. File unavailable (e.g., file not found, no access).
+						}
+					}
+					else
+					{
+						ssend(conn_s_ftp, FTP_ERROR_501); // Syntax error in parameters or arguments.
+					}
+				}
 				else
 				if(_IS(cmd, "USER") || _IS(cmd, "PASS"))
 				{
@@ -1204,7 +1203,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					rest = 0;
 				}
 			}
-			else if (working)
+			else
 			{
 				// commands available when not logged in
 				if(_IS(cmd, "USER"))
@@ -1225,26 +1224,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					}
 				}
 				else
-				if(_IS(cmd, "QUIT") || _IS(cmd, "BYE"))
-				{
-					ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
-					connactive = 0;
-				}
-				else
 				{
 					ssend(conn_s_ftp, FTP_ERROR_530); // Not logged in.
 				}
 			}
-			else
-			{
-				loggedin = connactive = 0;
-				break;
-			}
-
 		}
 		else
 		{
-			loggedin = connactive = 0;
+			connactive = 0;
 			break;
 		}
 

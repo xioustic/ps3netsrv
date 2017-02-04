@@ -1640,7 +1640,7 @@ static void ps3mapi_thread(u64 arg)
 	{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_MINVERSION); core_minversion = (int)(p1); }
 	if((core_minversion !=0) &&(PS3MAPI_CORE_MINVERSION == core_minversion)) //Check if ps3mapi core has a compatible min_version.
 	{
-		int list_s = FAILED;
+		int list_s = NONE;
 	relisten:
 		if(working) list_s = slisten(PS3MAPIPORT, 4);
 		else goto end;
@@ -1670,7 +1670,7 @@ static void ps3mapi_thread(u64 arg)
 				if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 				{
 					sclose(&list_s);
-					list_s = FAILED;
+					list_s = NONE;
 					if(working) goto relisten;
 					else break;
 				}

@@ -1889,7 +1889,7 @@ parse_request:
 							hex_dump(kl, (int)KLICENSEE_OFFSET, KLICENSEE_SIZE);
 							sprintf(buffer, "%s %s %s %s\r\n", kl, (char*)(KLIC_CONTENT_ID_OFFSET), header, (char*)(KLIC_PATH_OFFSET));
 
-							if(klic_polling == KL_AUTO && !strcmp(buffer, prev)) {sys_timer_usleep(10000); continue;}
+							if(klic_polling == KL_AUTO && IS(buffer, prev)) {sys_timer_usleep(10000); continue;}
 
 							save_file("/dev_hdd0/klic.log", buffer, APPEND_TEXT);
 
@@ -2352,7 +2352,7 @@ parse_request:
 			{
 				// /mount.ps3?<query>  search game & mount if only 1 match is found
 
-				if(!islike(param, "/mount.ps3?http")) {param[1] = 'i', param[2] = 'n', param[3] = 'd', param[4] = 'e', param[5] = 'x', auto_mount = true;}
+				if(!islike(param, "/mount.ps3?http")) {memcpy(param, "/index.ps3", 10); auto_mount = true;}
 			}
  #endif
 
@@ -3547,7 +3547,7 @@ again_debug:
 
 	led(GREEN, ON);
 
-	int list_s = FAILED;
+	int list_s = NONE;
 
 relisten:
 #ifdef USE_DEBUG
@@ -3606,7 +3606,7 @@ relisten:
 			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s = FAILED;
+				list_s = NONE;
 				if(working) goto relisten;
 				else break;
 			}

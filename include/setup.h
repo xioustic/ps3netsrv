@@ -430,8 +430,8 @@ static void setup_form(char *buffer, char *templn)
 	char STR_FANCTRL2[48];//	= "CTRL FAN";
 	char STR_FANCTRL4[72];//	= "CTRL DYN FAN";
 	char STR_FANCTRL5[88];//	= "CTRL MIN FAN";
-	char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
-	char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
+	//char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
+	//char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
 
 	language("STR_SCAN1", STR_SCAN1, "Scan these devices");
 	language("STR_PSPL", STR_PSPL, "Show PSP Launcher");
@@ -935,8 +935,10 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS),  buffer);
 #endif
 	add_check_box("puw", "1", STR_UNLOADWM,   " : <b>L3+R2+R3</b><br>"         , !(webman_config->combo & UNLOAD_WM),  buffer);
-	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+"                  , !(webman_config->combo & MANUALFAN),  buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
-	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+"                  , !(webman_config->combo & MINDYNFAN),  buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
+//	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+"                  , !(webman_config->combo & MANUALFAN),  buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
+//	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+"                  , !(webman_config->combo & MINDYNFAN),  buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
+	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+&#8593;/&#8595;</b><br>", !(webman_config->combo & MANUALFAN),  buffer);
+	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+&#8592;/&#8594;</b><br>", !(webman_config->combo & MINDYNFAN),  buffer);
 #ifdef REMOVE_SYSCALLS
 	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> ("         , !(webman_config->combo & DISABLESH),  buffer);
 	add_check_box("kcc", "1", "CCAPI", " ",  !(webman_config->keep_ccapi), buffer);

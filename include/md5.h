@@ -6,8 +6,7 @@ static void calc_md5(char *filename, char *md5)
 {
 	int fd;
 
-	uint8_t _md5[16];
-	for(uint8_t i = 0; i < 16; i++) _md5[i] = 0;
+	uint8_t _md5[16]; memset(_md5, 0, 16);
 
 	sys_addr_t sysmem = NULL;
 

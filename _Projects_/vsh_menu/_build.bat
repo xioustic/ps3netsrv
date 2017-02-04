@@ -10,7 +10,7 @@ if exist wm_vsh_menu.sym  del /q wm_vsh_menu.sym>nul
 
 md data>nul
 if exist data\keys del /q data\*>nul
-copy ..\data\* data>nul
+copy ..\..\data\* data>nul
 
 %CYGWIN%\bash --login -i -c 'make;exit'
 

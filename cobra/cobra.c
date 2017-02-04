@@ -1219,7 +1219,7 @@ int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max
 continue_loop:
 		skip_spaces();
 
-		if (strncasecmp(p, "FILE", 4) == 0 && p[4] <= ' ' && p[4] > 0)
+		if (p[4] <= ' ' && p[4] > 0 && strncasecmp(p, "FILE", 4) == 0)
 		{
 			if (bin_file)
 			{
@@ -1268,7 +1268,7 @@ continue_loop:
 				strncpy(filename, bin_file, fn_size);
 			}
 		}
-		else if (strncasecmp(p, "TRACK", 5) == 0 && p[5] <= ' ' && p[5] > 0)
+		else if (p[5] <= ' ' && p[5] > 0 && strncasecmp(p, "TRACK", 5) == 0)
 		{
 			if (read_index)
 			{
@@ -1295,14 +1295,14 @@ continue_loop:
 
 			if (ntracks == 0)
 			{
-				if (strncasecmp(p, "MODE2/2352", 9) != 0 || !(p[10] <= ' ' && p[10] >= 0))
+				if (!(p[10] <= ' ' && p[10] >= 0) || strncasecmp(p, "MODE2/2352", 9) != 0)
 				{
 					//DPRINTF("First track is not MODE2/2352!!!\n");
 					ret = ENOTSUP;
 					break;
 				}
 			}
-			else if (strncasecmp(p, "AUDIO", 5) != 0 || !(p[5] <= ' ' && p[5] >= 0))
+			else if (!(p[5] <= ' ' && p[5] >= 0) || strncasecmp(p, "AUDIO", 5) != 0)
 			{
 				//DPRINTF("Found a track which is not AUDIO!!!\n");
 				ret = ENOTSUP;
@@ -1311,7 +1311,7 @@ continue_loop:
 
 			read_index = 1;
 		}
-		else if (strncasecmp(p, "INDEX", 5) == 0 && p[5] <= ' ' && p[5] > 0)
+		else if (p[5] <= ' ' && p[5] > 0 && strncasecmp(p, "INDEX", 5) == 0)
 		{
 			if (read_index)
 			{
@@ -1325,32 +1325,32 @@ continue_loop:
 					int minutes, seconds, frames;
 
 					minutes = val(p);
-					if (minutes >= 256 || minutes < 0)
-					{
-						//DPRINTF("Bad minutes format.\n");
-					}
+//					if (minutes >= 256 || minutes < 0)
+//					{
+//						//DPRINTF("Bad minutes format.\n");
+//					}
 
-					if (*p != ':')
-					{
-						//DPRINTF("Bad index formatting (1)\n");
-					}
+//					if (*p != ':')
+//					{
+//						//DPRINTF("Bad index formatting (1)\n");
+//					}
 
 					seconds = val(p+1);
-					if (seconds >= 256 || seconds < 0)
-					{
-						//DPRINTF("Bad seconds format\n");
-					}
+//					if (seconds >= 256 || seconds < 0)
+//					{
+//						//DPRINTF("Bad seconds format\n");
+//					}
 
-					if (*p != ':')
-					{
-						//DPRINTF("Bad index formatting(2)\n");
-					}
+//					if (*p != ':')
+//					{
+//						//DPRINTF("Bad index formatting(2)\n");
+//					}
 
 					frames = val(p+1);
-					if (frames >= 256 || frames < 0)
-					{
-						//DPRINTF("Bad frames format\n");
-					}
+//					if (frames >= 256 || frames < 0)
+//					{
+//						//DPRINTF("Bad frames format\n");
+//					}
 
 					uint32_t lba = msf_to_lba(minutes, seconds, frames);
 
