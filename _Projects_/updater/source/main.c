@@ -615,6 +615,40 @@ int main()
 		}
 
 		CopyFile(APP_USRDIR "/wm_vsh_menu.sprx", PLUGINS_DIR "/wm_vsh_menu.sprx");
+
+		// append path if installing for first time
+		if(sysLv2FsStat(PLUGINS_DIR "/slaunch.sprx", &stat) != SUCCESS)
+		{
+			if(is_cobra())
+			{
+				// append line to boot_plugins.txt
+				if(sysLv2FsStat(HDDROOT_DIR "/boot_plugins.txt", &stat) == SUCCESS)
+					f = fopen(HDDROOT_DIR "/boot_plugins.txt", "a");
+				else
+					f = fopen(HDDROOT_DIR "/boot_plugins.txt", "w");
+					fputs("\r\n" PLUGINS_DIR "/slaunch.sprx", f);
+					fclose(f);
+			}
+			if(is_mamba())
+			{
+				// append line to mamba_plugins.txt
+				if(sysLv2FsStat(HDDROOT_DIR "/mamba_plugins.txt", &stat) == SUCCESS)
+					f = fopen(HDDROOT_DIR "/mamba_plugins.txt", "a");
+				else
+					f = fopen(HDDROOT_DIR "/mamba_plugins.txt", "w");
+					fputs("\r\n" PLUGINS_DIR "/slaunch.sprx", f);
+					fclose(f);
+			}
+			if(sysLv2FsStat(HDDROOT_DIR "/prx_plugins.txt", &stat) == SUCCESS)
+			{
+				// append line to prx_plugins.txt
+				f = fopen(HDDROOT_DIR "/prx_plugins.txt", "a");
+				fputs("\r\n" PLUGINS_DIR "/slaunch.sprx", f);
+				fclose(f);
+			}
+		}
+
+		CopyFile(APP_USRDIR "/slaunch.sprx", PLUGINS_DIR "/slaunch.sprx");
 	}
 
 	// skip update custom language file
