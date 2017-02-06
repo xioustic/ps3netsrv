@@ -74,7 +74,8 @@ static void spoof_idps_psid(void)
 		newIDPS[0] = convertH(webman_config->vIDPS1);
 		newIDPS[1] = convertH(webman_config->vIDPS2);
 
-		if(newIDPS[0] >= 0x0000000100800000ULL && newIDPS[1] != 0)
+		// IDPS must be like 00000001008*00**
+		if((newIDPS[0] & 0xFFFFFFFFFFF0FF00ULL) == 0x0000000100800000ULL && newIDPS[1] != 0)
 		{
 #ifndef LAST_FIRMWARE_ONLY
 			if(c_firmware <= 4.53f)

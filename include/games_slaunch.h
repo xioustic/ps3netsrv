@@ -1,11 +1,13 @@
-#define SLAUNCH_FILE			"/dev_hdd0/tmp/wmtmp/slaunch.bin"
+#define SLAUNCH_FILE		"/dev_hdd0/tmp/wmtmp/slaunch.bin"
+
+#define MAX_SLAUNCH_ITEMS	1000
 
 #ifdef SLAUNCH_FILE
 typedef struct
 {
-   char path[128];
-   char icon[128];
-   char name[128];
+	char path[128];
+	char icon[128];
+	char name[128];
 } __attribute__((packed)) _slaunch;
 
 static int create_slaunch_file(void)
@@ -21,15 +23,14 @@ static void add_slaunch_entry(int fd, const char *neth, const char *path, const 
 {
 	if(!fd) return;
 
-	char sLaunch[sizeof(_slaunch)];
-	_slaunch *slaunch = (_slaunch*) sLaunch;
+	_slaunch slaunch; char enc_filename[MAX_PATH_LEN];
 
-	memset(sLaunch, 0, sizeof(_slaunch));
-	snprintf(slaunch->path, 128, "/mount_ps3%s%s/%s", neth, path, filename);
-	snprintf(slaunch->icon, 128, "%s", icon);
-	snprintf(slaunch->name, 128, "%s", name);
+	memset(&slaunch, 0, sizeof(_slaunch)); urlenc_ex(enc_filename, filename, false);
+	snprintf(slaunch.path, sizeof(slaunch.path), "/mount_ps3%s%s/%s", neth, path, enc_filename);
+	snprintf(slaunch.icon, sizeof(slaunch.icon), "%s", icon);
+	snprintf(slaunch.name, sizeof(slaunch.name), "%s", name);
 
-	cellFsWrite(fd, (char*)sLaunch, 384, NULL);
+	cellFsWrite(fd, (void *)&slaunch, sizeof(_slaunch), NULL);
 }
 
 static void close_slaunch_file(int fd)

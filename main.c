@@ -1853,9 +1853,9 @@ parse_request:
 													 "%s%s<br>"
 													 "%s%s<p>",
 													 _game_TitleID, _game_Title,
-													 "KLicensee: ", hex_dump(kl, KLICENSEE_OFFSET, KLICENSEE_SIZE),
+													 "KLicensee: ",  hex_dump(kl, KLICENSEE_OFFSET, KLICENSEE_SIZE),
 													 "Content ID: ", (char*)(KLIC_CONTENT_ID_OFFSET),
-													 "File: ", (char*)(KLIC_PATH_OFFSET));
+													 "File: ",       (char*)(KLIC_PATH_OFFSET));
 				}
 				else
 					{sprintf(buffer, "ERROR: <a style=\"%s\" href=\"play.ps3\">%s</a><p>", HTML_URL_STYLE, "KLIC: Not in-game!"); klic_polling = KL_OFF; show_msg((char*)"KLIC: Not in-game!");}

@@ -1,8 +1,6 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
-PEXPORTPICKUP = ppu-lv2-prx-exportpickup
-
 CRT_HEAD += $(shell ppu-lv2-gcc -print-file-name'='ecrti.o)
 CRT_HEAD += $(shell ppu-lv2-gcc -print-file-name'='crtbegin.o)
 CRT_TAIL += $(shell ppu-lv2-gcc -print-file-name'='crtend.o)
@@ -10,23 +8,28 @@ CRT_HEAD += $(shell ppu-lv2-gcc -print-file-name'='ecrtn.o)
 
 ROOT_PATH = ../..
 
-#PPU_SRCS = network.c main.c
-PPU_SRCS = main.c
-PPU_INCDIRS	+= -I./vsh/inc
-PPU_PRX_TARGET = video_rec.prx
-PPU_PRX_LDFLAGS += -L./vsh/lib -Wl,--strip-unused-data
+PPU_SRCS = mem.c misc.c png_dec.c jpg_dec.c blitting.c main.c libc.c
+PPU_INCDIRS	= -I $(ROOT_PATH)/vsh
+PPU_PRX_TARGET = slaunch.prx
+PPU_PRX_LDFLAGS = -L $(ROOT_PATH)/lib -Wl, --strip-unused-data
 PPU_PRX_STRIP_FLAGS = -s
-
-PPU_PRX_LDLIBS 	+= -lfs_stub -lio_stub -lrtc_stub \
+PPU_PRX_LDLIBS 	+= -lfs_stub -lnet_stub -lrtc_stub -lio_stub -lnetctl_stub -lnet_stub -ljpgdec_stub \
+                   -lstdc_export_stub \
+                   -lallocator_export_stub \
+                   -lxsetting_export_stub \
+                   -lpngdec_ppuonly_export_stub \
                    -lvsh_export_stub \
                    -lpaf_export_stub \
                    -lvshmain_export_stub \
-                   -lvshtask_export_stub \
-                   -lallocator_export_stub \
-                   -lstdc_export_stub \
-                   -lxsetting_export_stub
+                   -lsdk_export_stub \
+                   -lxsetting_export_stub \
+                   -lsys_io_export_stub
 
-PPU_CFLAGS += -Os -ffunction-sections -fdata-sections -fno-builtin-printf -nodefaultlibs -std=gnu99 -Wno-shadow -Wno-unused-parameter
+PPU_CFLAGS += -Os -ffunction-sections -fdata-sections \
+              -fno-builtin-printf -nodefaultlibs -std=gnu99 \
+              -Wno-shadow -Wno-unused-parameter
+
+CLEANFILES = ./$(PPU_SPRX_TARGET)
 
 all:
 	$(MAKE) $(PPU_OBJS_DEPENDS)

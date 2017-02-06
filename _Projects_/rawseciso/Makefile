@@ -3,8 +3,10 @@ include $(CELL_MK_DIR)/sdk.makedef.mk
 
 BUILD_TYPE     	= release
 
+ROOT_PATH = ../..
+
 LIBSTUB_DIR		= ../lib
-PRX_DIR		= .
+PRX_DIR			= .
 INSTALL			= cp
 PEXPORTPICKUP		= ppu-lv2-prx-exportpickup
 PRX_LDFLAGS_EXTRA	= -L ../lib -Wl,--strip-unused-data
@@ -30,10 +32,9 @@ CLEANFILES = $(PRX_DIR)/$(PPU_SPRX_TARGET)
 all:
 	$(MAKE) $(PPU_OBJS_DEPENDS)
 	$(PPU_PRX_STRIP) --strip-debug --strip-section-header $(PPU_PRX_TARGET)
-	$(MAKE_FSELF) $(PPU_PRX_TARGET) $(PPU_SPRX_TARGET)
+#	$(MAKE_FSELF) $(PPU_PRX_TARGET) $(PPU_SPRX_TARGET)
+	cp -r $(ROOT_PATH)/data data
+	$(ROOT_PATH)/scetool -0 SELF -1 TRUE -s FALSE -2 04 -3 1070000052000001 -4 01000002 -5 APP -6 0003004000000000 -A 0001000000000000 -e $(PPU_PRX_TARGET) $(PPU_SPRX_TARGET)
+	rm -r data objs $(PPU_PRX_TARGET) *.sym
 
 include $(CELL_MK_DIR)/sdk.target.mk
-
-
-
-

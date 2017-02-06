@@ -89,6 +89,16 @@ static void enable_ingame_screenshot(void)
 }
 #endif
 
+static bool abort_autoplay(void)
+{
+	if(webman_config->autoplay)
+	{
+		CellPadData pad_data = pad_read();
+		if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2) {BEEP2; return true;} // abort auto-play holding L2
+	}
+	return false;
+}
+
 static void explore_exec_push(u32 usecs, u8 focus_first)
 {
 	if(explore_interface)
@@ -100,11 +110,7 @@ static void explore_exec_push(u32 usecs, u8 focus_first)
 			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
 		}
 
-		if(webman_config->autoplay)
-		{
-			CellPadData pad_data = pad_read();
-			if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2) {BEEP2; return;} // abort auto-play holding L2
-		}
+		if(abort_autoplay()) return;
 
 		explore_interface->ExecXMBcommand("exec_push", 0, 0);
 
@@ -120,7 +126,7 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 {
 	u8 n;
 
-	for(n = 0; n < 15; n++) {if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
+	for(n = 0; n < 15; n++) {if(abort_autoplay()) return; if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
 
 	if(IS(seg_name, "seg_device")) waitfor("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
 
@@ -142,7 +148,7 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 			while(View_Find("webrender_plugin") || View_Find("webbrowser_plugin"))
 			{
-				sys_timer_usleep(500000); retry++; if(retry > 4) break;
+				sys_timer_usleep(500000); retry++; if(retry > 4) break; if(abort_autoplay()) return;
 			}
 
 			// use segment for media type
@@ -160,6 +166,8 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 			for(n = 0; n < timeout; n++)
 			{
+				if(abort_autoplay()) return;
+
 				if((n < icon_found) && file_exists("/dev_hdd0/tmp/game/ICON0.PNG")) n = icon_found;
 
 				wait = (n < icon_found) || execute;

@@ -595,7 +595,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 0) == FAILED) {v3_entry++; continue;}
 #ifdef SLAUNCH_FILE
-						add_slaunch_entry(fdsl, neth, param, enc_dir_name, icon, templn);
+						if(key < MAX_SLAUNCH_ITEMS) add_slaunch_entry(fdsl, neth, param, data[v3_entry].name, icon, templn);
 #endif
 #ifdef WM_PROXY_SPRX
 						sprintf(tempstr, "<Table key=\"%04i\">"
@@ -701,14 +701,12 @@ next_xml_entry:
 							}
 
 							get_default_icon(icon, param, entry.d_name, !is_iso, tempID, ns, abort_connection, f1, f0);
-
+#ifdef SLAUNCH_FILE
+							if(key < MAX_SLAUNCH_ITEMS) add_slaunch_entry(fdsl, "", param, entry.d_name, icon, templn);
+#endif
 							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.d_name);
-
-#ifdef SLAUNCH_FILE
-							add_slaunch_entry(fdsl, "", param, enc_dir_name, icon, templn);
-#endif
 
 							// subfolder name
 							if((IS_NTFS) && entry.d_name[0] == '[')

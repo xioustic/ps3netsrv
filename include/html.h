@@ -150,7 +150,7 @@ static inline void urldec(char *url, char *original)
 	}
 }
 
-static bool urlenc(char *dst, const char *src)
+static bool urlenc_ex(char *dst, const char *src, bool gurl)
 {
 	size_t i, j = 0, pos = 0;
 
@@ -168,14 +168,14 @@ static bool urlenc(char *dst, const char *src)
 			dst[j++] = h2a((unsigned char)src[i]>>4);
 			dst[j] = h2a(src[i] & 0xf);
 		}
-		else if(src[i]=='?' || ((src[i]==':') && (i >= pos)))
+		else if((src[i]=='?' || ((src[i]==':') && (i >= pos))) && gurl)
 		{
 			dst[j++] = '%';
 			dst[j++] = '3';
 			dst[j] = (src[i] & 0xf) + '7'; // A | F
 		}
-		else if(src[i]==' ' || src[i]=='\'' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
-    		{
+		else if((src[i]==' ' && gurl) || src[i]=='\'' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
+		{
 			dst[j++] = '%';
 			dst[j++] = '2';
 			dst[j] = (src[i] == '+') ? 'B' : '0' + (src[i] & 0xf);
@@ -185,6 +185,11 @@ static bool urlenc(char *dst, const char *src)
 	dst[j] = '\0';
 
 	return (j > i); // true if dst != src
+}
+
+static bool urlenc(char *dst, const char *src)
+{
+	return urlenc_ex(dst, src, true);
 }
 
 static size_t htmlenc(char *dst, char *src, u8 cpy2src)
