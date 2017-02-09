@@ -143,6 +143,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 		setsockopt(conn_s_ftp, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 	}
 
+	sys_addr_t sysmem = NULL;
+	sys_memory_container_t mc_app = NULL;
+
 	while(connactive && working)
 	{
 		memset(buffer, 0, FTP_RECV_SIZE);
@@ -307,6 +310,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					if(split)
 					{
 						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN - 1);
+
+						if(sysmem) sys_memory_free(sysmem);
 
 						if(_IS(cmd, "HELP"))
 						{
@@ -547,6 +552,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					bool is_MLST = _IS(cmd, "MLST");
 					bool is_MLSx = is_MLSD || is_MLST;
 
+					if(sysmem && !nolist) sys_memory_free(sysmem);
+
 					if(IS(param, "-l") || IS(param, "-la") || IS(param, "-al")) {*param = NULL, nolist = false;}
 
 					if((data_s < 0) && (pasv_s >= 0) && !is_MLST) data_s = accept(pasv_s, NULL, NULL);
@@ -763,9 +770,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(islike(filename, "/dvd_bdvd"))
 								{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-							sys_addr_t sysmem = 0; size_t buffer_size = BUFFER_SIZE_FTP;
+							if(!sysmem)
+							{
+								if(!vsh_mc)	vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
+								if(vsh_mc)	mc_app = vsh_mc(1);
+								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
+							}
 
-							if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+							if(sysmem || (!sysmem && sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 							{
 								char *buffer2 = (char*)sysmem;
 #ifdef USE_NTFS
@@ -784,7 +796,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 										while(working)
 										{
-											read_e = ps3ntfs_read(fd, (void *)buffer2, buffer_size);
+											read_e = ps3ntfs_read(fd, (void *)buffer2, BUFFER_SIZE_FTP);
 											if(read_e >= 0)
 											{
 												if(read_e > 0)
@@ -810,7 +822,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 									rest = 0;
 
-									//int optval = buffer_size;
+									//int optval = BUFFER_SIZE_FTP;
 									//setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
@@ -818,7 +830,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									while(working)
 									{
-										if(cellFsRead(fd, (void *)buffer2, buffer_size, &read_e) == CELL_FS_SUCCEEDED)
+										if(cellFsRead(fd, (void *)buffer2, BUFFER_SIZE_FTP, &read_e) == CELL_FS_SUCCEEDED)
 										{
 											if(read_e > 0)
 											{
@@ -833,7 +845,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									cellFsClose(fd);
 								}
 
-								sys_memory_free(sysmem);
+								//sys_memory_free(sysmem);
 							}
 
 							if( err == CELL_FS_OK)
@@ -870,9 +882,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							int err = FAILED, is_append = _IS(cmd, "APPE");
 
-							sys_addr_t sysmem = 0; size_t buffer_size = BUFFER_SIZE_FTP;
+							if(!sysmem)
+							{
+								if(!vsh_mc)	vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
+								if(vsh_mc)	mc_app = vsh_mc(1);
+								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
+							}
 
-							if(sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+							if(sysmem || (!sysmem && sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 							{
 								char *buffer2 = (char*)sysmem;
 								int read_e = 0;
@@ -896,7 +913,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										while(working)
 										{
 											sys_timer_usleep(1668);
-											read_e = recv(data_s, buffer2, buffer_size, MSG_WAITALL);
+											read_e = recv(data_s, buffer2, BUFFER_SIZE_FTP, MSG_WAITALL);
 											if(read_e > 0)
 											{
 												if(ps3ntfs_write(fd, buffer2, read_e) != (int)read_e) {err = FAILED; break;}
@@ -927,19 +944,19 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
-									//int optval = buffer_size;
+									//int optval = BUFFER_SIZE_FTP;
 									//setsockopt(data_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));
 
 									while(working)
 									{
-										if((read_e = (u64)recv(data_s, buffer2, buffer_size, MSG_WAITALL)) > 0)
+										if((read_e = (u64)recv(data_s, buffer2, BUFFER_SIZE_FTP, MSG_WAITALL)) > 0)
 										{
 											if(cellFsWrite(fd, buffer2, read_e, NULL) != CELL_FS_SUCCEEDED) {err = FAILED; break;}
 										}
 										else
 											break;
 									}
-									sys_memory_free(sysmem);
+									//sys_memory_free(sysmem);
 									cellFsClose(fd);
 									cellFsChmod(filename, MODE);
 
@@ -1237,6 +1254,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 		sys_timer_usleep(1668);
 	}
+
+	if(sysmem) sys_memory_free(sysmem);
 
 	if(pasv_s >= 0) sclose(&pasv_s);
 	sclose(&conn_s_ftp);

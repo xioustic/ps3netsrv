@@ -1037,7 +1037,7 @@ static void handleclient(u64 conn_s_p)
 
 	size_t header_len;
 	sys_addr_t sysmem = NULL;
-	sys_memory_container_t mc_app = 0;
+	sys_memory_container_t mc_app = NULL;
 
 	bool is_ntfs = false;
 	char param[HTML_RECV_SIZE];
@@ -2239,6 +2239,8 @@ parse_request:
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				setPluginExit();
 
+				if(sysmem) sys_memory_free(sysmem);
+
 				{ DELETE_TURNOFF } { BEEP1 }
 
 				if(param[13] == '?')
@@ -2286,6 +2288,8 @@ parse_request:
 
 				http_response(conn_s, header, param, CODE_HTTP_OK, param);
 				setPluginExit();
+
+				if(sysmem) sys_memory_free(sysmem);
 
 				{ DELETE_TURNOFF } { BEEP2 }
 
@@ -3434,6 +3438,8 @@ send_response:
 				*buffer = NULL;
 			}
 		}
+		else
+			http_response(conn_s, header, param, CODE_BAD_REQUEST, "400 Bad Request");
 
 		break;
 	}
