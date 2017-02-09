@@ -284,7 +284,7 @@ void draw_selection(uint32_t game_idx)
 
 	// set frame buffer
 	set_texture_direct(ctx.menu, 0, 900, CANVAS_W, 96, CANVAS_W);
-	memcpy((uint32_t *)ctx.menu, (uint32_t *)(ctx.canvas)+900*CANVAS_W, CANVAS_W*96);
+	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+900*CANVAS_W*4, CANVAS_W*96*4);
 	set_frame(slot, 0xffc00000ffc00000);
 }
 
@@ -503,9 +503,9 @@ static void slaunch_thread(uint64_t arg)
 					else if(curpad & PAD_TRIANGLE) {gmode++; if(gmode>modeLAST) gmode=modeALL; if(curpad & PAD_L2) gmode=dmode=modeALL; cur_game=0, _cur_game=0; load_data();}
 					else if(curpad & PAD_SQUARE)   {dmode++; if(dmode>devsLAST) dmode=modeALL; if(curpad & PAD_L2) gmode=dmode=modeALL; cur_game=0, _cur_game=0; load_data();}
 
-					else if(curpad & PAD_R3)	{send_wm_request("/popup.ps3"); return_to_xmb(); break;}
-					else if(curpad & PAD_L3)	{send_wm_request("/refresh.ps3"); return_to_xmb(); break;}
-					else if(curpad & PAD_SELECT){send_wm_request("/browser.ps3/setup.ps3"); return_to_xmb(); break;}
+					else if(curpad & PAD_R3)	{return_to_xmb(); send_wm_request("/popup.ps3"); break;}
+					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh.ps3"); break;}
+					else if(curpad & PAD_SELECT){return_to_xmb(); send_wm_request("/browser.ps3/setup.ps3"); break;}
 
 					else if(curpad & PAD_CIRCLE)					// back to XMB
 					{
@@ -522,8 +522,12 @@ static void slaunch_thread(uint64_t arg)
 							set_frame(1 + cur_game % 10, (u & 1) ? 0xffff0000ffff0000 : 0xff400000ff400000);
 							sys_timer_usleep(75000);
 						}
-						send_wm_request(slaunch[cur_game].path);
+
+						char path[128];
+						sprintf(path, "%s", slaunch[cur_game].path);
+
 						return_to_xmb();
+						send_wm_request(path);
 						break;
 					}
 
