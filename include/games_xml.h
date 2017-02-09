@@ -286,8 +286,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	}
 #else
 	sys_memory_container_t	mc_app = 0;
-	if(!vsh_mc) vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
-	if(vsh_mc)	mc_app = vsh_mc(1);
+	mc_app = get_app_memory_container();
 	if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) set_buffer_sizes(99);
 
 	if(!sysmem)

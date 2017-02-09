@@ -2642,8 +2642,7 @@ parse_request:
 			{
 				if(!small_alloc || islike(param, "/index.ps3"))
 				{
-					if(!vsh_mc) vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
-					if(vsh_mc)	mc_app = vsh_mc(1);
+					mc_app = get_app_memory_container();
 					if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _3MB_; else
 					if(mc_app && sys_memory_allocate_from_container(_2MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _2MB_; else
 					if(mc_app && sys_memory_allocate_from_container(_1MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _1MB_;
@@ -3439,6 +3438,9 @@ send_response:
 			}
 		}
 		else
+		#ifdef WM_REQUEST
+		if(!wm_request)
+		#endif
 			http_response(conn_s, header, param, CODE_BAD_REQUEST, "400 Bad Request");
 
 		break;

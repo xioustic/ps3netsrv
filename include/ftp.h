@@ -24,9 +24,7 @@
 #define FTP_ERROR_550		"550 ERR\r\n"						// Requested action not taken. File unavailable (e.g., file not found, no access).
 #define FTP_ERROR_RNFR_550	"550 RNFR Error\r\n"				// Requested action not taken. File unavailable
 
-#ifdef USE_NTFS
 static u8 ftp_active = 0;
-#endif
 
 #define FTP_RECV_SIZE  (MAX_PATH_LEN + 20)
 
@@ -96,9 +94,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	struct statvfs vbuf;
 
 	if(!ftp_active && mountCount==-2) mount_all_ntfs_volumes();
+#endif
 
 	ftp_active++;
-#endif
 
 	int p1x = 0;
 	int p2x = 0;
@@ -307,11 +305,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "SITE"))
 				{
+					if(sysmem) sys_memory_free(sysmem);
+
 					if(split)
 					{
 						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN - 1);
-
-						if(sysmem) sys_memory_free(sysmem);
 
 						if(_IS(cmd, "HELP"))
 						{
@@ -770,10 +768,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(islike(filename, "/dvd_bdvd"))
 								{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-							if(!sysmem)
+							if(!sysmem && (ftp_active > 1))
 							{
-								if(!vsh_mc)	vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
-								if(vsh_mc)	mc_app = vsh_mc(1);
+								mc_app = get_app_memory_container();
 								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
 							}
 
@@ -882,10 +879,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							int err = FAILED, is_append = _IS(cmd, "APPE");
 
-							if(!sysmem)
+							if(!sysmem && (ftp_active > 1))
 							{
-								if(!vsh_mc)	vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
-								if(vsh_mc)	mc_app = vsh_mc(1);
+								mc_app = get_app_memory_container();
 								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
 							}
 
@@ -1261,9 +1257,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	sclose(&conn_s_ftp);
 	sclose(&data_s);
 
-#ifdef USE_NTFS
 	ftp_active--;
-#endif
 
 	setPluginInactive();
 
@@ -1274,9 +1268,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 static void ftpd_thread(uint64_t arg)
 {
 	int list_s = NONE;
-#ifdef USE_NTFS
 	ftp_active = 0;
-#endif
 
 relisten:
 	if(working) list_s = slisten(webman_config->ftp_port, 4);
