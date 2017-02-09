@@ -51,8 +51,17 @@ typedef struct
 static _slaunch *slaunch = NULL;
 
 static uint32_t games = 0;
+static uint32_t cur_game=0, _cur_game=0;
 
-static sys_ppu_thread_t slaunch_tid = -1;
+int32_t w=0;
+int32_t h=0;
+static uint64_t tick=0x80;
+static int8_t   delta=5;
+
+#define NONE   -1
+#define SYS_PPU_THREAD_NONE        (sys_ppu_thread_t)NONE
+
+static sys_ppu_thread_t slaunch_tid = SYS_PPU_THREAD_NONE;
 static int32_t running = 1;
 static uint8_t menu_running = 0;	// vsh menu off(0) or on(1)
 
@@ -65,8 +74,25 @@ static void slaunch_stop_thread(uint64_t arg);
 static void slaunch_thread(uint64_t arg);
 void draw_selection(uint32_t game_idx);
 
-static uint8_t gmode = 0;
+enum gameModes
+{
+	modeALL = 0,
+	modePS3 = 1,
+	modePSX = 2,
+	modePS2 = 3,
+	modePSP = 4,
+	modeDVD = 5,
+	modeROM = 6,
+	modeLAST= 6,
+	devsLAST= 4,
+};
+
+static char drives[4][12] = {"dev_hdd0", "dev_usb", "ntfs", "net"};
+
+static uint8_t gmode = modeALL;
+static uint8_t dmode = modeALL;
 static uint8_t cpu_rsx = 0;
+
 static uint32_t frame = 0;
 
 ////////////////////////////////////////////////////////////////////////
@@ -105,12 +131,12 @@ static int connect_to_webman(void)
 	s = socket(AF_INET, SOCK_STREAM, 0);
 	if (s < 0)
 	{
-		return -1;
+		return NONE;
 	}
 
 	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
 	{
-		return -1;
+		return NONE;
 	}
 
 	return s;
@@ -118,18 +144,18 @@ static int connect_to_webman(void)
 
 static void sclose(int *socket_e)
 {
-	if(*socket_e != -1)
+	if(*socket_e != NONE)
 	{
 		shutdown(*socket_e, SHUT_RDWR);
 		socketclose(*socket_e);
-		*socket_e = -1;
+		*socket_e = NONE;
 	}
 }
 
 static void send_wm_request(const char *cmd)
 {
 	// send command
-	int conn_s = -1;
+	int conn_s = NONE;
 	conn_s = connect_to_webman();
 
 	struct timeval tv;
@@ -177,26 +203,30 @@ static uint64_t file_exists(const char* path)
 
 static void draw_page(uint32_t game_idx)
 {
-	if(!games) return;
-	uint8_t slot = 0;
-	int px=48, py=90;
-	uint32_t i, j;
+	if(!games || game_idx>=games) return;
 
-	ctx.canvas = ctx.img[0].addr;
-	flip_frame((uint64_t*)ctx.img[0].addr);
+	uint8_t slot = 0;
+	uint32_t i, j;
+	int px=48, py=90;	// top-left
+
+	// draw background and menu strip
+	flip_frame((uint64_t*)ctx.canvas);
 	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+900*CANVAS_W*4, CANVAS_W*96*4);
 
 	set_textbox(0xff808080ff808080, 0, 890, CANVAS_W, 2);
 	set_textbox(0xff808080ff808080, 0, 1000, CANVAS_W, 2);
 
+	// draw game icons (5x2)
 	j=(game_idx/10)*10;
 	for(i=j;(slot<10&&i<games);i++)
 	{
 		slot++;
 		load_img_bitmap(slot, slaunch[i].icon);
 		py=((i-j)/5)*400+90+(300-ctx.img[slot].h)/2;
-		set_texture(slot, ((px+(320-ctx.img[slot].w)/2)/2)*2, py);
+		ctx.img[slot].x=((px+(320-ctx.img[slot].w)/2)/2)*2;
+		ctx.img[slot].y=py;
 		set_backdrop(slot, 0);
+		set_texture(slot, ctx.img[slot].x, ctx.img[slot].y);
 		px+=(320+48); if(px>1600) px=48;
 	}
 	draw_selection(game_idx);
@@ -205,54 +235,74 @@ static void draw_page(uint32_t game_idx)
 void draw_selection(uint32_t game_idx)
 {
 	uint8_t slot = 1 + game_idx % 10;
-	char one_of[32];
+	char one_of[32], mode[8], *path = slaunch[game_idx].path;
 
 	// game name
+	if(ISHD)	set_font(32.f, 32.f, 1.0f, 1);
+	else		set_font(32.f, 32.f, 3.0f, 1);
 	ctx.fg_color=0xffc0c0c0;
-	set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.menu, -1, 0, slaunch[game_idx].name );
+	print_text(ctx.menu, CENTER_TEXT, 0, slaunch[game_idx].name );
 
 	// game path
+	if(ISHD)	set_font(24.f, 16.f, 1.0f, 1);
+	else		set_font(32.f, 16.f, 2.0f, 1);
 	ctx.fg_color=0xff808080;
-	set_font(24.f, 16.f, 1.0f, 1); print_text(ctx.menu, -1, 40, slaunch[game_idx].path+10 );
+
+	if(*path == '/' && path[10] == '/') path += 10;
+	if(*path == '/') print_text(ctx.menu, CENTER_TEXT, 40, path);
 
 	// game index
+	if(ISHD)	set_font(20.f, 20.f, 1.0f, 1);
+	else		set_font(32.f, 20.f, 2.0f, 1);
 	ctx.fg_color=0xffA0A0A0;
 	sprintf(one_of, "%i / %i", game_idx+1, games);
-	set_font(20.f, 20.f, 1.5f, 1); print_text(ctx.menu, -1, 64, one_of );
+	print_text(ctx.menu, CENTER_TEXT, 64, one_of );
 
-	if(gmode)
-		print_text(ctx.menu, 80, 64, (gmode == 1) ? "PS3" : (gmode == 2) ? "PSX" : (gmode == 3) ? "PS2" : (gmode == 4) ? "PSP" : (gmode == 5) ? "BD/DVD" : "ROMS");
+	// game list mode
+	if(gmode) sprintf(mode, "%s", (gmode == modePS3) ? "PS3" : (gmode == modePSX) ? "PSX" : (gmode == modePS2) ? "PS2" : (gmode == modePSP) ? "PSP" : (gmode == modeDVD) ? "BD/DVD" : "ROMS");
+
+	if(dmode && gmode)
+	{
+		sprintf(one_of, "/%s/%s", drives[dmode-1], mode);
+		print_text(ctx.menu, 80, 64, one_of);
+	}
+	else if(dmode)
+		print_text(ctx.menu, 80, 64, drives[dmode-1]);
+	else if(gmode)
+		print_text(ctx.menu, 80, 64, mode);
 
 	// temperature
-	char s_temp[64];
-	uint32_t temp_c = 0, temp_f = 0;
-	get_temperature(cpu_rsx, &temp_c);
-	temp_f = (uint32_t)(1.8f * (float)temp_c + 32.f);
-	sprintf(s_temp, "%s :  %i C  /  %i F", cpu_rsx ? "RSX" : "CPU", temp_c, temp_f);
-	print_text(ctx.menu, CANVAS_W - 300, 64, s_temp);
+	if(ISHD || (h==720))
+	{
+		char s_temp[64];
+		uint32_t temp_c = 0, temp_f = 0;
+		get_temperature(cpu_rsx, &temp_c);
+		temp_f = (uint32_t)(1.8f * (float)temp_c + 32.f);
+		sprintf(s_temp, "%s :  %i C  /  %i F", cpu_rsx ? "RSX" : "CPU", temp_c, temp_f);
+		print_text(ctx.menu, CANVAS_W - ((h==720) ? 450 : 300), 64, s_temp);
+	}
 
+	// set frame buffer
 	set_texture_direct(ctx.menu, 0, 900, CANVAS_W, 96, CANVAS_W);
-	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+900*CANVAS_W*4, CANVAS_W*96*4);
-
-	set_frame(slot);
+	memcpy((uint32_t *)ctx.menu, (uint32_t *)(ctx.canvas)+900*CANVAS_W, CANVAS_W*96);
+	set_frame(slot, 0xffc00000ffc00000);
 }
 
 static void load_data(void)
 {
 	games=(file_exists(WMTMP "/slaunch.bin"))/sizeof(_slaunch);
-	if(games>MAX_GAMES) games=MAX_GAMES;
+	if(games>=MAX_GAMES) games=MAX_GAMES-1;
+
+	int fd;
 
 reload:
+	reset_heap();
 
-	load_img_bitmap(0, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-storegame.jpg");
-
-	int fd = 0;
 	if(games && (cellFsOpen((char*)WMTMP "/slaunch.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED))
 	{
-		if(slaunch) free(slaunch);
-		slaunch = (_slaunch*)malloc((games+1)*sizeof(_slaunch));
+		// load game list in MC memory
+		slaunch = (_slaunch*)mem_alloc((games+1)*sizeof(_slaunch));
 
-		_slaunch swap;
 		cellFsRead(fd, (void *)slaunch, sizeof(_slaunch)*games, NULL);
 		cellFsClose(fd);
 
@@ -262,19 +312,30 @@ reload:
 		{
 			for(int32_t n=games-1; n >= 0; n--)
 			{
-				if( (gmode == 1 && (!strstr(slaunch[n].path, "PS3") && !strstr(slaunch[n].path, "/GAME"))) ||
-					(gmode == 2 && (!strstr(slaunch[n].path, "PSX"))) ||
-					(gmode == 3 && (!strstr(slaunch[n].path, "PS2"))) ||
-					(gmode == 4 && (!strstr(slaunch[n].path, "PSP"))) ||
-					(gmode == 5 && (!strstr(slaunch[n].path, "BDISO") && !strstr(slaunch[n].path, "DVDISO"))) ||
-					(gmode == 6 && (!strstr(slaunch[n].path, "ROMS"))) )
-					{memset(slaunch[n].name, 0xFF, sizeof(_slaunch)); ngames--;}
+				if( (gmode == modePS3 && (!strstr(slaunch[n].path, "PS3") && !strstr(slaunch[n].path, "/GAME"))) ||
+					(gmode == modePSX && (!strstr(slaunch[n].path, "PSX"))) ||
+					(gmode == modePS2 && (!strstr(slaunch[n].path, "PS2"))) ||
+					(gmode == modePSP && (!strstr(slaunch[n].path, "PSP"))) ||
+					(gmode == modeDVD && (!strstr(slaunch[n].path, "BDISO") && !strstr(slaunch[n].path, "DVDISO"))) ||
+					(gmode == modeROM && (!strstr(slaunch[n].path, "ROMS"))) )
+					{memset(slaunch[n].name, 0xFF, 127); ngames--;}
 			}
-
-			if(ngames == 0) {gmode++; if(gmode > 6) gmode = 0; goto reload;}
+			if(ngames == 0) {gmode++; if(gmode > devsLAST) gmode = modeALL; goto reload;}
 		}
 
-		// sort games
+		if(dmode)
+		{
+			int8_t dlen = strlen(drives[dmode-1]);
+			for(int32_t n=games-1; n >= 0; n--)
+			{
+				if((slaunch[n].name[0] & 0xFF) == 0xFF) continue;
+				if(((dmode == 2) && !strstr(slaunch[n].path+11, drives[2])) || ((dmode != 2) && memcmp(slaunch[n].path+11, drives[dmode-1], dlen))) {memset(slaunch[n].name, 0xFF, 127); ngames--;}
+			}
+			if(ngames == 0) {dmode++; if(dmode > 4) dmode = modeALL; goto reload;}
+		}
+
+		// sort game list
+		_slaunch swap;
 		for(uint32_t n=0; n<(games-1); n++)
 		{
 			for(uint32_t m=(n+1); m<games; m++)
@@ -292,17 +353,17 @@ reload:
 	else
 		games = 0;
 
-	// no content
-	if(!games)
+	if(games)
 	{
-		ctx.canvas = ctx.img[0].addr;
-		flip_frame((uint64_t*)ctx.img[0].addr);
-		memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+900*CANVAS_W*4, CANVAS_W*96*4);
-		set_textbox(0xff808080ff808080, 0, 890, CANVAS_W, 2);
-		set_textbox(0xff808080ff808080, 0, 1000, CANVAS_W, 2);
+		menu_running = 1;
+		draw_page(cur_game);
+	}
+	else	// no content
+	{
+		// no games - show "no content" message
 		ctx.fg_color=0xffc0c0c0;
-		set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, -1, 520, "There is no content.");
-		flip_frame((uint64_t*)ctx.img[0].addr);
+		set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, CENTER_TEXT, 520, "There is no content.");
+		flip_frame((uint64_t*)ctx.canvas);
 		sys_timer_sleep(2);
 		return_to_xmb();
 	}
@@ -312,40 +373,40 @@ reload:
 //                       START VSH MENU                             //
 //////////////////////////////////////////////////////////////////////
 
-static void start_VSH_Menu(bool fx)
+static void start_VSH_Menu(void)
 {
 
-	if(fx) rsx_fifo_pause(1);
+	rsx_fifo_pause(1);
 
 	int32_t ret, mem_size;
 
-	//CANVAS_W = getDisplayWidth(), CANVAS_H = getDisplayHeight();
-
 	// create VSH Menu heap memory from memory container 1("app")
-	mem_size = (((CANVAS_W * CANVAS_H * 4 * 4) + (FONT_CACHE_MAX * 32 * 32)) + MB(2)) / MB(1);
-	ret = create_heap(mem_size);
+	mem_size = (((CANVAS_W * CANVAS_H * 4) + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4)) + MB(1)) / MB(1);
+	ret = create_heap(mem_size); //11MB
 
 	if(ret) return;
 
-	// initialize VSH Menu graphic
-	init_graphic(fx);
+	w = getDisplayWidth();	// display width
+	h = getDisplayHeight();
 
-	if(fx) dim_bg();
+	// initialize VSH Menu graphic
+	init_graphic();
 
 	// stop vsh pad
 	start_stop_vsh_pad(0);
 
-	load_data();
+	// load background
+	load_img_bitmap(0, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-storegame.jpg");
 
-	// set menu_running on
-	menu_running = 1;
+	// load game list
+	load_data();
 }
 
 //////////////////////////////////////////////////////////////////////
 //                       STOP VSH MENU                              //
 //////////////////////////////////////////////////////////////////////
 
-static void stop_VSH_Menu(bool fx)
+static void stop_VSH_Menu(void)
 {
 	// menu off
 	menu_running = 0;
@@ -357,7 +418,7 @@ static void stop_VSH_Menu(bool fx)
 	destroy_heap();
 
 	// continue rsx rendering
-	if(fx) rsx_fifo_pause(0);
+	rsx_fifo_pause(0);
 
 	// restart vsh pad
 	start_stop_vsh_pad(1);
@@ -366,17 +427,9 @@ static void stop_VSH_Menu(bool fx)
 static void return_to_xmb(void)
 {
 	dump_bg();
-	dim_bg();
-	if(slaunch) free(slaunch);
-	stop_VSH_Menu(true);
+	dim_bg(0.5f, 0.0f);
+	stop_VSH_Menu();
 }
-
-static void refresh_VSH_Menu(void)
-{
-	stop_VSH_Menu(false);
-	start_VSH_Menu(false);
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 //                      PLUGIN MAIN PPU THREAD                        //
@@ -387,7 +440,7 @@ static void slaunch_thread(uint64_t arg)
 	uint32_t init_delay=0;
 	CellPadData pdata;
 
-	uint32_t cur_game=0, _cur_game=0;
+	sys_timer_sleep(20);												// wait 20s and not interfere with boot process
 
 	while(running)
 	{
@@ -403,29 +456,36 @@ static void slaunch_thread(uint64_t arg)
 				if((pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) &&
 					(pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0))
 				{
-					if(vshmain_EB757101() == 0)
+					if(xsetting_CC56EB2D()->GetCurrentUserNumber()>=0) // user logged in
 					{
-						start_VSH_Menu(true);
-						if(games) draw_page(cur_game);
-						init_delay=0;
+						if(vshmain_EB757101() == 0)
+						{
+							start_VSH_Menu();
+							init_delay=0;
+						}
+					}
+					else
+					{
+						send_wm_request("/popup.ps3?Not%20logged%20in!");
+						sys_timer_sleep(2);
 					}
 				}
 			}
 		}
 		else // menu is running
 		{
-			while(1)
+			while(menu_running && running)
 			{
 				for(int32_t port=0; port<2; port++)
 					{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
 
 				if(curpad)
 				{
-					if(curpad==oldpad)
+					if(curpad==oldpad)	// key-repeat
 					{
 						init_delay++;
 						if(init_delay<=40) continue;
-						else sys_timer_usleep(80000);
+						else sys_timer_usleep(40000);
 					}
 					else
 						init_delay=0;
@@ -440,15 +500,37 @@ static void slaunch_thread(uint64_t arg)
 					else if(curpad & PAD_R1)	cur_game+=10;
 					else if(curpad & PAD_L1)	if(!cur_game) cur_game=games-1; else cur_game-=10;
 
-					else if(curpad & PAD_TRIANGLE){if(curpad & PAD_L2) gmode=0; else gmode++; if(gmode>6) gmode=0; cur_game=0, _cur_game=0; refresh_VSH_Menu(); if(games) draw_page(cur_game);}
+					else if(curpad & PAD_TRIANGLE) {gmode++; if(gmode>modeLAST) gmode=modeALL; if(curpad & PAD_L2) gmode=dmode=modeALL; cur_game=0, _cur_game=0; load_data();}
+					else if(curpad & PAD_SQUARE)   {dmode++; if(dmode>devsLAST) dmode=modeALL; if(curpad & PAD_L2) gmode=dmode=modeALL; cur_game=0, _cur_game=0; load_data();}
 
 					else if(curpad & PAD_R3)	{send_wm_request("/popup.ps3"); return_to_xmb(); break;}
 					else if(curpad & PAD_L3)	{send_wm_request("/refresh.ps3"); return_to_xmb(); break;}
 					else if(curpad & PAD_SELECT){send_wm_request("/browser.ps3/setup.ps3"); return_to_xmb(); break;}
-					else if(curpad & PAD_CROSS) {send_wm_request(slaunch[cur_game].path); return_to_xmb(); break;}
-					else if(curpad & PAD_CIRCLE){curpad=oldpad=0; return_to_xmb(); break;}
+
+					else if(curpad & PAD_CIRCLE)					// back to XMB
+					{
+						curpad=oldpad=0;
+						play_rco_sound("system_plugin", "snd_cancel");
+						stop_VSH_Menu(); /*return_to_xmb();*/
+						break;
+					}
+					else if(curpad & PAD_CROSS)						// execute action & return to XMB
+					{
+						play_rco_sound("system_plugin", "snd_system_ok");
+						for(uint8_t u=0;u<10;u++)
+						{
+							set_frame(1 + cur_game % 10, (u & 1) ? 0xffff0000ffff0000 : 0xff400000ff400000);
+							sys_timer_usleep(75000);
+						}
+						send_wm_request(slaunch[cur_game].path);
+						return_to_xmb();
+						break;
+					}
+
 					if(cur_game!=_cur_game)
 					{
+						play_rco_sound("system_plugin", "snd_cursor");
+						tick=0xc0;
 						set_backdrop((1+_cur_game%10), 1);
 						if(cur_game>=games) cur_game=0;
 						if((cur_game/10)*10 != (_cur_game/10)*10)
@@ -457,15 +539,18 @@ static void slaunch_thread(uint64_t arg)
 							draw_selection(cur_game);
 					}
 				}
-				else {init_delay=0, oldpad=0, frame++; if(frame > 300) {frame = 0, cpu_rsx ^= 1; draw_selection(cur_game);}}
+				else
+				{
+					init_delay=0, oldpad=0, tick+=delta;			// pulsing selection frame
+					set_frame(1 + cur_game % 10, 0xff000000ff000000|tick<<48|tick<<16);
+					if(tick<0x80 || tick>0xF0)delta=-delta;
+
+					// update temperature
+					if(++frame > 300) {frame = 0, cpu_rsx ^= 1; draw_selection(cur_game);}
+				}
 			}
 		}
 	}
-
-	finalize_module();
-
-	uint64_t exit_code;
-	sys_ppu_thread_join(slaunch_tid, &exit_code);
 
 	sys_ppu_thread_exit(0);
 }
@@ -475,7 +560,7 @@ static void slaunch_thread(uint64_t arg)
 ***********************************************************************/
 int32_t slaunch_start(uint64_t arg)
 {
-	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, 0, 3000, 0x6000, 1, THREAD_NAME);
+	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, 0, 3000, 0x2000, 1, THREAD_NAME);
 
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_RESIDENT;
@@ -486,14 +571,13 @@ int32_t slaunch_start(uint64_t arg)
 ***********************************************************************/
 static void slaunch_stop_thread(uint64_t arg)
 {
-	if(menu_running) stop_VSH_Menu(true);
+	if(menu_running) stop_VSH_Menu();
 
 	running = 0;
-	sys_timer_usleep(500000); //Prevent unload too fast
 
 	uint64_t exit_code;
 
-	if(slaunch_tid != (sys_ppu_thread_t)-1)
+	if(slaunch_tid != SYS_PPU_THREAD_NONE)
 			sys_ppu_thread_join(slaunch_tid, &exit_code);
 
 	sys_ppu_thread_exit(0);
@@ -525,8 +609,6 @@ int slaunch_stop(void)
 
 	int ret = sys_ppu_thread_create(&t, slaunch_stop_thread, 0, 0, 0x2000, 1, STOP_THREAD_NAME);
 	if (ret == 0) sys_ppu_thread_join(t, &exit_code);
-
-	sys_timer_usleep(500000); // 0.5s
 
 	finalize_module();
 

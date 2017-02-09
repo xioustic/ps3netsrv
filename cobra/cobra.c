@@ -109,8 +109,7 @@ size_t read_file(const char *file, char *data, size_t size, int32_t offset);
 int save_file(const char *file, const char *mem, int64_t size);
 
 int file_copy(const char *file1, char *file2, uint64_t maxbytes);
-int waitfor(const char *path, uint8_t timeout);
-int val(const char *c);
+int wait_for(const char *path, uint8_t timeout);
 
 // storage.h inline functions merged
 static int sys_storage_ext_get_emu_state(sys_emu_state_t *state)
@@ -1182,7 +1181,6 @@ int cobra_cd_read(uint32_t handle, void *buf, uint32_t sector, uint32_t count, i
 
 	return (nerrors > 0) ? EIO : 0;
 }
-*/
 
 int cobra_parse_cue(void *cue, uint32_t size, TrackDef *tracks, unsigned int max_tracks, unsigned int *num_tracks, char *filename, unsigned int fn_size)
 {
@@ -1414,7 +1412,6 @@ exit_loop:
 	return 0;
 }
 
-/*
 int cobra_create_cue(char *path, char *filename, TrackDef *tracks, unsigned int num_tracks)
 {
 	if (!path || !tracks || !num_tracks)
@@ -1579,7 +1576,7 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		cobra_send_fake_disc_insert_event();
 
 		// Wait 3 seconds for automounter to mount iso
-		if (waitfor("/dev_bdvd", 3) == FAILED)
+		if (wait_for("/dev_bdvd", 3) == FAILED)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();
@@ -2004,7 +2001,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		cobra_send_fake_disc_insert_event();
 
 		// Wait 0.5 seconds for automounter to mount iso
-		if (waitfor("/dev_bdvd", 1) == FAILED)
+		if (wait_for("/dev_bdvd", 1) == FAILED)
 		{
 			cobra_send_fake_disc_eject_event();
 			sys_storage_ext_umount_discfile();

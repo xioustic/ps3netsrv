@@ -740,7 +740,7 @@ static void do_umount_iso(void)
 	if(real_disctype != DISC_TYPE_NONE)
 	{
 		cobra_send_fake_disc_insert_event();
-		waitfor("/dev_bdvd", 1);
+		wait_for("/dev_bdvd", 1);
 		cobra_disc_auth();
 	}
 }
@@ -872,7 +872,7 @@ static void cache_file_to_hdd(char *source, char *target, const char *basepath, 
 
 static void cache_icon0_and_param_sfo(char *destpath)
 {
-	waitfor("/dev_bdvd", 15);
+	wait_for("/dev_bdvd", 15);
 
 	char *ext = destpath + strlen(destpath);
 	strcat(ext, ".SFO\0");
@@ -934,7 +934,7 @@ static void mount_autoboot(void)
 	if(strlen(path) > 8)
 #endif
 	{
-		waitfor(path, 2 * (webman_config->boots + webman_config->bootd));
+		wait_for(path, 2 * (webman_config->boots + webman_config->bootd));
 #ifdef COBRA_ONLY
 		do_mount = ( islike(path, "/net") || islike(path, "http") || file_exists(path) );
 #else
@@ -944,7 +944,7 @@ static void mount_autoboot(void)
 
 	if(do_mount)
 	{   // add some delay
-		if(webman_config->delay)      {sys_timer_sleep(10); waitfor(path, 2 * (webman_config->boots + webman_config->bootd));}
+		if(webman_config->delay)      {sys_timer_sleep(10); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
 		else if(islike(path, "/net"))  sys_timer_sleep(10);
 #ifndef COBRA_ONLY
 		if(strstr(path, ".ntfs[") == NULL)
@@ -1412,7 +1412,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					{
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
-						waitfor("/dev_bdvd", 3);
+						wait_for("/dev_bdvd", 3);
 
 						if(!extcmp(_path, ".ntfs[PS3ISO]", 13))
 						{
@@ -1522,7 +1522,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(_netiso_args->emu_mode == EMU_PS3)
 					{
-						waitfor("/dev_bdvd", 15);
+						wait_for("/dev_bdvd", 15);
 
 						get_name(templn, _path, GET_WMTMP);
 						cache_icon0_and_param_sfo(templn);
@@ -1748,7 +1748,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					sys_timer_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
-					waitfor("/dev_bdvd", 5);
+					wait_for("/dev_bdvd", 5);
 
 					// re-mount with media type
 					if(isDir("/dev_bdvd/PS3_GAME")) mount_unk = EMU_PS3; else
@@ -2113,7 +2113,7 @@ exit_mount:
 
 	if(ret && extcmp(_path, ".BIN.ENC", 8))
 	{
-		waitfor("/dev_bdvd", (islike(_path, "/dev_hdd0") ? 6 : netid ? 20 : 15));
+		wait_for("/dev_bdvd", (islike(_path, "/dev_hdd0") ? 6 : netid ? 20 : 15));
 		if(!isDir("/dev_bdvd")) ret = false;
 	}
 

@@ -2,6 +2,7 @@
 int (*vshtask_notify)(int, const char *) = NULL;
 int (*View_Find)(const char *) = NULL;
 int (*plugin_GetInterface)(int,int) = NULL;
+int (*vsh_mc)(int32_t) = NULL;
 
 #ifdef SYS_BGM
 uint32_t (*BgmPlaybackDisable)(int, void *) = NULL;
@@ -128,7 +129,7 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 	for(n = 0; n < 15; n++) {if(abort_autoplay()) return; if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
 
-	if(IS(seg_name, "seg_device")) waitfor("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
+	if(IS(seg_name, "seg_device")) wait_for("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
 
 	int view = View_Find("explore_plugin");
 

@@ -23,7 +23,7 @@ typedef struct{
 
 
 
-Buffer load_png(const char *file_path);
+Buffer load_png(const char *file_path, void* buf_addr);
 
 
 #endif // _PNG_DEC_H_

@@ -8,6 +8,19 @@ int SaveFile(char *path, char *mem, int file_size)
 {
 	sysLv2FsUnlink((char*)path);
 
+	int fd = ps3ntfs_open(path, O_CREAT | O_WRONLY | O_TRUNC, 0);
+	if(fd >= 0)
+	{
+		if(file_size != ps3ntfs_write(fd, mem, file_size))
+		{
+			ps3ntfs_close(fd);
+			return FAILED;
+		}
+		ps3ntfs_close(fd);
+	}
+	else
+		return FAILED;
+/*
 	FILE *fp;
 
 	fp = fopen(path, "wb");
@@ -21,9 +34,9 @@ int SaveFile(char *path, char *mem, int file_size)
 		}
 		fclose(fp);
 	}
-    else
+	else
 		return FAILED;
-
+*/
 	sysLv2FsChmod(path, FS_S_IFMT | 0777);
 
 	return SUCCESS;

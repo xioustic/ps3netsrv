@@ -21,6 +21,6 @@ typedef struct{
 	Cb_Arg_J cb_arg_j;                       // callback arg
 } jpg_dec_info;
 
-Buffer load_jpg(const char *file_path);
+Buffer load_jpg(const char *file_path, void* buf_addr);
 
 #endif // _JPG_DEC_H_

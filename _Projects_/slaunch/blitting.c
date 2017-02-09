@@ -6,11 +6,10 @@
 
 #include <cell/rtc.h>
 //#include "include/network.h"	// debug
-
+extern uint32_t w,h;
 
 // display values
-static uint32_t unk1 = 0, BASE_offset = 0, pitch = 0;
-static uint32_t h = 0, w = 0;
+static uint32_t BASE_offset = 0;
 
 static Bitmap *bitmap = NULL;                       // font glyph cache
 
@@ -92,6 +91,7 @@ static void font_init(void)
 
 	// get id of current logged in user for the xRegistry query we do next
 	 user_id = xsetting_CC56EB2D()->GetCurrentUserNumber();
+	 if(user_id>255) user_id=1;
 
 	// get current font style for the current logged in user
 	xsetting_CC56EB2D()->GetRegistryValue(user_id, 0x5C, &val);
@@ -294,14 +294,37 @@ static int32_t utf8_to_ucs4(uint8_t *utf8, uint32_t *ucs4)
 	return len;
 }
 
-void dim_bg(void)
+/*
+void dim_img(float dim)
 {
-	int32_t i, k, CANVAS_WW = CANVAS_W/2;
-	uint64_t *canvas = (uint64_t*)ctx.bg;
+	uint32_t i, k, CANVAS_WW = CANVAS_W/2;
+	uint64_t *canvas = (uint64_t*)ctx.canvas;
 	uint64_t new_pixel=0;
 	uint64_t new_pixel_R0, new_pixel_G0, new_pixel_B0, new_pixel_R1, new_pixel_G1, new_pixel_B1;
 
-	for(float dim=0.91f; dim>=0.0f; dim-=0.3f)
+	for(i = 0; i < CANVAS_H ; i++)
+		for(k = 0; k < CANVAS_WW; k++)
+		{
+			new_pixel = canvas[k + i * CANVAS_WW];
+			new_pixel_B0 = (uint8_t)((float)((new_pixel)     & 0xff)*dim);
+			new_pixel_G0 = (uint8_t)((float)((new_pixel>> 8) & 0xff)*dim);
+			new_pixel_R0 = (uint8_t)((float)((new_pixel>>16) & 0xff)*dim);
+			new_pixel_B1 = (uint8_t)((float)((new_pixel>>32) & 0xff)*dim);
+			new_pixel_G1 = (uint8_t)((float)((new_pixel>>40) & 0xff)*dim);
+			new_pixel_R1 = (uint8_t)((float)((new_pixel>>48) & 0xff)*dim);
+			canvas[k + i * CANVAS_WW] = new_pixel_R1<<48 | new_pixel_G1<<40 | new_pixel_B1<<32 | new_pixel_R0<<16 | new_pixel_G0<< 8 | new_pixel_B0;
+		}
+}
+*/
+
+void dim_bg(float ds, float de)
+{
+	uint32_t i, k, CANVAS_WW = CANVAS_W/2;
+	uint64_t *canvas = (uint64_t*)ctx.canvas;
+	uint64_t new_pixel=0;
+	uint64_t new_pixel_R0, new_pixel_G0, new_pixel_B0, new_pixel_R1, new_pixel_G1, new_pixel_B1;
+
+	for(float dim=ds; dim>=de; dim-=0.25f)
 	for(i = 0; i < CANVAS_H/2+1 ; i++)
 		for(k = 0; k < CANVAS_WW; k++)
 		{
@@ -333,7 +356,7 @@ void dim_bg(void)
 void dump_bg(void)
 {
 	uint32_t i, k, CANVAS_WW = CANVAS_W/2;
-	uint64_t *bg = (uint64_t*)ctx.bg;
+	uint64_t *bg = (uint64_t*)ctx.canvas;
 
 	for(i = 0; i < CANVAS_H; i++)
 		for(k = 0; k < CANVAS_WW; k++)
@@ -343,15 +366,15 @@ void dump_bg(void)
 /***********************************************************************
 *
 ***********************************************************************/
-void init_graphic(bool fx)
+void init_graphic()
 {
 	memset(&ctx, 0, sizeof(DrawCtx));
 
 	// set drawing context
 	ctx.canvas     = mem_alloc(CANVAS_W * CANVAS_H * 4);  // background buffer
-	ctx.bg         = ctx.canvas;
 	ctx.menu	   = mem_alloc(CANVAS_W * 96 * 4);
 	ctx.font_cache = mem_alloc(FONT_CACHE_MAX * 32 * 32); // glyph bitmap cache
+	ctx.imgs	   = mem_alloc(MAX_WH4);				  // images (actually just 1 image with max 384x384 resolution)
 	ctx.bg_color   = 0xFF000000;                          // black, opaque
 	ctx.fg_color   = 0xFFFFFFFF;                          // white, opaque
 
@@ -359,39 +382,36 @@ void init_graphic(bool fx)
 
 	// get current display values
 	BASE_offset = (*(uint32_t*)0x60201104) + BASE;      // start offset of current framebuffer
-	getDisplayPitch(&pitch, &unk1);       // framebuffer pitch size
-	h = getDisplayHeight();               // display height
-	w = getDisplayWidth();                // display width
 
-	// dump background, for alpha blending
-	if(fx) dump_bg();
+	//getDisplayPitch(&pitch, &unk1);       // framebuffer pitch size
+	//h = getDisplayHeight();               // display height
+	//w = getDisplayWidth();                // display width
+
 }
 
 /***********************************************************************
-* load a png file
+* load an image file
 *
-* int32_t idx      = index of png, max 4 (0 - 3)
-* const char *path = path to png file
+* int32_t idx      = index of img, max 11 (0 - 10)
+* const char *path = path to img file
 ***********************************************************************/
 int32_t load_img_bitmap(int32_t idx, const char *path)
 {
-	if(idx > IMG_MAX) return -1;
 
-	mem_free(ctx.img[idx].w * ctx.img[idx].h * 4);
-	ctx.img[idx].addr=NULL;
+	if(idx > IMG_MAX) return -1;
+	uint32_t *buf=ctx.canvas;
+	if(idx) buf=ctx.imgs;
 
 	if(strstr((char*)path, ".png") || strstr((char*)path, ".PNG"))
-		ctx.img[idx] = load_png(path);
+		ctx.img[idx] = load_png(path, buf);
 	else
-		ctx.img[idx] = load_jpg(path);
+		ctx.img[idx] = load_jpg(path, buf);
 
-	// create blank cover if can't load image
 	if(!ctx.img[idx].w || !ctx.img[idx].h)
 	{
 		ctx.img[idx].w=260;
 		ctx.img[idx].h=300;
-		ctx.img[idx].addr=mem_alloc(ctx.img[idx].w * ctx.img[idx].h * 4);
-		memset(ctx.img[idx].addr, 0x80808080, ctx.img[idx].w * ctx.img[idx].h * 4);
+		memset(ctx.img[idx].addr, 0x80808080, 260 * 300 * 4);
 	}
 	return 0;
 }
@@ -426,7 +446,7 @@ static uint32_t mix_color(uint32_t bg, uint32_t fg)
 ***********************************************************************/
 void flip_frame(uint64_t *canvas)
 {
-	int32_t i, k, CANVAS_WW = CANVAS_W/2;
+	uint32_t i, k, CANVAS_WW = CANVAS_W/2;
 
 	for(i = 0; i < CANVAS_H; i++)
 		for(k = 0; k < CANVAS_WW; k++)
@@ -447,24 +467,20 @@ void set_texture_direct(uint32_t *texture, uint32_t x, uint32_t y, uint32_t widt
 
 void set_texture(uint8_t idx, uint32_t x, uint32_t y)
 {
-	ctx.img[idx].x=x;
-	ctx.img[idx].y=y;
-
 	uint32_t i, k, _width = ctx.img[idx].w/2;
 	uint64_t *canvas = (uint64_t*)ctx.img[idx].addr;
-	if(!ctx.img[idx].b)
+	if(!ctx.img[idx].b)	// jpeg - no transparency
 		for(i = 0; i < ctx.img[idx].h; i++)
 			for(k = 0; k < _width; k++)
 				*(uint64_t*)(OFFSET(k*2+x, (i+y))) =
 					 canvas[k + i * _width];
-	else
+	else				// png - blend with 18% gray background
 		for(i = 0; i < ctx.img[idx].h; i++)
 			for(k = 0; k < _width; k++)
 			{
-				*(uint64_t*)(OFFSET(k*2+x, (i+y))) = 0x8030303080303030;
 				*(uint64_t*)(OFFSET(k*2+x, (i+y))) =
-					 ((uint64_t)(mix_color((*(uint64_t*)(OFFSET(k*2+x, (i+y))))>>32, (canvas[k + i * _width])>>32))<<32)
-					| (mix_color(*(uint64_t*)(OFFSET(k*2+x, (i+y))), canvas[k + i * _width])&0xffffffff);
+					 ((uint64_t)(mix_color(0x80303030, (canvas[k + i * _width])>>32))<<32)
+								| (mix_color(0x80303030, canvas[k + i * _width]));
 			}
 }
 
@@ -524,6 +540,7 @@ void set_backdrop(uint8_t idx, uint8_t restore)
 	}
 }
 
+// draw color box on the frame-buffer
 void set_textbox(uint64_t color, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
 	uint32_t i, k, _width = width/2;
@@ -532,30 +549,14 @@ void set_textbox(uint64_t color, uint32_t x, uint32_t y, uint32_t width, uint32_
 			*(uint64_t*)(OFFSET(k*2+x, (i+y))) = color;
 }
 
-void set_frame(uint8_t idx)
+// draw colored selection frame around the #IDX on the frame-buffer
+void set_frame(uint8_t idx, uint64_t color)
 {
-	uint32_t color= 0xffc00000;
 	set_textbox(color, ctx.img[idx].x-16, ctx.img[idx].y-16, ctx.img[idx].w+32, 16);
 	set_textbox(color, ctx.img[idx].x-16, ctx.img[idx].y+ctx.img[idx].h, ctx.img[idx].w+32, 16);
 
 	set_textbox(color, ctx.img[idx].x-16, ctx.img[idx].y, 16, ctx.img[idx].h);
 	set_textbox(color, ctx.img[idx].x+ctx.img[idx].w, ctx.img[idx].y, 16, ctx.img[idx].h);
-}
-
-/***********************************************************************
-* set background color
-***********************************************************************/
-void set_background_color(uint32_t color)
-{
-	ctx.bg_color = color;
-}
-
-/***********************************************************************
-* set foreground color
-***********************************************************************/
-void set_foreground_color(uint32_t color)
-{
-	ctx.fg_color = color;
 }
 
 /***********************************************************************
@@ -569,8 +570,8 @@ void set_foreground_color(uint32_t color)
 void set_font(float_t font_w, float_t font_h, float_t weight, int32_t distance)
 {
 	// max size is 32 * 32 pixels
-	if(font_w > 32.f && font_h > 32.f)
-	  font_w = font_h = 32.f;
+	if(font_w > 32.f) font_w = 32.f;
+	if(font_h > 32.f) font_h = 32.f;
 
 	// set font
 	FontSetScalePixel(&ctx.font, font_w, font_h);
@@ -608,7 +609,7 @@ int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str)
 	memset(&glyph, 0, sizeof(Glyph));
 
 	// center text (only 1 line)
-	if(x == -1)
+	if(x == CENTER_TEXT)
 	{
 		while(1)                                  // get render length
 		{
@@ -654,7 +655,10 @@ int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str)
 			  for(k = 0; k < glyph->w; k++)
 			    if((glyph->image[i * glyph->w + k]) && (t_x + k < CANVAS_W) && (t_y + i < CANVAS_H))
 				{
-						canvas[(t_y + i + 1) * CANVAS_W + t_x + k + 1] = 0;
+						if(ISHD)
+							canvas[(t_y + i + 1) * CANVAS_W + t_x + k + 1] = 0;
+						else
+							canvas[(t_y + i + 1) * CANVAS_W + t_x + k + 1] = 0xff333333;
 						canvas[(t_y + i) * CANVAS_W + t_x + k] =
 						mix_color(canvas[(t_y + i) * CANVAS_W + t_x + k],
 						         ((uint32_t)glyph->image[i * glyph->w + k] <<24) |

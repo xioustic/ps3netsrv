@@ -72,7 +72,7 @@ static int32_t set_dec_param(jpg_dec_info	*dec_ctx)
 
 	jpg_w = info.imageWidth;
 	jpg_h = info.imageHeight;
-	if(!jpg_w || !jpg_h) return -1;
+	if(!jpg_w || !jpg_h || (jpg_w!=1920 && jpg_w*jpg_h*4>MAX_WH4)) return -1;
 
 	// set decoder parameter
 	in.commandPtr		    = NULL;
@@ -130,13 +130,13 @@ static int32_t cb_free(void *ptr, void *cb_free_arg)
 * decode jpg file
 * const char *file_path  =  path to jpg file e.g. "/dev_hdd0/test.jpg"
 ***********************************************************************/
-Buffer load_jpg(const char *file_path)
+Buffer load_jpg(const char *file_path, void* buf_addr)
 {
 	Buffer tmp;
 	jpg_dec_info dec_ctx;
-	void *buf_addr = NULL;
 	jpg_w=jpg_h=0;
-	tmp.addr=0;
+	tmp.addr = (uint32_t*)buf_addr;
+	tmp.w=0; tmp.h=0;
 
 	// create jpg decoder
 	if(create_decoder(&dec_ctx)==CELL_OK)
@@ -147,12 +147,10 @@ Buffer load_jpg(const char *file_path)
 			// set decode parameter
 			if(set_dec_param(&dec_ctx)==CELL_OK)
 			{
-				// alloc target buffer
-				buf_addr = mem_alloc(jpg_w * jpg_h * 4);
-				tmp.addr = (uint32_t*)buf_addr;
-
 				// decode jpg stream, into target buffer
 				decode_jpg_stream(&dec_ctx, buf_addr);
+				tmp.w = jpg_w;
+				tmp.h = jpg_h;
 			}
 			// close jpg stream
 			cellJpgDecClose(dec_ctx.main_h, dec_ctx.sub_h);
@@ -162,8 +160,7 @@ Buffer load_jpg(const char *file_path)
 	}
 
 	// store jpg values
-	tmp.w = jpg_w;
-	tmp.h = jpg_h;
+
 	tmp.b = 0; // no transparency
 	tmp.x = 0;
 	tmp.y = 0;

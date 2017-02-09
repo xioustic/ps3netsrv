@@ -81,7 +81,7 @@ static int32_t set_dec_param(png_dec_info	*dec_ctx)
 
 	png_w = info.imageWidth;
 	png_h = info.imageHeight;
-	if(!png_w || !png_h) return -1;
+	if(!png_w || !png_h || (png_w!=1920 && png_w*png_h*4>MAX_WH4)) return -1;
 
 	// set decoder parameter
 	in.commandPtr		    = NULL;
@@ -155,13 +155,14 @@ static int32_t cb_free(void *ptr, void *cb_free_arg)
 * decode png file
 * const char *file_path  =  path to png file e.g. "/dev_hdd0/test.png"
 ***********************************************************************/
-Buffer load_png(const char *file_path)
+Buffer load_png(const char *file_path, void* buf_addr)
 {
 	Buffer tmp;
 	png_dec_info dec_ctx;          // decryption handles
-	void *buf_addr = NULL;         // buffer for decoded png data
 	png_w=png_h=0;
-	tmp.addr=0;
+	tmp.addr = (uint32_t*)buf_addr;
+	tmp.w=0; tmp.h=0;
+
 	// create png decoder
 	if(create_decoder(&dec_ctx)==CELL_OK)
 	{
@@ -171,12 +172,10 @@ Buffer load_png(const char *file_path)
 			// set decode parameter
 			if(set_dec_param(&dec_ctx)==CELL_OK)
 			{
-				// alloc target buffer
-				buf_addr = mem_alloc(png_w * png_h * 4);
-				tmp.addr = (uint32_t*)buf_addr;
-
 				// decode png stream, into target buffer
 				decode_png_stream(&dec_ctx, buf_addr);
+				tmp.w = png_w;
+				tmp.h = png_h;
 			}
 
 			// close png stream
@@ -187,8 +186,7 @@ Buffer load_png(const char *file_path)
 		PngDecDestroy(dec_ctx.main_h);
 	}
 	// store png values
-	tmp.w = png_w;
-	tmp.h = png_h;
+
 	tmp.b = 1; // transparency
 	tmp.x = 0;
 	tmp.y = 0;

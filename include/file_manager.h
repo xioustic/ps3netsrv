@@ -6,7 +6,6 @@ u16 _LINELEN = LINELEN;
 u16 _MAX_PATH_LEN = MAX_PATH_LEN;
 u16 _MAX_LINE_LEN = MAX_LINE_LEN;
 
-#define _2MB_	0x200000ULL
 #define _48GB_	0xC00000000ULL
 
 #define TABLE_ITEM_PREFIX  "<tr><td><a class=\""

@@ -35,7 +35,7 @@ ren pkgfiles pkgfiles-normal_theme
 ren pkgfiles-metalification_theme pkgfiles
 
 if exist EP0001-UPDWEBMOD_00-0000000000000000.pkg del EP0001-UPDWEBMOD_00-0000000000000000.pkg>>nul
-if exist webMAN_MOD_1.46.xx_Updater_metalification_theme.pkg del webMAN_MOD_1.46.xx_Updater_metalification_theme.pkg>>nul
+if exist webMAN_MOD_1.47.xx_Updater_metalification_theme.pkg del webMAN_MOD_1.47.xx_Updater_metalification_theme.pkg>>nul
 
 if exist updater.elf del updater.elf>>nul
 if exist updater.self del updater.self>>nul
@@ -62,8 +62,8 @@ psn_package_npdrm.exe -n package.conf build\EP0001-UPDWEBMOD_00-0000000000000000
 
 del package.conf>>nul
 
-if exist webMAN_MOD_1.46.xx_Updater_metalification_theme.pkg del webMAN_MOD_1.46.xx_Updater_metalification_theme.pkg>>nul
-move /y EP0001-UPDWEBMOD_00-0000000000000000.pkg webMAN_MOD_1.46.xx_Updater_metalification_theme.pkg>>nul
+if exist webMAN_MOD_1.47.xx_Updater_metalification_theme.pkg del webMAN_MOD_1.47.xx_Updater_metalification_theme.pkg>>nul
+move /y EP0001-UPDWEBMOD_00-0000000000000000.pkg webMAN_MOD_1.47.xx_Updater_metalification_theme.pkg>>nul
 
 rd /q/s build>>nul
 

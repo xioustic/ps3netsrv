@@ -259,6 +259,11 @@ next_ntfs_entry:
 								if(m == PS3ISO)
 								{
 									titleID[0] = '\0';
+
+									sprintf(wm_path, "%s:/%s%s/%s.SFO", mounts[i].name, c_path[m], SUFIX(profile), filename);
+									if(file_exists(wm_path) == false)
+										ExtractFileFromISO(path, "/PS3_GAME/PARAM.SFO;1", wm_path);
+
 									sprintf(wm_path, "/dev_hdd0/tmp/wmtmp/%s.SFO", filename);
 									if(file_exists(wm_path) == false)
 										ExtractFileFromISO(path, "/PS3_GAME/PARAM.SFO;1", wm_path);
@@ -279,6 +284,10 @@ next_ntfs_entry:
 										if(file_exists(mmCM_path) == false)
 											sysLv2FsLink(wm_path, mmCM_path);
 									}
+
+									sprintf(wm_path, "%s:/%s%s/%s.PNG", mounts[i].name, c_path[m], SUFIX(profile), filename);
+									if(file_exists(wm_path) == false)
+										ExtractFileFromISO(path, "/PS3_GAME/ICON0.PNG;1", wm_path);
 
 									sprintf(wm_path, "/dev_hdd0/tmp/wmtmp/%s.PNG", filename);
 									if(file_exists(wm_path) == false)

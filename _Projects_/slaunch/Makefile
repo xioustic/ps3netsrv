@@ -1,6 +1,8 @@
 CELL_MK_DIR = $(CELL_SDK)/samples/mk
 include $(CELL_MK_DIR)/sdk.makedef.mk
 
+PEXPORTPICKUP = ppu-lv2-prx-exportpickup
+
 CRT_HEAD += $(shell ppu-lv2-gcc -print-file-name'='ecrti.o)
 CRT_HEAD += $(shell ppu-lv2-gcc -print-file-name'='crtbegin.o)
 CRT_TAIL += $(shell ppu-lv2-gcc -print-file-name'='crtend.o)

@@ -38,7 +38,7 @@
 
 //// EXTRA FEATURES ////
 #define XMB_SCREENSHOT	1	// screenshot XMB using L2 + R2 + SELECT + START (thanks to 3141card)
-#define SWAP_KERNEL		1	// load custom lv2_kernel.self patching LV1 and soft rebooting (use /copy.ps3)
+#define SWAP_KERNEL		1	// load custom lv2_kernel.self patching LV1 and soft rebooting (use /copy.ps3) [requires QA flag enabled]
 #define WM_CUSTOM_COMBO	"/dev_hdd0/tmp/wm_combo/wm_custom_"		// advanced custom combos
 #define NET3NET4		1	// add support for /net3 and /net4
 #define PS3NET_SERVER	1	// ps3 net server

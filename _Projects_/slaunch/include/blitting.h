@@ -20,7 +20,15 @@
 #define CANVAS_W      1920              // canvas width in pixel
 #define CANVAS_H      1080              // canvas height in pixel
 
-#define IMG_MAX       26                // additional png bitmaps
+#define ISHD          (w == 1920)
+
+#define IMG_MAX			 11             // bg + 10 image slots
+#define MAX_W			384
+#define MAX_H			384
+#define MAX_WH4			(MAX_W * MAX_H * 4)
+
+#define CENTER_TEXT  -1
+
 
 // get pixel offset into framebuffer by x/y coordinates
 /*#define OFFSET(x, y) (uint32_t)((((uint32_t)offset) + ((((int16_t)x) + \
@@ -32,30 +40,16 @@
 ** ** ** 1280 0x1400 (5120)
 *  *  *   720 0x0C00 (3072)
 */
-#define OFFSET(x, y) ( (uint32_t) ( BASE_offset + (	( ((x)<<2) + (y) * 8192) ) ) )
-/*
-#define OFFSET(x, y) ( (uint32_t) ( BASE_offset + (			\
-			( ((x)<<2) + (y) * 8192)						\
-			) ) )
-*/
+#define OFFSET_1080p(x, y) ( (uint32_t) ( BASE_offset + (	( ((x)<<2) + (y) * 8192) ) ) )
+#define OFFSET_720p(x, y)  ( (uint32_t) ( BASE_offset + (	(( ((((x)* 2)/3)<<2) + (((y)* 2)/ 3) * 5120) ) & 0xfffffff8) ) )
+#define OFFSET_576p(x, y)  ( (uint32_t) ( BASE_offset + (	(( ((((x)* 3)/8)<<2) + (((y)* 8)/15) * 3072) ) & 0xfffffff8) ) )
+#define OFFSET_480p(x, y)  ( (uint32_t) ( BASE_offset + (	(( ((((x)* 3)/8)<<2) + (((y)* 4)/ 9) * 3072) ) & 0xfffffff8) ) )
 
-/*
-#define OFFSET(x, y) ( (uint32_t) ( BASE_offset + (			\
-			( ((uint32_t)((float)((x)*1.5f))<<2) + ((uint32_t)((float)((y)/2.67f))) * 3072)						\
-			) ) )
-*/
-/*
-(x)
-( pitch==8192 ? (x) : (pitch==5120 ? ((x)/1.5f) : ((x)/2.67f) ) )
-(y)
-( pitch==8192 ? (y)*8192 : (pitch==5120 ? ((y)*5120/1.5f) : ((y)*3072/1,875f) ) )
-*/
-
-/*
-#define OFFSET(x, y) ( (uint32_t) ( BASE_offset + (			\
-			( ((( pitch==8192 ? (x) : (pitch==5120 ? ((x)/1.5f) : ((x)/2.67f) ) ))*4) + ( pitch==8192 ? (y)*8192 : (pitch==5120 ? ((y)*5120/1.5f) : ((y)*3072/1.875f) ) ))						\
-			) ) )
-*/
+//#define OFFSET(x, y) OFFSET_1080p(x, y)
+//#define OFFSET(x, y) OFFSET_720p(x, y)
+//#define OFFSET(x, y) OFFSET_576p(x, y)
+//#define OFFSET(x, y) OFFSET_480p(x, y)
+#define OFFSET(x, y) ( (uint32_t) ( BASE_offset + (h==1080?((	( ((x)<<2) + (y) * 8192) )):(h==720?((	(( ((((x)* 2)/3)<<2) + (((y)* 2)/ 3) * 5120) ) & 0xfffffff8)):(h==576?((	(( ((((x)* 3)/8)<<2) + (((y)* 8)/15) * 3072) ) & 0xfffffff8)):((	(( ((((x)* 3)/8)<<2) + (((y)* 4)/ 9) * 3072) ) & 0xfffffff8))))) ) )
 
 extern int32_t LINE_HEIGHT;
 
@@ -91,8 +85,8 @@ typedef struct _Bitmap {
 // drawing context
 typedef struct _DrawCtx {
 	uint32_t *canvas;             // addr of canvas
-	uint32_t *bg;                 // addr of background backup
 	uint32_t *menu;               // addr of bottom menu stip
+	uint32_t *imgs;               // addr of images
 	uint32_t *font_cache;         // addr of glyph bitmap cache buffer
 	CellFont font;
 	CellFontRenderer renderer;
@@ -104,10 +98,11 @@ typedef struct _DrawCtx {
 DrawCtx ctx;                      // drawing context
 
 void font_finalize(void);
-void init_graphic(bool fx);
+void init_graphic(void);
 int32_t load_img_bitmap(int32_t idx, const char *path);
 void flip_frame(uint64_t *canvas);
-void dim_bg(void);
+void dim_bg(float ds, float de);
+void dim_img(float dim);
 void dump_bg(void);
 void set_background_color(uint32_t color);
 void set_foreground_color(uint32_t color);
@@ -118,7 +113,7 @@ int32_t draw_png(int32_t idx, int32_t c_x, int32_t c_y, int32_t p_x, int32_t p_y
 void set_texture_direct(uint32_t *texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t width2);
 void set_texture(uint8_t idx, uint32_t x, uint32_t y);
 void set_backdrop(uint8_t idx, uint8_t restore);
-void set_frame(uint8_t idx);
+void set_frame(uint8_t idx, uint64_t color);
 void set_textbox(uint64_t color, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 
 //void draw_pixel(int32_t x, int32_t y);

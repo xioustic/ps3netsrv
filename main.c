@@ -123,7 +123,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.46.02 MOD"
+#define WM_VERSION			"1.47.00 MOD"
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -286,19 +286,24 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define FTPPORT			(21)
 #define NETPORT			(38008)
 
-#define KB			   1024UL
-#define   _2KB_		   2048UL
-#define   _4KB_		   4096UL
-#define   _6KB_		   6144UL
-#define   _8KB_		   8192UL
-#define  _12KB_		  12288UL
-#define  _32KB_		  32768UL
-#define  _64KB_		  65536UL
-#define _128KB_		 131072UL
-#define _192KB_		 196608UL
-#define _256KB_		 262144UL
-#define  _1MB_		1048576UL
-#define _32MB_		33554432UL
+#define KB			     1024UL
+#define   _2KB_		     2048UL
+#define   _4KB_		     4096UL
+#define   _6KB_		     6144UL
+#define   _8KB_		     8192UL
+#define  _12KB_		    12288UL
+#define  _32KB_		    32768UL
+#define  _64KB_		    65536UL
+#define _128KB_		   131072UL
+#define _192KB_		   196608UL
+#define _256KB_		   262144UL
+#define _384KB_		   393216UL
+#define _512KB_		   524288UL
+#define _640KB_		   655360UL
+#define  _1MB_		0x0100000UL
+#define  _2MB_		0x0200000UL
+#define  _3MB_		0x0300000UL
+#define _32MB_		0x2000000UL
 
 #define MIN_MEM		_192KB_
 
@@ -686,7 +691,7 @@ static int isDir(const char* path);
 
 size_t read_file(const char *file, char *data, size_t size, int32_t offset);
 int save_file(const char *file, const char *mem, int64_t size);
-int waitfor(const char *path, uint8_t timeout);
+int wait_for(const char *path, uint8_t timeout);
 int val(const char *c);
 
 #include "include/html.h"
@@ -948,8 +953,8 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 
 		if(!is_cpursx)
 				buffer += concat(buffer,
-						"a.d:link{color:#D0D0D0;background:0px 2px url('data:image/gif;base64,R0lGODlhEAAMAIMAAOenIumzLbmOWOuxN++9Me+1Pe+9QvDAUtWxaffKXvPOcfTWc/fWe/fWhPfckgAAACH5BAMAAA8ALAAAAAAQAAwAAARQMI1Agzk4n5Sa+84CVNUwHAz4KWzLMo3SzDStOkrHMO8O2zmXsAXD5DjIJEdxyRie0KfzYChYr1jpYVAweb/cwrMbAJjP54AXwRa433A2IgIAOw==') no-repeat;padding:0 0 0 20px;}"
-						"a.w:link{color:#D0D0D0;background:url('data:image/gif;base64,R0lGODlhDgAQAIMAAAAAAOfn5+/v7/f39////////////////////////////////////////////wAAACH5BAMAAA8ALAAAAAAOABAAAAQx8D0xqh0iSHl70FxnfaDohWYloOk6papEwa5g37gt5/zO475fJvgDCW8gknIpWToDEQA7') no-repeat;padding:0 0 0 20px;}");
+						"a.d:link,a.d:visited{background:0px 2px url('data:image/gif;base64,R0lGODlhEAAMAIMAAOenIumzLbmOWOuxN++9Me+1Pe+9QvDAUtWxaffKXvPOcfTWc/fWe/fWhPfckgAAACH5BAMAAA8ALAAAAAAQAAwAAARQMI1Agzk4n5Sa+84CVNUwHAz4KWzLMo3SzDStOkrHMO8O2zmXsAXD5DjIJEdxyRie0KfzYChYr1jpYVAweb/cwrMbAJjP54AXwRa433A2IgIAOw==') no-repeat;padding:0 0 0 20px;}"
+						"a.w:link,a.w:visited{background:url('data:image/gif;base64,R0lGODlhDgAQAIMAAAAAAOfn5+/v7/f39////////////////////////////////////////////wAAACH5BAMAAA8ALAAAAAAOABAAAAQx8D0xqh0iSHl70FxnfaDohWYloOk6papEwa5g37gt5/zO475fJvgDCW8gknIpWToDEQA7') no-repeat;padding:0 0 0 20px;}");
 
 		buffer += concat(buffer,
 						"a:active,a:active:hover,a:visited:hover,a:link:hover{color:#FFFFFF;}"
@@ -1032,6 +1037,7 @@ static void handleclient(u64 conn_s_p)
 
 	size_t header_len;
 	sys_addr_t sysmem = NULL;
+	sys_memory_container_t mc_app = 0;
 
 	bool is_ntfs = false;
 	char param[HTML_RECV_SIZE];
@@ -1055,7 +1061,7 @@ static void handleclient(u64 conn_s_p)
 				show_msg(param);
 			}
 
-			if(webman_config->bootd) waitfor("/dev_usb", webman_config->bootd); // wait for any usb
+			if(webman_config->bootd) wait_for("/dev_usb", webman_config->bootd); // wait for any usb
 		}
 		else //if(conn_s_p == REFRESH_CONTENT)
 		{
@@ -1216,6 +1222,7 @@ static void handleclient(u64 conn_s_p)
 		if(!webman_config->bind) strcpy(webman_config->allow_ip, ip_address);
 	}
 
+/*
 	// check available free memory
 	{
 		_meminfo meminfo;
@@ -1243,7 +1250,7 @@ again3:
 			goto exit_handleclient;
 		}
 	}
-
+*/
 	#ifdef WM_REQUEST
 	if(!wm_request)
 	#endif
@@ -1982,7 +1989,7 @@ parse_request:
 				// /wait.ps3/<path>
 
 				if(param[9] == '/')
-					waitfor(param + 9, 30);
+					wait_for(param + 9, 30);
 				else
 					sys_timer_sleep(val(param + 10));
 
@@ -2631,13 +2638,22 @@ parse_request:
 			{
 				if(!small_alloc || islike(param, "/index.ps3"))
 				{
-					BUFFER_SIZE_HTML = get_buffer_size(webman_config->foot);
+					if(!vsh_mc) vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
+					if(vsh_mc)	mc_app = vsh_mc(1);
+					if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _3MB_; else
+					if(mc_app && sys_memory_allocate_from_container(_2MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _2MB_; else
+					if(mc_app && sys_memory_allocate_from_container(_1MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _1MB_;
 
-					_meminfo meminfo;
-					{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+					if(!sysmem)
+					{
+						BUFFER_SIZE_HTML = get_buffer_size(webman_config->foot);
 
-					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(3); //MIN+
-					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
+						_meminfo meminfo;
+						{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+
+						if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(3); //MIN+
+						if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
+					}
 				}
 
 				while((!sysmem) && (BUFFER_SIZE_HTML > 0) && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK) BUFFER_SIZE_HTML -= _64KB_;

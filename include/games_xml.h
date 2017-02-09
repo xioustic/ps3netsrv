@@ -117,8 +117,13 @@ static void make_fb_xml(char *myxml, char *templn)
 	save_file(FB_XML, myxml, size);
 }
 
-static u32 get_buffer_size(int footprint)
+static u32 get_buffer_size(uint8_t footprint)
 {
+	if(footprint == 99) //mc_app
+	{
+		return _3MB_;
+	}
+
 	if(footprint == 1) //MIN
 	{
 #ifndef LITE_EDITION
@@ -135,7 +140,7 @@ static u32 get_buffer_size(int footprint)
 	else
 	if(footprint == 3) //MIN+
 	{
-		return ( 512*KB);
+		return (_512KB_);
 	}
 	else	//STANDARD
 	{
@@ -143,7 +148,7 @@ static u32 get_buffer_size(int footprint)
 	}
 }
 
-static void set_buffer_sizes(int footprint)
+static void set_buffer_sizes(uint8_t footprint)
 {
 	BUFFER_SIZE_ALL = get_buffer_size(footprint);
 	BUFFER_SIZE_FTP	= ( _128KB_);
@@ -152,6 +157,25 @@ static void set_buffer_sizes(int footprint)
 	BUFFER_SIZE_PS2	= (  _64KB_);
 	BUFFER_SIZE_DVD	= (  _64KB_);
 
+	if(footprint == 99 && webman_config->foot <= 1) //mc_app
+	{
+		BUFFER_SIZE_FTP	= ( _256KB_);
+
+		//BUFFER_SIZE	= (1792*KB);
+		BUFFER_SIZE_PSX	= (_384KB_);
+		BUFFER_SIZE_PSP	= (_128KB_);
+		BUFFER_SIZE_PS2	= (_256KB_);
+		BUFFER_SIZE_DVD	= (_512KB_);
+
+		if((webman_config->cmask & PS1)) BUFFER_SIZE_PSX	= (_64KB_);
+		if((webman_config->cmask & PS2)) BUFFER_SIZE_PS2	= (_64KB_);
+		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (_64KB_);
+
+#ifdef MOUNT_ROMS
+		BUFFER_SIZE_PSP	+= (_640KB_);
+#endif
+	}
+	else
 	if(footprint == 1) //MIN
 	{
 		//BUFFER_SIZE	= ( _128KB_);
@@ -161,7 +185,7 @@ static void set_buffer_sizes(int footprint)
 	if(footprint == 2) //MAX
 	{
 		BUFFER_SIZE_FTP	= ( _256KB_);
-		//BUFFER_SIZE	= ( 512*KB);
+		//BUFFER_SIZE	= ( _512KB_);
 		BUFFER_SIZE_PSX	= ( _256KB_);
 		BUFFER_SIZE_PSP	= (  _64KB_);
 		BUFFER_SIZE_PS2	= ( _128KB_);
@@ -206,7 +230,7 @@ static void set_buffer_sizes(int footprint)
 		BUFFER_SIZE_PSP	= (  720*KB);
 		BUFFER_SIZE_DVD	= (  _64KB_);
 	}
-	else	//STANDARD
+	else	// if(footprint == 0) STANDARD
 	{
 		BUFFER_SIZE_ALL = ( 896*KB);
 		//BUFFER_SIZE	= ( 448*KB);
@@ -217,10 +241,12 @@ static void set_buffer_sizes(int footprint)
 		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (_64KB_);
 	}
 
-	BUFFER_SIZE = BUFFER_SIZE_ALL - (BUFFER_SIZE_PSX + BUFFER_SIZE_PSP + BUFFER_SIZE_PS2 + BUFFER_SIZE_DVD);
-
 #ifdef MOUNT_ROMS
-	BUFFER_SIZE_ROM = (footprint == 7) ? 640*KB : BUFFER_SIZE_PSP / 2;
+	BUFFER_SIZE_ROM = (footprint >= 7) ? _640KB_ : BUFFER_SIZE_PSP / 2; BUFFER_SIZE_PSP -= BUFFER_SIZE_ROM;
+
+	BUFFER_SIZE = BUFFER_SIZE_ALL - (BUFFER_SIZE_PSX + BUFFER_SIZE_PSP + BUFFER_SIZE_PS2 + BUFFER_SIZE_DVD + BUFFER_SIZE_ROM);
+#else
+	BUFFER_SIZE = BUFFER_SIZE_ALL - (BUFFER_SIZE_PSX + BUFFER_SIZE_PSP + BUFFER_SIZE_PS2 + BUFFER_SIZE_DVD);
 #endif
 }
 
@@ -251,16 +277,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 	}
 
 	set_buffer_sizes(webman_config->foot);
-
-	_meminfo meminfo;
-	{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
-	if((meminfo.avail)<( (BUFFER_SIZE_ALL) + MIN_MEM)) set_buffer_sizes(3); //MIN+
-	if((meminfo.avail)<( (BUFFER_SIZE_ALL) + MIN_MEM)) set_buffer_sizes(1); //MIN
-	if((meminfo.avail)<( (BUFFER_SIZE_ALL) + MIN_MEM))
-	{
-		return false;  //leave if less than min memory
-	}
-
 	sys_addr_t sysmem = 0;
 
 #ifdef USE_VM
@@ -269,9 +285,21 @@ static bool update_mygames_xml(u64 conn_s_p)
 		return false;  //leave if cannot allocate memory
 	}
 #else
-	if(sys_memory_allocate((BUFFER_SIZE_ALL), SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK)
+	sys_memory_container_t	mc_app = 0;
+	if(!vsh_mc) vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
+	if(vsh_mc)	mc_app = vsh_mc(1);
+	if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) set_buffer_sizes(99);
+
+	if(!sysmem)
 	{
-		return false;  //leave if cannot allocate memory
+		_meminfo meminfo;
+		{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+		if( meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) set_buffer_sizes(3); //MIN+
+		if (meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) set_buffer_sizes(1); //MIN
+		if((meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) || sys_memory_allocate((BUFFER_SIZE_ALL), SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK)
+		{
+			return false;  //leave if cannot allocate memory
+		}
 	}
 #endif
 
@@ -467,7 +495,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 		{
 			if(webman_config->boots && (f0 >= 1 && f0 <= 6)) // usb000->007
 			{
-				waitfor(drives[f0], webman_config->boots);
+				wait_for(drives[f0], webman_config->boots);
 			}
 #ifdef USE_NTFS
 			if(IS_NTFS && webman_config->ntfs) prepNTFS(1);

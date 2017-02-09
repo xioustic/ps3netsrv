@@ -55,3 +55,8 @@ int32_t mem_free(uint32_t size)
 	if(prx_heap>=size) prx_heap -= size; else return (-1);
 	return(0);
 }
+
+void reset_heap(void)
+{
+  prx_heap = (uint32_t)heap_mem;
+}

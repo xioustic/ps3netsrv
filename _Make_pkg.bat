@@ -1,5 +1,5 @@
 @echo off
-title Building webMAN_MOD_1.46.xx_Updater.pkg ...
+title Building webMAN_MOD_1.47.xx_Updater.pkg ...
 
 move /Y webftp_server_lite.sprx                _Projects_\updater\pkgfiles\USRDIR
 move /Y webftp_server_full.sprx                _Projects_\updater\pkgfiles\USRDIR
@@ -18,8 +18,8 @@ call Make_PKG.bat
 call Make_PKG_rebugification_theme.bat
 call Make_PKG_metalification_theme.bat
 
-set ver=1.46
-set rev=02
+set ver=1.47
+set rev=00
 
 move webMAN_MOD_%ver%.xx_Updater.pkg                      ..\..\webMAN_MOD_%ver%.%rev%_Updater.pkg
 move webMAN_MOD_%ver%.xx_Updater_rebugification_theme.pkg ..\..\webMAN_MOD_%ver%.%rev%_Updater_rebugification_theme.pkg

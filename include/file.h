@@ -622,13 +622,13 @@ static int del(const char *path, u8 recursive)
 }
 #endif
 
-int waitfor(const char *path, uint8_t timeout)
+int wait_for(const char *path, uint8_t timeout)
 {
 	struct CellFsStat s;
-	for(uint8_t n = 0; n < (timeout * 4); n++)
+	for(uint8_t n = 0; n < (timeout * 20); n++)
 	{
 		if(*path && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return CELL_FS_SUCCEEDED;
-		if(!working) break; sys_timer_usleep(250000);
+		if(!working) break; sys_timer_usleep(50000);
 	}
 	return FAILED;
 }
