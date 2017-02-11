@@ -141,7 +141,7 @@ static void show_idps(char *msg)
 	#undef SEP
 
 	show_msg(msg);
-	sys_timer_sleep(2);
+	sys_ppu_thread_sleep(2);
 }
 
 #endif

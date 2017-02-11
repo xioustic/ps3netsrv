@@ -90,7 +90,7 @@ static void wait_for_xml_download(char *filename, char *param)
 		struct CellFsStat s; u64 size = 475000; if(xml) size = val(xml + 1); else xml = strstr(filename, ".xm!");
 
 		for(u8 retry = 0; retry < 15; retry++)
-			{if(!working || (cellFsStat(filename, &s) == CELL_FS_SUCCEEDED && s.st_size >= size)) break; sys_timer_sleep(2);}
+			{if(!working || (cellFsStat(filename, &s) == CELL_FS_SUCCEEDED && s.st_size >= size)) break; sys_ppu_thread_sleep(2);}
 
 		if(s.st_size < size) {cellFsUnlink(filename); return;}
 
@@ -106,8 +106,8 @@ static void wait_for_xml_download(char *filename, char *param)
 
 static void wait_for_pkg_install(void)
 {
-	sys_timer_sleep(5);
-	while (working && IS_INSTALLING) sys_timer_sleep(2);
+	sys_ppu_thread_sleep(5);
+	while (working && IS_INSTALLING) sys_ppu_thread_sleep(2);
 
 	time_t install_time = pkg_install_time;  // set time before install
 	get_pkg_size_and_install_time(pkg_path); // get time after install
@@ -151,13 +151,13 @@ static void unload_web_plugins(void)
 	while(View_Find("webrender_plugin"))
 	{
 		UnloadPluginById(0x1C, (void *)unloadSysPluginCallback);
-		sys_timer_usleep(500000); retry++; if(retry > 20) break;
+		sys_ppu_thread_usleep(500000); retry++; if(retry > 20) break;
 	}
 
 	while(View_Find("webbrowser_plugin"))
 	{
 		UnloadPluginById(0x1B, (void *)unloadSysPluginCallback);
-		sys_timer_usleep(500000); retry++; if(retry > 20) break;
+		sys_ppu_thread_usleep(500000); retry++; if(retry > 20) break;
 	}
 
 #ifdef VIRTUAL_PAD
@@ -400,7 +400,7 @@ static void installPKG_combo_thread(u64 arg)
 		}
 		cellFsClosedir(fd);
 
-		if(ret == FAILED) { BEEP2 } else sys_timer_sleep(2);
+		if(ret == FAILED) { BEEP2 } else sys_ppu_thread_sleep(2);
 	}
 
 	install_in_progress = false;

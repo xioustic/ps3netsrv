@@ -157,9 +157,9 @@
 							cellFsUnlink(WMCONFIG);
 							{ BEEP1 }
 							show_msg((char*)STR_RMVWMCFG);
-							sys_timer_sleep(2);
+							sys_ppu_thread_sleep(2);
 							show_msg((char*)STR_RMVWMCFGOK);
-							sys_timer_sleep(3);
+							sys_ppu_thread_sleep(3);
 							goto reboot; // vsh reboot
 						}
 #ifdef COBRA_ONLY
@@ -276,7 +276,7 @@ show_persistent_popup:
 										sprintf(msg, "%s %s (%i %s)", STR_COPYING, current_file, copied_count, STR_FILES);
 
 									show_msg(msg);
-									sys_timer_sleep(2);
+									sys_ppu_thread_sleep(2);
 									if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_R2 | CELL_PAD_CTRL_L2) ) break;
 								}
 #endif
@@ -352,7 +352,7 @@ show_popup:
 								{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 
 								show_msg(msg);
-								sys_timer_sleep(2);
+								sys_ppu_thread_sleep(2);
 							}
 						}
 						else
@@ -736,10 +736,10 @@ show_popup:
 
 				if(reboot)
 				{
-					sys_timer_sleep(1);
+					sys_ppu_thread_sleep(1);
 					// reboot
 					show_msg((char*)"Switching successful! Reboot now...");
-					sys_timer_sleep(3);
+					sys_ppu_thread_sleep(3);
 					disable_dev_blind();
 reboot:
 					// vsh reboot
@@ -755,7 +755,8 @@ reboot:
 			}
 
 			if(!working) break;
-			sys_timer_usleep(300000);
+
+			sys_ppu_thread_usleep(300000);
 
 			if(show_persistent_popup)
 			{
@@ -765,4 +766,4 @@ reboot:
 			}
 		}
 
-		if(working && (n < 10)) sys_timer_usleep((12 - n) * 150000);
+		if(working && (n < 10)) sys_ppu_thread_usleep((12 - n) * 150000);

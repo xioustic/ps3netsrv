@@ -498,7 +498,7 @@ static void netiso_thread(uint64_t arg)
 
 			if(ret == (int) 0x8001000A)
 			{   // EBUSY
-				sys_timer_usleep(100000);
+				sys_ppu_thread_usleep(100000);
 				continue;
 			}
 
@@ -598,7 +598,7 @@ static int connect_to_remote_server(u8 server_id)
 			if(retries < MAX_RETRIES)
 			{
 				retries++;
-				sys_timer_sleep(1);
+				sys_ppu_thread_sleep(1);
 				goto reconnect;
 			}
 

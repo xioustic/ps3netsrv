@@ -1153,7 +1153,7 @@ static void reset_settings(void)
 	{
 		if(read_file(WMCONFIG, (char*)&wmconfig, sizeof(WebmanCfg), DONT_CLEAR_DATA)) break;
 
-		sys_timer_usleep(500000);
+		sys_ppu_thread_usleep(500000);
 	}
 
 	#ifndef COBRA_ONLY

@@ -255,7 +255,7 @@ static bool rec_start(const char *param)
 	}
 
 	reco_open(-1); // memory container
-	sys_timer_sleep(4);
+	sys_ppu_thread_sleep(4);
 
 
 	if(View_Find(REC_PLUGIN) != 0)
@@ -275,7 +275,7 @@ static bool rec_start(const char *param)
 	else
 	{
 		reco_open(-1); //reco_open((vsh_memory_container_by_id(1) == NONE ) ? vsh_memory_container_by_id(0) : vsh_memory_container_by_id(1));
-		sys_timer_sleep(3);
+		sys_ppu_thread_sleep(3);
 
 		if(View_Find(REC_PLUGIN) != 0)
 		{

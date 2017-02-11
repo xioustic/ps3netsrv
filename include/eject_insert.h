@@ -61,12 +61,12 @@ static void reset_usb_ports(char *_path)
 	if(usb6 >= 8) fake_eject_event(USB_MASS_STORAGE_2(usb6));
 	if(usb7 >= 8) fake_eject_event(USB_MASS_STORAGE_2(usb7));
 
-	sys_timer_sleep(1); u8 indx = (u8)val(_path + 8);
+	sys_ppu_thread_sleep(1); u8 indx = (u8)val(_path + 8);
 
 	// make the current usb device the first
 	fake_insert_event(USB_MASS_STORAGE(indx), DEVICE_TYPE_USB);
 
-	sys_timer_sleep(3);
+	sys_ppu_thread_sleep(3);
 
 	// send fake insert event for the other usb devices
 	for(u8 f0 = 0; f0 < 8; f0++)
@@ -114,7 +114,7 @@ static void eject_insert(u8 eject, u8 insert)
 		// Eject disc
 		{system_call_7(SC_STORAGE_INSERT_EJECT, dev_id, 1, (uint64_t)(u32) atapi_cmnd, 56, NULL, 0, NULL);}
 
-		if(insert) sys_timer_sleep(2);
+		if(insert) sys_ppu_thread_sleep(2);
 	}
 
 	if(insert)

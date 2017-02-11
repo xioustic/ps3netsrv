@@ -478,7 +478,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	else
 	if(fix_aborted)  strcat(buffer, "Fix aborted!");  //  /fixgame.ps3$abort
 
-	if(copy_aborted | fix_aborted) {strcat(buffer, "<p>"); sys_timer_usleep(100000); copy_aborted = fix_aborted = false;}
+	if(copy_aborted | fix_aborted) {strcat(buffer, "<p>"); sys_ppu_thread_usleep(100000); copy_aborted = fix_aborted = false;}
 #endif
 
 	_LINELEN = LINELEN;

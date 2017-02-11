@@ -84,10 +84,10 @@ static void poll_thread(uint64_t poll)
 		{
 			t1 = t2 = 0;
 			get_temperature(0, &t1); // CPU: 3E030000 -> 3E.03°C -> 62.(03/256)°C
-			sys_timer_usleep(300000);
+			sys_ppu_thread_usleep(300000);
 
 			get_temperature(1, &t2); // RSX: 3E030000 -> 3E.03°C -> 62.(03/256)°C
-			sys_timer_usleep(200000);
+			sys_ppu_thread_usleep(200000);
 
 			if(!max_temp || fan_ps2_mode) continue; // if fan mode was changed to manual by another thread while doing usleep
 
@@ -194,7 +194,7 @@ static void poll_thread(uint64_t poll)
  #endif
 					sprintf(msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
 					show_msg(msg);
-					sys_timer_sleep(2);
+					sys_ppu_thread_sleep(2);
 
 					if((t1 > MAX_TEMPERATURE) || (t2 > MAX_TEMPERATURE))
 					{

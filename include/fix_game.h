@@ -266,7 +266,7 @@ static void fix_game_folder(char *path)
 			}
 			else if(isDir(fix_game_path[plevel]) && (webman_config->fixgame!=FIX_GAME_QUICK)) fix_game_folder(fix_game_path[plevel]);
 
-			sys_timer_usleep(1000);
+			sys_ppu_thread_usleep(1000);
 		}
 
 		cellFsClosedir(fd);
@@ -369,7 +369,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 				while(true)
 				{
-					sys_timer_usleep(1000);
+					sys_ppu_thread_usleep(1000);
 					if(fix_aborted) goto exit_fix;
 
 					if(t==0) lba = getlba(chunk, chunk_size, "EBOOT.BIN;1", 11, &start);
@@ -422,7 +422,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 			size -= chunk_size;
 			if(chunk_size > size) chunk_size = (int) size;
 
-			sys_timer_usleep(1000);
+			sys_ppu_thread_usleep(1000);
 		}
 exit_fix:
 		cellFsClose(fd);

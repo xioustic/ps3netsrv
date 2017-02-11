@@ -62,7 +62,7 @@ static void prepNTFS(u8 towait)
 	if(mountCount == -2)
 		for(i = 0; i < 2; i++)
 		{
-			if(towait) sys_timer_sleep(2 * towait);
+			if(towait) sys_ppu_thread_sleep(2 * towait);
 			mount_all_ntfs_volumes();
 			if(mountCount) break;
 		}
@@ -314,7 +314,7 @@ for_sfo:
 											}
 
 											sys_ppu_thread_create(&t, rawseciso_stop_thread, 0, 0, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
-											while(rawseciso_loaded) {sys_timer_usleep(50000);}
+											while(rawseciso_loaded) {sys_ppu_thread_usleep(50000);}
 										}
 									}
 								}

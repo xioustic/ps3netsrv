@@ -33,6 +33,7 @@
 #include <sys/stat.h>
 
 #include "flags.h"
+#include "include/timer.h"
 
 #ifdef REX_ONLY
  #ifndef DEX_SUPPORT
@@ -893,6 +894,7 @@ static void restore_settings(bool syscon)
 {
 #ifdef COBRA_ONLY
 	get_vsh_plugin_slot_by_name((char *)"VSH_MENU", true); // unload vsh menu
+	get_vsh_plugin_slot_by_name((char *)"sLaunch",  true); // unload sLaunch
 #endif
 
 	if(syscon)
@@ -909,7 +911,7 @@ static void restore_settings(bool syscon)
 	#endif
 
 	working = plugin_active = 0;
-	sys_timer_sleep(2);
+	sys_ppu_thread_sleep(2);
 }
 
 static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_http, u8 is_cpursx, bool mount_ps3)
@@ -1056,7 +1058,7 @@ static void handleclient(u64 conn_s_p)
  #endif
 			if(profile || (!(webman_config->wmstart) && STR_WMSTART[0] != NULL))
 			{
-				sys_timer_sleep(10);
+				sys_ppu_thread_sleep(10);
 				sprintf(param, "%s%s", STR_WMSTART, SUFIX2(profile));
 				show_msg(param);
 			}
@@ -1163,7 +1165,7 @@ static void handleclient(u64 conn_s_p)
 			#ifdef REMOVE_SYSCALLS
 			if(webman_config->spp & 1) //remove syscalls & history
 			{
-				sys_timer_sleep(5);
+				sys_ppu_thread_sleep(5);
 
 				remove_cfw_syscalls(webman_config->keep_ccapi);
 				delete_history(true);
@@ -1238,7 +1240,7 @@ again3:
 			#endif
 
 			retries++;
-			sys_timer_sleep(1);
+			sys_ppu_thread_sleep(1);
 			if((retries < 5) && working) goto again3;
 
 			http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR); BEEP3;
@@ -1295,7 +1297,7 @@ parse_request:
 				{
 					if(*header == '/') {strcpy(param, header); buf.st_size = sprintf(header, "GET %s", param);}
 					for(size_t n = buf.st_size; n > 4; n--) if(header[n] == ' ') header[n] = '+';
-					if(islike(header, "GET /play.ps3")) {if(IS_INGAME) {sys_timer_sleep(1); served = 0; is_ps3_http = 1; continue;}}
+					if(islike(header, "GET /play.ps3")) {if(IS_INGAME) {sys_ppu_thread_sleep(1); served = 0; is_ps3_http = 1; continue;}}
 				}
 				cellFsUnlink(WMREQUEST_FILE);
 			}
@@ -1771,7 +1773,7 @@ parse_request:
 
 					sprintf(header, "PS2 Classic %s", classic_ps2_enabled ? STR_DISABLED : STR_ENABLED);
 					show_msg(header);
-					sys_timer_sleep(3);
+					sys_ppu_thread_sleep(3);
 				}
 				else
     #endif //#ifndef LITE_EDITION
@@ -1847,7 +1849,7 @@ parse_request:
 					if(IS_ON_XMB) http_response(conn_s, header, param, CODE_HTTP_OK, (char*)"/KLIC: Waiting for game...");
 
 					// wait until game start
-					while((klic_polling == KL_AUTO) && IS_ON_XMB && working) {sys_timer_usleep(500000);}
+					while((klic_polling == KL_AUTO) && IS_ON_XMB && working) sys_ppu_thread_usleep(500000);
 				}
 
 				char kl[0x120], prev[0x200], buffer[0x200]; memset(kl, 0, 120);
@@ -1897,7 +1899,7 @@ parse_request:
 							hex_dump(kl, (int)KLICENSEE_OFFSET, KLICENSEE_SIZE);
 							sprintf(buffer, "%s %s %s %s\r\n", kl, (char*)(KLIC_CONTENT_ID_OFFSET), header, (char*)(KLIC_PATH_OFFSET));
 
-							if(klic_polling == KL_AUTO && IS(buffer, prev)) {sys_timer_usleep(10000); continue;}
+							if(klic_polling == KL_AUTO && IS(buffer, prev)) {sys_ppu_thread_usleep(10000); continue;}
 
 							save_file("/dev_hdd0/klic.log", buffer, APPEND_TEXT);
 
@@ -1991,7 +1993,7 @@ parse_request:
 				if(param[9] == '/')
 					wait_for(param + 9, 30);
 				else
-					sys_timer_sleep(val(param + 10));
+					sys_ppu_thread_sleep(val(param + 10));
 
 				if(!mc) http_response(conn_s, header, param, CODE_HTTP_OK, param);
 
@@ -2600,7 +2602,7 @@ parse_request:
 
 					while(working)
 					{
-						//sys_timer_usleep(500);
+						//sys_ppu_thread_usleep(500);
 #ifdef USE_NTFS
 						if(is_ntfs) read_e = ps3ntfs_read(fd, (void *)buffer, BUFFER_SIZE_FTP);
 #endif
@@ -3321,7 +3323,7 @@ parse_request:
 
 						if(IS_ON_XMB && !(webman_config->combo2 & PLAY_DISC) && (strstr(param, ".ntfs[BD") == NULL) && (strstr(param, "/PSPISO") == NULL))
 						{
-							sys_timer_sleep(1);
+							sys_ppu_thread_sleep(1);
 							int view = View_Find("explore_plugin");
 
 							if(view)
@@ -3548,13 +3550,13 @@ static void wwwd_thread(uint64_t arg)
 #endif
 
 	led(YELLOW, OFF);
-	sys_timer_sleep(5);
+	sys_ppu_thread_sleep(5);
 
 #ifdef USE_DEBUG
 	u8 d_retries = 0;
 again_debug:
 	debug_s = connect_to_server("192.168.100.209", 38009);
-	if(debug_s <  0) {d_retries++; sys_timer_sleep(2); if(d_retries < 10) goto again_debug;}
+	if(debug_s <  0) {d_retries++; sys_ppu_thread_sleep(2); if(d_retries < 10) goto again_debug;}
 	if(debug_s >= 0) ssend(debug_s, "Connected...\r\n");
 	sprintf(debug, "FC=%i T0=%i T1=%i\r\n", webman_config->fanc, webman_config->temp0, webman_config->temp1);
 	ssend(debug_s, debug);
@@ -3584,11 +3586,12 @@ relisten:
 
 	if(list_s < 0)
 	{
-		if(working) {sys_timer_sleep(2); goto relisten;}
+		sys_ppu_thread_sleep(1);
+		if(working) goto relisten;
 		else goto end;
 	}
 
-	if((list_s >= 0) && working)
+	//if(list_s >= 0)
 	{
 		#ifdef USE_DEBUG
 		ssend(debug_s, " OK!\r\n");
@@ -3598,7 +3601,7 @@ relisten:
 
 		while(working)
 		{
-			sys_timer_usleep(10000); timeout = 0;
+			timeout = 0; sys_ppu_thread_usleep(1668);
 
 			while(working && (loading_html > 2))
 			{
@@ -3607,8 +3610,8 @@ relisten:
 				ssend(debug_s, debug);
 				#endif
 
-				sys_timer_usleep(300000);
-				if(++timeout > 100) loading_html = 0; // continue after 30 seconds
+				sys_ppu_thread_usleep(120000);
+				if(++timeout > 250) loading_html = 0; // continue after 30 seconds
 			}
 
 			int conn_s;
@@ -3631,7 +3634,6 @@ relisten:
 			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s = NONE;
 				if(working) goto relisten;
 				else break;
 			}
@@ -3658,7 +3660,7 @@ static void wwwd_stop_thread(uint64_t arg)
 {
 	working = 0;
 
-	while(refreshing_xml) sys_timer_usleep(500000); // Prevent unload too fast
+	while(refreshing_xml) sys_ppu_thread_usleep(500000); // Prevent unload too fast
 
 	restore_fan(1); // restore & set static fan speed for ps2
 
@@ -3666,7 +3668,7 @@ static void wwwd_stop_thread(uint64_t arg)
 	setAutoPowerOff(false);
 	#endif
 
-	sys_timer_usleep(500000);
+	sys_ppu_thread_usleep(500000);
 
 	uint64_t exit_code;
 
@@ -3681,7 +3683,7 @@ static void wwwd_stop_thread(uint64_t arg)
 	sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 	sys_ppu_thread_join(t_id, &exit_code);
 
-	while(netiso_loaded || rawseciso_loaded) {sys_timer_usleep(100000);}
+	while(netiso_loaded || rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
 */
 
 	sys_ppu_thread_join(thread_id_wwwd, &exit_code);
@@ -3756,7 +3758,7 @@ int wwwd_stop(void)
 	uint64_t exit_code;
 	if (ret == 0) sys_ppu_thread_join(t_id, &exit_code);
 
-	sys_timer_usleep(500000);
+	sys_ppu_thread_usleep(500000);
 
 	unload_prx_module();
 

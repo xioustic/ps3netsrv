@@ -82,7 +82,7 @@ static void fan_control(u8 set_fanspeed, u8 initial)
 		{
 			fan_speed = 0x48;
 			sys_sm_set_fan_policy(0, 2, fan_speed);
-			sys_timer_sleep(2);
+			sys_ppu_thread_sleep(2);
 		}
 		old_fan = fan_speed;
 		sys_sm_set_fan_policy(0, 2, fan_speed);

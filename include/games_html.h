@@ -938,7 +938,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 
 	// --- wait until 120 seconds if server is busy loading games ---
-	c_len = 0; while(loading_games && working && (c_len < 600)) {sys_timer_usleep(200000); c_len++;}
+	c_len = 0; while(loading_games && working && (c_len < 600)) {sys_ppu_thread_usleep(200000); c_len++;}
 
 	if(c_len >= 600 || !working) return false;
 	// ---

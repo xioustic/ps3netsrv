@@ -203,8 +203,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
  #endif
 				{
 					char category[16], seg_name[40]; *category = *seg_name = NULL;
-					//if((atag && !l2) || (!atag && l2)) {sys_timer_sleep(1); launch_disc(category, seg_name);} // L2 + X
-					sys_timer_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
+					//if((atag && !l2) || (!atag && l2)) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name);} // L2 + X
+					sys_ppu_thread_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
 
 					autoplay = false;
 				}
@@ -728,7 +728,7 @@ static void do_umount_iso(void)
 
 		for(u8 m = 0; m < 250; m++)
 		{
-			sys_timer_usleep(4000);
+			sys_ppu_thread_usleep(4000);
 
 			if(!isDir("/dev_bdvd")) break;
 		}
@@ -762,7 +762,7 @@ static void do_umount(bool clean)
  #ifdef PS2_DISC
 		do_umount_ps2disc(false);
  #endif
-		sys_timer_usleep(20000);
+		sys_ppu_thread_usleep(20000);
 
 		cobra_unload_vsh_plugin(0); // unload rawseciso / netiso plugins
 		cobra_unset_psp_umd();
@@ -796,9 +796,9 @@ static void do_umount(bool clean)
 		}
 
  #ifndef LITE_EDITION
-		while(netiso_loaded || rawseciso_loaded) {sys_timer_usleep(100000);}
+		while(netiso_loaded || rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
  #else
-		while(rawseciso_loaded) {sys_timer_usleep(100000);}
+		while(rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
  #endif
 
 		{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
@@ -824,11 +824,11 @@ static void do_umount_eject(void)
 {
 	do_umount(false);
 
-	sys_timer_usleep(4000);
+	sys_ppu_thread_usleep(4000);
 
 	cobra_send_fake_disc_eject_event();
 
-	sys_timer_usleep(4000);
+	sys_ppu_thread_usleep(4000);
 }
 #endif //#ifdef COBRA_ONLY
 
@@ -883,7 +883,7 @@ static void cache_icon0_and_param_sfo(char *destpath)
 		for(u8 n = 0; n < 10; n++)
 		{
 			if(file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", destpath, _4KB_) >= CELL_FS_SUCCEEDED) break;
-			sys_timer_usleep(500000);
+			sys_ppu_thread_usleep(500000);
 		}
 	}
 
@@ -894,7 +894,7 @@ static void cache_icon0_and_param_sfo(char *destpath)
 		for(u8 n = 0; n < 10; n++)
 		{
 			if(file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", destpath, COPY_WHOLE_FILE) >= CELL_FS_SUCCEEDED) break;
-			sys_timer_usleep(500000);
+			sys_ppu_thread_usleep(500000);
 		}
 	}
 }
@@ -944,8 +944,8 @@ static void mount_autoboot(void)
 
 	if(do_mount)
 	{   // add some delay
-		if(webman_config->delay)      {sys_timer_sleep(10); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
-		else if(islike(path, "/net"))  sys_timer_sleep(10);
+		if(webman_config->delay)      {sys_ppu_thread_sleep(10); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
+		else if(islike(path, "/net"))  sys_ppu_thread_sleep(10);
 #ifndef COBRA_ONLY
 		if(strstr(path, ".ntfs[") == NULL)
 #endif
@@ -1026,7 +1026,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 		if(IS_ON_XMB)
 		{
-			while(View_Find("explore_plugin") == 0) sys_timer_sleep(1); // wait for explore_plugin
+			while(View_Find("explore_plugin") == 0) sys_ppu_thread_sleep(1); // wait for explore_plugin
 
 			do_umount(false);
 			open_browser(url, 0);
@@ -1360,9 +1360,9 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			if( strstr(_path, "/PSXISO") || strstr(_path, "/PSXGAMES") || !extcmp(_path, ".ntfs[PSXISO]", 13) || mount_unk == EMU_PSX) {mount_unk = EMU_PSX; select_ps1emu(_path);}
 
 			//if(_next || _prev)
-				sys_timer_sleep(1);
+				sys_ppu_thread_sleep(1);
 			//else
-			//	sys_timer_usleep(50000);
+			//	sys_ppu_thread_usleep(50000);
 
 
 			// --------------
@@ -1561,7 +1561,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	#endif //#ifdef FIX_GAME
 
 					cobra_mount_ps3_disc_image(cobra_iso_list, iso_parts);
-					sys_timer_usleep(2500);
+					sys_ppu_thread_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
 					{
@@ -1745,7 +1745,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				{
 					// mount iso as data
 					cobra_mount_bd_disc_image(cobra_iso_list, iso_parts);
-					sys_timer_usleep(2500);
+					sys_ppu_thread_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
 					wait_for("/dev_bdvd", 5);
@@ -1765,7 +1765,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				// ----------------------------------------------------------------------------------------
 				// send_fake_disc_insert_event for mounted ISOs (PS3ISO/PS2ISO/PSXISO/PSPISO/BDISO/DVDISO)
 				// ----------------------------------------------------------------------------------------
-				sys_timer_usleep(2500);
+				sys_ppu_thread_usleep(2500);
 				cobra_send_fake_disc_insert_event();
 
 				//goto exit_mount;
@@ -2069,7 +2069,7 @@ install_mm_payload:
 		pokeq(map_data + (n * 0x20) + 0x08, dst_len);
 	}
 
-	if(isDir("/dev_bdvd")) sys_timer_sleep(2);
+	if(isDir("/dev_bdvd")) sys_ppu_thread_sleep(2);
 
 	//if(do_eject) eject_insert(0, 1);
 

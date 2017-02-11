@@ -400,7 +400,7 @@ next_part:
 					part_size -= written;
 					if(part_size == 0) break;
 
-					sys_timer_usleep(1000);
+					sys_ppu_thread_usleep(1000);
 				}
 
 
@@ -624,11 +624,13 @@ static int del(const char *path, u8 recursive)
 
 int wait_for(const char *path, uint8_t timeout)
 {
-	struct CellFsStat s;
+	if(!path[0]) return FAILED;
+
 	for(uint8_t n = 0; n < (timeout * 20); n++)
 	{
-		if(*path && cellFsStat(path, &s) == CELL_FS_SUCCEEDED) return CELL_FS_SUCCEEDED;
-		if(!working) break; sys_timer_usleep(50000);
+		if(file_exists(path)) return CELL_FS_SUCCEEDED;
+		if(!working) break;
+		sys_ppu_thread_usleep(50000);
 	}
 	return FAILED;
 }
@@ -643,7 +645,7 @@ static void enable_dev_blind(const char *msg)
 	if(!msg) return;
 
 	show_msg((char*)msg);
-	sys_timer_sleep(2);
+	sys_ppu_thread_sleep(2);
 }
 
 static void disable_dev_blind(void)

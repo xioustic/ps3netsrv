@@ -664,7 +664,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 													rDate.hour, rDate.minute, entry.d_name);
 									}
 									if(send(data_s, buffer, slen, 0) < 0) break;
-									sys_timer_usleep(1000);
+									sys_ppu_thread_usleep(1000);
 #ifdef USE_NTFS
 								}
 #endif
@@ -908,7 +908,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 										while(working)
 										{
-											sys_timer_usleep(1668);
 											read_e = recv(data_s, buffer2, BUFFER_SIZE_FTP, MSG_WAITALL);
 											if(read_e > 0)
 											{
@@ -1248,7 +1247,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 			break;
 		}
 
-		sys_timer_usleep(1668);
+		sys_ppu_thread_usleep(1668);
 	}
 
 	if(sysmem) sys_memory_free(sysmem);
@@ -1274,9 +1273,9 @@ relisten:
 	if(working) list_s = slisten(webman_config->ftp_port, 4);
 	else goto end;
 
-	if(working && (list_s < 0))
+	if(list_s < 0)
 	{
-		sys_timer_sleep(3);
+		sys_ppu_thread_sleep(1);
 		if(working) goto relisten;
 		else goto end;
 	}
@@ -1285,10 +1284,10 @@ relisten:
 	{
 		while(working)
 		{
-			sys_timer_usleep(100000);
+			sys_ppu_thread_usleep(100000);
 			int conn_s_ftp;
 			if(!working) break;
-			else
+
 			if(sys_admin && ((conn_s_ftp = accept(list_s, NULL, NULL)) > 0))
 			{
 				sys_ppu_thread_t t_id;
@@ -1299,7 +1298,6 @@ relisten:
 			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s = NONE;
 				if(working) goto relisten;
 				else break;
 			}

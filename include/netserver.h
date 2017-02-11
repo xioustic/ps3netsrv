@@ -656,7 +656,6 @@ static void handleclient_net(uint64_t arg)
 		{
 			break;
 		}
-		//sys_timer_usleep(1668);
 	}
 
 	sclose(&clients[index].s);
@@ -675,9 +674,9 @@ relisten:
 	if(working) list_s = slisten(webman_config->netsrvp, 4);
 	else goto end;
 
-	if(working && (list_s < 0))
+	if(list_s < 0)
 	{
-		sys_timer_sleep(3);
+		sys_ppu_thread_sleep(1);
 		if(working) goto relisten;
 		else goto end;
 	}
@@ -686,11 +685,11 @@ relisten:
 	{
 		while(working)
 		{
-			sys_timer_usleep(1668);
+			sys_ppu_thread_usleep(1668);
 			int conn_s_net;
 			if(!working) break;
-			else
-			if(working && (conn_s_net = accept(list_s, NULL, NULL)) > 0)
+
+			if((conn_s_net = accept(list_s, NULL, NULL)) > 0)
 			{
 				// get client slot
 				int index = NONE;
@@ -710,7 +709,6 @@ relisten:
 			if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 			{
 				sclose(&list_s);
-				list_s = NONE;
 				if(working) goto relisten;
 				else break;
 			}

@@ -93,7 +93,7 @@ static void enable_ingame_screenshot(void)
 		set_SSHT_(1);	// enable screenshot
 
 		show_msg((char*)"Screenshot enabled");
-		sys_timer_sleep(2);
+		sys_ppu_thread_sleep(2);
 	}
 }
 #endif
@@ -112,7 +112,7 @@ static void explore_exec_push(u32 usecs, u8 focus_first)
 {
 	if(explore_interface)
 	{
-		sys_timer_usleep(usecs);
+		sys_ppu_thread_usleep(usecs);
 
 		if(focus_first)
 		{
@@ -125,7 +125,7 @@ static void explore_exec_push(u32 usecs, u8 focus_first)
 
 		if(focus_first)
 		{
-			sys_timer_usleep(2000000);
+			sys_ppu_thread_usleep(2000000);
 			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
 		}
 	}
@@ -135,9 +135,9 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 {
 	u8 n;
 
-	for(n = 0; n < 15; n++) {if(abort_autoplay()) return; if(View_Find("explore_plugin") == 0) sys_timer_sleep(2); else break;}
+	for(n = 0; n < 15; n++) {if(abort_autoplay()) return; if(View_Find("explore_plugin") == 0) sys_ppu_thread_sleep(2); else break;}
 
-	if(IS(seg_name, "seg_device")) wait_for("/dev_bdvd", 10); if(n) sys_timer_sleep(3);
+	if(IS(seg_name, "seg_device")) wait_for("/dev_bdvd", 10); if(n) sys_ppu_thread_sleep(3);
 
 	int view = View_Find("explore_plugin");
 
@@ -157,7 +157,7 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 			while(View_Find("webrender_plugin") || View_Find("webbrowser_plugin"))
 			{
-				sys_timer_usleep(500000); retry++; if(retry > 4) break; if(abort_autoplay()) return;
+				sys_ppu_thread_usleep(500000); retry++; if(retry > 4) break; if(abort_autoplay()) return;
 			}
 
 			// use segment for media type
@@ -181,15 +181,15 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 				wait = (n < icon_found) || execute;
 
-				if(wait) sys_timer_usleep(100000);
+				if(wait) sys_ppu_thread_usleep(100000);
 				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-				if(wait) sys_timer_usleep(250000);
+				if(wait) sys_ppu_thread_usleep(250000);
 				sprintf(explore_command, "focus_category %s", category);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-				if(wait) sys_timer_usleep(250000);
+				if(wait) sys_ppu_thread_usleep(250000);
 				sprintf(explore_command, "focus_segment_index %s", seg_name);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-				if(wait) sys_timer_usleep(150000);
+				if(wait) sys_ppu_thread_usleep(150000);
 			}
 
 			if(execute) explore_exec_push(0, false); //explore_interface->ExecXMBcommand("exec_push", 0, 0);

@@ -1620,7 +1620,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 			break;
 		}
 
-		sys_timer_usleep(1668);
+		sys_ppu_thread_usleep(1668);
 	}
 
 	sprintf(buffer, PS3MAPI_DISCONNECT_NOTIF, inet_ntoa(conn_info.remote_adr));
@@ -1641,25 +1641,26 @@ static void ps3mapi_thread(u64 arg)
 	if((core_minversion !=0) &&(PS3MAPI_CORE_MINVERSION == core_minversion)) //Check if ps3mapi core has a compatible min_version.
 	{
 		int list_s = NONE;
+
 	relisten:
 		if(working) list_s = slisten(PS3MAPIPORT, 4);
 		else goto end;
 
-		if(working && (list_s<0))
+		if(list_s < 0)
 		{
-			sys_timer_sleep(3);
+			sys_ppu_thread_sleep(1);
 			if(working) goto relisten;
 			else goto end;
 		}
 
-		//if(working && (list_s >= 0))
+		//if(list_s >= 0)
 		{
 			while(working)
 			{
-				sys_timer_usleep(1668);
+				sys_ppu_thread_usleep(100000);
 				int conn_s_ps3mapi;
 				if (!working) goto end;
-				else
+
 				if(sys_admin && ((conn_s_ps3mapi = accept(list_s, NULL, NULL)) > 0))
 				{
 					sys_ppu_thread_t t_id;
@@ -1670,7 +1671,6 @@ static void ps3mapi_thread(u64 arg)
 				if((sys_net_errno == SYS_NET_EBADF) || (sys_net_errno == SYS_NET_ENETDOWN))
 				{
 					sclose(&list_s);
-					list_s = NONE;
 					if(working) goto relisten;
 					else break;
 				}

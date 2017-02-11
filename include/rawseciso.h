@@ -257,9 +257,9 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 								ret = sys_storage_open(usb_device, 0, &handle, 0);
 								if(ret == CELL_OK) break;
 
-								handle = SYS_DEVICE_HANDLE_NONE; sys_timer_usleep(500000);
+								handle = SYS_DEVICE_HANDLE_NONE; sys_ppu_thread_usleep(500000);
 							}
-							else sys_timer_usleep(7000000);
+							else sys_ppu_thread_usleep(7000000);
 						}
 						x = -1; continue;
 					}
@@ -270,7 +270,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 						//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 						return FAILED;
 					}
-					else sys_timer_usleep(100000);
+					else sys_ppu_thread_usleep(100000);
 				}
 				else break;
 			}
@@ -320,9 +320,9 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 									ret = sys_storage_open(usb_device, 0, &handle, 0);
 									if(ret == CELL_OK) break;
 
-									handle = SYS_DEVICE_HANDLE_NONE; sys_timer_usleep(500000);
+									handle = SYS_DEVICE_HANDLE_NONE; sys_ppu_thread_usleep(500000);
 								}
-								else sys_timer_usleep(7000000);
+								else sys_ppu_thread_usleep(7000000);
 							}
 							x = -1; continue;
 						}
@@ -332,7 +332,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 							//DPRINTF("sys_storage_read failed: %x %x -> %x\n", sector, n, ret);
 							return FAILED;
 						}
-						else sys_timer_usleep(100000);
+						else sys_ppu_thread_usleep(100000);
 					}
 					else break;
 				}
@@ -381,9 +381,9 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 									ret = sys_storage_open(usb_device, 0, &handle, 0);
 									if(ret == CELL_OK) break;
 
-									handle = SYS_DEVICE_HANDLE_NONE; sys_timer_usleep(500000);
+									handle = SYS_DEVICE_HANDLE_NONE; sys_ppu_thread_usleep(500000);
 								}
-								else sys_timer_usleep(7000000);
+								else sys_ppu_thread_usleep(7000000);
 							}
 							x = -1; continue;
 						}
@@ -393,7 +393,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 							//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 							return FAILED;
 						}
-						else sys_timer_usleep(100000);
+						else sys_ppu_thread_usleep(100000);
 					}
 					else break;
 				}
@@ -456,7 +456,7 @@ static int process_read_file_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t siz
 					if(ret == CELL_OK) break;
 
 					discfd = NONE;
-					sys_timer_usleep(5000000);
+					sys_ppu_thread_usleep(5000000);
 				}
 
 				last_index = idx;
@@ -524,7 +524,7 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 				if(ret == CELL_OK) break;
 
 				discfd = NONE;
-				sys_timer_usleep(5000000);
+				sys_ppu_thread_usleep(5000000);
 			}
 		}
 	}
@@ -879,7 +879,7 @@ static void eject_thread(uint64_t arg)
 					}
 				}
 
-				while(do_run) sys_timer_usleep(100000);
+				while(do_run) sys_ppu_thread_usleep(100000);
 
 				psx_indx = (psx_indx + 1) & 7;
 
@@ -905,7 +905,7 @@ static void eject_thread(uint64_t arg)
 			}
 		}
 
-		sys_timer_usleep(70000);
+		sys_ppu_thread_usleep(70000);
 	}
 
 	//DPRINTF("Exiting eject thread!\n");
@@ -975,7 +975,7 @@ static void rawseciso_thread(uint64_t arg)
 					break;
 				}
 
-				sys_timer_usleep(500000);
+				sys_ppu_thread_usleep(500000);
 			}
 		}
 
@@ -1115,7 +1115,7 @@ static void rawseciso_thread(uint64_t arg)
 		{
 			if(!ntfs_running) break;
 
-			sys_timer_usleep(100000);
+			sys_ppu_thread_usleep(100000);
 
 			continue;
 		}
@@ -1127,7 +1127,7 @@ static void rawseciso_thread(uint64_t arg)
 			{
 				if(!ntfs_running) break;
 
-				sys_timer_usleep(100000);
+				sys_ppu_thread_usleep(100000);
 
 				continue;
 			}
@@ -1209,7 +1209,7 @@ static void rawseciso_thread(uint64_t arg)
 
 			if(ret == (int) 0x8001000A)
 			{   // EBUSY
-				sys_timer_usleep(100000);
+				sys_ppu_thread_usleep(100000);
 				continue;
 			}
 

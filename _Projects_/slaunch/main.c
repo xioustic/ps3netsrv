@@ -72,7 +72,8 @@ int32_t slaunch_stop(void);
 static void finalize_module(void);
 static void slaunch_stop_thread(uint64_t arg);
 static void slaunch_thread(uint64_t arg);
-void draw_selection(uint32_t game_idx);
+
+static void draw_selection(uint32_t game_idx);
 
 enum gameModes
 {
@@ -94,6 +95,28 @@ static uint8_t dmode = modeALL;
 static uint8_t cpu_rsx = 0;
 
 static uint32_t frame = 0;
+
+#define SC_COBRA_SYSCALL8			 				(8)
+#define SYSCALL8_OPCODE_PS3MAPI			 			0x7777
+#define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
+
+static unsigned int get_vsh_plugin_slot_by_name(char *name)
+{
+	char tmp_name[30];
+	char tmp_filename[256];
+	unsigned int slot;
+
+	for (slot = 1; slot < 7; slot++)
+	{
+		memset(tmp_name, 0, sizeof(tmp_name));
+		memset(tmp_filename, 0, sizeof(tmp_filename));
+
+		{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO, (uint64_t)slot, (uint64_t)(uint32_t)tmp_name, (uint64_t)(uint32_t)tmp_filename); }
+
+		if(!strstr(tmp_name, name)) break;
+	}
+	return slot;
+}
 
 ////////////////////////////////////////////////////////////////////////
 //			SYS_PPU_THREAD_EXIT, DIRECT OVER SYSCALL				//
@@ -232,7 +255,7 @@ static void draw_page(uint32_t game_idx)
 	draw_selection(game_idx);
 }
 
-void draw_selection(uint32_t game_idx)
+static void draw_selection(uint32_t game_idx)
 {
 	uint8_t slot = 1 + game_idx % 10;
 	char one_of[32], mode[8], *path = slaunch[game_idx].path;
@@ -290,6 +313,9 @@ void draw_selection(uint32_t game_idx)
 
 static void load_data(void)
 {
+	char *err_msg = "There is no content.";
+	if(get_vsh_plugin_slot_by_name("WWWD") >= 7) {games=0, err_msg = "webMAN is not loaded."; goto exit_load;}
+
 	games=(file_exists(WMTMP "/slaunch.bin"))/sizeof(_slaunch);
 	if(games>=MAX_GAMES) games=MAX_GAMES-1;
 
@@ -353,6 +379,8 @@ reload:
 	else
 		games = 0;
 
+exit_load:
+
 	if(games)
 	{
 		menu_running = 1;
@@ -362,7 +390,7 @@ reload:
 	{
 		// no games - show "no content" message
 		ctx.fg_color=0xffc0c0c0;
-		set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, CENTER_TEXT, 520, "There is no content.");
+		set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, CENTER_TEXT, 520, err_msg);
 		flip_frame((uint64_t*)ctx.canvas);
 		sys_timer_sleep(2);
 		return_to_xmb();

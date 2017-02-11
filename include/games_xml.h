@@ -36,7 +36,7 @@ static void refresh_xml(char *msg)
 	sys_ppu_thread_t t_id;
 	sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
-	while(refreshing_xml && working) sys_timer_usleep(300000);
+	while(refreshing_xml && working) sys_ppu_thread_usleep(300000);
 
 	sprintf(msg, "%s XML%s: OK", STR_REFRESH, SUFIX2(profile));
 	show_msg(msg);
@@ -1148,7 +1148,7 @@ static void update_xml_thread(u64 conn_s_p)
 	refreshing_xml = 1;
 
 	if(IS_ON_XMB)
-		while(View_Find("explore_plugin") == 0) sys_timer_sleep(1); // wait for explore_plugin
+		while(View_Find("explore_plugin") == 0) sys_ppu_thread_sleep(1); // wait for explore_plugin
 
 	if(update_mygames_xml(conn_s_p)) mount_autoboot();
 

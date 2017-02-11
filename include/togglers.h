@@ -29,7 +29,7 @@ static bool toggle_rebug_mode(void)
 	{
 		show_msg((char*)"Normal Mode detected!\n"
 						"Switch to REBUG Mode Debug XMB...");
-		sys_timer_sleep(3);
+		sys_ppu_thread_sleep(3);
 
 		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.nrm", "index.dat.swp");
 		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.nrm", "version.txt.swp");
@@ -43,7 +43,7 @@ static bool toggle_rebug_mode(void)
 	{
 		show_msg((char*)"REBUG Mode Debug XMB detected!\n"
 						"Switch to Retail XMB...");
-		sys_timer_sleep(3);
+		sys_ppu_thread_sleep(3);
 
 		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.dexsp", "vsh.self.cexsp");
 
@@ -54,7 +54,7 @@ static bool toggle_rebug_mode(void)
 	{
 		show_msg((char*)"REBUG Mode Retail XMB detected!\n"
 						"Switch to Debug XMB...");
-		sys_timer_sleep(3);
+		sys_ppu_thread_sleep(3);
 
 		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.cexsp", "vsh.self.dexsp");
 
@@ -98,7 +98,7 @@ static bool toggle_normal_mode(void)
 	{
 		show_msg((char*)"Normal Mode detected!\n"
 						"No need to switch!");
-		sys_timer_sleep(3);
+		sys_ppu_thread_sleep(3);
 		disable_dev_blind();
 	}
 	return false;
@@ -123,7 +123,7 @@ static void toggle_debug_menu(void)
 
 		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.dex", "sysconf_plugin.sprx.cex");
 	}
-	sys_timer_sleep(1);
+	sys_ppu_thread_sleep(1);
 	disable_dev_blind();
 }
 #endif //#ifdef REX_ONLY

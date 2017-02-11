@@ -54,7 +54,7 @@ static bool mount_ps2disc(char *path)
 
  #endif //#ifdef COBRA_ONLY
 
-	if(!isDir("/dev_ps2disc")) sys_timer_sleep(2);
+	if(!isDir("/dev_ps2disc")) sys_ppu_thread_sleep(2);
 	if(isDir("/dev_ps2disc")) return true;
 	return false;
 }
