@@ -1102,10 +1102,10 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			else
 			if(_next)
 			{
-				if(lastgames.last == LAST_GAMES_UPPER_BOUND) lastgames.last = 0; else lastgames.last++;
+				if(lastgames.last >= LAST_GAMES_UPPER_BOUND) lastgames.last = 0; else lastgames.last++;
 			}
-			if(lastgames.game[lastgames.last][0]!='/') lastgames.last = 0;
-			if(lastgames.game[lastgames.last][0]!='/' || strlen(lastgames.game[lastgames.last]) < 7) goto exit_mount;
+			if(*lastgames.game[lastgames.last]!='/') lastgames.last = 0;
+			if(*lastgames.game[lastgames.last]!='/' || strlen(lastgames.game[lastgames.last]) < 7) goto exit_mount;
 
 			sprintf(_path, "%s", lastgames.game[lastgames.last]);
 		}

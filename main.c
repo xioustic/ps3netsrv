@@ -226,7 +226,9 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define THREAD_PRIO_STOP		 0x000
 
 #define THREAD_STACK_SIZE_8KB		0x02000UL
+#define THREAD_STACK_SIZE_32KB		0x08000UL
 #define THREAD_STACK_SIZE_64KB		0x10000UL
+#define THREAD_STACK_SIZE_128KB		0x20000UL
 
 #define SYS_PPU_THREAD_CREATE_NORMAL	0x000
 
@@ -1128,7 +1130,7 @@ static void handleclient(u64 conn_s_p)
 #endif
 
 		sys_ppu_thread_t t_id;
-		sys_ppu_thread_create(&t_id, update_xml_thread, conn_s_p, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+		sys_ppu_thread_create(&t_id, update_xml_thread, conn_s_p, THREAD_PRIO, THREAD_STACK_SIZE_128KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
 		if(conn_s_p == START_DAEMON)
 		{
@@ -3570,7 +3572,7 @@ again_debug:
 		fan_control(webman_config->temp0, 0);
 	}
 
-	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
+	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_32KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
 
 	led(GREEN, ON);
 
