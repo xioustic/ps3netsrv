@@ -50,7 +50,7 @@ static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
 
 static sys_memory_container_t get_app_memory_container(void)
 {
-	if(IS_INGAME) return 0;
+	if(IS_INGAME || webman_config->mc_app) return 0;
 	if(!vsh_mc)	vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
 	if(vsh_mc)	return vsh_mc(1);
 	return 0;

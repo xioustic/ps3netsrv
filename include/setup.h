@@ -243,7 +243,8 @@ static void setup_parse_settings(char *param)
 	webman_config->nowarn = 0;
 	if(strstr(param, "warn=1")) webman_config->nowarn = 1;
 
-	webman_config->foot=get_valuen(param, "fp=", 0, 7);
+	webman_config->foot=get_valuen(param, "fp=", 0, 7); set_buffer_sizes(webman_config->foot);
+	if(!strstr(param, "mc=1")) webman_config->mc_app = 1;
 
 	webman_config->spp = 0;
 #ifdef COBRA_ONLY
@@ -793,7 +794,7 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 	//memory usage
-	sprintf(templn, " %s [%iKB]: <select name=\"fp\" accesskey=\"M\">", STR_MEMUSAGE, (int)(BUFFER_SIZE_ALL / KB)); strcat(buffer, templn);
+	sprintf(templn, " %s [%iKB]: <select name=\"fp\" accesskey=\"M\">", STR_MEMUSAGE, (webman_config->mc_app) ? (int)(BUFFER_SIZE_ALL / KB) : 3072); strcat(buffer, templn);
 
 	value = webman_config->foot;
 	add_option_item("0", "Standard (896KB)"                , (value == 0), buffer);
@@ -803,8 +804,10 @@ static void setup_form(char *buffer, char *templn)
 	add_option_item("4", "Max PS3+ (1088K PS3)"            , (value == 4), buffer);
 	add_option_item("5", "Max PSX+ ( 368K PS3 + 720K PSX)" , (value == 5), buffer);
 	add_option_item("6", "Max BLU+ ( 368K PS3 + 720K BLU)" , (value == 6), buffer);
-	add_option_item("7", "Max PSP+ ( 368K PS3 + 720K PSP)" , (value == 6), buffer);
-	strcat(buffer, "</select><p>");
+	add_option_item("7", "Max PSP+ ( 368K PS3 + 720K PSP)" , (value == 7), buffer);
+	strcat(buffer, "</select>");
+
+	add_check_box("mc", "1", "3072KB [MC]", "<p>", !(webman_config->mc_app), buffer);
 
 #ifndef ENGLISH_ONLY
 	//language

@@ -488,8 +488,9 @@ typedef struct
 	uint8_t launchpad_grp;
 	uint8_t ps3l;
 	uint8_t roms;
+	uint8_t mc_app; // allow allocation from app memory container
 
-	uint8_t padding2[17];
+	uint8_t padding2[16];
 
 	// start up settings
 

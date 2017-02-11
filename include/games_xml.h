@@ -119,7 +119,7 @@ static void make_fb_xml(char *myxml, char *templn)
 
 static u32 get_buffer_size(uint8_t footprint)
 {
-	if(footprint == 99) //mc_app
+	if((webman_config->mc_app == 0) && (footprint == 99)) //mc_app
 	{
 		return _3MB_;
 	}
