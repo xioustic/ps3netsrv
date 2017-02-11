@@ -796,7 +796,7 @@ static void start_VSH_Menu(void)
 	mem_size = (((CANVAS_W * CANVAS_H * 4 * 2) + (FONT_CACHE_MAX * 32 * 32)) + (320 * 176 * 4) + MB(4)) / MB(1);
 	ret = create_heap(mem_size);  // 6 MB
 
-	if(ret) return;
+	if(ret) {rsx_fifo_pause(0); return;}
 
 	// initialize VSH Menu graphic
 	init_graphic();

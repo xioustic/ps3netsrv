@@ -412,7 +412,7 @@ static void start_VSH_Menu(void)
 	mem_size = (((CANVAS_W * CANVAS_H * 4) + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4)) + MB(1)) / MB(1);
 	ret = create_heap(mem_size); //11MB
 
-	if(ret) return;
+	if(ret) {rsx_fifo_pause(0); return;}
 
 	w = getDisplayWidth();	// display width
 	h = getDisplayHeight();
