@@ -72,7 +72,7 @@ static int32_t set_dec_param(jpg_dec_info	*dec_ctx)
 
 	jpg_w = info.imageWidth;
 	jpg_h = info.imageHeight;
-	if(!jpg_w || !jpg_h || (jpg_w!=1920 && jpg_w*jpg_h*4>MAX_WH4)) return -1;
+	if(!jpg_w || !jpg_h || (!ISHD(jpg_w) && (jpg_w*jpg_h)>MAX_WH4)) return -1;
 
 	// set decoder parameter
 	in.commandPtr		    = NULL;
@@ -81,6 +81,13 @@ static int32_t set_dec_param(jpg_dec_info	*dec_ctx)
 	in.method				= CELL_JPGDEC_FAST;//CELL_JPGDEC_QUALITY
 	in.outputColorAlpha		= 0xFF;
 	in.downScale			= 1;
+
+	if(!ISHD(jpg_w) && ((jpg_w*jpg_h*4)>(MAX_WH4) || jpg_w>MAX_W || jpg_h>MAX_H))
+	{
+		in.downScale = 2;
+		jpg_w/=2;
+		jpg_h/=2;
+	}
 
 	return cellJpgDecSetParameter(dec_ctx->main_h, dec_ctx->sub_h, &in, &out);
 }

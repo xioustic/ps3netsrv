@@ -555,9 +555,6 @@ static int copy_file(char *src, char *dst)
 
 	int ret;
 	int fd_s, fd_d;
-	const uint32_t buf_size = _16KB_;
-	uint8_t _buf[_16KB_];
-	uint8_t *buf = (uint8_t *)_buf;
 
 	ret = cellFsOpen(src, CELL_FS_O_RDONLY, &fd_s, NULL, 0);
 	if(ret == 0)
@@ -565,6 +562,8 @@ static int copy_file(char *src, char *dst)
 		ret = cellFsOpen(dst, CELL_FS_O_WRONLY | CELL_FS_O_CREAT | CELL_FS_O_TRUNC, &fd_d, NULL, 0);
 		if(ret == 0)
 		{
+			const uint32_t buf_size = _16KB_;
+			uint8_t *buf = (uint8_t *)malloc(buf_size);
 			while(1)
 			{
 				uint64_t nread, nwritten;
@@ -583,6 +582,7 @@ static int copy_file(char *src, char *dst)
 			}
 
 			cellFsClose(fd_d);
+			free(buf);
 		}
 
 		cellFsClose(fd_s);
@@ -836,11 +836,12 @@ int cobra_disc_auth(void)
 
 	if (real_disctype == DEVICE_TYPE_PS3_BD || real_disctype == DEVICE_TYPE_PS3_DVD)
 	{
-		static uint8_t buf[1024];
-
+		//static uint8_t buf[1024];
+		uint8_t *buf = (uint8_t*)malloc(1024);
 		memset(buf, 0, 1024);
 
 		sys_ss_disc_auth(0x5007, (uint64_t)(uint32_t)buf);
+		free(buf);
 	}
 	else
 	{
@@ -1535,15 +1536,16 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		return EABORT;
 	}
 
-	char sector[2048];
+	uint8_t *sector = (uint8_t*)malloc(1024);
 	read_file(path, sector, sizeof(sector), 0x8000);
 
-	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) return EIO;
+	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) {free(sector); return EIO;}
 
 	unsigned int real_disctype, effective_disctype, iso_disctype;
 
 	char title_id[11];
 	memcpy(title_id, sector + 0x373, 10); title_id[10] = 0;
+	free(sector);
 
 	char *root;
 
@@ -1569,7 +1571,6 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		{
 			if (real_disctype != DISC_TYPE_NONE)
 				cobra_send_fake_disc_insert_event();
-
 			return ret;
 		}
 
@@ -1948,9 +1949,10 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		return ESYSVER;
 	}
 
+	//uint8_t sector[2048]; memset(sector, 0, 2048);
+	uint8_t *sector = (uint8_t*)malloc(1024);
 
-	int fd; uint8_t sector[2048]; memset(sector, 0, 2048);
-
+	int fd;
 	if (cellFsOpen(path, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		uint64_t pos;
@@ -1962,13 +1964,14 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 		cellFsClose(fd);
 	}
 
-	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) return EIO;
+	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) {free(sector); return EIO;}
 
 	unsigned int real_disctype, effective_disctype, iso_disctype;
 
 	char title_id[11];
 	memset(title_id, 0, sizeof(title_id));
 	memcpy(title_id, sector+0x373, 10);
+	free(sector);
 
 	char *root;
 

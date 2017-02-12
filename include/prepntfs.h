@@ -183,10 +183,10 @@ next_ntfs_entry:
 										if(fd >= 0)
 										{
 											uint8_t cue_buf[2048];
-											int r = ps3ntfs_read(fd, (char *)cue_buf, sizeof(cue_buf));
+											int cue_size = ps3ntfs_read(fd, (char *)cue_buf, sizeof(cue_buf));
 											ps3ntfs_close(fd);
 
-											if(r > 13)
+											if(cue_size > 13)
 											{
 												cue = 1;
 												num_tracks = 0;
@@ -194,48 +194,21 @@ next_ntfs_entry:
 												tracks[0].lba = 0;
 												tracks[0].is_audio = 0;
 
-												char tcode[MAX_LINE_LEN];
-												u8 tmin = 0, tsec = 0, tfrm = 0;
 												u8 use_pregap = 0;
-												int lp = 0, tcode_len; char *templn = path;
+												int lba, lp = 0; char *templn = path;
 
-												while (lp < r)// get_line
+												while (lp < cue_size)
 												{
-													u8 line_found = 0;
-													*templn = 0;
-													for(int l = 0; l < MAX_LINE_LEN; l++)
-													{
-														if(l>=r) break;
-														if(lp<r && cue_buf[lp] && cue_buf[lp]!='\n' && cue_buf[lp]!='\r')
-														{
-															templn[l] = cue_buf[lp];
-															templn[l+1] = NULL;
-														}
-														else
-														{
-															templn[l] = NULL;
-														}
-														if(cue_buf[lp]=='\n' || cue_buf[lp]=='\r') line_found = 1;
-														lp++;
-														if(cue_buf[lp]=='\n' || cue_buf[lp]=='\r') lp++;
-
-														if(templn[l]==0) break;
-													}
-
-													if(!line_found) break;
+													lp = get_line(templn, cue_buf, cue_size, lp);
+													if(lp < 1) break;
 
 													if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
 													if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
 
-													tcode_len = sprintf(tcode, "%s", strrchr(templn, ' ') + 1); tcode[8] = NULL;
-													if((tcode_len != 8) || tcode[2]!=':' || tcode[5]!=':') continue;
-													tmin = (tcode[0]-'0')*10 + (tcode[1]-'0');
-													tsec = (tcode[3]-'0')*10 + (tcode[4]-'0');
-													tfrm = (tcode[6]-'0')*10 + (tcode[7]-'0');
-													if(use_pregap && num_tracks) tsec += 2;
+													lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
 
+													tracks[num_tracks].lba = lba;
 													if(num_tracks) tracks[num_tracks].is_audio = 1;
-													tracks[num_tracks].lba = (tmin * 60 + tsec) * 75 + tfrm;
 
 													num_tracks++; if(num_tracks>=32) break;
 												}

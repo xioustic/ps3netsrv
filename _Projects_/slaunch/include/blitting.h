@@ -20,11 +20,11 @@
 #define CANVAS_W      1920              // canvas width in pixel
 #define CANVAS_H      1080              // canvas height in pixel
 
-#define ISHD          (w == 1920)
+#define ISHD(a)       (a == 1920)
 
 #define IMG_MAX			 11             // bg + 10 image slots
-#define MAX_W			384
-#define MAX_H			384
+#define MAX_W			336
+#define MAX_H			336
 #define MAX_WH4			(MAX_W * MAX_H * 4)
 
 #define CENTER_TEXT  -1

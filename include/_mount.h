@@ -245,7 +245,8 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			// -----------------
 			char *filename = strrchr(_path, '/'), *icon = tempstr;
 			{
-				char tempstr[_4KB_], tempID[10], *d_name; *icon = *tempID = NULL;
+				char *buf = malloc(_4KB_);
+				char tempID[10], *d_name; *icon = *tempID = NULL;
 				u8 f0 = strstr(filename, ".ntfs[") ? NTFS : 0, f1 = strstr(_path, "PS2") ? 5 : strstr(_path, "PSX") ? 6 : strstr(_path, "PSP") ? 8 : 2, is_dir = isDir(source);
 
 				check_cover_folders(templn);
@@ -257,17 +258,17 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				if(is_dir)
 				{
 					sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", _path, d_name);
-					get_title_and_id_from_sfo(templn, tempID, d_name, icon, tempstr, 0); f1 = 0;
+					get_title_and_id_from_sfo(templn, tempID, d_name, icon, buf, 0); f1 = 0;
 				}
 #ifdef COBRA_ONLY
 				else
 				{
-					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, FROM_MOUNT, strlen(d_name), tempstr);
+					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, FROM_MOUNT, strlen(d_name), buf);
 				}
 #endif
 				default_icon = get_default_icon(icon, _path, d_name, is_dir, tempID, NONE, 0, f0, f1);
 
-				*filename = '/';
+				*filename = '/'; free(buf);
 			}
 
 			urlenc(enc_dir_name, icon);
@@ -1155,6 +1156,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// show start mounting message (game path)
 	// ----------------------------------------
 
+	if(do_eject == EXPLORE_CLOSE_ALL) {do_eject = 1; explore_close_all(_path);}
+
 	if(do_eject) show_msg(_path);
 
 
@@ -1664,9 +1667,9 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 						sys_addr_t sysmem = 0;
 						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 						{
-							char *buf = (char*)sysmem;
-							uint64_t msiz = read_file(_path, buf, 65535, 0);
-							if(msiz > 10)
+							char *cue_buf = (char*)sysmem;
+							int cue_size = read_file(_path, cue_buf, 65535, 0);
+							if(cue_size > 13)
 							{
 								unsigned int num_tracks = 0;
 
@@ -1674,48 +1677,21 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 								tracks[0].lba = 0;
 								tracks[0].is_audio = 0;
 
-								char tcode[MAX_LINE_LEN];
-								u8 tmin = 0, tsec = 0, tfrm = 0;
 								u8 use_pregap = 0;
-								u32 lp = 0, tcode_len;
+								int lba, lp = 0;
 
-								while(lp < msiz)// get_line ( templn, 512, sysmem ) != NULL )
+								while(lp < cue_size)
 								{
-									u8 line_found = 0;
-									*templn = NULL;
-									for(u32 l = 0; l < MAX_LINE_LEN; l++)
-									{
-										if(l>=msiz) break;
-										if(lp<msiz && buf[lp] && buf[lp]!='\n' && buf[lp]!='\r')
-										{
-											templn[l] = buf[lp];
-											templn[l+1] = NULL;
-										}
-										else
-										{
-											templn[l] = NULL;
-										}
-										if(buf[lp]=='\n' || buf[lp]=='\r') line_found = 1;
-										lp++;
-										if(buf[lp]=='\n' || buf[lp]=='\r') lp++;
-
-										if(templn[l] == NULL) break;
-									}
-
-									if(!line_found) break;
+									lp = get_line(templn, cue_buf, cue_size, lp);
+									if(lp < 1) break;
 
 									if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
 									if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
 
-									tcode_len = sprintf(tcode, "%s", strrchr(templn, ' ') + 1); tcode[8] = NULL;
-									if((tcode_len != 8) || tcode[2]!=':' || tcode[5]!=':') continue;
-									tmin = (tcode[0]-'0')*10 + (tcode[1]-'0');
-									tsec = (tcode[3]-'0')*10 + (tcode[4]-'0');
-									tfrm = (tcode[6]-'0')*10 + (tcode[7]-'0');
-									if(use_pregap && num_tracks) tsec += 2;
+									lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
 
+									tracks[num_tracks].lba = lba;
 									if(num_tracks) tracks[num_tracks].is_audio = 1;
-									tracks[num_tracks].lba = (tmin * 60 + tsec) * 75 + tfrm;
 
 									num_tracks++; if(num_tracks >= 32) break;
 								}

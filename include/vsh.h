@@ -14,6 +14,8 @@ int (*set_SSHT_)(int) = NULL;
 
 int opd[2] = {0, 0};
 
+#define EXPLORE_CLOSE_ALL   3
+
 static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
 {
 	// 0x10000 = ELF
@@ -108,6 +110,21 @@ static bool abort_autoplay(void)
 	return false;
 }
 
+static void explore_close_all(const char *path)
+{
+	int view = View_Find("explore_plugin"); if(!view) return;
+
+	explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+	if(explore_interface)
+	{
+		explore_interface->ExecXMBcommand((char*)"close_all_list", 0, 0);
+		if(strstr(path, "BDISO") || strstr(path, "DVDISO"))
+			explore_interface->ExecXMBcommand((char*)"focus_category video", 0, 0);
+		else
+			explore_interface->ExecXMBcommand((char*)"focus_category game", 0, 0);
+	}
+}
+
 static void explore_exec_push(u32 usecs, u8 focus_first)
 {
 	if(explore_interface)
@@ -133,13 +150,11 @@ static void explore_exec_push(u32 usecs, u8 focus_first)
 
 static void launch_disc(char *category, char *seg_name, bool execute)
 {
-	u8 n;
+	u8 n; int view;
 
-	for(n = 0; n < 15; n++) {if(abort_autoplay()) return; if(View_Find("explore_plugin") == 0) sys_ppu_thread_sleep(2); else break;}
+	for(n = 0; n < 15; n++) {if(abort_autoplay()) return; view = View_Find("explore_plugin"); if(!view) sys_ppu_thread_sleep(2); else break;}
 
 	if(IS(seg_name, "seg_device")) wait_for("/dev_bdvd", 10); if(n) sys_ppu_thread_sleep(3);
-
-	int view = View_Find("explore_plugin");
 
 	if(view)
 	{

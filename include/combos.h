@@ -468,7 +468,7 @@ show_popup:
 							else
 #endif
 							{
-								mount_with_mm((char*)"_prev", 1);
+								mount_with_mm((char*)"_prev", EXPLORE_CLOSE_ALL);
 
 								n = 0;
 								break;
@@ -482,7 +482,7 @@ show_popup:
 							else
 #endif
 							{
-								mount_with_mm((char*)"_next", 1);
+								mount_with_mm((char*)"_next", EXPLORE_CLOSE_ALL);
 
 								n = 0;
 								break;

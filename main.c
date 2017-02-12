@@ -224,6 +224,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define THREAD_PRIO_FTP			-0x10
 #define THREAD_PRIO_NET			-0x1d8
 #define THREAD_PRIO_STOP		 0x000
+#define THREAD_PRIO_XML			2900
 
 #define THREAD_STACK_SIZE_8KB		0x02000UL
 #define THREAD_STACK_SIZE_32KB		0x08000UL
@@ -310,14 +311,14 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 #define MIN_MEM		_192KB_
 
-static u32 BUFFER_SIZE_FTP	= ( _128KB_);
-static u32 BUFFER_SIZE_ALL	= ( 896*KB);
+static u32 BUFFER_SIZE_FTP;
+static u32 BUFFER_SIZE_ALL;
 
-static u32 BUFFER_SIZE		= ( 448*KB);
-static u32 BUFFER_SIZE_PSX	= ( 160*KB);
-static u32 BUFFER_SIZE_PSP	= (  _32KB_);
-static u32 BUFFER_SIZE_PS2	= (  _64KB_);
-static u32 BUFFER_SIZE_DVD	= ( _192KB_);
+static u32 BUFFER_SIZE;//
+static u32 BUFFER_SIZE_PSX;
+static u32 BUFFER_SIZE_PSP;
+static u32 BUFFER_SIZE_PS2;
+static u32 BUFFER_SIZE_DVD;
 
 #ifdef MOUNT_ROMS
 static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
@@ -824,7 +825,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 	}
 	else
 	{
-		char templn[_2KB_];
+		char *templn = malloc(_2KB_);
 
 		if(*msg == '/')
 			{sprintf(templn, "%s : OK", msg+1); show_msg(templn);}
@@ -868,6 +869,8 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
 								(code == CODE_RETURN_TO_ROOT) ? CODE_HTTP_OK : code, url, HTTP_RESPONSE_TITLE_LEN + strlen(templn), HTML_BODY, HTML_RESPONSE_TITLE, templn);
+
+		free(templn);
 	}
 
 	send(conn_s, header, slen, 0);
@@ -3338,12 +3341,7 @@ parse_request:
 									explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
 								else
  #endif
-								{
-									explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-									bool is_video = (strstr(param, paths[3]) || strstr(param, paths[4]));
-									sprintf(templn, "focus_category %s", is_video ? "video" : "game");
-									explore_interface->ExecXMBcommand(templn, 0, 0);
-								}
+									explore_close_all(param);
 							}
 						}
 

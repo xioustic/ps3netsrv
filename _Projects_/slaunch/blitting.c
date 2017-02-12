@@ -546,7 +546,7 @@ void set_textbox(uint64_t color, uint32_t x, uint32_t y, uint32_t width, uint32_
 	uint32_t i, k, _width = width/2;
 	for(i = 0; i < height; i++)
 		for(k = 0; k < _width; k++)
-			*(uint64_t*)(OFFSET(k*2+x, (i+y))) = color;
+			*(uint64_t*)(OFFSET(k*2+(x&0xffe), (i+y))) = color;
 }
 
 // draw colored selection frame around the #IDX on the frame-buffer
@@ -653,9 +653,9 @@ int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str)
 			// draw bitmap
 			for(i = 0; i < glyph->h; i++)
 			  for(k = 0; k < glyph->w; k++)
-			    if((glyph->image[i * glyph->w + k]) && (t_x + k < CANVAS_W) && (t_y + i < CANVAS_H))
+				if((glyph->image[i * glyph->w + k]) && (t_x + k < CANVAS_W) && (t_y + i < CANVAS_H))
 				{
-						if(ISHD)
+						if(ISHD(w))
 							canvas[(t_y + i + 1) * CANVAS_W + t_x + k + 1] = 0;
 						else
 							canvas[(t_y + i + 1) * CANVAS_W + t_x + k + 1] = 0xff333333;

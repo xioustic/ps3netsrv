@@ -482,3 +482,51 @@ static u8 get_valuen(const char *param, const char *label, u8 min_value, u8 max_
 {
 	return RANGE((u8)get_valuen32(param, label), min_value, max_value);
 }
+
+static int parse_lba(const char *templn, bool use_pregap)
+{
+	char *time=strrchr(templn, ' '); if(!time) return FAILED;
+	char tcode[10];
+
+	int tcode_len = snprintf(tcode, 8, "%s", time + 1); tcode[8] = NULL;
+	if((tcode_len != 8) || tcode[2]!=':' || tcode[5]!=':') return FAILED;
+
+	u8 tmin = 0, tsec = 0, tfrm = 0;
+	tmin = (tcode[0]-'0')*10 + (tcode[1]-'0');
+	tsec = (tcode[3]-'0')*10 + (tcode[4]-'0');
+	tfrm = (tcode[6]-'0')*10 + (tcode[7]-'0');
+
+	if(use_pregap) tsec += 2;
+
+	return ((tmin * 60 + tsec) * 75 + tfrm);
+}
+
+static int get_line(char *templn, const char *cue_buf, int buf_size, int start)
+{
+	*templn = NULL;
+	int lp = start;
+	u8 line_found = 0;
+
+	for(int l = 0; l < MAX_LINE_LEN; l++)
+	{
+		if(l>=buf_size) break;
+		if(lp<buf_size && cue_buf[lp] && cue_buf[lp]!='\n' && cue_buf[lp]!='\r')
+		{
+			templn[l] = cue_buf[lp];
+			templn[l+1] = NULL;
+		}
+		else
+		{
+			templn[l] = NULL;
+		}
+		if(cue_buf[lp]=='\n' || cue_buf[lp]=='\r') line_found = 1;
+		lp++;
+		if(cue_buf[lp]=='\n' || cue_buf[lp]=='\r') lp++;
+
+		if(templn[l]==0) break; //EOF
+	}
+
+	if(!line_found) return NONE;
+
+	return lp;
+}

@@ -83,7 +83,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	int rest = 0;			// for resuming file transfers
 
 	char cmd[16], param[MAX_PATH_LEN], filename[MAX_PATH_LEN], source[MAX_PATH_LEN]; // used as source parameter in RNFR and COPY commands
-	char buffer[FTP_RECV_SIZE], *cpursx = filename, *tempcwd = filename, *d_path = param;
+	char *cpursx = filename, *tempcwd = filename, *d_path = param;
 	struct CellFsStat buf;
 	int fd, pos;
 
@@ -93,7 +93,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	struct stat bufn;
 	struct statvfs vbuf;
 
-	if(!ftp_active && mountCount==-2) mount_all_ntfs_volumes();
+	if(!ftp_active && mountCount==-2 && !refreshing_xml) mount_all_ntfs_volumes();
 #endif
 
 	ftp_active++;
@@ -115,7 +115,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	if(webman_config->bind && ((conn_info.local_adr.s_addr != conn_info.remote_adr.s_addr) && strncmp(remote_ip, webman_config->allow_ip, strlen(webman_config->allow_ip)) != 0))
 	{
-		sprintf(buffer, "451 Access Denied. Use SETUP to allow remote connections.\r\n"); ssend(conn_s_ftp, buffer);
+		ssend(conn_s_ftp, "451 Access Denied. Use SETUP to allow remote connections.\r\n");
 		sclose(&conn_s_ftp);
 		sys_ppu_thread_exit(0);
 	}
@@ -124,6 +124,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	sprintf(ip_address, "%s", inet_ntoa(conn_info.local_adr));
 	for(u8 n = 0; ip_address[n]; n++) if(ip_address[n] == '.') ip_address[n] = ',';
+
+	char *buffer = malloc(FTP_RECV_SIZE);
 
 #ifdef USE_NTFS
 	sprintf(buffer, "%i webMAN ftpd " WM_VERSION " [NTFS:%i]\r\n", 220, mountCount); ssend(conn_s_ftp, buffer);
@@ -342,6 +344,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(_IS(cmd, "SHUTDOWN"))
 						{
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
+							free(buffer);
 							working = 0;
 							{ DELETE_TURNOFF } { BEEP1 }
 							{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
@@ -351,6 +354,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(_IS(cmd, "RESTART") || _IS(cmd, "REBOOT"))
 						{
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
+							free(buffer);
 							working = 0;
 							{ DELETE_TURNOFF } { BEEP2 }
 							if(_IS(cmd, "REBOOT")) save_file(WMNOSCAN, NULL, 0);
@@ -1250,6 +1254,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 		sys_ppu_thread_usleep(1668);
 	}
 
+	free(buffer);
 	if(sysmem) sys_memory_free(sysmem);
 
 	if(pasv_s >= 0) sclose(&pasv_s);

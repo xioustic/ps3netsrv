@@ -224,7 +224,7 @@ static void poll_thread(uint64_t poll)
 		poll = webman_config->poll;
 		if((poll == 0) && (sec >= 120)) // check USB drives each 120 seconds
 		{
-			uint8_t tmp[2048], f0 = 0;
+			uint8_t *tmp = (uint8_t*)malloc(2048), f0 = 0;
 			uint32_t usb_handle = NONE, r;
 
 			for(u8 i = 0; i < 6; i++)
@@ -238,6 +238,7 @@ static void poll_thread(uint64_t poll)
 				}
 			}
 			sec = 0;
+			free(tmp);
 		}
 		sec += step;
 

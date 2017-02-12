@@ -228,9 +228,11 @@ static void draw_page(uint32_t game_idx)
 {
 	if(!games || game_idx>=games) return;
 
+	const int left_margin=56;
+
 	uint8_t slot = 0;
 	uint32_t i, j;
-	int px=48, py=90;	// top-left
+	int px=left_margin, py=90;	// top-left
 
 	// draw background and menu strip
 	flip_frame((uint64_t*)ctx.canvas);
@@ -250,7 +252,7 @@ static void draw_page(uint32_t game_idx)
 		ctx.img[slot].y=py;
 		set_backdrop(slot, 0);
 		set_texture(slot, ctx.img[slot].x, ctx.img[slot].y);
-		px+=(320+48); if(px>1600) px=48;
+		px+=(320+48); if(px>1600) px=left_margin;
 	}
 	draw_selection(game_idx);
 }
@@ -261,13 +263,13 @@ static void draw_selection(uint32_t game_idx)
 	char one_of[32], mode[8], *path = slaunch[game_idx].path;
 
 	// game name
-	if(ISHD)	set_font(32.f, 32.f, 1.0f, 1);
+	if(ISHD(w))	set_font(32.f, 32.f, 1.0f, 1);
 	else		set_font(32.f, 32.f, 3.0f, 1);
 	ctx.fg_color=0xffc0c0c0;
 	print_text(ctx.menu, CENTER_TEXT, 0, slaunch[game_idx].name );
 
 	// game path
-	if(ISHD)	set_font(24.f, 16.f, 1.0f, 1);
+	if(ISHD(w))	set_font(24.f, 16.f, 1.0f, 1);
 	else		set_font(32.f, 16.f, 2.0f, 1);
 	ctx.fg_color=0xff808080;
 
@@ -275,7 +277,7 @@ static void draw_selection(uint32_t game_idx)
 	if(*path == '/') print_text(ctx.menu, CENTER_TEXT, 40, path);
 
 	// game index
-	if(ISHD)	set_font(20.f, 20.f, 1.0f, 1);
+	if(ISHD(w))	set_font(20.f, 20.f, 1.0f, 1);
 	else		set_font(32.f, 20.f, 2.0f, 1);
 	ctx.fg_color=0xffA0A0A0;
 	sprintf(one_of, "%i / %i", game_idx+1, games);
@@ -295,7 +297,7 @@ static void draw_selection(uint32_t game_idx)
 		print_text(ctx.menu, 80, 64, mode);
 
 	// temperature
-	if(ISHD || (h==720))
+	if(ISHD(w) || (h==720))
 	{
 		char s_temp[64];
 		uint32_t temp_c = 0, temp_f = 0;
@@ -410,7 +412,7 @@ static void start_VSH_Menu(void)
 
 	// create VSH Menu heap memory from memory container 1("app")
 	mem_size = (((CANVAS_W * CANVAS_H * 4) + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4)) + MB(1)) / MB(1);
-	ret = create_heap(mem_size); //11MB
+	ret = create_heap(mem_size); //10MB
 
 	if(ret) {rsx_fifo_pause(0); return;}
 
