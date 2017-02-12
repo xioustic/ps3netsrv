@@ -157,7 +157,7 @@ static void set_buffer_sizes(uint8_t footprint)
 	BUFFER_SIZE_PS2	= (  _64KB_);
 	BUFFER_SIZE_DVD	= (  _64KB_);
 
-	if(footprint == 99 && webman_config->foot <= 1) //mc_app
+	if(footprint == 99) //mc_app
 	{
 		BUFFER_SIZE_FTP	= ( _256KB_);
 
@@ -166,14 +166,6 @@ static void set_buffer_sizes(uint8_t footprint)
 		BUFFER_SIZE_PSP	= (_128KB_);
 		BUFFER_SIZE_PS2	= (_256KB_);
 		BUFFER_SIZE_DVD	= (_512KB_);
-
-		if((webman_config->cmask & PS1)) BUFFER_SIZE_PSX	= (_64KB_);
-		if((webman_config->cmask & PS2)) BUFFER_SIZE_PS2	= (_64KB_);
-		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (_64KB_);
-
-#ifdef MOUNT_ROMS
-		BUFFER_SIZE_PSP	+= (_640KB_);
-#endif
 	}
 	else
 	if(footprint == 1) //MIN
@@ -190,10 +182,6 @@ static void set_buffer_sizes(uint8_t footprint)
 		BUFFER_SIZE_PSP	= (  _64KB_);
 		BUFFER_SIZE_PS2	= ( _128KB_);
 		BUFFER_SIZE_DVD	= ( _192KB_);
-
-		if((webman_config->cmask & PS1)) BUFFER_SIZE_PSX	= (_64KB_);
-		if((webman_config->cmask & PS2)) BUFFER_SIZE_PS2	= (_64KB_);
-		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (_64KB_);
 	}
 	else
 	if(footprint == 3) //MIN+
@@ -211,7 +199,7 @@ static void set_buffer_sizes(uint8_t footprint)
 	if(footprint == 5) //MAX PSX+
 	{
 		//BUFFER_SIZE	= (  368*KB);
-		BUFFER_SIZE_PSX	= (  720*KB);
+		BUFFER_SIZE_PSX	= (  768*KB);
 		BUFFER_SIZE_PSP	= (  _64KB_);
 	}
 	else
@@ -220,14 +208,18 @@ static void set_buffer_sizes(uint8_t footprint)
 		//BUFFER_SIZE	= (  368*KB);
 		BUFFER_SIZE_PSX	= (  _64KB_);
 		BUFFER_SIZE_PSP	= (  _64KB_);
-		BUFFER_SIZE_DVD	= (  720*KB);
+		BUFFER_SIZE_DVD	= (  768*KB);
 	}
 	else
 	if(footprint == 7) //MAX PSP+
 	{
 		//BUFFER_SIZE	= (  368*KB);
 		BUFFER_SIZE_PSX	= (  _64KB_);
-		BUFFER_SIZE_PSP	= (  720*KB);
+#ifdef MOUNT_ROMS
+		BUFFER_SIZE_PSP	= (webman_config->roms) ? ( _128KB_) : (768*KB);
+#else
+		BUFFER_SIZE_PSP	= (768*KB);
+#endif
 		BUFFER_SIZE_DVD	= (  _64KB_);
 	}
 	else	// if(footprint == 0) STANDARD
@@ -236,13 +228,15 @@ static void set_buffer_sizes(uint8_t footprint)
 		//BUFFER_SIZE	= ( 448*KB);
 		BUFFER_SIZE_PSX	= ( 160*KB);
 		BUFFER_SIZE_DVD	= ( _192KB_);
-
-		if((webman_config->cmask & PS1)) BUFFER_SIZE_PSX	= (_32KB_);
-		if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (_64KB_);
 	}
 
+	if((webman_config->cmask & PS1)) BUFFER_SIZE_PSX	= (_8KB_);
+	if((webman_config->cmask & PS2)) BUFFER_SIZE_PS2	= (_8KB_);
+	if((webman_config->cmask & PSP)) BUFFER_SIZE_PSP	= (_8KB_);
+	if((webman_config->cmask & (BLU | DVD)) == (BLU | DVD)) BUFFER_SIZE_DVD = (_8KB_);
+
 #ifdef MOUNT_ROMS
-	BUFFER_SIZE_ROM = (footprint >= 7) ? _640KB_ : BUFFER_SIZE_PSP / 2; BUFFER_SIZE_PSP -= BUFFER_SIZE_ROM;
+	BUFFER_SIZE_ROM = !(webman_config->roms) ? _8KB_ : (footprint >= 7) ? _640KB_ : _64KB_;
 
 	BUFFER_SIZE = BUFFER_SIZE_ALL - (BUFFER_SIZE_PSX + BUFFER_SIZE_PSP + BUFFER_SIZE_PS2 + BUFFER_SIZE_DVD + BUFFER_SIZE_ROM);
 #else
@@ -287,8 +281,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 #else
 	sys_memory_container_t	mc_app = 0;
 	mc_app = get_app_memory_container();
-	if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) set_buffer_sizes(99);
-
 	if(!sysmem)
 	{
 		_meminfo meminfo;
@@ -337,41 +329,25 @@ static bool update_mygames_xml(u64 conn_s_p)
 	language("/CLOSEFILE", NULL, NULL);
 #endif
 
-
-	BUFFER_SIZE		= BUFFER_SIZE;
-	BUFFER_SIZE_PSX	= BUFFER_SIZE_PSX;
-	BUFFER_SIZE_PSP	= BUFFER_SIZE_PSP;
-	BUFFER_SIZE_PS2	= BUFFER_SIZE_PS2;
-	BUFFER_SIZE_DVD	= BUFFER_SIZE_DVD;
-	BUFFER_SIZE_ALL	= BUFFER_SIZE_ALL;
-
-	sys_addr_t sysmem1 = sysmem  + (BUFFER_SIZE);
-	sys_addr_t sysmem2 = sysmem1 + (BUFFER_SIZE_PSX) + (BUFFER_SIZE_PSP);
-	sys_addr_t sysmem3 = sysmem2 + (BUFFER_SIZE_PS2);
+	sys_addr_t sysmem_psx = sysmem + (BUFFER_SIZE);
+	sys_addr_t sysmem_psp = sysmem + (BUFFER_SIZE) + (BUFFER_SIZE_PSX);
+	sys_addr_t sysmem_ps2 = sysmem + (BUFFER_SIZE) + (BUFFER_SIZE_PSX) + (BUFFER_SIZE_PSP);
+	sys_addr_t sysmem_dvd = sysmem + (BUFFER_SIZE) + (BUFFER_SIZE_PSX) + (BUFFER_SIZE_PSP) + (BUFFER_SIZE_PS2);
 
 #ifdef MOUNT_ROMS
-	if(webman_config->roms) BUFFER_SIZE_PSP -= BUFFER_SIZE_ROM;
+	sys_addr_t sysmem_rom = sysmem + (BUFFER_SIZE) + (BUFFER_SIZE_PSX) + (BUFFER_SIZE_PSP) + (BUFFER_SIZE_PS2) + (BUFFER_SIZE_DVD);
+	char *myxml_roms  = (char*)sysmem_rom;
+#else
+	char *myxml_roms  = NULL;
 #endif
 
 	char *myxml_ps3   = (char*)sysmem;
-	char *myxml_psx   = NULL;
-	char *myxml_psp   = NULL;
-	char *myxml_roms  = NULL;
-	char *myxml_ps2   = NULL;
-	char *myxml_dvd   = NULL;
-	char *myxml       = NULL;
-	char *myxml_items = NULL;
-
-	myxml_psx = (char*)sysmem1;
-	myxml_psp = (char*)sysmem1+(BUFFER_SIZE_PSX);
- #ifdef MOUNT_ROMS
-	myxml_roms = (char*)sysmem1+(BUFFER_SIZE_PSX)+(BUFFER_SIZE_PSP);
- #endif
-	myxml_ps2 = (char*)sysmem2;
-
-	myxml_dvd	= (char*)sysmem3;
-	myxml		= (char*)sysmem+(BUFFER_SIZE)-4300;
-	myxml_items = (char*)sysmem3;
+	char *myxml_psx   = (char*)sysmem_psx;
+	char *myxml_ps2   = (char*)sysmem_ps2;
+	char *myxml_psp   = (char*)sysmem_psp;
+	char *myxml_dvd   = (char*)sysmem_dvd;
+	char *myxml       = (char*)sysmem+(BUFFER_SIZE)-4300;
+	char *myxml_items = (char*)sysmem_dvd;
 
 	cellFsMkdir("/dev_hdd0/xmlhost", MODE);
 	cellFsMkdir("/dev_hdd0/xmlhost/game_plugin", MODE);

@@ -1484,7 +1484,7 @@ int cobra_map_game(const char *path, const char *title_id, int *special_mode)
 
 	build_blank_iso(title_id);
 
-	int ret = sys_map_path((char*)"/dev_bdvd", path);
+	int ret = sys_map_path("/dev_bdvd", path);
 	if (ret != 0) return ret;
 
 	sys_map_path("//dev_bdvd", path);

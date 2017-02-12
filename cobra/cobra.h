@@ -94,6 +94,8 @@ enum DiscEmu
 	EMU_DVD,
 	EMU_MAX,
 	EMU_PSP, // not a DiscEmu
+	EMU_ROMS,   // not a DiscEmu
+	EMU_GAMEI, // not a DiscEmu
 };
 
 typedef struct

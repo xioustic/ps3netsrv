@@ -32,8 +32,80 @@ typedef struct
 u8 usb = 1; // first connected usb drive [used by /copy.ps3 & in the tooltips for /copy.ps3 links in the file manager]. 1 = /dev_usb000
 #endif
 
-static void game_mount(char *buffer, char *templn, char *param, char *tempstr, bool mount_ps3, bool forced_mount)
+static void auto_play(char *param)
 {
+#ifdef OFFLINE_INGAME
+	if((strstr(param, OFFLINE_TAG) != NULL)) net_status = 0;
+#endif
+	if(IS_ON_XMB && (strstr(param, "/PSPISO") == NULL) && (extcmp(param, ".BIN.ENC", 8) != 0))
+	{
+		uint8_t autoplay = webman_config->autoplay;
+
+		CellPadData pad_data = pad_read();
+		bool atag = (strcasestr(param, AUTOPLAY_TAG)!=NULL) || (autoplay);
+ #ifdef REMOVE_SYSCALLS
+		bool l2 = (pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2));
+ #else
+		bool l2 = (pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)));
+ #endif
+
+ #if defined(FAKEISO) || defined(PKG_LAUNCHER)
+		int view = View_Find("explore_plugin");
+		if(view) explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
+ #endif
+
+ #ifdef PKG_LAUNCHER
+		if(strstr(param, "/GAMEI/"))
+		{
+			if(!(webman_config->nogrp) && webman_config->ps3l && (view != 0))
+			{
+				explore_interface->ExecXMBcommand("focus_index pkg_launcher", 0, 0);
+				explore_exec_push(200000, true); // open pkg_launcher folder
+			}
+		}
+		else
+ #endif
+ #ifdef FAKEISO
+		if(!l2 && !extcmp(param, ".ntfs[BDFILE]", 13))
+		{
+			if(!(webman_config->nogrp) && webman_config->rxvid && (view != 0))
+			{
+				if(strcasestr(param, ".pkg"))
+				{
+					explore_interface->ExecXMBcommand("close_all_list", 0, 0);
+					explore_interface->ExecXMBcommand("focus_segment_index seg_package_files", 0, 0);
+				}
+				else
+				{
+					explore_interface->ExecXMBcommand("focus_index rx_video", 0, 0);
+					explore_exec_push(200000, true);  // open rx_video folder
+
+					if(!autoplay || strcasestr(param, ".mkv")) {is_busy = false; return;}
+
+					explore_exec_push(2000000, true); // open Data Disc
+				}
+			}
+		}
+		else
+ #endif
+		{
+			char category[16], seg_name[40]; *category = *seg_name = NULL;
+			//if((atag && !l2) || (!atag && l2)) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name);} // L2 + X
+			sys_ppu_thread_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
+
+			autoplay = false;
+		}
+
+		if(autoplay)
+		{
+			explore_exec_push(2000000, false);
+		}
+	}
+}
+
+static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, bool mount_ps3, bool forced_mount)
+{
+	bool mounted = false;
 
 	// ---------------------
 	// unmount current game
@@ -74,8 +146,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		bool is_copy = ((plen == IS_COPY) && (copy_in_progress == false));
 #endif
 		char enc_dir_name[1024], *source = param + plen;
-		bool mounted = false; max_mapped = 0;
-		bool is_gamei = false;
+		max_mapped = 0;
 
 		// ----------------------------
 		// remove url query parameters
@@ -136,87 +207,15 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			}
 			else
 				mounted = mount_with_mm(source, 1);
-
-#ifdef PKG_LAUNCHER
-			is_gamei = strstr(param, "/GAMEI/");
-#endif
 		}
 
-		// -----------------
-		// auto-play & exit
-		// -----------------
+		// -------------------
+		// exit mount from XMB
+		// -------------------
 		if(mount_ps3)
 		{
-#ifdef OFFLINE_INGAME
-			if(mounted && (strstr(param, OFFLINE_TAG) != NULL)) net_status = 0;
-#endif
-			if(mounted && IS_ON_XMB && (strstr(param, "/PSPISO") == NULL) && (extcmp(param, ".BIN.ENC", 8) != 0))
-			{
-				uint8_t autoplay = webman_config->autoplay;
-
-				CellPadData pad_data = pad_read();
-				bool atag = (strcasestr(param, AUTOPLAY_TAG)!=NULL) || (autoplay);
- #ifdef REMOVE_SYSCALLS
-				bool l2 = (pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2));
- #else
-				bool l2 = (pad_data.len > 0 && (pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)));
- #endif
-
- #if defined(FAKEISO) || defined(PKG_LAUNCHER)
-				int view = View_Find("explore_plugin");
-				if(view) explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
- #endif
-
- #ifdef PKG_LAUNCHER
-				if(is_gamei)
-				{
-					if(!(webman_config->nogrp) && webman_config->ps3l && (view != 0))
-					{
-						explore_interface->ExecXMBcommand("focus_index pkg_launcher", 0, 0);
-						explore_exec_push(200000, true); // open pkg_launcher folder
-					}
-				}
-				else
- #endif
- #ifdef FAKEISO
-				if(!l2 && !extcmp(param, ".ntfs[BDFILE]", 13))
-				{
-					if(!(webman_config->nogrp) && webman_config->rxvid && (view != 0))
-					{
-						if(strcasestr(param, ".pkg"))
-						{
-							explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-							explore_interface->ExecXMBcommand("focus_segment_index seg_package_files", 0, 0);
-						}
-						else
-						{
-							explore_interface->ExecXMBcommand("focus_index rx_video", 0, 0);
-							explore_exec_push(200000, true);  // open rx_video folder
-
-							if(!autoplay || strcasestr(param, ".mkv")) {is_busy = false; return;}
-
-							explore_exec_push(2000000, true); // open Data Disc
-						}
-					}
-				}
-				else
- #endif
-				{
-					char category[16], seg_name[40]; *category = *seg_name = NULL;
-					//if((atag && !l2) || (!atag && l2)) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name);} // L2 + X
-					sys_ppu_thread_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
-
-					autoplay = false;
-				}
-
-				if(autoplay)
-				{
-					explore_exec_push(2000000, false);
-				}
-			}
-
 			is_busy = false;
-			return;
+			return mounted;
 		}
 
 		/////////////////
@@ -559,7 +558,7 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				if(strstr(target, "/webftp_server")) {sprintf(tempstr, "<HR>%s", STR_SETTINGSUPD);} else
 				if(cp_mode) {char *p = strrchr(_path, '/'); *p = NULL; sprintf(tempstr, HTML_REDIRECT_TO_URL, _path, HTML_REDIRECT_WAIT);}
 
-				if(is_error) {show_msg((char*)STR_CPYABORT); cp_mode = CP_MODE_NONE; return;}
+				if(is_error) {show_msg((char*)STR_CPYABORT); cp_mode = CP_MODE_NONE; return false;}
 			}
 			else
 #endif // #ifdef COPY_PS3
@@ -596,11 +595,14 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 
 				language("/CLOSEFILE", NULL, NULL);
 #endif
+				bool is_gamei = false;
 				bool is_movie = strstr(param, "/BDISO") || strstr(param, "/DVDISO") || !extcmp(param, ".ntfs[BDISO]", 12) || !extcmp(param, ".ntfs[DVDISO]", 13);
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
 
 				//if(strstr(param, "/PSX")) {sprintf(tempstr, " <font size=2>[CD %i • %s]</font>", CD_SECTOR_SIZE_2352, (webman_config->ps1emu) ? "ps1_netemu.self" : "ps1_emu.self"); strcat(buffer, tempstr);}
 #ifdef PKG_LAUNCHER
+				is_gamei = strstr(param, "/GAMEI/");
+
 				if(is_gamei)
 				{
 					char *pos = strstr(STR_PSPLOADED, "PSP Launcher"); if(pos) strcpy(pos, "PKG Launcher");
@@ -712,6 +714,8 @@ static void game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		}
 #endif //#ifdef COPY_PS3
 	}
+
+	return mounted;
 }
 
 #ifdef COBRA_ONLY
@@ -770,6 +774,7 @@ static void do_umount(bool clean)
 		sys_map_path("/dev_bdvd", NULL);
 		sys_map_path("//dev_bdvd", NULL);
 
+		sys_map_path("/app_home/USRDIR", NULL);
 		sys_map_path("/app_home", isDir("/dev_hdd0/packages") ? (char*)"/dev_hdd0/packages" : NULL);
 
 		sys_map_path("/dev_bdvd/PS3/UPDATE", NULL);
@@ -1011,7 +1016,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 	bool ret = true;
 
-	u8 mount_unk = EMU_OFF;
+	mount_unk = EMU_OFF;
 
 	led(GREEN, BLINK_FAST);
 
@@ -1208,7 +1213,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			sprintf(_path, "/dev_hdd0/game/%s", map_title_id);
 			sys_map_path(_path, _path0);
 
-			mount_unk = EMU_MAX;
+			mount_unk = EMU_GAMEI;
 			goto exit_mount;
 		}
 	}
@@ -1235,8 +1240,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			cobra_map_game("/dev_hdd0/game/PKGLAUNCH", "PKGLAUNCH", 0);
 
 			save_file("/dev_hdd0/game/PKGLAUNCH/USRDIR/launch.txt", _path, 0);
-			mount_unk = EMU_MAX;
-			goto exit_mount;
+			mount_unk = EMU_ROMS;
+			goto mounting_done; //goto exit_mount;
 		}
 	}
  #endif

@@ -157,13 +157,13 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 			while(View_Find("webrender_plugin") || View_Find("webbrowser_plugin"))
 			{
-				sys_ppu_thread_usleep(500000); retry++; if(retry > 4) break; if(abort_autoplay()) return;
+				sys_ppu_thread_usleep(50000); retry++; if(retry > 40) break; if(abort_autoplay()) return;
 			}
 
 			// use segment for media type
 			if(IS(category, "game") && IS(seg_name, "seg_device"))
 			{
-				if(isDir("/dev_bdvd/PS3_GAME")) {timeout = 20, icon_found = timeout - 8;} else
+				if(isDir("/dev_bdvd/PS3_GAME")) {timeout = 12, icon_found = timeout - 10;} else
 				if(file_exists("/dev_bdvd/SYSTEM.CNF")) ; else
 				if(isDir("/dev_bdvd/BDMV") )    {sprintf(category, "video"); sprintf(seg_name, "seg_bdmav_device");} else
 				if(isDir("/dev_bdvd/VIDEO_TS")) {sprintf(category, "video"); sprintf(seg_name, "seg_dvdv_device" );} else
@@ -173,6 +173,8 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 			explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
 
+			if(mount_unk == EMU_ROMS) {timeout = 2, icon_found = 1;}
+
 			for(n = 0; n < timeout; n++)
 			{
 				if(abort_autoplay()) return;
@@ -181,18 +183,18 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 				wait = (n < icon_found) || execute;
 
-				if(wait) sys_ppu_thread_usleep(100000);
+				if(wait) sys_ppu_thread_usleep(50000);
 				explore_interface->ExecXMBcommand("close_all_list", 0, 0);
-				if(wait) sys_ppu_thread_usleep(250000);
+				if(wait) sys_ppu_thread_usleep(150000);
 				sprintf(explore_command, "focus_category %s", category);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
-				if(wait) sys_ppu_thread_usleep(250000);
+				if(wait) sys_ppu_thread_usleep(150000);
 				sprintf(explore_command, "focus_segment_index %s", seg_name);
 				explore_interface->ExecXMBcommand((char*)explore_command, 0, 0);
 				if(wait) sys_ppu_thread_usleep(150000);
 			}
 
-			if(execute) explore_exec_push(0, false); //explore_interface->ExecXMBcommand("exec_push", 0, 0);
+			if(execute) explore_exec_push(0, false);
 		}
 		else {BEEP3}
 	}

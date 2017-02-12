@@ -100,7 +100,7 @@ static uint32_t frame = 0;
 #define SYSCALL8_OPCODE_PS3MAPI			 			0x7777
 #define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
 
-static unsigned int get_vsh_plugin_slot_by_name(char *name)
+static unsigned int get_vsh_plugin_slot_by_name(const char *name)
 {
 	char tmp_name[30];
 	char tmp_filename[256];
@@ -313,8 +313,8 @@ static void draw_selection(uint32_t game_idx)
 
 static void load_data(void)
 {
-	char *err_msg = "There is no content.";
-	if(get_vsh_plugin_slot_by_name("WWWD") >= 7) {games=0, err_msg = "webMAN is not loaded."; goto exit_load;}
+	char *err_msg = (char*)"There is no content.";
+	if(get_vsh_plugin_slot_by_name("WWWD") >= 7) {games=0, err_msg = (char*)"webMAN is not loaded."; goto exit_load;}
 
 	games=(file_exists(WMTMP "/slaunch.bin"))/sizeof(_slaunch);
 	if(games>=MAX_GAMES) games=MAX_GAMES-1;
@@ -346,7 +346,7 @@ reload:
 					(gmode == modeROM && (!strstr(slaunch[n].path, "ROMS"))) )
 					{memset(slaunch[n].name, 0xFF, 127); ngames--;}
 			}
-			if(ngames == 0) {gmode++; if(gmode > devsLAST) gmode = modeALL; goto reload;}
+			if(ngames == 0) {gmode++; if(gmode > modeLAST) gmode = modeALL; goto reload;}
 		}
 
 		if(dmode)
@@ -357,7 +357,7 @@ reload:
 				if((slaunch[n].name[0] & 0xFF) == 0xFF) continue;
 				if(((dmode == 2) && !strstr(slaunch[n].path+11, drives[2])) || ((dmode != 2) && memcmp(slaunch[n].path+11, drives[dmode-1], dlen))) {memset(slaunch[n].name, 0xFF, 127); ngames--;}
 			}
-			if(ngames == 0) {dmode++; if(dmode > 4) dmode = modeALL; goto reload;}
+			if(ngames == 0) {dmode++; if(dmode > devsLAST) dmode = modeALL; goto reload;}
 		}
 
 		// sort game list

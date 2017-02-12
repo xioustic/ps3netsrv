@@ -750,6 +750,7 @@ static void add_game_info(char *buffer, char *templn, bool is_cpursx);
 
 static bool from_reboot = false;
 static bool is_busy = false;
+static u8 mount_unk = EMU_OFF;
 
 #ifdef COPY_PS3
 static char current_file[MAX_PATH_LEN];
@@ -3337,11 +3338,19 @@ parse_request:
 									explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
 								else
  #endif
+								{
 									explore_interface->ExecXMBcommand("close_all_list", 0, 0);
+									bool is_video = (strstr(param, paths[3]) || strstr(param, paths[4]));
+									sprintf(templn, "focus_category %s", is_video ? "video" : "game");
+									explore_interface->ExecXMBcommand(templn, 0, 0);
+								}
 							}
 						}
 
-						game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount);
+						if(sysmem) sys_memory_free(sysmem);
+
+						if(game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount)) auto_play(param);
+
 						goto exit_handleclient;
 					}
 					else

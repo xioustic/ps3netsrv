@@ -802,9 +802,13 @@ static void setup_form(char *buffer, char *templn)
 	add_option_item("3", "Min+ (512KB)"                    , (value == 3), buffer);
 	add_option_item("2", "Max (1280KB)"                    , (value == 2), buffer);
 	add_option_item("4", "Max PS3+ (1088K PS3)"            , (value == 4), buffer);
-	add_option_item("5", "Max PSX+ ( 368K PS3 + 720K PSX)" , (value == 5), buffer);
-	add_option_item("6", "Max BLU+ ( 368K PS3 + 720K BLU)" , (value == 6), buffer);
-	add_option_item("7", "Max PSP+ ( 368K PS3 + 720K PSP)" , (value == 7), buffer);
+	add_option_item("5", "Max PSX+ ( 368K PS3 + 768K PSX)" , (value == 5), buffer);
+	add_option_item("6", "Max BLU+ ( 368K PS3 + 768K BLU)" , (value == 6), buffer);
+#ifdef MOUNT_ROMS
+	add_option_item("7", "Max PSP+ ( 368K PS3 + 768K PSP/ROMS)", (value == 7), buffer);
+#else
+	add_option_item("7", "Max PSP+ ( 368K PS3 + 768K PSP)" , (value == 7), buffer);
+#endif
 	strcat(buffer, "</select>");
 
 	add_check_box("mc", "1", "3072KB [MC]", "<p>", !(webman_config->mc_app), buffer);
