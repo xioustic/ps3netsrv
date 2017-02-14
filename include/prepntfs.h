@@ -11,14 +11,14 @@ enum ntfs_folders
 
 static u8 prepntfs_working = false;
 
-static void prepNTFS(u8 towait)
+static int prepNTFS(u8 towait)
 {
-	if(prepntfs_working) return;
+	if(prepntfs_working) return 0;
 	prepntfs_working = true;
 
 	char path[256];
 
-	int i, parts;
+	int i, parts, count = 0;
 	sys_ppu_thread_t t;
 
 	unsigned int num_tracks;
@@ -48,16 +48,6 @@ static void prepNTFS(u8 towait)
 	int fd = NONE;
 	u64 read = 0;
 	char path0[MAX_PATH_LEN], subpath[256], filename[256];
-	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
-	{
-		char *ext;
-		while(!cellFsReaddir(fd, &dir, &read) && read)
-		{
-			ext = strstr(dir.d_name, ".ntfs[");
-			if(ext && !IS(ext, ".ntfs[BDFILE]")) {sprintf(path0, "%s/%s", path, dir.d_name); cellFsUnlink(path0);}
-		}
-		cellFsClosedir(fd);
-	}
 
 	if(mountCount == -2)
 		for(i = 0; i < 2; i++)
@@ -66,6 +56,20 @@ static void prepNTFS(u8 towait)
 			mount_all_ntfs_volumes();
 			if(mountCount) break;
 		}
+
+	if(!towait || mountCount <= 0)
+	{
+		if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
+		{
+			char *ext;
+			while(!cellFsReaddir(fd, &dir, &read) && read)
+			{
+				ext = strstr(dir.d_name, ".ntfs[");
+				if(ext && !IS(ext, ".ntfs[BDFILE]")) {sprintf(path0, "%s/%s", path, dir.d_name); cellFsUnlink(path0);}
+			}
+			cellFsClosedir(fd);
+		}
+	}
 
 	if(mountCount <= 0) {mountCount=-2; goto exit_prepntfs;}
 
@@ -256,7 +260,8 @@ next_ntfs_entry:
 									}
 
 									snprintf(path, sizeof(path), "%s/%s%s.ntfs[%s]", WMTMP, filename, SUFIX2(profile), c_path[m]);
-									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args)+(parts*sizeof(uint32_t))*2)+(num_tracks*sizeof(ScsiTrackDescriptor)));
+
+									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args)+(parts*sizeof(uint32_t))*2)+(num_tracks*sizeof(ScsiTrackDescriptor))); count++;
 
 									plen = snprintf(path, sizeof(path), "%s/%s", WMTMP, dir.d_name);
 									nlen = snprintf(path0, sizeof(path0), "%s:%s%s%s/%s", mounts[i].name, prefix[n], c_path[m], SUFIX(profile), dir.d_name);
@@ -308,6 +313,6 @@ exit_prepntfs:
 	if(sectionsP) free(sectionsP);
 	if(sections_sizeP) free(sections_sizeP);
 	prepntfs_working = false;
-	return;
+	return count;
 }
 #endif

@@ -1536,7 +1536,7 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		return EABORT;
 	}
 
-	uint8_t *sector = (uint8_t*)malloc(1024);
+	char *sector = malloc(1024);
 	read_file(path, sector, sizeof(sector), 0x8000);
 
 	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) {free(sector); return EIO;}

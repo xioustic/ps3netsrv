@@ -23,9 +23,10 @@ static void add_slaunch_entry(int fd, const char *neth, const char *path, const 
 {
 	if(!fd) return;
 
-	_slaunch slaunch; char enc_filename[MAX_PATH_LEN];
+	_slaunch slaunch; memset(&slaunch, 0, sizeof(_slaunch));
 
-	memset(&slaunch, 0, sizeof(_slaunch)); urlenc_ex(enc_filename, filename, false);
+	char enc_filename[MAX_PATH_LEN]; urlenc_ex(enc_filename, filename, false);
+
 	snprintf(slaunch.path, sizeof(slaunch.path), "/mount_ps3%s%s/%s", neth, path, enc_filename);
 	snprintf(slaunch.icon, sizeof(slaunch.icon), "%s", icon);
 	snprintf(slaunch.name, sizeof(slaunch.name), "%s", name);

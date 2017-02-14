@@ -1271,20 +1271,27 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				enable_classic_ps2_mode();
 			}
  #endif
+			cellFsUnlink(PS2_CLASSIC_ISO_CONFIG);
 			cellFsUnlink(PS2_CLASSIC_ISO_PATH);
 			if(file_copy(_path, (char*)PS2_CLASSIC_ISO_PATH, COPY_WHOLE_FILE) == 0)
 			{
 				if(file_exists(PS2_CLASSIC_ISO_ICON ".bak") == false)
 					file_copy((char*)PS2_CLASSIC_ISO_ICON, (char*)(PS2_CLASSIC_ISO_ICON ".bak"), COPY_WHOLE_FILE);
 
-				sprintf(temp, "%s.png", _path);
+				size_t len = sprintf(temp, "%s.png", _path);
 				if(file_exists(temp) == false) sprintf(temp, "%s.PNG", _path);
+				if(file_exists(temp) == false && len > 12) strcat(temp + len - 12, ".png\0");
+				if(file_exists(temp) == false && len > 12) strcat(temp + len - 4,  ".PNG\0");
 
 				cellFsUnlink(PS2_CLASSIC_ISO_ICON);
 				if(file_exists(temp))
 					file_copy(temp, (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
 				else
 					file_copy((char*)(PS2_CLASSIC_ISO_ICON ".bak"), (char*)PS2_CLASSIC_ISO_ICON, COPY_WHOLE_FILE);
+
+				sprintf(temp, "%s.CONFIG", _path);
+				if(file_exists(temp) == false && len > 12) strcat(temp + len - 12, ".CONFIG\0");
+				file_copy(temp, (char*)PS2_CLASSIC_ISO_CONFIG, COPY_WHOLE_FILE);
 
 				if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
@@ -1416,7 +1423,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
 					char *rawiso_data = (char*)addr;
-					if(read_file(_path, rawiso_data, _64KB_, 0) > _4KB_)
+					if(read_file(_path, rawiso_data, _64KB_, 0) > 32)
 					{
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 

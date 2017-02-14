@@ -88,6 +88,8 @@ enum gameModes
 	devsLAST= 4,
 };
 
+#define NTFS  3
+
 static char drives[4][12] = {"dev_hdd0", "dev_usb", "ntfs", "net"};
 
 static uint8_t gmode = modeALL;
@@ -356,8 +358,8 @@ reload:
 			int8_t dlen = strlen(drives[dmode-1]);
 			for(int32_t n=games-1; n >= 0; n--)
 			{
-				if((slaunch[n].name[0] & 0xFF) == 0xFF) continue;
-				if(((dmode == 2) && !strstr(slaunch[n].path+11, drives[2])) || ((dmode != 2) && memcmp(slaunch[n].path+11, drives[dmode-1], dlen))) {memset(slaunch[n].name, 0xFF, 127); ngames--;}
+				if((slaunch[n].name[0] & 0xFF) == 0xFF) continue; // skip filtered content
+				if(((dmode == NTFS) && !strstr(slaunch[n].path+11, drives[dmode-1])) || ((dmode != NTFS) && memcmp(slaunch[n].path+11, drives[dmode-1], dlen))) {memset(slaunch[n].name, 0xFF, 127); ngames--;}
 			}
 			if(ngames == 0) {dmode++; if(dmode > devsLAST) dmode = modeALL; goto reload;}
 		}

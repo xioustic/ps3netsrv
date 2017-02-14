@@ -51,10 +51,10 @@
 #include "vsh/vshnet.h"
 #include "vsh/explore_plugin.h"
 
-#define _game_TitleID  _game_info+0x04
-#define _game_Title    _game_info+0x14
+static char _game_TitleID[16]; //#define _game_TitleID  _game_info+0x04
+static char _game_Title  [64]; //#define _game_Title    _game_info+0x14
 
-static char _game_info[0x120];
+//static char _game_info[0x120];
 static char search_url[50];
 
 #define WM_PROXY_SPRX	"idle_plugin"		// idle_plugin.sprx
@@ -152,9 +152,10 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 #define PS2_CLASSIC_TOGGLER "/dev_hdd0/classic_ps2"
 
-#define PS2_CLASSIC_PLACEHOLDER  "/dev_hdd0/game/PS2U10000/USRDIR"
-#define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 #define PS2_CLASSIC_ISO_ICON     "/dev_hdd0/game/PS2U10000/ICON0.PNG"
+#define PS2_CLASSIC_PLACEHOLDER  "/dev_hdd0/game/PS2U10000/USRDIR"
+#define PS2_CLASSIC_ISO_CONFIG   "/dev_hdd0/game/PS2U10000/USRDIR/CONFIG"
+#define PS2_CLASSIC_ISO_PATH     "/dev_hdd0/game/PS2U10000/USRDIR/ISO.BIN.ENC"
 
 #define NONE -1
 #define SYS_PPU_THREAD_NONE        (sys_ppu_thread_t)NONE
@@ -715,7 +716,7 @@ int val(const char *c);
 static ntfs_md *mounts = NULL;
 static int mountCount = -2;
 
-static void prepNTFS(u8 towait);
+static int prepNTFS(u8 towait);
 #endif
 
 int wwwd_start(size_t args, void *argp);
@@ -1266,7 +1267,7 @@ again3:
 	{
 		struct timeval tv;
 		tv.tv_usec = 0;
-		tv.tv_sec = 3;
+		tv.tv_sec = 5;
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 		int optval = HTML_RECV_SIZE;
@@ -1314,7 +1315,7 @@ parse_request:
 
 		mc = NULL;
 
-		if(((*header == 'G') || recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && *header == 'G' && header[4] == '/') // serve only GET /xxx requests
+		if(((*header == 'G') || (recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && *header == 'G' && header[4] == '/')) // serve only GET /xxx requests
 		{
 			if(strstr(header, "x-ps3-browser")) is_ps3_http = 1; else
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
@@ -1591,7 +1592,7 @@ parse_request:
 
 				pkg_delete_after_install = (param[8] == '.');
 
-				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
+				char *msg = malloc(MAX_LINE_LEN); memset(msg, 0, MAX_LINE_LEN);
 
 				setPluginActive();
 
@@ -1604,7 +1605,7 @@ parse_request:
 					if(!mc) http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_INSTALL_PKG, msg);
 				}
 
-				show_msg(msg);
+				show_msg(msg); free(msg);
 
 				if(pkg_delete_after_install || do_restart)
 				{
@@ -1859,7 +1860,7 @@ parse_request:
 					while((klic_polling == KL_AUTO) && IS_ON_XMB && working) sys_ppu_thread_usleep(500000);
 				}
 
-				char kl[0x120], prev[0x200], buffer[0x200]; memset(kl, 0, 120);
+				char *kl = malloc(0x120), *prev = malloc(0x200), *buffer = malloc(0x200); memset(kl, 0, 120);
 
 				if(IS_INGAME)
 				{
@@ -1916,6 +1917,10 @@ parse_request:
 						klic_polling = KL_OFF;
 					}
 				}
+
+				free(kl);
+				free(prev);
+				free(buffer);
 
 				goto exit_handleclient;
 			}
@@ -2961,9 +2966,10 @@ parse_request:
 						{
 							mount_all_ntfs_volumes();
 
-							if(islike(param + 12, "?prepntfs")) prepNTFS(1);
+							int ngames = 0; *header = NULL;
+							if(islike(param + 12, "?prepntfs")) {ngames = prepNTFS(strstr(param, "0") ? 0 : 1); sprintf(header, " • <a href=\"/dev_hdd0/tmp/wmtmp\">%i %s</a>", ngames, STR_GAMES);}
 
-							sprintf(param, "NTFS VOLUMES: %i", mountCount); is_busy = false;
+							sprintf(param, "NTFS VOLUMES: %i%s", mountCount, header); is_busy = false;
 
 							http_response(conn_s, header, param, CODE_HTTP_OK, param);
 							goto exit_handleclient;
@@ -2972,14 +2978,18 @@ parse_request:
 
 						refresh_xml(templn);
  #ifndef ENGLISH_ONLY
-						char STR_XMLRF[280];
+						char *STR_XMLRF = malloc(280);
 
 						sprintf(STR_XMLRF, "Game list refreshed (<a href=\"%s\">mygames.xml</a>).%s", MY_GAMES_XML, "<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.");
 
 						language("STR_XMLRF", STR_XMLRF, STR_XMLRF);
 						language("/CLOSEFILE", NULL, NULL);
- #endif
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
+
+						free(STR_XMLRF);
+ #else
+						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
+ #endif
 					}
 					else
 					if(islike(param, "/setup.ps3?"))

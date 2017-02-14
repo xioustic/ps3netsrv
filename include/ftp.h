@@ -72,27 +72,8 @@ static int ssplit(const char* str, char* left, int lmaxlen, char* right, int rma
 static void handleclient_ftp(u64 conn_s_ftp_p)
 {
 	int conn_s_ftp = (int)conn_s_ftp_p; // main communications socket
-	int data_s = NONE;			// data socket
-	int pasv_s = NONE;			// passive data socket
-
-	u8 connactive = 1;			// whether the ftp connection is active or not
-	u8 dataactive = 0;			// prevent the data connection from being closed at the end of the loop
-	u8 loggedin = 0;			// whether the user is logged in or not
-
-	char cwd[MAX_PATH_LEN];	// Current Working Directory
-	int rest = 0;			// for resuming file transfers
-
-	char cmd[16], param[MAX_PATH_LEN], filename[MAX_PATH_LEN], source[MAX_PATH_LEN]; // used as source parameter in RNFR and COPY commands
-	char *cpursx = filename, *tempcwd = filename, *d_path = param;
-	struct CellFsStat buf;
-	int fd, pos;
-
-	bool is_ntfs = false;
 
 #ifdef USE_NTFS
-	struct stat bufn;
-	struct statvfs vbuf;
-
 	if(!ftp_active && mountCount==-2 && !refreshing_xml) mount_all_ntfs_volumes();
 #endif
 
@@ -107,8 +88,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	sys_net_sockinfo_t conn_info;
 	sys_net_get_sockinfo(conn_s_ftp, &conn_info, 1);
 
-	char ip_address[16], remote_ip[16];
-	char pasv_output[56];
+	char remote_ip[16];
 	sprintf(remote_ip, "%s", inet_ntoa(conn_info.remote_adr));
 
 	ssend(conn_s_ftp, FTP_OK_TYPE_220); // Service ready for new user.
@@ -122,12 +102,33 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	setPluginActive();
 
+	char ip_address[16];
 	sprintf(ip_address, "%s", inet_ntoa(conn_info.local_adr));
 	for(u8 n = 0; ip_address[n]; n++) if(ip_address[n] == '.') ip_address[n] = ',';
+
+	int data_s = NONE;			// data socket
+	int pasv_s = NONE;			// passive data socket
+
+	u8 connactive = 1;			// whether the ftp connection is active or not
+	u8 dataactive = 0;			// prevent the data connection from being closed at the end of the loop
+	u8 loggedin = 0;			// whether the user is logged in or not
+
+	char cwd[MAX_PATH_LEN];	// Current Working Directory
+	int rest = 0;			// for resuming file transfers
+
+	char cmd[16], param[MAX_PATH_LEN], filename[MAX_PATH_LEN], source[MAX_PATH_LEN]; // used as source parameter in RNFR and COPY commands
+	char *cpursx = filename, *tempcwd = filename, *d_path = param, *pasv_output = param;
+	struct CellFsStat buf;
+	int fd, pos;
+
+	bool is_ntfs = false;
 
 	char *buffer = malloc(FTP_RECV_SIZE);
 
 #ifdef USE_NTFS
+	struct stat bufn;
+	struct statvfs vbuf;
+
 	sprintf(buffer, "%i webMAN ftpd " WM_VERSION " [NTFS:%i]\r\n", 220, mountCount); ssend(conn_s_ftp, buffer);
 #else
 	sprintf(buffer, "%i webMAN ftpd " WM_VERSION "\r\n", 220); ssend(conn_s_ftp, buffer);

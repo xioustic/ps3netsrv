@@ -188,7 +188,7 @@ static void get_next_read(uint64_t discoffset, uint64_t bufsize, uint64_t *offse
 	//DPRINTF("Offset or size out of range  %lx%08lx   %lx!!!!!!!!\n", discoffset>>32, discoffset, bufsize);
 }
 
-uint8_t last_sect_buf[4096] __attribute__((aligned(16)));
+uint8_t *last_sect_buf; //uint8_t last_sect_buf[4096] __attribute__((aligned(16)));
 uint32_t last_sect = 0xFFFFFFFF;
 
 static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size)
@@ -204,7 +204,6 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 		uint64_t pos, readsize;
 		int idx;
 		int ret;
-		//uint8_t tmp[4096];
 		uint32_t sector;
 		uint32_t r;
 
@@ -1105,6 +1104,8 @@ static void rawseciso_thread(uint64_t arg)
 
 	rawseciso_loaded = ntfs_running = 1;
 
+	last_sect_buf = (uint8_t*)malloc(4096);
+
 	while(ntfs_running)
 	{
 		sys_event_t event;
@@ -1219,6 +1220,8 @@ static void rawseciso_thread(uint64_t arg)
 		//DPRINTF("sys_event_port_send failed: %x\n", ret);
 		if(ret != CELL_OK) break;
 	}
+
+	free(last_sect_buf);
 
 	do_run = eject_running = 0;
 

@@ -218,7 +218,7 @@ static size_t utf8enc(char *dst, char *src, u8 cpy2src)
 	size_t j = 0; u16 c;
 	for(size_t i = 0; src[i]; i++)
 	{
-		c = (src[i] & 0xFFFF);
+		c = ((unsigned char)src[i] & 0xFFFF);
 
 		if(!(c & 0xff80)) dst[j++]=c;
 		else if(!(c & 0xf800))
@@ -247,7 +247,7 @@ static size_t utf8dec(char *dst, char *src, u8 cpy2src)
 	u8 c;
 	for(size_t i = 0; src[i] != '\0'; i++, j++)
 	{
-		c = (src[i]&0xFF);
+		c = ((unsigned char)src[i]&0xFF);
 		if(c < 0x80)
 			dst[j] = c;
 		else if(c & 0x20)
@@ -483,6 +483,7 @@ static u8 get_valuen(const char *param, const char *label, u8 min_value, u8 max_
 	return RANGE((u8)get_valuen32(param, label), min_value, max_value);
 }
 
+#ifdef COBRA_ONLY
 static int parse_lba(const char *templn, bool use_pregap)
 {
 	char *time=strrchr(templn, ' '); if(!time) return FAILED;
@@ -530,3 +531,4 @@ static int get_line(char *templn, const char *cue_buf, int buf_size, int start)
 
 	return lp;
 }
+#endif

@@ -309,7 +309,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 	if(cellFsOpen(iso_file, CELL_FS_O_RDWR, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		uint64_t chunk_size=_4KB_; char chunk[chunk_size]; u64 ps3_sys_version;
+		uint64_t chunk_size=_4KB_; char *chunk = malloc(chunk_size); u64 ps3_sys_version;
 		uint64_t bytes_read = 0, lba = 0, pos=0xA000ULL;
 
 		bool fix_sfo = true, fix_eboot = true, fix_ver = false;
@@ -427,6 +427,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 			sys_ppu_thread_usleep(1000);
 		}
 exit_fix:
+		free(chunk);
 		cellFsClose(fd);
 	}
 	else

@@ -101,7 +101,7 @@ static void saveBMP(char *path, bool notify_bmp)
 	sys_memory_container_t mc_app = SYS_MEMORY_CONTAINER_NONE;
 	mc_app = vsh_memory_container_by_id(1);
 
-	const int32_t mem_size = 64 * 1024; // 64 KB (bmp data and frame buffer)
+	const int32_t mem_size = _64KB_; // 64 KB (bmp data and frame buffer)
 
 	// max frame line size = 1920 pixel * 4(byte per pixel) = 7680 byte = 8 KB
 	// max bmp buffer size = 1920 pixel * 3(byte per pixel) = 5760 byte = 6 KB

@@ -85,7 +85,7 @@ static int32_t set_dec_param(jpg_dec_info	*dec_ctx)
 	if(!ISHD(jpg_w) && ((jpg_w*jpg_h*4)>(MAX_WH4) || jpg_w>MAX_W || jpg_h>MAX_H))
 	{
 		in.downScale = 2;
-		jpg_w/=2;
+		jpg_w/=2; jpg_w+=(jpg_w%4);
 		jpg_h/=2;
 	}
 

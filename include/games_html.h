@@ -1275,7 +1275,7 @@ next_html_entry:
 
 							urlenc(enc_dir_name, entry.d_name);
 
-							templn[64] = NULL;
+							templn[80] = NULL;
 
 							if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
@@ -1294,7 +1294,7 @@ next_html_entry:
 							if(mobile_mode)
 							{
 								if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore names with quotes: cause syntax error in javascript: gamelist.js
-								for(size_t c = 0; templn[c] > 0; c++) {if((templn[c] == '"') || (templn[c] < ' ')) templn[c] = ' ';} // replace invalid chars
+								for(unsigned char *c = templn; *c; c++) {if((*c == '"') || (*c < ' ')) *c = ' ';} // replace invalid chars
 
 								int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320, h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280, h = 280;}
 

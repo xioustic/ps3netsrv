@@ -170,6 +170,10 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 					sprintf(tempstr, "%s%s", "/dev_blind", "?1");
 				else if(IS(templn, "/dev_blind"))
 					sprintf(tempstr, "%s%s", "/dev_blind", "?0");
+#ifdef USE_NTFS
+				else if(is_ntfs_path(templn))
+					sprintf(tempstr, "/refresh.ps3?prepntfs");
+#endif
 				else
 					sprintf(tempstr, "/mount.ps3%s", templn);
 
@@ -237,9 +241,9 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 		sprintf(fsize, "<a href=\"/copy.ps3%s\" title=\"%'llu %s copy to %s\">%'llu %s</a>", islike(templn, param) ? templn + plen : templn, sbytes, STR_BYTE, "/dev_hdd0", sz, sf);
 	}
  #endif
-	else if( ((flen > 4) && strcasestr(ISO_EXTENSIONS, ext) != NULL && !islike(templn, HDD0_GAME_DIR)) || (!is_net && ( strstr(ext13, ".ntfs[") || IS(ext8, ".BIN.ENC") )) )
+	else if( ((!is_net) && ( strstr(ext13, ".ntfs[") || IS(ext8, ".BIN.ENC") )) || ((flen > 4) && (strcasestr(ISO_EXTENSIONS, ext) != NULL) && !islike(templn, HDD0_GAME_DIR)) )
 	{
-		if( (strcasestr(name, ".iso.") != NULL) && extcasecmp(name, ".iso.0", 6) )
+		if( (strcasestr(name, ".iso.") != NULL) && extcasecmp(name, ".iso.0", 6) && ( !strstr(ext13, ".ntfs[") ))
 			sprintf(fsize, "<label title=\"%'llu %s\"> %'llu %s</label>", sbytes, STR_BYTE, sz, sf);
 		else
 			sprintf(fsize, "<a href=\"/mount.ps3%s\" title=\"%'llu %s\">%'llu %s</a>", templn, sbytes, STR_BYTE, sz, sf);
@@ -372,7 +376,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 {
 	int tlen = 0;
 
-	char swap[_MAX_PATH_LEN], templn[_MAX_PATH_LEN], url[_MAX_PATH_LEN], *slash, *buffer = pbuffer;
+	char *swap = malloc(_MAX_PATH_LEN), *templn = malloc(_MAX_PATH_LEN), *url = malloc(_MAX_PATH_LEN), *slash, *buffer = pbuffer;
 
 	sprintf(templn, "%s", param);
 
@@ -403,8 +407,9 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	else if(param[1] != 'n' && file_exists(param) == false) strcpy(swap, strrchr(param, '/') + 1);
 	else
 	{
-		char label[_MAX_PATH_LEN]; tlen = strlen(param) - 4; if(tlen < 0) tlen = 0;
+		tlen = strlen(param) - 4; if(tlen < 0) tlen = 0;
 
+		char *label = malloc(_MAX_PATH_LEN);
 		urlenc(url, param); if(islike(param, "/net")) htmlenc(label, templn, 0); else strcpy(label, templn);
 
 #ifdef USE_NTFS
@@ -424,11 +429,17 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 						islike(param, "/dev_hdd0/GAMES/covers") ? "" :
 						((isDir(param) || strcasestr(ISO_EXTENSIONS, param + tlen) != NULL) || (strstr(param, "/GAME") != NULL) || (strstr(param, ".ntfs[") != NULL) || (strstr(param, "/GAME") != NULL) || islike(param, "/net") || !extcmp(param + MAX(tlen - 4, 0), ".BIN.ENC", 8)) ? "/mount.ps3" :
 						"", url, label);
+
+		free(label);
 	}
 
 	// add code to buffer
 
 	strcat(buffer, swap);
+
+	free(url);
+	free(swap);
+	free(templn);
 }
 
 static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, int8_t sort_by, int8_t sort_order, char *file_query)
@@ -558,7 +569,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 												  "<td> " HTML_URL HTML_ENTRY_DATE
 												, swap, swap, HTML_DIR);
 
-					if(flen >= _MAX_LINE_LEN) return false; //ignore lines are too long
+					if(flen >= _MAX_LINE_LEN) return false; //path is too long
 
 					idx++, dirs++;
 					tlen += flen;
