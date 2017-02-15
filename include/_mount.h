@@ -1671,45 +1671,41 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(!extcasecmp(_path, ".cue", 4))
 					{
-						sys_addr_t sysmem = 0;
-						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+						char *cue_buf = malloc(_2KB_);
+						int cue_size = read_file(_path, cue_buf, _2KB_, 0);
+						if(cue_size > 13)
 						{
-							char *cue_buf = (char*)sysmem;
-							int cue_size = read_file(_path, cue_buf, 65535, 0);
-							if(cue_size > 13)
+							unsigned int num_tracks = 0;
+
+							TrackDef tracks[32];
+							tracks[0].lba = 0;
+							tracks[0].is_audio = 0;
+
+							u8 use_pregap = 0;
+							int lba, lp = 0;
+
+							while(lp < cue_size)
 							{
-								unsigned int num_tracks = 0;
+								lp = get_line(templn, cue_buf, cue_size, lp);
+								if(lp < 1) break;
 
-								TrackDef tracks[32];
-								tracks[0].lba = 0;
-								tracks[0].is_audio = 0;
+								if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
+								if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
 
-								u8 use_pregap = 0;
-								int lba, lp = 0;
+								lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
 
-								while(lp < cue_size)
-								{
-									lp = get_line(templn, cue_buf, cue_size, lp);
-									if(lp < 1) break;
+								tracks[num_tracks].lba = lba;
+								if(num_tracks) tracks[num_tracks].is_audio = 1;
 
-									if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-									if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
-
-									lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
-
-									tracks[num_tracks].lba = lba;
-									if(num_tracks) tracks[num_tracks].is_audio = 1;
-
-									num_tracks++; if(num_tracks >= 32) break;
-								}
-
-								if(!num_tracks) num_tracks++;
-								cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
-								mount_iso = false;
+								num_tracks++; if(num_tracks >= 32) break;
 							}
 
-							sys_memory_free(sysmem);
+							if(!num_tracks) num_tracks++;
+							cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
+							mount_iso = false;
 						}
+
+						free(cue_buf);
 					}
 
 					if(mount_iso)

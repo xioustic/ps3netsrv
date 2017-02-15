@@ -34,6 +34,7 @@ SYS_MODULE_STOP(slaunch_stop);
 #define THREAD_NAME         "slaunch_thread"
 #define STOP_THREAD_NAME    "slaunch_stop_thread"
 
+
 struct timeval {
 	int64_t tv_sec;			/* seconds */
 	int64_t tv_usec;		/* and microseconds */
@@ -41,6 +42,16 @@ struct timeval {
 
 #define MAX_GAMES 1000
 #define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
+#define WM_ICONS_PATH		"/dev_hdd0/tmp/wm_icons"			// webMAN icons folder
+
+static char wm_icons[5][40] = {
+								WM_ICONS_PATH "/icon_wm_ps3.png",       //024.png  [0]
+								WM_ICONS_PATH "/icon_wm_psx.png",       //026.png  [1]
+								WM_ICONS_PATH "/icon_wm_ps2.png",       //025.png  [2]
+								WM_ICONS_PATH "/icon_wm_psp.png",       //022.png  [3]
+								WM_ICONS_PATH "/icon_wm_dvd.png",       //023.png  [4]
+								};
+
 typedef struct
 {
 	char path[128];
@@ -91,6 +102,7 @@ enum gameModes
 #define NTFS  3
 
 static char drives[4][12] = {"dev_hdd0", "dev_usb", "ntfs", "net"};
+static char gmodes[6][8]  = {"PS3", "PSX", "PS2", "PSP", "VIDEO", "ROMS"};
 
 static uint8_t gmode = modeALL;
 static uint8_t dmode = modeALL;
@@ -248,6 +260,16 @@ static void draw_page(uint32_t game_idx)
 	for(i=j;(slot<10&&i<games);i++)
 	{
 		slot++;
+
+		if(file_exists(slaunch[i].icon)==false)
+		{
+			if(strstr(slaunch[i].path, "PSX"))	sprintf(slaunch[i].icon, wm_icons[1]); else
+			if(strstr(slaunch[i].path, "PS2"))	sprintf(slaunch[i].icon, wm_icons[2]); else
+			if(strstr(slaunch[i].path, "PSP"))	sprintf(slaunch[i].icon, wm_icons[3]); else
+			if(strstr(slaunch[i].path, "DVD"))	sprintf(slaunch[i].icon, wm_icons[4]); else
+												sprintf(slaunch[i].icon, wm_icons[0]);
+		}
+
 		load_img_bitmap(slot, slaunch[i].icon);
 		py=((i-j)/5)*400+90+(300-ctx.img[slot].h)/2;
 		ctx.img[slot].x=((px+(320-ctx.img[slot].w)/2)/2)*2;
@@ -286,7 +308,7 @@ static void draw_selection(uint32_t game_idx)
 	print_text(ctx.menu, CENTER_TEXT, 64, one_of );
 
 	// game list mode
-	if(gmode) sprintf(mode, "%s", (gmode == modePS3) ? "PS3" : (gmode == modePSX) ? "PSX" : (gmode == modePS2) ? "PS2" : (gmode == modePSP) ? "PSP" : (gmode == modeDVD) ? "BD/DVD" : "ROMS");
+	if(gmode) sprintf(mode, "%s", gmodes[gmode-1]);
 
 	if(dmode && gmode)
 	{
@@ -322,6 +344,8 @@ static void load_data(void)
 
 	games=(file_exists(WMTMP "/slaunch.bin"))/sizeof(_slaunch);
 	if(games>=MAX_GAMES) games=MAX_GAMES-1;
+
+	if(cur_game>=games) _cur_game=cur_game=0;
 
 	int fd;
 
@@ -399,6 +423,15 @@ exit_load:
 		sys_timer_sleep(2);
 		return_to_xmb();
 	}
+}
+
+static void reload_data(uint32_t curpad)
+{
+	if(curpad & PAD_L2) gmode=dmode=modeALL;
+
+	_cur_game=cur_game=0;
+
+	load_data();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -485,7 +518,7 @@ static void slaunch_thread(uint64_t arg)
 
 			if(pdata.len)					// if pad data and we are on XMB
 			{
-				if((pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) &&
+				if( (pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) &&
 					(pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0))
 				{
 					if(xsetting_CC56EB2D()->GetCurrentUserNumber()>=0) // user logged in
@@ -508,6 +541,7 @@ static void slaunch_thread(uint64_t arg)
 		{
 			while(menu_running && running)
 			{
+				// check only pad ports 0 and 1
 				for(int32_t port=0; port<2; port++)
 					{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
 
@@ -532,8 +566,8 @@ static void slaunch_thread(uint64_t arg)
 					else if(curpad & PAD_R1)	cur_game+=10;
 					else if(curpad & PAD_L1)	if(!cur_game) cur_game=games-1; else cur_game-=10;
 
-					else if(curpad & PAD_TRIANGLE) {gmode++; if(gmode>modeLAST) gmode=modeALL; if(curpad & PAD_L2) gmode=dmode=modeALL; cur_game=0, _cur_game=0; load_data();}
-					else if(curpad & PAD_SQUARE)   {dmode++; if(dmode>devsLAST) dmode=modeALL; if(curpad & PAD_L2) gmode=dmode=modeALL; cur_game=0, _cur_game=0; load_data();}
+					else if(curpad & PAD_TRIANGLE) {play_rco_sound("system_plugin", "snd_cursor"); gmode++; if(gmode>modeLAST) gmode=modeALL; reload_data(curpad);}
+					else if(curpad & PAD_SQUARE)   {play_rco_sound("system_plugin", "snd_cursor"); dmode++; if(dmode>devsLAST) dmode=modeALL; reload_data(curpad);}
 
 					else if(curpad & PAD_R3)	{return_to_xmb(); send_wm_request("/popup.ps3"); break;}
 					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh.ps3"); break;}
@@ -546,7 +580,7 @@ static void slaunch_thread(uint64_t arg)
 						stop_VSH_Menu(); /*return_to_xmb();*/
 						break;
 					}
-					else if(curpad & PAD_CROSS)						// execute action & return to XMB
+					else if(curpad & PAD_CROSS && games)			// execute action & return to XMB
 					{
 						play_rco_sound("system_plugin", "snd_system_ok");
 						for(uint8_t u=0;u<10;u++)
@@ -563,7 +597,7 @@ static void slaunch_thread(uint64_t arg)
 						break;
 					}
 
-					if(cur_game!=_cur_game)
+					if(cur_game!=_cur_game && games)
 					{
 						play_rco_sound("system_plugin", "snd_cursor");
 						tick=0xc0;
@@ -578,7 +612,7 @@ static void slaunch_thread(uint64_t arg)
 				else
 				{
 					init_delay=0, oldpad=0, tick+=delta;			// pulsing selection frame
-					set_frame(1 + cur_game % 10, 0xff000000ff000000|tick<<48|tick<<16);
+					if(games) set_frame(1 + cur_game % 10, 0xff000000ff000000|tick<<48|tick<<16);
 					if(tick<0x80 || tick>0xF0)delta=-delta;
 
 					// update temperature

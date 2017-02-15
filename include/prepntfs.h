@@ -186,8 +186,8 @@ next_ntfs_entry:
 
 										if(fd >= 0)
 										{
-											uint8_t cue_buf[2048];
-											int cue_size = ps3ntfs_read(fd, (char *)cue_buf, sizeof(cue_buf));
+											char *cue_buf = malloc(_2KB_);
+											int cue_size = ps3ntfs_read(fd, cue_buf, _2KB_);
 											ps3ntfs_close(fd);
 
 											if(cue_size > 13)
@@ -219,6 +219,7 @@ next_ntfs_entry:
 
 												num_tracks++; if(num_tracks >= 32) break;
 											}
+											free(cue_buf);
 										}
 									}
 

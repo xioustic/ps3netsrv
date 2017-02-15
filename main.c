@@ -228,7 +228,9 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define THREAD_PRIO_XML			2900
 
 #define THREAD_STACK_SIZE_8KB		0x02000UL
+#define THREAD_STACK_SIZE_16KB		0x04000UL
 #define THREAD_STACK_SIZE_32KB		0x08000UL
+#define THREAD_STACK_SIZE_40KB		0x0A000UL
 #define THREAD_STACK_SIZE_64KB		0x10000UL
 #define THREAD_STACK_SIZE_128KB		0x20000UL
 
@@ -1277,7 +1279,7 @@ again3:
 parse_request:
 
   {
-	u8 served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
+	u8 retry = 0, served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
 	int8_t sort_order = 1, sort_by = 0;
 	u64 c_len = 0;
 
@@ -1315,7 +1317,7 @@ parse_request:
 
 		mc = NULL;
 
-		if(((*header == 'G') || (recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && *header == 'G' && header[4] == '/')) // serve only GET /xxx requests
+		if((*header == 'G') || ((recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && (*header == 'G') && (header[4] == '/'))) // serve only GET /xxx requests
 		{
 			if(strstr(header, "x-ps3-browser")) is_ps3_http = 1; else
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
@@ -3459,11 +3461,16 @@ send_response:
 				*buffer = NULL;
 			}
 		}
+		else if(*header == 0 && retry < 5)
+		{
+			served = 0, retry++; // data no received
+			continue;
+		}
 		else
 		#ifdef WM_REQUEST
 		if(!wm_request)
 		#endif
-			http_response(conn_s, header, param, CODE_BAD_REQUEST, "400 Bad Request");
+			http_response(conn_s, header, param, CODE_BAD_REQUEST, STR_ERROR);
 
 		break;
 	}
@@ -3556,7 +3563,7 @@ static void wwwd_thread(uint64_t arg)
 		sys_ppu_thread_create(&thread_id_ftpd, ftpd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTP); // start ftp daemon immediately
 
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_64KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_40KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
 
 #ifdef PS3NET_SERVER
 	if(!webman_config->netsrvd)
@@ -3647,7 +3654,7 @@ relisten:
 
 				sys_ppu_thread_t t_id;
 
-				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_40KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 				else {sclose(&conn_s); break;}
 			}
 			else
