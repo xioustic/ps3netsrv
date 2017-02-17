@@ -313,7 +313,9 @@ static void draw_selection(uint32_t game_idx)
 	// game list mode
 	if(gmode) sprintf(mode, "%s", gmodes[gmode-1]);
 
-	if(dmode && gmode)
+	if(menu_mode)
+		print_text(ctx.menu, 80, 64, "MENU");
+	else if(dmode && gmode)
 	{
 		sprintf(one_of, "/%s/%s", drives[dmode-1], mode);
 		print_text(ctx.menu, 80, 64, one_of);
