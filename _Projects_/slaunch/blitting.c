@@ -324,7 +324,7 @@ void dim_bg(float ds, float de)
 	uint64_t new_pixel=0;
 	uint64_t new_pixel_R0, new_pixel_G0, new_pixel_B0, new_pixel_R1, new_pixel_G1, new_pixel_B1;
 
-	for(float dim=ds; dim>=de; dim-=0.25f)
+	for(float dim=ds; dim>=de; dim-=0.35f)
 	for(i = 0; i < CANVAS_H/2+1 ; i++)
 		for(k = 0; k < CANVAS_WW; k++)
 		{
@@ -635,7 +635,7 @@ int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str)
 		{
 		  break;
 		}
-		else if(code == '\n')
+		else if((code == '\n') && (x != CENTER_TEXT))
 		{
 			o_x = x;
 			o_y += bitmap->horizontal_layout.lineHeight;

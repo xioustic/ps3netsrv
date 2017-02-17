@@ -191,12 +191,13 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #ifdef PS2_DISC
 			if(islike(param, "/mount.ps2"))
 			{
+				do_umount(true);
 				mounted = mount_ps2disc(source);
 			}
 			else
 			if(islike(param, "/mount_ps2"))
 			{
-				do_umount(true);
+				do_umount_ps2disc(false);
 				mounted = mount_ps2disc(source);
 			}
 			else

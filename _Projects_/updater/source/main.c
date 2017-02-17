@@ -496,18 +496,18 @@ int main()
 	CopyFile(APP_USRDIR "/icon_lp_blu.png"      , ICONS_DIR "/icon_lp_blu.png");
 	CopyFile(APP_USRDIR "/icon_lp_nocover.png"  , ICONS_DIR "/icon_lp_nocover.png");
 
+	// XMBM+ webMAN
+	sysLv2FsMkdir(XMLMANPLS_DIR, 0777);
+	sysLv2FsMkdir(XMLMANPLS_DIR "/USRDIR", 0777);
+	sysLv2FsMkdir(XMLMANPLS_IMAGES_DIR, 0777);
+	sysLv2FsMkdir(XMLMANPLS_FEATS_DIR, 0777);
+
 	CopyFile(APP_USRDIR "/eject.png"  			, XMLMANPLS_IMAGES_DIR "/eject.png");
 	CopyFile(APP_USRDIR "/setup.png"  			, XMLMANPLS_IMAGES_DIR "/setup.png");
 	CopyFile(APP_USRDIR "/refresh.png"			, XMLMANPLS_IMAGES_DIR "/refresh.png");
 	//CopyFile(APP_USRDIR "/clear.png"  		, XMLMANPLS_IMAGES_DIR "/clear.png");
 	//CopyFile(APP_USRDIR "/cache.png"  		, XMLMANPLS_IMAGES_DIR "/cache.png");
 	//CopyFile(APP_USRDIR "/restart.png"		, XMLMANPLS_IMAGES_DIR "/restart.png");
-
-	// XMBM+ webMAN
-	sysLv2FsMkdir(XMLMANPLS_DIR, 0777);
-	sysLv2FsMkdir(XMLMANPLS_DIR "/USRDIR", 0777);
-	sysLv2FsMkdir(XMLMANPLS_IMAGES_DIR, 0777);
-	sysLv2FsMkdir(XMLMANPLS_FEATS_DIR, 0777);
 
 	if(sysLv2FsStat(XMLMANPLS_DIR "/PARAM.SFO", &stat) != SUCCESS)
 		CopyFile(APP_USRDIR "/PARAM.SFO", XMLMANPLS_DIR "/PARAM.SFO");
@@ -563,6 +563,8 @@ int main()
 
 	CopyFile(APP_USRDIR "/icon_wm_eject.png", XMLMANPLS_IMAGES_DIR "/icon_wm_eject.png");
 	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  , XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
+
+	CopyFile(APP_USRDIR "/slaunch1.png", TMP_DIR "wmtmp/slaunch1.png");
 
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 

@@ -2,12 +2,24 @@
 
 #define MAX_SLAUNCH_ITEMS	1000
 
+#define TYPE_ALL 0
+#define TYPE_PS1 1
+#define TYPE_PS2 2
+#define TYPE_PS3 3
+#define TYPE_PSP 4
+#define TYPE_VID 5
+#define TYPE_ROM 6
+#define TYPE_MAX 7
+
 #ifdef SLAUNCH_FILE
 typedef struct
 {
 	char path[128];
 	char icon[128];
-	char name[128];
+	char name[112];
+	char padding[5];
+	char id[10];
+	uint8_t type;
 } __attribute__((packed)) _slaunch;
 
 static int create_slaunch_file(void)
@@ -19,7 +31,7 @@ static int create_slaunch_file(void)
 		return 0;
 }
 
-static void add_slaunch_entry(int fd, const char *neth, const char *path, const char *filename, const char *icon, const char *name)
+static void add_slaunch_entry(int fd, const char *neth, const char *path, const char *filename, const char *icon, const char *name, const char *id, u8 f1)
 {
 	if(!fd) return;
 
@@ -27,9 +39,12 @@ static void add_slaunch_entry(int fd, const char *neth, const char *path, const 
 
 	char enc_filename[MAX_PATH_LEN]; urlenc_ex(enc_filename, filename, false);
 
-	snprintf(slaunch.path, sizeof(slaunch.path), "/mount_ps3%s%s/%s", neth, path, enc_filename);
-	snprintf(slaunch.icon, sizeof(slaunch.icon), "%s", icon);
-	snprintf(slaunch.name, sizeof(slaunch.name), "%s", name);
+	slaunch.type = IS_ROMS_FOLDER ? TYPE_ROM : IS_PS3_TYPE ? TYPE_PS3 : IS_PSX_FOLDER ? TYPE_PS1 : IS_PS2_FOLDER ? TYPE_PS2 : IS_PSP_FOLDER ? TYPE_PSP : TYPE_VID;
+
+	snprintf(slaunch.path, 127, "/mount_ps3%s%s/%s", neth, path, enc_filename);
+	snprintf(slaunch.icon, 127, "%s", icon);
+	snprintf(slaunch.name, 110, "%s", name);
+	snprintf(slaunch.id,   sizeof(slaunch.id),   "%s", id);
 
 	cellFsWrite(fd, (void *)&slaunch, sizeof(_slaunch), NULL);
 }

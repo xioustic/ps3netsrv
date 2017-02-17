@@ -145,7 +145,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	}
 
 	sys_addr_t sysmem = NULL;
-	sys_memory_container_t mc_app = NULL;
 
 	while(connactive && working)
 	{
@@ -170,6 +169,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 			{
 				if(_IS(cmd, "CWD") || _IS(cmd, "XCWD"))
 				{
+					if(sysmem) {sys_memory_free(sysmem); sysmem = NULL;} // release allocated buffer on directory change
+
 					if(split)
 					{
 						if(IS(param, "..")) goto cdup;
@@ -199,6 +200,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "CDUP") || _IS(cmd, "XCUP"))
 				{
+					if(sysmem) {sys_memory_free(sysmem); sysmem = NULL;} // release allocated buffer on directory change
+
 					cdup:
 					pos = strlen(cwd) - 2;
 
@@ -308,8 +311,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				else
 				if(_IS(cmd, "SITE"))
 				{
-					if(sysmem) sys_memory_free(sysmem);
-
 					if(split)
 					{
 						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN - 1);
@@ -342,24 +343,15 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 											  "214 End\r\n");
 						}
 						else
-						if(_IS(cmd, "SHUTDOWN"))
+						if(_IS(cmd, "RESTART") || _IS(cmd, "REBOOT") || _IS(cmd, "SHUTDOWN"))
 						{
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
 							free(buffer);
+							if(sysmem) sys_memory_free(sysmem);
 							working = 0;
-							{ DELETE_TURNOFF } { BEEP1 }
-							{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
-							sys_ppu_thread_exit(0);
-						}
-						else
-						if(_IS(cmd, "RESTART") || _IS(cmd, "REBOOT"))
-						{
-							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
-							free(buffer);
-							working = 0;
-							{ DELETE_TURNOFF } { BEEP2 }
+							{ DELETE_TURNOFF }
 							if(_IS(cmd, "REBOOT")) save_file(WMNOSCAN, NULL, 0);
-							{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
+							if(_IS(cmd, "SHUTDOWN")) {BEEP1; system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);} else {BEEP2; system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 							sys_ppu_thread_exit(0);
 						}
 #ifdef USE_NTFS
@@ -555,11 +547,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					bool is_MLST = _IS(cmd, "MLST");
 					bool is_MLSx = is_MLSD || is_MLST;
 
-					if(sysmem && !nolist) sys_memory_free(sysmem);
-
 					if(IS(param, "-l") || IS(param, "-la") || IS(param, "-al")) {*param = NULL, nolist = false;}
 
 					if((data_s < 0) && (pasv_s >= 0) && !is_MLST) data_s = accept(pasv_s, NULL, NULL);
+
+					if(!(is_MLST || nolist) && sysmem) {sys_memory_free(sysmem); sysmem = NULL;}
 
 					if(data_s >= 0)
 					{
@@ -773,7 +765,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(islike(filename, "/dvd_bdvd"))
 								{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-							if(!sysmem && (ftp_active > 1))
+							sys_memory_container_t mc_app = NULL;
+
+							if(ftp_active > 1)
 							{
 								mc_app = get_app_memory_container();
 								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
@@ -846,11 +840,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									}
 									cellFsClose(fd);
 								}
-
-								//sys_memory_free(sysmem);
 							}
 
-							if( err == CELL_FS_OK)
+							if(err == CELL_FS_OK)
 							{
 								ssend(conn_s_ftp, FTP_OK_226);		// Closing data connection. Requested file action successful (for example, file transfer or file abort).
 							}
@@ -884,7 +876,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							int err = FAILED, is_append = _IS(cmd, "APPE");
 
-							if(!sysmem && (ftp_active > 1))
+							sys_memory_container_t mc_app = NULL;
+
+							if(!sysmem && ftp_active > 1)
 							{
 								mc_app = get_app_memory_container();
 								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
@@ -956,7 +950,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										else
 											break;
 									}
-									//sys_memory_free(sysmem);
+
 									cellFsClose(fd);
 									cellFsChmod(filename, MODE);
 

@@ -790,8 +790,8 @@ static char current_file[MAX_PATH_LEN];
 #include "include/video_rec.h"
 #include "include/secure_file_id.h"
 
-#include "include/games_slaunch.h"
 #include "include/games_html.h"
+#include "include/games_slaunch.h"
 #include "include/games_xml.h"
 #include "include/prepntfs.h"
 
@@ -1053,7 +1053,6 @@ static void handleclient(u64 conn_s_p)
 
 	bool is_ntfs = false;
 	char param[HTML_RECV_SIZE];
-	int fd;
 
 	char *file_query = param + HTML_RECV_LAST; *file_query = NULL;
 
@@ -1091,20 +1090,10 @@ static void handleclient(u64 conn_s_p)
 #endif
 
 		//////////// usb ports ////////////
-		if(cellFsOpendir("/", &fd) == CELL_FS_SUCCEEDED)
+		for(u8 indx = 5, d = 6; d < 128; d++)
 		{
-			CellFsDirent entry; u64 read_e; u8 indx = 5; // 5 = /dev_usb006, 6 = /dev_usb007
-
-			while(cellFsReaddir(fd, &entry, &read_e) == 0 && read_e > 0)
-			{
-				if(islike(entry.d_name, "dev_usb"))
-				{
-					if(entry.d_name[7] == '0' && entry.d_name[8] == '0' && entry.d_name[9] < '4') continue;
-					sprintf(drives[indx], "/%s", entry.d_name);
-					indx++; if(indx > 6) break;
-				}
-			}
-			cellFsClosedir(fd);
+			sprintf(param, "/dev_usb%03i", d);
+			if(isDir(param)) {strcpy(drives[indx++], param); if(indx > 6) break;}
 		}
 		///////////////////////////////////
 
@@ -2596,7 +2585,7 @@ parse_request:
 					{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
 				char *buffer = (char*)sysmem;
-				int fd = -1;
+				int fd;
 #ifdef USE_NTFS
 				if(is_ntfs)
 				{

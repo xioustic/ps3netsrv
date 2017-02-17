@@ -34,7 +34,6 @@ SYS_MODULE_STOP(slaunch_stop);
 #define THREAD_NAME         "slaunch_thread"
 #define STOP_THREAD_NAME    "slaunch_stop_thread"
 
-
 struct timeval {
 	int64_t tv_sec;			/* seconds */
 	int64_t tv_usec;		/* and microseconds */
@@ -43,6 +42,9 @@ struct timeval {
 #define MAX_GAMES 1000
 #define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
 #define WM_ICONS_PATH		"/dev_hdd0/tmp/wm_icons"			// webMAN icons folder
+
+#define XMLMANPLS_DIR        "/dev_hdd0/game/XMBMANPLS"
+#define XMLMANPLS_IMAGES_DIR XMLMANPLS_DIR "/USRDIR/IMAGES"
 
 static char wm_icons[5][40] = {
 								WM_ICONS_PATH "/icon_wm_ps3.png",       //024.png  [0]
@@ -62,7 +64,7 @@ typedef struct
 static _slaunch *slaunch = NULL;
 
 static uint32_t games = 0;
-static uint32_t cur_game=0, _cur_game=0;
+static uint32_t cur_game=0, _cur_game=0, cur_game_=0;
 
 int32_t w=0;
 int32_t h=0;
@@ -75,6 +77,7 @@ static int8_t   delta=5;
 static sys_ppu_thread_t slaunch_tid = SYS_PPU_THREAD_NONE;
 static int32_t running = 1;
 static uint8_t menu_running = 0;	// vsh menu off(0) or on(1)
+static uint8_t menu_mode = 0;
 
 static void return_to_xmb(void);
 int32_t slaunch_start(uint64_t arg);
@@ -339,20 +342,27 @@ static void draw_selection(uint32_t game_idx)
 
 static void load_data(void)
 {
-	char *err_msg = (char*)"There is no content.";
-	if(get_vsh_plugin_slot_by_name("WWWD") >= 7) {games=0, err_msg = (char*)"webMAN is not loaded."; goto exit_load;}
-
-	games=(file_exists(WMTMP "/slaunch.bin"))/sizeof(_slaunch);
-	if(games>=MAX_GAMES) games=MAX_GAMES-1;
-
-	if(cur_game>=games) _cur_game=cur_game=0;
-
 	int fd;
+
+	char *err_msg = (char*)"There is no content.";
+	if(get_vsh_plugin_slot_by_name("WWWD") >= 7) {games=menu_mode=0, err_msg = (char*)"webMAN is not loaded."; goto exit_load;}
+
+	char filename[64];
+	if(menu_mode) sprintf(filename, "%s/slaunch%i.bin", WMTMP, menu_mode); else sprintf(filename, "%s/slaunch.bin", WMTMP);
+
+	uint64_t size = file_exists(filename);
+	if(menu_mode && (size == 0)) {menu_mode = modeALL; cur_game = cur_game_; draw_page(0); return;}
+	if(menu_mode == 0) cur_game = cur_game_;
+
+	games=size/sizeof(_slaunch);
+
+	if(games>=MAX_GAMES) games=MAX_GAMES-1;
+	if(cur_game>=games) _cur_game=cur_game=0;
 
 reload:
 	reset_heap();
 
-	if(games && (cellFsOpen((char*)WMTMP "/slaunch.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED))
+	if(games && (cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED))
 	{
 		// load game list in MC memory
 		slaunch = (_slaunch*)mem_alloc((games+1)*sizeof(_slaunch));
@@ -360,49 +370,53 @@ reload:
 		cellFsRead(fd, (void *)slaunch, sizeof(_slaunch)*games, NULL);
 		cellFsClose(fd);
 
-		uint32_t ngames = games;
-
-		if(gmode)
+		if(!menu_mode)
 		{
-			for(int32_t n=games-1; n >= 0; n--)
-			{
-				if( (gmode == modePS3 && (!strstr(slaunch[n].path, "PS3") && !strstr(slaunch[n].path, "/GAME"))) ||
-					(gmode == modePSX && (!strstr(slaunch[n].path, "PSX"))) ||
-					(gmode == modePS2 && (!strstr(slaunch[n].path, "PS2"))) ||
-					(gmode == modePSP && (!strstr(slaunch[n].path, "PSP"))) ||
-					(gmode == modeDVD && (!strstr(slaunch[n].path, "BDISO") && !strstr(slaunch[n].path, "DVDISO"))) ||
-					(gmode == modeROM && (!strstr(slaunch[n].path, "ROMS"))) )
-					{memset(slaunch[n].name, 0xFF, 127); ngames--;}
-			}
-			if(ngames == 0) {gmode++; if(gmode > modeLAST) gmode = modeALL; goto reload;}
-		}
+			uint32_t ngames = games;
 
-		if(dmode)
-		{
-			int8_t dlen = strlen(drives[dmode-1]);
-			for(int32_t n=games-1; n >= 0; n--)
+			if(gmode)
 			{
-				if((slaunch[n].name[0] & 0xFF) == 0xFF) continue; // skip filtered content
-				if(((dmode == NTFS) && !strstr(slaunch[n].path+11, drives[dmode-1])) || ((dmode != NTFS) && memcmp(slaunch[n].path+11, drives[dmode-1], dlen))) {memset(slaunch[n].name, 0xFF, 127); ngames--;}
-			}
-			if(ngames == 0) {dmode++; if(dmode > devsLAST) dmode = modeALL; goto reload;}
-		}
-
-		// sort game list
-		_slaunch swap;
-		for(uint32_t n=0; n<(games-1); n++)
-		{
-			for(uint32_t m=(n+1); m<games; m++)
-			{
-				if(strcasecmp(slaunch[n].name, slaunch[m].name)>0)
+				for(int32_t n=games-1; n >= 0; n--)
 				{
-					swap=slaunch[n];
-					slaunch[n]=slaunch[m];
-					slaunch[m]=swap;
+					if( (gmode == modePS3 && (!strstr(slaunch[n].path, "PS3") && !strstr(slaunch[n].path, "/GAME"))) ||
+						(gmode == modePSX && (!strstr(slaunch[n].path, "PSX"))) ||
+						(gmode == modePS2 && (!strstr(slaunch[n].path, "PS2"))) ||
+						(gmode == modePSP && (!strstr(slaunch[n].path, "PSP"))) ||
+						(gmode == modeDVD && (!strstr(slaunch[n].path, "BDISO") && !strstr(slaunch[n].path, "DVDISO"))) ||
+						(gmode == modeROM && (!strstr(slaunch[n].path, "ROMS"))) )
+						{memset(slaunch[n].name, 0xFF, 127); ngames--;}
+				}
+				if(ngames == 0) {gmode++; if(gmode > modeLAST) gmode = modeALL; goto reload;}
+			}
+
+			if(dmode)
+			{
+				int8_t dlen = strlen(drives[dmode-1]);
+				for(int32_t n=games-1; n >= 0; n--)
+				{
+					if((slaunch[n].name[0] & 0xFF) == 0xFF) continue; // skip filtered content
+					if(((dmode == NTFS) && !strstr(slaunch[n].path+11, drives[dmode-1])) || ((dmode != NTFS) && memcmp(slaunch[n].path+11, drives[dmode-1], dlen))) {memset(slaunch[n].name, 0xFF, 127); ngames--;}
+				}
+				if(ngames == 0) {dmode++; if(dmode > devsLAST) dmode = modeALL; goto reload;}
+			}
+
+			// sort game list
+			_slaunch swap;
+			for(uint32_t n=0; n<(games-1); n++)
+			{
+				for(uint32_t m=(n+1); m<games; m++)
+				{
+					if(strcasecmp(slaunch[n].name, slaunch[m].name)>0)
+					{
+						swap=slaunch[n];
+						slaunch[n]=slaunch[m];
+						slaunch[m]=swap;
+					}
 				}
 			}
+
+			games = ngames;
 		}
-		games = ngames;
 	}
 	else
 		games = 0;
@@ -416,6 +430,8 @@ exit_load:
 	}
 	else	// no content
 	{
+		if(menu_mode) {menu_mode = 0; return;}
+
 		// no games - show "no content" message
 		ctx.fg_color=0xffc0c0c0;
 		set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, CENTER_TEXT, 520, err_msg);
@@ -427,6 +443,8 @@ exit_load:
 
 static void reload_data(uint32_t curpad)
 {
+	play_rco_sound("system_plugin", "snd_cursor");
+
 	if(curpad & PAD_L2) gmode=dmode=modeALL;
 
 	_cur_game=cur_game=0;
@@ -474,7 +492,7 @@ static void start_VSH_Menu(void)
 static void stop_VSH_Menu(void)
 {
 	// menu off
-	menu_running = 0;
+	menu_mode = menu_running = 0;
 
 	// unbind renderer and kill font-instance
 	font_finalize();
@@ -505,13 +523,13 @@ static void slaunch_thread(uint64_t arg)
 	uint32_t init_delay=0;
 	CellPadData pdata;
 
-	sys_timer_sleep(20);												// wait 20s and not interfere with boot process
+	sys_timer_sleep(15);												// wait 15s and not interfere with boot process
 
 	while(running)
 	{
 		if(!menu_running)												// VSH menu is not running, normal XMB execution
 		{
-			sys_timer_sleep(1);
+			sys_timer_usleep(500000);
 			pdata.len = 0;
 			for(uint8_t p = 0; p < 2; p++)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
@@ -566,24 +584,34 @@ static void slaunch_thread(uint64_t arg)
 					else if(curpad & PAD_R1)	cur_game+=10;
 					else if(curpad & PAD_L1)	if(!cur_game) cur_game=games-1; else cur_game-=10;
 
-					else if(curpad & PAD_TRIANGLE) {play_rco_sound("system_plugin", "snd_cursor"); gmode++; if(gmode>modeLAST) gmode=modeALL; reload_data(curpad);}
-					else if(curpad & PAD_SQUARE)   {play_rco_sound("system_plugin", "snd_cursor"); dmode++; if(dmode>devsLAST) dmode=modeALL; reload_data(curpad);}
+					else if(curpad & PAD_TRIANGLE) {gmode++; if(gmode>modeLAST) gmode=modeALL; reload_data(curpad);}
+					else if(curpad & PAD_SQUARE)   {dmode++; if(dmode>devsLAST) dmode=modeALL; reload_data(curpad);}
 
 					else if(curpad & PAD_R3)	{return_to_xmb(); send_wm_request("/popup.ps3"); break;}
 					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh.ps3"); break;}
-					else if(curpad & PAD_SELECT){return_to_xmb(); send_wm_request("/browser.ps3/setup.ps3"); break;}
+					else if(curpad & PAD_SELECT)
+					{
+						if(menu_mode == 0) cur_game_ = cur_game;
+						menu_mode++; if(menu_mode > 1) menu_mode = modeALL;
+						reload_data(curpad);
+						sys_timer_usleep(40000);
+					}
 
 					else if(curpad & PAD_CIRCLE)					// back to XMB
 					{
-						curpad=oldpad=0;
-						play_rco_sound("system_plugin", "snd_cancel");
-						stop_VSH_Menu(); /*return_to_xmb();*/
+						if(menu_mode) {menu_mode=0; reload_data(curpad); cur_game = cur_game;}
+						else
+						{
+							curpad=oldpad=0;
+							play_rco_sound("system_plugin", "snd_cancel");
+							stop_VSH_Menu(); /*return_to_xmb();*/
+						}
 						break;
 					}
 					else if(curpad & PAD_CROSS && games)			// execute action & return to XMB
 					{
 						play_rco_sound("system_plugin", "snd_system_ok");
-						for(uint8_t u=0;u<10;u++)
+						for(uint8_t u=0;u<6;u++)
 						{
 							set_frame(1 + cur_game % 10, (u & 1) ? 0xffff0000ffff0000 : 0xff400000ff400000);
 							sys_timer_usleep(75000);

@@ -30,7 +30,7 @@ static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
 
 		const char* lib_name_ptr =  (const char*)*(uint32_t*)((char*)export_stru_ptr + 0x10);
 
-		if(strncmp(vsh_module, lib_name_ptr, strlen(lib_name_ptr))==0)
+		if(strncmp(vsh_module, lib_name_ptr, strlen(lib_name_ptr)) == 0)
 		{
 			// we got the proper export struct
 			uint32_t lib_fnid_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x14);
@@ -163,6 +163,10 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 	if(view)
 	{
+		int discboot = 0xff;
+		xsetting_0AF1F161()->GetSystemDiscBootFirstEnabled(&discboot);
+		if(discboot) return;
+
 		char explore_command[128]; // info: http://www.psdevwiki.com/ps3/explore_plugin
 
 		// default category

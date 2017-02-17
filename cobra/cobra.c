@@ -348,41 +348,18 @@ static uint8_t lambda_md5[16] =
 
 static int translate_type(unsigned int type)
 {
-	if (type == 0)
-		return DISC_TYPE_NONE;
-
-	else if (type == DEVICE_TYPE_PS3_BD)
-		return DISC_TYPE_PS3_BD;
-
-	else if (type == DEVICE_TYPE_PS3_DVD)
-		return DISC_TYPE_PS3_DVD;
-
-	else if (type == DEVICE_TYPE_PS2_DVD)
-		return DISC_TYPE_PS2_DVD;
-
-	else if (type == DEVICE_TYPE_PS2_CD)
-		return DISC_TYPE_PS2_CD;
-
-	else if (type == DEVICE_TYPE_PSX_CD)
-		return DISC_TYPE_PSX_CD;
-
-	else if (type == DEVICE_TYPE_BDROM)
-		return DISC_TYPE_BDROM;
-
-	else if (type == DEVICE_TYPE_BDMR_SR)
-		return DISC_TYPE_BDMR_SR;
-
-	else if (type == DEVICE_TYPE_BDMR_RR)
-		return DISC_TYPE_BDMR_RR;
-
-	else if (type == DEVICE_TYPE_BDMRE)
-		return DISC_TYPE_BDMRE;
-
-	else if (type == DEVICE_TYPE_DVD)
-		return DISC_TYPE_DVD;
-
-	else if (type == DEVICE_TYPE_CD)
-		return DISC_TYPE_CD;
+	if(type == 0)					return DISC_TYPE_NONE;
+	if(type == DEVICE_TYPE_PS3_BD)	return DISC_TYPE_PS3_BD;
+	if(type == DEVICE_TYPE_PS3_DVD)	return DISC_TYPE_PS3_DVD;
+	if(type == DEVICE_TYPE_PS2_DVD)	return DISC_TYPE_PS2_DVD;
+	if(type == DEVICE_TYPE_PS2_CD)	return DISC_TYPE_PS2_CD;
+	if(type == DEVICE_TYPE_PSX_CD)	return DISC_TYPE_PSX_CD;
+	if(type == DEVICE_TYPE_BDROM)	return DISC_TYPE_BDROM;
+	if(type == DEVICE_TYPE_BDMR_SR)	return DISC_TYPE_BDMR_SR;
+	if(type == DEVICE_TYPE_BDMR_RR)	return DISC_TYPE_BDMR_RR;
+	if(type == DEVICE_TYPE_BDMRE)	return DISC_TYPE_BDMRE;
+	if(type == DEVICE_TYPE_DVD)		return DISC_TYPE_DVD;
+	if(type == DEVICE_TYPE_CD)		return DISC_TYPE_CD;
 
 	return DISC_TYPE_UNKNOWN;
 }
@@ -1608,7 +1585,7 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 
 	if(file_copy(umd_file, icon_save_path, 0) >= CELL_FS_SUCCEEDED)
 	{
-		sys_map_path((char *)PSPL_ICON, icon_save_path);
+		sys_map_path(PSPL_ICON, icon_save_path);
 		snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/SYSDIR/EBOOT.OLD", root);
 
 		if (cellFsStat(umd_file, &stat) != CELL_FS_SUCCEEDED)
@@ -1783,7 +1760,7 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 	{
 		int fd;
 
-		sys_map_path((char *)PSPL_ICON, icon_save_path);
+		sys_map_path(PSPL_ICON, icon_save_path);
 		snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/SYSDIR/prometheus.prx", root);
 
 		if (cellFsStat(umd_file, &stat) != CELL_FS_SUCCEEDED)
@@ -2039,7 +2016,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 	{
 		int fd;
 
-		sys_map_path((char *)PSPL_ICON, icon_save_path);
+		sys_map_path(PSPL_ICON, icon_save_path);
 		snprintf(umd_file, sizeof(umd_file), "%s/PSP_GAME/SYSDIR/EBOOT.OLD", root);
 
 		if (cellFsStat(umd_file, &stat) != CELL_FS_SUCCEEDED)
@@ -2150,7 +2127,7 @@ int cobra_set_psp_umd2(char *path, char *umd_root, char *icon_save_path, uint64_
 
 int cobra_unset_psp_umd(void)
 {
-	int ret = sys_map_path((char *)PSPL_ICON, NULL);
+	int ret = sys_map_path(PSPL_ICON, NULL);
 	if (ret == ENOSYS)
 		return ret;
 

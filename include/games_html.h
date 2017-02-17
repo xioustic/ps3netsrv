@@ -452,7 +452,45 @@ no_icon0:
 			default_icon = iDVD;
 	}
 
-	strcpy(icon, wm_icons[default_icon]);
+#ifdef COBRA_ONLY
+	if(NO_ICON && IS_PS3_FOLDER && !IS_NTFS && !IS_NET && IS_INGAME)
+	{
+		sprintf(icon, "%s/%s", param, file);
+
+		//extact icon0.png from hdd/usb (not from ntfs)
+		if(file_exists(icon))
+		{
+			char *cobra_iso_list[1];
+			cobra_iso_list[0] = icon;
+
+			{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
+
+			cobra_send_fake_disc_eject_event();
+			sys_timer_usleep(10000);
+			cobra_umount_disc_image();
+			cobra_mount_ps3_disc_image(cobra_iso_list, 1);
+			sys_timer_usleep(10000);
+			cobra_send_fake_disc_insert_event();
+			sys_timer_usleep(10000);
+
+			*icon = NULL;
+			wait_for("/dev_bdvd/PS3_GAME/PARAM.SFO", 3);
+
+			size_t len = get_name(icon, file, GET_WMTMP); strcat(icon, ".SFO");
+			file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", icon, COPY_WHOLE_FILE);
+			sprintf(icon + len, ".PNG");
+			file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", icon, COPY_WHOLE_FILE);
+
+			cobra_send_fake_disc_eject_event();
+			sys_timer_usleep(4000);
+			cobra_umount_disc_image();
+
+			{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
+		}
+	}
+#endif
+
+	if(!HAS(icon)) strcpy(icon, wm_icons[default_icon]);
 	return default_icon;
 }
 
