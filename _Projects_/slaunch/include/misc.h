@@ -44,7 +44,8 @@ void start_stop_vsh_pad(uint8_t flag);
 void MyPadGetData(int32_t port_no, CellPadData *data);
 int32_t rsx_fifo_pause(uint8_t pause);
 
-void play_rco_sound(const char *plugin, const char *sound);
+//uint32_t load_rco_texture(uint32_t* texture, const char *plugin, const char *texture_name);
+void play_rco_sound(const char *sound);
 void buzzer(uint8_t mode);
 
 uint64_t lv2peek(uint64_t addr);

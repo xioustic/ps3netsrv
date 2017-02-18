@@ -13,6 +13,11 @@
 
 #define XML_KEY_LEN 7
 
+typedef struct
+{
+	char value[12];
+} t_keys;
+
 enum xmb_groups
 {
 	gPS3 = 0,
@@ -432,10 +437,12 @@ static bool update_mygames_xml(u64 conn_s_p)
 	}
 
 	int fd;
-	char skey[max_xmb_items][12];
+	t_keys skey[max_xmb_items];
 
-	char param[MAX_PATH_LEN];
-	char icon[MAX_PATH_LEN], enc_dir_name[1024], subpath[MAX_PATH_LEN];
+	char *icon = malloc(STD_PATH_LEN);
+	char *param = malloc(STD_PATH_LEN);
+	char *subpath = malloc(STD_PATH_LEN);
+	char *enc_dir_name = malloc(1024);
 
 	u8 is_net = 0;
 	int abort_connection = 0;
@@ -617,7 +624,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 										 key, icon,
 										 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, neth, param, "");
 #endif
-						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, data[v3_entry].name, item_count, xml_len, 0)) key++;
+						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key].value, key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, data[v3_entry].name, item_count, xml_len, 0)) key++;
 
 						v3_entry++;
 					}
@@ -738,7 +745,7 @@ next_xml_entry:
 											 key, icon,
 											 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
 #endif
-							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key], key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, entry.d_name, item_count, xml_len, subfolder)) key++;
+							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key].value, key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, entry.d_name, item_count, xml_len, subfolder)) key++;
 						}
 //////////////////////////////
 						if(subfolder) goto next_xml_entry;
@@ -803,15 +810,15 @@ continue_reading_folder_xml:
 
 	if(key)
 	{   // sort xmb items
-		char swap[16]; u16 m, n;
-
+		u16 m, n;
+		t_keys swap;
 		for(n = 0; n < (key - 1); n++)
 			for(m = (n + 1); m < key; m++)
-				if(strncmp(skey[n], skey[m], XML_KEY_LEN) > 0)
+				if(strncmp(skey[n].value, skey[m].value, XML_KEY_LEN) > 0)
 				{
-					strcpy(swap, skey[n]);
-					strcpy(skey[n], skey[m]);
-					strcpy(skey[m], swap);
+					swap    = skey[n];
+					skey[n] = skey[m];
+					skey[m] = swap;
 				}
 	}
 
@@ -868,7 +875,7 @@ continue_reading_folder_xml:
 		for(u16 a = 0; a < key; a++)
 		{
 			if(xml_len[gPS3] >= (BUFFER_SIZE - 1000)) break;
-			sprintf(templn, ADD_XMB_ITEM("%s"), skey[a] + XML_KEY_LEN, skey[a] + XML_KEY_LEN);
+			sprintf(templn, ADD_XMB_ITEM("%s"), skey[a].value + XML_KEY_LEN, skey[a].value + XML_KEY_LEN);
 			xml_len[gPS3] += concat(myxml_items + xml_len[gPS3], templn);
 		}
 	}
@@ -876,25 +883,25 @@ continue_reading_folder_xml:
 	{
 		for(u16 a = 0; a < key; a++)
 		{
-			sprintf(templn, ADD_XMB_ITEM("%s"), skey[a] + XML_KEY_LEN, skey[a] + XML_KEY_LEN);
-			if(*skey[a] == PS3_&& xml_len[gPS3] < (BUFFER_SIZE - 5000))
+			sprintf(templn, ADD_XMB_ITEM("%s"), skey[a].value + XML_KEY_LEN, skey[a].value + XML_KEY_LEN);
+			if(*skey[a].value == PS3_&& xml_len[gPS3] < (BUFFER_SIZE - 5000))
 				xml_len[gPS3] += concat(myxml_ps3 + xml_len[gPS3], templn);
 			else
-			if(*skey[a] == PS2 && xml_len[gPS2] < (BUFFER_SIZE_PS2 - 128))
+			if(*skey[a].value == PS2 && xml_len[gPS2] < (BUFFER_SIZE_PS2 - 128))
 				xml_len[gPS2] += concat(myxml_ps2 + xml_len[gPS2], templn);
 #ifdef COBRA_ONLY
 			else
-			if(*skey[a] == PS1 && xml_len[gPSX] < (BUFFER_SIZE_PSX - 128))
+			if(*skey[a].value == PS1 && xml_len[gPSX] < (BUFFER_SIZE_PSX - 128))
 				xml_len[gPSX] += concat(myxml_psx + xml_len[gPSX], templn);
 			else
-			if(*skey[a] == PSP && xml_len[gPSP] < (BUFFER_SIZE_PSP - 128))
+			if(*skey[a].value == PSP && xml_len[gPSP] < (BUFFER_SIZE_PSP - 128))
 				xml_len[gPSP] += concat(myxml_psp + xml_len[gPSP], templn);
 			else
-			if(*skey[a] == BLU && xml_len[gDVD] < (BUFFER_SIZE_DVD - 1200))
+			if(*skey[a].value == BLU && xml_len[gDVD] < (BUFFER_SIZE_DVD - 1200))
 				xml_len[gDVD] += concat(myxml_dvd + xml_len[gDVD], templn);
  #ifdef MOUNT_ROMS
 			else
-			if(*skey[a] == DVD && xml_len[gROM] < (BUFFER_SIZE_ROM - 1200))
+			if(*skey[a].value == DVD && xml_len[gROM] < (BUFFER_SIZE_ROM - 1200))
 				xml_len[gROM] += concat(myxml_roms + xml_len[gROM], templn);
  #endif
 #endif
@@ -1109,6 +1116,11 @@ continue_reading_folder_xml:
 	// --- release allocated memory
 
 	led(GREEN, ON);
+
+	free(icon);
+	free(param);
+	free(subpath);
+	free(enc_dir_name);
 
 #ifdef USE_VM
 	sys_vm_unmap(sysmem);

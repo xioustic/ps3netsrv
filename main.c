@@ -336,6 +336,7 @@ static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
 
 #define LINELEN			512 // file listing
 #define MAX_LINE_LEN	640 // html games
+#define STD_PATH_LEN	263 // standard path len (260 characters in NTFS - Windows 10 removed this limit in 2016)
 #define MAX_PATH_LEN	512 // do not change!
 #define MAX_TEXT_LEN	2000 // should not exceed HTML_RECV_SIZE
 
@@ -659,7 +660,7 @@ static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_u
 static char paths [13][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI", "ROMS"};
 
 #ifdef COPY_PS3
-static char    cp_path[MAX_PATH_LEN];   // cut/copy/paste buffer
+static char    cp_path[STD_PATH_LEN+1];   // cut/copy/paste buffer
 static uint8_t cp_mode = CP_MODE_NONE;  // 0 = none / 1 = copy / 2 = cut/move
 #endif
 
@@ -757,7 +758,7 @@ static bool is_busy = false;
 static u8 mount_unk = EMU_OFF;
 
 #ifdef COPY_PS3
-static char current_file[MAX_PATH_LEN];
+static char current_file[STD_PATH_LEN+1];
 #endif
 
 #include "include/eject_insert.h"
@@ -771,8 +772,8 @@ static char current_file[MAX_PATH_LEN];
 #endif //#ifdef COBRA_ONLY
 
 #include "include/webchat.h"
-#include "include/file.h"
 #include "include/vsh.h"
+#include "include/file.h"
 #include "include/ps2_disc.h"
 #include "include/ps2_classic.h"
 #include "include/xmb_savebmp.h"
@@ -1525,7 +1526,7 @@ parse_request:
 				// /download.ps3?url=<url>            (see pkg_handler.h for details)
 				// /download.ps3?to=<path>&url=<url>
 
-				char msg[MAX_LINE_LEN], filename[MAX_PATH_LEN]; memset(msg, 0, MAX_LINE_LEN); *filename = NULL;
+				char msg[MAX_LINE_LEN], filename[STD_PATH_LEN+1]; memset(msg, 0, MAX_LINE_LEN); *filename = NULL;
 
 				setPluginActive();
 
@@ -1538,7 +1539,7 @@ parse_request:
 					*dlpath = NULL; // limit string to url in "Downloading http://blah..."
 
 					char *dlfile = strrchr(msg, '/');
-					if(dlfile) sprintf(filename, "%s%s", dlpath + 5, dlfile);
+					if(dlfile) snprintf(filename, STD_PATH_LEN, "%s%s", dlpath + 5, dlfile);
 
 					*dlpath = '\n'; // restore line break
 				}
@@ -2157,7 +2158,7 @@ parse_request:
 				// /cut.ps3<path>  stores <path> in <cp_path> clipboard buffer for move with /paste.ps3 (cp_mode = 2)
 
 				cp_mode = islike(param, "/cut.ps3") ? CP_MODE_MOVE : CP_MODE_COPY;
-				sprintf(cp_path, "%s", param + 8);
+				snprintf(cp_path, STD_PATH_LEN, "%s", param + 8);
 				sprintf(param, "%s", cp_path);
 				char *p = strrchr(param, '/'); *p = NULL;
 				if(file_exists(cp_path) == false) cp_mode = CP_MODE_NONE;
@@ -3526,7 +3527,7 @@ static void wwwd_thread(uint64_t arg)
 	reset_settings();
 
 #ifdef COPY_PS3
-	memset(cp_path, 0, MAX_PATH_LEN);
+	memset(cp_path, 0, STD_PATH_LEN);
 #endif
 
 #ifdef WM_REQUEST

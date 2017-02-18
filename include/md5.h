@@ -8,9 +8,14 @@ static void calc_md5(char *filename, char *md5)
 
 	uint8_t _md5[16]; memset(_md5, 0, 16);
 
-	sys_addr_t sysmem = NULL;
+	sys_addr_t sysmem = NULL; size_t buffer_size = _256KB_;
 
-	if(sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+	sys_memory_container_t mc_app = get_app_memory_container();
+	if(mc_app)	sys_memory_allocate_from_container(buffer_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
+
+	if(!sysmem) buffer_size = _128KB_;
+
+	if(sysmem || (!sysmem && sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 	{
 		if (cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == 0)
 		{
@@ -24,7 +29,7 @@ static void calc_md5(char *filename, char *md5)
 			{
 				uint64_t nread;
 
-				cellFsRead(fd, buf, _128KB_, &nread);
+				cellFsRead(fd, buf, buffer_size, &nread);
 
 				if (nread == 0) break;
 

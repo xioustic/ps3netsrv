@@ -376,7 +376,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 {
 	int tlen = 0;
 
-	char *swap = malloc(_MAX_PATH_LEN), *templn = malloc(_MAX_PATH_LEN), *url = malloc(_MAX_PATH_LEN), *slash, *buffer = pbuffer;
+	char *swap = malloc(MAX_PATH_LEN), *templn = malloc(MAX_PATH_LEN), *url = malloc(MAX_PATH_LEN), *slash, *buffer = pbuffer;
 
 	sprintf(templn, "%s", param);
 
@@ -766,13 +766,15 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		if(idx)
 		{   // sort html file entries
 			u16 n, m;
+			t_line_entries swap;
+
 			for(n = 0; n < (idx - 1); n++)
 				for(m = (n + 1); m < idx; m++)
 					if(sort_order * strncmp(line_entry[n].path, line_entry[m].path, FILE_MGR_KEY_LEN) > 0)
 					{
-						strcpy(swap, line_entry[n].path);
-						strcpy(line_entry[n].path, line_entry[m].path);
-						strcpy(line_entry[m].path, swap);
+						swap = line_entry[n];
+						line_entry[n] = line_entry[m];
+						line_entry[m] = swap;
 					}
 		}
 
@@ -923,21 +925,27 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				u8 n, m;
 				for(n = 0; n < MAX_LAST_GAMES; n++)
 				{
-					if(lastgames.game[n][1] != 'n' && file_exists(lastgames.game[n]) == false) *lastgames.game[n] = NULL;
+					if(lastgames.game[n].path[1] != 'n' && file_exists(lastgames.game[n].path) == false) *lastgames.game[n].path = NULL;
 				}
 
+				t_path_entries swap;
 				for(n = 0; n < (MAX_LAST_GAMES - 1); n++)
 					for(m = (n + 1); m < MAX_LAST_GAMES; m++)
-						if(*lastgames.game[n] == '/' && *lastgames.game[m] == '/' && (strcasecmp(strrchr(lastgames.game[n], '/'), strrchr(lastgames.game[m], '/')) > 0))
+						if(*lastgames.game[n].path == '/' && *lastgames.game[m].path == '/' && (strcasecmp(strrchr(lastgames.game[n].path, '/'), strrchr(lastgames.game[m].path, '/')) > 0))
 						{
-							strncpy(swap, lastgames.game[n], MAX_PATH_LEN);
-							strncpy(lastgames.game[n], lastgames.game[m], MAX_PATH_LEN);
-							strncpy(lastgames.game[m], swap, MAX_PATH_LEN);
+							swap = lastgames.game[n];
+							lastgames.game[n] = lastgames.game[m];
+							lastgames.game[m] = swap;
 						}
 
 				for(n = 0; n < MAX_LAST_GAMES; n++)
 				{
-					if(*lastgames.game[n]) {sprintf(tempstr, "<a class=\"%c\" href=\"/mount.ps3%s\">%s</a><br>", (isDir(lastgames.game[n]) || strstr(lastgames.game[n], "/GAME")) ? 'd' : 'w', lastgames.game[n], strrchr(lastgames.game[n], '/') + 1); buffer += concat(buffer, tempstr);}
+					if(*lastgames.game[n].path)
+					{
+						char *name = strrchr(lastgames.game[n].path, '/') + 1; if(name[1] == NULL) name = lastgames.game[n].path;
+						sprintf(tempstr, "<a class=\"%c\" href=\"/mount.ps3%s\">%s</a><br>", (isDir(lastgames.game[n].path) || strstr(lastgames.game[n].path, "/GAME")) ? 'd' : 'w', lastgames.game[n].path, name);
+						buffer += concat(buffer, tempstr);
+					}
 				}
 			}
 			strcat(buffer, "</div></a>");

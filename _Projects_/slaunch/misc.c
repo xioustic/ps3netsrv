@@ -116,17 +116,21 @@ int32_t rsx_fifo_pause(uint8_t pause)
 	return (int32_t)p1;
 }
 
-
+/*
+uint32_t load_rco_texture(uint32_t* texture, const char *plugin, const char *texture_name)
+{
+	return (paf_3A8454FC(texture, (paf_F21655F3(plugin)), texture_name));
+}
+*/
 
 /***********************************************************************
 * play a rco sound file
 *
-* const char *plugin = plugin name own the rco file we would play a sound from
 * const char *sound  = sound recource file in rco we would play
 ***********************************************************************/
-void play_rco_sound(const char *plugin, const char *sound)
+void play_rco_sound(const char *sound)
 {
-	paf_B93AFE7E((paf_F21655F3(plugin)), sound, 1, 0);
+	paf_B93AFE7E((paf_F21655F3("system_plugin")), sound, 1, 0);
 }
 
 /***********************************************************************

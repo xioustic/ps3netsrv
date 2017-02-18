@@ -21,6 +21,8 @@ static u32 copied_count = 0;
 
 #define DEV_NTFS		"/dev_nt"
 
+static sys_addr_t g_sysmem = NULL;
+
 #ifdef USE_NTFS
 
 static bool is_ntfs_path(const char *path)
@@ -65,7 +67,7 @@ static uint64_t get_free_space(const char *dev_name)
 	if(is_ntfs_path(dev_name))
 	{
 		struct statvfs vbuf;
-		char tmp[MAX_PATH_LEN];
+		char tmp[STD_PATH_LEN];
 		strcpy(tmp, dev_name); tmp[10] = ':', tmp[12] = 0;
 		ps3ntfs_statvfs(tmp + 5, &vbuf);
 		return ((u64)vbuf.f_bfree * (u64)vbuf.f_bsize);
@@ -82,7 +84,7 @@ static int isDir(const char* path)
 #ifdef USE_NTFS
 	if(is_ntfs_path(path))
 	{
-		char tmp[MAX_PATH_LEN];
+		char tmp[STD_PATH_LEN];
 		strcpy(tmp, path); tmp[10] = ':';
 		struct stat bufn;
 		return ((ps3ntfs_stat(tmp + 5, &bufn) >= 0) && (bufn.st_mode & S_IFDIR));
@@ -101,7 +103,7 @@ static bool file_exists(const char* path)
 #ifdef USE_NTFS
 	if(is_ntfs_path(path))
 	{
-		char tmp[MAX_PATH_LEN];
+		char tmp[STD_PATH_LEN];
 		strcpy(tmp, path); tmp[10] = ':';
 		struct stat bufn;
 		return (ps3ntfs_stat(tmp + 5, &bufn) >= 0);
@@ -333,9 +335,17 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 
 	if(is_ntfs1 || cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
+		sys_addr_t sysmem = NULL; uint64_t chunk_size = _256KB_;
 
-		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+		if(g_sysmem) sysmem = g_sysmem; else
+		{
+			sys_memory_container_t mc_app = get_app_memory_container();
+			if(mc_app)	sys_memory_allocate_from_container(chunk_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
+		}
+
+		if(!sysmem) chunk_size = _64KB_;
+
+		if(sysmem || (!sysmem && sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 		{
 			uint64_t size = buf.st_size, part_size = buf.st_size; u8 part = 0;
 			if(maxbytes > 0 && size > maxbytes) size = maxbytes;
@@ -441,7 +451,8 @@ next_part:
 
 				ret = size;
 			}
-			sys_memory_free(sysmem);
+
+			if(!g_sysmem) sys_memory_free(sysmem);
 		}
 
 #ifdef USE_NTFS
@@ -485,8 +496,14 @@ static int folder_copy(const char *path1, char *path2)
 	{
 		CellFsDirent dir; u64 read_e;
 
-		char source[MAX_PATH_LEN];
-		char target[MAX_PATH_LEN];
+		char source[STD_PATH_LEN];
+		char target[STD_PATH_LEN];
+
+		if(!g_sysmem)
+		{
+			sys_memory_container_t mc_app = get_app_memory_container();
+			if(mc_app)	sys_memory_allocate_from_container(_256KB_, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &g_sysmem);
+		}
 
 		while(working)
 		{
@@ -514,6 +531,8 @@ static int folder_copy(const char *path1, char *path2)
 			else
 				file_copy(source, target, COPY_WHOLE_FILE);
 		}
+
+		if(g_sysmem) {sys_memory_free(g_sysmem); g_sysmem = NULL;}
 
 #ifdef USE_NTFS
 		if(is_ntfs) ps3ntfs_dirclose(pdir);
@@ -569,7 +588,7 @@ static int del(const char *path, u8 recursive)
 	{
 		CellFsDirent dir; u64 read_e;
 
-		char entry[MAX_PATH_LEN];
+		char entry[STD_PATH_LEN];
 
 		while(working)
 		{
@@ -663,7 +682,7 @@ static void unlink_file(const char *drive, const char *path, const char *file)
 static bool do_custom_combo(const char *filename)
 {
  #if defined(WM_CUSTOM_COMBO)
-	char combo_file[MAX_PATH_LEN];
+	char combo_file[STD_PATH_LEN];
 
 	if(*filename == '/')
 		sprintf(combo_file, "%s", filename);
@@ -734,8 +753,8 @@ static void import_edats(const char *path1, const char *path2)
 	{
 		CellFsDirent dir; u64 read_e;
 
-		char source[MAX_PATH_LEN];
-		char target[MAX_PATH_LEN];
+		char source[STD_PATH_LEN];
+		char target[STD_PATH_LEN];
 
 		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{

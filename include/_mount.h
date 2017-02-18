@@ -15,8 +15,14 @@ char map_title_id[10];
 
 typedef struct
 {
+	char path[MAX_PATH_LEN];
+}
+t_path_entries;
+
+typedef struct
+{
 	uint8_t last;
-	char game[MAX_LAST_GAMES][MAX_PATH_LEN];
+	t_path_entries game[MAX_LAST_GAMES];
 } __attribute__((packed)) _lastgames;
 
 #define IS_COPY		9
@@ -141,7 +147,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		enum icon_type default_icon = iPS3;
 
 #ifdef COPY_PS3
-		char target[MAX_PATH_LEN], *pos; *target = NULL;
+		char target[STD_PATH_LEN], *pos; *target = NULL;
 		if(islike(param, "/copy.ps3")) {plen = IS_COPY; pos = strstr(param, "&to="); if(pos) {strcpy(target, pos + 4); *pos = NULL;}}
 		bool is_copy = ((plen == IS_COPY) && (copy_in_progress == false));
 #endif
@@ -224,7 +230,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		/////////////////
 		else if(*source == '/')
 		{
-			char _path[MAX_PATH_LEN];
+			char _path[STD_PATH_LEN];
 			size_t slen = 0;
 
 			// ----------------
@@ -686,6 +692,8 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 
 				if(islike(target, "/dev_blind")) enable_dev_blind(NO_MSG);
 
+				if(isDir(source) && (strlen(target) > 3) && target[strlen(target)-1] != '/') strcat(target, "/");
+
 				// make target dir tree
 				mkdir_tree(target);
 
@@ -841,7 +849,7 @@ static void do_umount_eject(void)
 
 static void get_last_game(char *last_path)
 {
-	read_file(WMTMP "/last_game.txt", last_path, MAX_PATH_LEN, 0);
+	read_file(WMTMP "/last_game.txt", last_path, STD_PATH_LEN, 0);
 }
 
 #ifdef COBRA_ONLY
@@ -909,7 +917,7 @@ static void cache_icon0_and_param_sfo(char *destpath)
 
 static void mount_autoboot(void)
 {
-	char path[MAX_PATH_LEN];
+	char path[STD_PATH_LEN+1];
 
 	// get autoboot path
 	if(webman_config->autob && (
@@ -1014,7 +1022,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// init variables
 	// ---------------
 
-	char _path[MAX_PATH_LEN], titleID[10];
+	char _path[STD_PATH_LEN], titleID[10];
 
 	bool ret = true;
 
@@ -1111,30 +1119,30 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			{
 				if(lastgames.last >= LAST_GAMES_UPPER_BOUND) lastgames.last = 0; else lastgames.last++;
 			}
-			if(*lastgames.game[lastgames.last]!='/') lastgames.last = 0;
-			if(*lastgames.game[lastgames.last]!='/' || strlen(lastgames.game[lastgames.last]) < 7) goto exit_mount;
+			if(*lastgames.game[lastgames.last].path!='/') lastgames.last = 0;
+			if(*lastgames.game[lastgames.last].path!='/' || strlen(lastgames.game[lastgames.last].path) < 7) goto exit_mount;
 
-			sprintf(_path, "%s", lastgames.game[lastgames.last]);
+			sprintf(_path, "%s", lastgames.game[lastgames.last].path);
 		}
 		else
 		if(lastgames.last >= MAX_LAST_GAMES)
 		{
 			lastgames.last = 0;
-			snprintf(lastgames.game[lastgames.last], MAX_PATH_LEN, "%s", _path);
+			snprintf(lastgames.game[lastgames.last].path, STD_PATH_LEN, "%s", _path);
 		}
 		else
 		{
 			bool found = false;
 			for(u8 n = 0; n < MAX_LAST_GAMES; n++)
 			{
-				if(IS(lastgames.game[n], _path)) {found = true; break;}
+				if(IS(lastgames.game[n].path, _path)) {found = true; break;}
 			}
 
 			if(!found)
 			{
 				lastgames.last++;
 				if(lastgames.last >= MAX_LAST_GAMES) lastgames.last = 0;
-				snprintf(lastgames.game[lastgames.last], MAX_PATH_LEN, "%s", _path);
+				snprintf(lastgames.game[lastgames.last].path, STD_PATH_LEN, "%s", _path);
 			}
 		}
 
@@ -1256,7 +1264,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// ------------------
 	if(!extcmp(_path, ".BIN.ENC", 8))
 	{
-		char temp[MAX_PATH_LEN];
+		char temp[STD_PATH_LEN + 16];
 
 		if(file_exists(PS2_CLASSIC_PLACEHOLDER))
 		{
@@ -1281,8 +1289,8 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 				size_t len = sprintf(temp, "%s.png", _path);
 				if(file_exists(temp) == false) sprintf(temp, "%s.PNG", _path);
-				if(file_exists(temp) == false && len > 12) strcat(temp + len - 12, ".png\0");
-				if(file_exists(temp) == false && len > 12) strcat(temp + len - 4,  ".PNG\0");
+				if(file_exists(temp) == false && len > 12) sprintf(temp + len - 12, ".png"); // remove .BIN.ENC
+				if(file_exists(temp) == false && len > 12) sprintf(temp + len - 4,  ".PNG");
 
 				cellFsUnlink(PS2_CLASSIC_ISO_ICON);
 				if(file_exists(temp))
@@ -1342,7 +1350,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 			else if(strstr(_path, "/GAME"))
 			{
-				char extgdfile[MAX_PATH_LEN], *extgdini = extgdfile;
+				char extgdfile[STD_PATH_LEN + 24], *extgdini = extgdfile;
 				sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
 				if(read_file(extgdfile, extgdini, 12, 0))
 				{
@@ -1386,32 +1394,33 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 			// --------------
 
 			u8 iso_parts = 1;
-			char iso_list[MAX_ISO_PARTS][MAX_PATH_LEN];
-			char *cobra_iso_list[MAX_ISO_PARTS];
-			char path2[MAX_PATH_LEN];
 			char templn[MAX_LINE_LEN];
 
-			sprintf(iso_list[0], "%s", _path);
-			cobra_iso_list[0] = (char*)iso_list[0];
+			size_t path_len = sprintf(templn, "%s", _path);
 
 			CD_SECTOR_SIZE_2352 = 2352;
 
 			if(!extcasecmp(_path, ".iso.0", 6))
 			{
-				sprintf(path2, "%s", _path);
-				path2[strlen(path2)-2] = NULL;
+				path_len -= 2;
 				for(u8 n = 1; n < MAX_ISO_PARTS; n++)
 				{
-					sprintf(templn, "%s.%i", path2, n);
-					if(file_exists(templn))
-					{
-						iso_parts++;
-						sprintf(iso_list[n], "%s", templn);
-						cobra_iso_list[n] = (char*)iso_list[n];
-					}
-					else
-						break;
+					sprintf(templn + path_len, ".%i", n);
+					if(file_exists(templn) == false) break;
+					iso_parts++;
 				}
+			}
+
+			char *cobra_iso_list[iso_parts], iso_list[iso_parts][STD_PATH_LEN];
+
+			sprintf(iso_list[0], "%s", _path);
+			cobra_iso_list[0] = (char*)iso_list[0];
+
+			for(u8 n = 1; n < iso_parts; n++)
+			{
+				templn[path_len] = NULL;
+				sprintf(iso_list[n], "%s.%i", templn, n);
+				cobra_iso_list[n] = (char*)iso_list[n];
 			}
 
 			// ---------------
@@ -1777,7 +1786,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		#ifdef FIX_GAME
 			fix_game(_path, titleID, webman_config->fixgame);
 		#else
-			char filename[MAX_PATH_LEN];
+			char filename[STD_PATH_LEN + 20];
 			sprintf(filename, "%s/PS3_GAME/PARAM.SFO", _path);
 
 			getTitleID(filename, titleID, GET_TITLE_ID_ONLY);
@@ -1900,7 +1909,7 @@ install_mm_payload:
 	pokeq(open_hook + 0x20, (0x7C9C237848000001ULL | (base_addr-open_hook-0x24)));
 
 
-	char path[MAX_PATH_LEN];
+	char path[STD_PATH_LEN];
 
 	#ifdef EXT_GDATA
 
@@ -1923,7 +1932,7 @@ install_mm_payload:
 	// -- get TitleID from PARAM.SFO
 	#ifndef FIX_GAME
 	{
-		char filename[MAX_PATH_LEN];
+		char filename[STD_PATH_LEN + 20];
 
 		sprintf(filename, "%s/PS3_GAME/PARAM.SFO", _path);
 		getTitleID(filename, titleID, GET_TITLE_ID_ONLY);
@@ -1969,7 +1978,7 @@ install_mm_payload:
 
 	else if(strstr(_path, "/GAME"))
 	{
-		char extgdfile[MAX_PATH_LEN], *extgdini = extgdfile;
+		char extgdfile[STD_PATH_LEN + 24], *extgdini = extgdfile;
 		sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
 		if(read_file(extgdfile, extgdini, 12, 0))
 		{
@@ -2068,7 +2077,7 @@ exit_mount:
 
 	if(ret && *_path == '/')
 	{
-		char msg[MAX_PATH_LEN], *pos;
+		char msg[STD_PATH_LEN + 48], *pos;
 
 		// get file name (without path)
 		pos = strrchr(_path, '/');
@@ -2127,7 +2136,7 @@ exit_mount:
 	// show error if bdvd was not mounted
 	// -----------------------------------
 
-	if(!ret && !isDir("/dev_bdvd")) {char msg[MAX_PATH_LEN]; sprintf(msg, "%s %s", STR_ERROR, _path); show_msg(msg);}
+	if(!ret && !isDir("/dev_bdvd")) {char msg[STD_PATH_LEN + 20]; sprintf(msg, "%s %s", STR_ERROR, _path); show_msg(msg);}
 
 	// -------------------------------------------------------------------------------------
 	// remove syscalls hodling R2 (or prevent remove syscall if path contains [online] tag)

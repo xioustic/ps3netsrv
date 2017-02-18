@@ -285,10 +285,10 @@ static void get_default_icon_from_folder(char *icon, u8 is_dir, const char *para
 			// get covers named as titleID from iso folder
 			if(!is_dir && HAS_TITLE_ID && (f0 < 7 || f0 > NTFS))
 			{
-				char titleid[MAX_PATH_LEN];
+				char titleid[STD_PATH_LEN];
 				char *pos = strchr(entry_name, '/'); if(pos) {*pos = NULL; sprintf(titleid, "%s/%s", entry_name, tempID); *pos = '/';} else sprintf(titleid, "%s", tempID);
 
-				char tmp[MAX_PATH_LEN]; if(HAS(icon)) sprintf(tmp, "%s", icon); else *tmp = NULL;
+				char tmp[STD_PATH_LEN]; if(HAS(icon)) sprintf(tmp, "%s", icon); else *tmp = NULL;
 
 				sprintf(icon, "%s/%s.JPG", param, titleid); if(file_exists(icon)) return;
 				sprintf(icon, "%s/%s.PNG", param, titleid); if(file_exists(icon)) return;
@@ -404,10 +404,10 @@ static enum icon_type get_default_icon_by_type(u8 f1)
 
 static enum icon_type get_default_icon(char *icon, const char *param, char *file, int is_dir, char *tempID, int ns, int abort_connection, u8 f0, u8 f1)
 {
-	char filename[MAX_PATH_LEN];
+	char filename[STD_PATH_LEN];
 
 	if(ns == FROM_MOUNT)
-		sprintf(filename, "%s", file);
+		snprintf(filename, STD_PATH_LEN, "%s", file);
 	else
 		*filename = NULL;
 
@@ -1013,8 +1013,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		typedef struct
 		{
 			char path[MAX_LINE_LEN];
-		}
-		t_line_entries;
+		} t_line_entries;
+
 		t_line_entries *line_entry = (t_line_entries *)sysmem_html;
 		u16 max_entries = (BUFFER_MAXSIZE / MAX_LINE_LEN); tlen = 0;
 
@@ -1392,14 +1392,14 @@ next_html_entry:
 		if(idx)
 		{   // sort html game items
 			u16 n, m;
-			char *swap = tempstr;
+			t_line_entries swap;
 			for(n = 0; n < (idx - 1); n++)
 				for(m = (n + 1); m < idx; m++)
 					if(strncmp(line_entry[n].path, line_entry[m].path, HTML_KEY_LEN) > 0)
 					{
-						strcpy(swap, line_entry[n].path);
-						strcpy(line_entry[n].path, line_entry[m].path);
-						strcpy(line_entry[m].path, swap);
+						swap = line_entry[n];
+						line_entry[n] = line_entry[m];
+						line_entry[m] = swap;
 					}
 		}
 

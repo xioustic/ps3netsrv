@@ -297,7 +297,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 	struct CellFsStat buf;
 
 	if(islike(iso_file, "/net") || strstr(iso_file, ".ntfs[")) ; else
-	if(fix_aborted || cellFsStat(iso_file, &buf) != CELL_FS_SUCCEEDED) return;
+	if(fix_aborted || (cellFsStat(iso_file, &buf) != CELL_FS_SUCCEEDED) || (c_firmware >= LATEST_CFW)) return;
 
 	int fd; char titleID[10], update_path[MAX_PATH_LEN];
 
@@ -445,6 +445,8 @@ exit_fix:
 static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 {
 	memset(titleID, 0, 10);
+
+	if(c_firmware >= LATEST_CFW) return;
 
 	if(file_exists(game_path) || islike(game_path, "/net") || strstr(game_path, ".ntfs["))
 	{

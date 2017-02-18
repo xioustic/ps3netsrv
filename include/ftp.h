@@ -26,7 +26,7 @@
 
 static u8 ftp_active = 0;
 
-#define FTP_RECV_SIZE  (MAX_PATH_LEN + 20)
+#define FTP_RECV_SIZE  (STD_PATH_LEN + 20)
 
 #define FTP_FILE_UNAVAILABLE    -4
 
@@ -113,10 +113,10 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	u8 dataactive = 0;			// prevent the data connection from being closed at the end of the loop
 	u8 loggedin = 0;			// whether the user is logged in or not
 
-	char cwd[MAX_PATH_LEN];	// Current Working Directory
+	char cwd[STD_PATH_LEN];	// Current Working Directory
 	int rest = 0;			// for resuming file transfers
 
-	char cmd[16], param[MAX_PATH_LEN], filename[MAX_PATH_LEN], source[MAX_PATH_LEN]; // used as source parameter in RNFR and COPY commands
+	char cmd[16], param[STD_PATH_LEN], filename[STD_PATH_LEN], source[STD_PATH_LEN]; // used as source parameter in RNFR and COPY commands
 	char *cpursx = filename, *tempcwd = filename, *d_path = param, *pasv_output = param;
 	struct CellFsStat buf;
 	int fd, pos;
@@ -156,7 +156,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 			is_ntfs = false;
 
-			int split = ssplit(buffer, cmd, 15, param, MAX_PATH_LEN - 1);
+			int split = ssplit(buffer, cmd, 15, param, STD_PATH_LEN - 1);
 
 			if(!working || _IS(cmd, "QUIT") || _IS(cmd, "BYE"))
 			{
@@ -313,7 +313,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				{
 					if(split)
 					{
-						split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN - 1);
+						split = ssplit(param, cmd, 10, filename, STD_PATH_LEN - 1);
 
 						if(_IS(cmd, "HELP"))
 						{
@@ -463,7 +463,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						else
 						if(_IS(cmd, "CHMOD"))
 						{
-							split = ssplit(param, cmd, 10, filename, MAX_PATH_LEN - 1);
+							split = ssplit(param, cmd, 10, filename, STD_PATH_LEN - 1);
 
 							strcpy(param, filename); absPath(filename, param, cwd);
 
@@ -556,7 +556,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					if(data_s >= 0)
 					{
 						// --- get d_path & wildcard ---
-						char *pw, *ps, wcard[MAX_PATH_LEN]; *wcard = NULL;
+						char *pw, *ps, wcard[STD_PATH_LEN]; *wcard = NULL;
 
 						pw = strchr(param, '*'); if(pw) {ps = strrchr(param, '/'); if((ps > param) && (ps < pw)) pw = ps; while(*pw == '*' || *pw == '/') *pw++ = 0; strcpy(wcard, pw); pw = strstr(wcard, "*"); if(pw) *pw = 0; if(!*wcard && !ps) strcpy(wcard, param);}
 
