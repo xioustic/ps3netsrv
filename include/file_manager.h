@@ -376,7 +376,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 {
 	int tlen = 0;
 
-	char *swap = malloc(MAX_PATH_LEN), *templn = malloc(MAX_PATH_LEN), *url = malloc(MAX_PATH_LEN), *slash, *buffer = pbuffer;
+	char swap[MAX_PATH_LEN], templn[MAX_PATH_LEN], url[MAX_PATH_LEN], *slash, *buffer = pbuffer;
 
 	sprintf(templn, "%s", param);
 
@@ -409,7 +409,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	{
 		tlen = strlen(param) - 4; if(tlen < 0) tlen = 0;
 
-		char *label = malloc(_MAX_PATH_LEN);
+		char label[_MAX_PATH_LEN];
 		urlenc(url, param); if(islike(param, "/net")) htmlenc(label, templn, 0); else strcpy(label, templn);
 
 #ifdef USE_NTFS
@@ -429,17 +429,11 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 						islike(param, "/dev_hdd0/GAMES/covers") ? "" :
 						((isDir(param) || strcasestr(ISO_EXTENSIONS, param + tlen) != NULL) || (strstr(param, "/GAME") != NULL) || (strstr(param, ".ntfs[") != NULL) || (strstr(param, "/GAME") != NULL) || islike(param, "/net") || !extcmp(param + MAX(tlen - 4, 0), ".BIN.ENC", 8)) ? "/mount.ps3" :
 						"", url, label);
-
-		free(label);
 	}
 
 	// add code to buffer
 
 	strcat(buffer, swap);
-
-	free(url);
-	free(swap);
-	free(templn);
 }
 
 static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, int8_t sort_by, int8_t sort_order, char *file_query)

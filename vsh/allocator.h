@@ -14,10 +14,10 @@ extern void *allocator_6137D196(size_t alignment, size_t size);  // memalign()
 // allocator_6997B837  // ?
 
 extern void *allocator_759E0635(size_t size);  // malloc()
-#define malloc allocator_759E0635
+//#define malloc allocator_759E0635
 
 extern void allocator_77A602DD(void *ptr);  // free()
-#define free allocator_77A602DD
+//#define free allocator_77A602DD
 
 // allocator_799473AE  // ?
 // allocator_79EADF05  // malloc_usable_size
@@ -41,4 +41,4 @@ extern void *allocator_F7A14A22(void *ptr, size_t size);  // realloc()
 #define realloc allocator_F7A14A22
 
 
-#endif // __ALLOCATOR_H__ 
+#endif // __ALLOCATOR_H__

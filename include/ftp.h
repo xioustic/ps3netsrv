@@ -123,7 +123,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	bool is_ntfs = false;
 
-	char *buffer = malloc(FTP_RECV_SIZE);
+	char buffer[FTP_RECV_SIZE];
 
 #ifdef USE_NTFS
 	struct stat bufn;
@@ -346,7 +346,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						if(_IS(cmd, "RESTART") || _IS(cmd, "REBOOT") || _IS(cmd, "SHUTDOWN"))
 						{
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
-							free(buffer);
 							if(sysmem) sys_memory_free(sysmem);
 							working = 0;
 							{ DELETE_TURNOFF }
@@ -765,11 +764,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(islike(filename, "/dvd_bdvd"))
 								{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
 
-							sys_memory_container_t mc_app = NULL;
-
 							if(ftp_active > 1)
 							{
-								mc_app = get_app_memory_container();
+								sys_memory_container_t mc_app = get_app_memory_container();
 								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
 							}
 
@@ -876,11 +873,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 							int err = FAILED, is_append = _IS(cmd, "APPE");
 
-							sys_memory_container_t mc_app = NULL;
-
 							if(!sysmem && ftp_active > 1)
 							{
-								mc_app = get_app_memory_container();
+								sys_memory_container_t mc_app = get_app_memory_container();
 								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
 							}
 
@@ -1249,7 +1244,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 		sys_ppu_thread_usleep(1668);
 	}
 
-	free(buffer);
 	if(sysmem) sys_memory_free(sysmem);
 
 	if(pasv_s >= 0) sclose(&pasv_s);

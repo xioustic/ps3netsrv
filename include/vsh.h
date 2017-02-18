@@ -75,13 +75,12 @@ static int get_game_info(void)
 
 	if(h)
 	{
-		char *_game_info = malloc(0x120);
+		char _game_info[0x120];
 		game_interface = (game_plugin_interface *)plugin_GetInterface(h, 1);
 		game_interface->gameInfo(_game_info);
 
 		snprintf(_game_TitleID, 10, "%s", _game_info+0x04);
 		snprintf(_game_Title,   63, "%s", _game_info+0x14);
-		free(_game_info);
 	}
 
 	return h;

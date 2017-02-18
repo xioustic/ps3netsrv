@@ -10,8 +10,11 @@ static void calc_md5(char *filename, char *md5)
 
 	sys_addr_t sysmem = NULL; size_t buffer_size = _256KB_;
 
-	sys_memory_container_t mc_app = get_app_memory_container();
-	if(mc_app)	sys_memory_allocate_from_container(buffer_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
+	if(!webman_config->mc_app)
+	{
+		sys_memory_container_t mc_app = get_app_memory_container();
+		if(mc_app)	sys_memory_allocate_from_container(buffer_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
+	}
 
 	if(!sysmem) buffer_size = _128KB_;
 

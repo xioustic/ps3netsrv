@@ -230,7 +230,6 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define THREAD_STACK_SIZE_8KB		0x02000UL
 #define THREAD_STACK_SIZE_16KB		0x04000UL
 #define THREAD_STACK_SIZE_32KB		0x08000UL
-#define THREAD_STACK_SIZE_40KB		0x0A000UL
 #define THREAD_STACK_SIZE_64KB		0x10000UL
 #define THREAD_STACK_SIZE_128KB		0x20000UL
 
@@ -829,7 +828,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 	}
 	else
 	{
-		char *templn = malloc(_2KB_);
+		char templn[_2KB_];
 
 		if(*msg == '/')
 			{sprintf(templn, "%s : OK", msg+1); show_msg(templn);}
@@ -873,8 +872,6 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
 								(code == CODE_RETURN_TO_ROOT) ? CODE_HTTP_OK : code, url, HTTP_RESPONSE_TITLE_LEN + strlen(templn), HTML_BODY, HTML_RESPONSE_TITLE, templn);
-
-		free(templn);
 	}
 
 	send(conn_s, header, slen, 0);
@@ -1050,7 +1047,6 @@ static void handleclient(u64 conn_s_p)
 
 	size_t header_len;
 	sys_addr_t sysmem = NULL;
-	sys_memory_container_t mc_app = NULL;
 
 	bool is_ntfs = false;
 	char param[HTML_RECV_SIZE];
@@ -1584,7 +1580,7 @@ parse_request:
 
 				pkg_delete_after_install = (param[8] == '.');
 
-				char *msg = malloc(MAX_LINE_LEN); memset(msg, 0, MAX_LINE_LEN);
+				char msg[MAX_LINE_LEN]; memset(msg, 0, MAX_LINE_LEN);
 
 				setPluginActive();
 
@@ -1597,7 +1593,7 @@ parse_request:
 					if(!mc) http_response(conn_s, header, param, (ret == FAILED) ? CODE_BAD_REQUEST : CODE_INSTALL_PKG, msg);
 				}
 
-				show_msg(msg); free(msg);
+				show_msg(msg);
 
 				if(pkg_delete_after_install || do_restart)
 				{
@@ -1852,7 +1848,7 @@ parse_request:
 					while((klic_polling == KL_AUTO) && IS_ON_XMB && working) sys_ppu_thread_usleep(500000);
 				}
 
-				char *kl = malloc(0x120), *prev = malloc(0x200), *buffer = malloc(0x200); memset(kl, 0, 120);
+				char kl[0x120], prev[0x200], buffer[0x200]; memset(kl, 0, 120);
 
 				if(IS_INGAME)
 				{
@@ -1909,10 +1905,6 @@ parse_request:
 						klic_polling = KL_OFF;
 					}
 				}
-
-				free(kl);
-				free(prev);
-				free(buffer);
 
 				goto exit_handleclient;
 			}
@@ -2648,7 +2640,7 @@ parse_request:
 			{
 				if(!small_alloc || islike(param, "/index.ps3"))
 				{
-					mc_app = get_app_memory_container();
+					sys_memory_container_t mc_app = get_app_memory_container();
 					if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _3MB_; else
 					if(mc_app && sys_memory_allocate_from_container(_2MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _2MB_; else
 					if(mc_app && sys_memory_allocate_from_container(_1MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _1MB_;
@@ -2970,15 +2962,13 @@ parse_request:
 
 						refresh_xml(templn);
  #ifndef ENGLISH_ONLY
-						char *STR_XMLRF = malloc(280);
+						char STR_XMLRF[280];
 
 						sprintf(STR_XMLRF, "Game list refreshed (<a href=\"%s\">mygames.xml</a>).%s", MY_GAMES_XML, "<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.");
 
 						language("STR_XMLRF", STR_XMLRF, STR_XMLRF);
 						language("/CLOSEFILE", NULL, NULL);
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
-
-						free(STR_XMLRF);
  #else
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
  #endif
@@ -3347,9 +3337,9 @@ parse_request:
 							}
 						}
 
-						if(sysmem) sys_memory_free(sysmem);
-
 						if(game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount)) auto_play(param);
+
+						if(sysmem) sys_memory_free(sysmem);
 
 						goto exit_handleclient;
 					}
@@ -3469,6 +3459,7 @@ send_response:
 exit_handleclient:
 
 	if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
+
 	if(mc) goto parse_request;
 
 	#ifdef USE_DEBUG
@@ -3553,7 +3544,7 @@ static void wwwd_thread(uint64_t arg)
 		sys_ppu_thread_create(&thread_id_ftpd, ftpd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTP); // start ftp daemon immediately
 
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_40KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_64KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
 
 #ifdef PS3NET_SERVER
 	if(!webman_config->netsrvd)
@@ -3644,7 +3635,7 @@ relisten:
 
 				sys_ppu_thread_t t_id;
 
-				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_40KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 				else {sclose(&conn_s); break;}
 			}
 			else

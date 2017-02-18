@@ -162,7 +162,7 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 	bool ret = false;
 
 	memset(titleID, 0, 10);
-	char *paramsfo = malloc(_4KB_); unsigned char *mem = (u8*)paramsfo;
+	char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
 
 	uint64_t sfo_size = read_file(filename, paramsfo, _4KB_, 0);
 
@@ -182,7 +182,6 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 		}
 	}
 
-	free(paramsfo);
 	return ret;
 }
 
@@ -309,7 +308,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 	if(cellFsOpen(iso_file, CELL_FS_O_RDWR, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		uint64_t chunk_size=_4KB_; char *chunk = malloc(chunk_size); u64 ps3_sys_version;
+		uint64_t chunk_size=_4KB_; char chunk[chunk_size]; u64 ps3_sys_version;
 		uint64_t bytes_read = 0, lba = 0, pos=0xA000ULL;
 
 		bool fix_sfo = true, fix_eboot = true, fix_ver = false;
@@ -427,7 +426,6 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 			sys_ppu_thread_usleep(1000);
 		}
 exit_fix:
-		free(chunk);
 		cellFsClose(fd);
 	}
 	else
@@ -472,7 +470,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 			if(file_exists(filename) == false) sprintf(filename, "%s/PS3_GAME/PARAM.SFO", game_path);
 			if(file_exists(filename) == false) {wait_for("/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
 
-			char *paramsfo = malloc(_4KB_); unsigned char *mem = (u8*)paramsfo;
+			char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
 			uint64_t bytes_read = 0;
 
 			bytes_read = read_file(filename, paramsfo, _4KB_, 0);
@@ -530,7 +528,6 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 					}
 				}
 			}
-			free(paramsfo);
 			// ----
 
 		}

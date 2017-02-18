@@ -499,10 +499,13 @@ static void start_VSH_Menu(void)
 
 	int32_t ret, mem_size;
 
-	// create VSH Menu heap memory from memory container 1("app")
+	uint64_t gamelist_size = file_exists(WMTMP "/slaunch.bin");
+
 //	mem_size = (((CANVAS_W * CANVAS_H * 4) + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4)*2 + ((MAX_GAMES+1)*sizeof(_slaunch))) + MB(1)) / MB(1);
-	mem_size = (((CANVAS_W * CANVAS_H * 4) + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4)   + ((MAX_GAMES+1)*sizeof(_slaunch))) + MB(1)) / MB(1);
-	ret = create_heap(mem_size); //11MB
+	mem_size = ((CANVAS_W * CANVAS_H * 4) + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4)   + (gamelist_size) + MB(1)) / MB(1);
+
+	// create VSH Menu heap memory from memory container 1("app")
+	ret = create_heap(mem_size);
 
 	if(ret) {rsx_fifo_pause(0); return;}
 
@@ -698,7 +701,7 @@ static void slaunch_thread(uint64_t arg)
 ***********************************************************************/
 int32_t slaunch_start(uint64_t arg)
 {
-	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, 0, 3000, 0x2000, 1, THREAD_NAME);
+	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, 0, 3000, 0x3000, 1, THREAD_NAME);
 
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_RESIDENT;

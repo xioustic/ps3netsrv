@@ -252,7 +252,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			// -----------------
 			char *filename = strrchr(_path, '/'), *icon = tempstr;
 			{
-				char *buf = malloc(_4KB_);
+				char buf[_4KB_];
 				char tempID[10], *d_name; *icon = *tempID = NULL;
 				u8 f0 = strstr(filename, ".ntfs[") ? NTFS : 0, f1 = strstr(_path, "PS2") ? 5 : strstr(_path, "PSX") ? 6 : strstr(_path, "PSP") ? 8 : 2, is_dir = isDir(source);
 
@@ -275,7 +275,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif
 				default_icon = get_default_icon(icon, _path, d_name, is_dir, tempID, NONE, 0, f0, f1);
 
-				*filename = '/'; free(buf);
+				*filename = '/';
 			}
 
 			urlenc(enc_dir_name, icon);
@@ -1681,7 +1681,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 					if(!extcasecmp(_path, ".cue", 4))
 					{
-						char *cue_buf = malloc(_2KB_);
+						char cue_buf[_2KB_];
 						int cue_size = read_file(_path, cue_buf, _2KB_, 0);
 						if(cue_size > 13)
 						{
@@ -1714,8 +1714,6 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 							cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
 							mount_iso = false;
 						}
-
-						free(cue_buf);
 					}
 
 					if(mount_iso)

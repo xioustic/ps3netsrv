@@ -276,7 +276,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	}
 
 	set_buffer_sizes(webman_config->foot);
-	sys_addr_t sysmem = 0;
+	sys_addr_t sysmem = NULL;
 
 #ifdef USE_VM
 	if(sys_vm_memory_map(_32MB_, _1MB_, SYS_MEMORY_CONTAINER_ID_INVALID, SYS_MEMORY_PAGE_SIZE_64K, SYS_VM_POLICY_AUTO_RECOMMENDED, &sysmem) != CELL_OK)
@@ -284,8 +284,12 @@ static bool update_mygames_xml(u64 conn_s_p)
 		return false;  //leave if cannot allocate memory
 	}
 #else
-	sys_memory_container_t	mc_app = 0;
-	mc_app = get_app_memory_container();
+	if(!webman_config->mc_app)
+	{
+		sys_memory_container_t mc_app = get_app_memory_container();
+		if(mc_app) sys_memory_allocate_from_container(BUFFER_SIZE_ALL, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem);
+	}
+
 	if(!sysmem)
 	{
 		_meminfo meminfo;
