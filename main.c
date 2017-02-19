@@ -2234,11 +2234,11 @@ parse_request:
 				// quit.ps3        Stops webMAN and sets fan to fixed speed specified in PS2 mode
 				// quit.ps3?0      Stops webMAN and sets fan to syscon mode
 
-				http_response(conn_s, header, param, CODE_HTTP_OK, param);
  #ifdef LOAD_PRX
  quit:
  #endif
-				sclose(&conn_s);
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
+
 				if(sysmem) sys_memory_free(sysmem);
 
 				restore_settings(!webman_config->fanc || (webman_config->ps2temp < 33) || strstr(param, "?0"));
@@ -2268,7 +2268,7 @@ parse_request:
 				else
 					{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
 
-				goto exit_handleclient;
+				sys_ppu_thread_exit(0);
 			}
 			if(islike(param, "/rebuild.ps3"))
 			{
@@ -3346,7 +3346,7 @@ parse_request:
 							}
 						}
 
-						if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
+						if(sysmem) {sys_memory_free(sysmem); sysmem = NULL;}
 
 						if(game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount)) auto_play(param);
 
@@ -3467,7 +3467,7 @@ send_response:
 
 exit_handleclient:
 
-	if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
+	if(sysmem) {sys_memory_free(sysmem); sysmem = NULL;}
 
 	if(mc) goto parse_request;
 

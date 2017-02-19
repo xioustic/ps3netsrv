@@ -761,7 +761,7 @@ next_xml_entry:
 
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-				if(data2) sys_memory_free(data2);
+				if(data2) {sys_memory_free((sys_addr_t)data2); data2 = NULL;}
  #endif
 #endif
 			}

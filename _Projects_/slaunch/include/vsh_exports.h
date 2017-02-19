@@ -55,6 +55,8 @@
 #include "pngdec_ppuonly.h"
 #include "sys_io.h"
 #include "xregistry.h"
+#include "webbrowser_plugin.h"
+#include "xmb_plugin.h"
 
 //#include "vshcommon.h"
 //#include "vshnet.h"

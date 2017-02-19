@@ -28,13 +28,9 @@ static void calc_md5(char *filename, char *md5)
 
 			uint8_t *buf = (uint8_t *)sysmem;
 
-			for( ; ; )
+			for(uint64_t nread; nread > 0; )
 			{
-				uint64_t nread;
-
 				cellFsRead(fd, buf, buffer_size, &nread);
-
-				if (nread == 0) break;
 
 				cellMd5BlockUpdate(&workarea, buf, nread);
 			}

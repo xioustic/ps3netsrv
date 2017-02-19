@@ -47,7 +47,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t dump_size)
 			}
 			cellFsClose(fd);
 		}
-		sys_memory_free((sys_addr_t)sys_mem);
+		sys_memory_free(sys_mem);
 		show_msg((char*)"Memory dump completed!");
 	}
 

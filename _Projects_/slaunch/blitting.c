@@ -375,6 +375,7 @@ void init_graphic()
 	ctx.menu	   = mem_alloc(CANVAS_W * 96 * 4);			// info bar
 	ctx.font_cache = mem_alloc(FONT_CACHE_MAX * 32 * 32);	// glyph bitmap cache
 	ctx.imgs	   = mem_alloc(MAX_WH4);					// images (actually just 1 image with max 384x384 resolution)
+	ctx.side	   = mem_alloc(SM_M);						// side menu
 	ctx.bg_color   = 0xFF000000;							// black, opaque
 	ctx.fg_color   = 0xFFFFFFFF;							// white, opaque
 
@@ -411,8 +412,30 @@ int32_t load_img_bitmap(int32_t idx, const char *path)
 	{
 		ctx.img[idx].w=260;
 		ctx.img[idx].h=300;
-		memset(ctx.img[idx].addr, 0x80808080, 260 * 300 * 4);
+		memset(buf, 0x80808080, 260 * 300 * 4);
 	}
+
+	if(ctx.img[idx].w<=(MAX_W/2) && ctx.img[idx].h<=(MAX_H/2))
+	{
+		//upscale x2
+		uint32_t tw=2*ctx.img[idx].w;
+		uint32_t pixel;
+
+		for( int32_t y=ctx.img[idx].h-1; y>=0; y--)
+		for(uint32_t x=0; x<ctx.img[idx].w; x++)
+		{
+			pixel=buf[x+(y*ctx.img[idx].w)];
+
+			buf[x*2   + y*2    *tw]=pixel;
+			buf[x*2+1 + y*2    *tw]=pixel;
+			buf[x*2   + (y*2+1)*tw]=pixel;
+			buf[x*2+1 + (y*2+1)*tw]=pixel;
+		}
+
+		ctx.img[idx].w<<=1;
+		ctx.img[idx].h<<=1;
+	}
+
 	return 0;
 }
 
@@ -454,15 +477,14 @@ void flip_frame(uint64_t *canvas)
 				 canvas[k + i * CANVAS_WW];
 }
 
-
-void set_texture_direct(uint32_t *texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t width2)
+void set_texture_direct(uint32_t *texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
-	uint32_t i, k, _width = width/2, _width2 = width2/2;
+	uint32_t i, k, _width = width/2;
 	uint64_t *canvas = (uint64_t*)texture;
 	for(i = 0; i < height; i++)
 		for(k = 0; k < _width; k++)
 			*(uint64_t*)(OFFSET(k*2+x, (i+y))) =
-				 canvas[k + i * _width2];
+				 canvas[k + i * _width];
 }
 
 void set_texture(uint8_t idx, uint32_t x, uint32_t y)
@@ -595,13 +617,13 @@ void set_font(float_t font_w, float_t font_h, float_t weight, int32_t distance)
 * int32_t y       = start y coordinate into canvas
 * const char *str = string to print
 ***********************************************************************/
-int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str)
+int32_t print_text(uint32_t *texture, uint32_t text_width, uint32_t x, uint32_t y, const char *str)
 {
 	uint32_t *canvas = texture;
-	int32_t i, k, len = 0;
+	uint32_t i, k, len = 0;
 	uint32_t code = 0;                                              // char unicode
-	int32_t t_x = x, t_y = y;                                       // temp x/y
-	int32_t o_x = x, o_y = y + bitmap->horizontal_layout.baseLineY; // origin x/y
+	uint32_t t_x = x, t_y = y;                                       // temp x/y
+	uint32_t o_x = x, o_y = y + bitmap->horizontal_layout.baseLineY; // origin x/y
 	Glyph *glyph;                                                   // char glyph
 	uint8_t *utf8 = (uint8_t*)str;
 
@@ -635,7 +657,7 @@ int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str)
 		{
 		  break;
 		}
-		else if((code == '\n') && (x != CENTER_TEXT))
+		else if((code == '^') || ((code == '\n') && (x != CENTER_TEXT)))
 		{
 			o_x = x;
 			o_y += bitmap->horizontal_layout.lineHeight;
@@ -653,16 +675,13 @@ int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str)
 			// draw bitmap
 			for(i = 0; i < glyph->h; i++)
 			  for(k = 0; k < glyph->w; k++)
-				if((glyph->image[i * glyph->w + k]) && (t_x + k < CANVAS_W) && (t_y + i < CANVAS_H))
+			    if((glyph->image[i * glyph->w + k]) && (t_x + k < text_width) && (t_y + i < CANVAS_H))
 				{
-						if(ISHD(w))
-							canvas[(t_y + i + 1) * CANVAS_W + t_x + k + 1] = 0;
-						else
-							canvas[(t_y + i + 1) * CANVAS_W + t_x + k + 1] = 0xff333333;
-						canvas[(t_y + i) * CANVAS_W + t_x + k] =
-						mix_color(canvas[(t_y + i) * CANVAS_W + t_x + k],
-						         ((uint32_t)glyph->image[i * glyph->w + k] <<24) |
-						         (ctx.fg_color & 0x00FFFFFF));
+					canvas[(t_y + i + 1) * text_width + t_x + k + 1] = (w==1920 ? 0 : 0xff333333);
+					canvas[(t_y + i) * text_width + t_x + k] =
+					mix_color(canvas[(t_y + i) * text_width + t_x + k],
+							 ((uint32_t)glyph->image[i * glyph->w + k] <<24) |
+							 (ctx.fg_color & 0x00FFFFFF));
 				}
 
 			// get origin-x for next char

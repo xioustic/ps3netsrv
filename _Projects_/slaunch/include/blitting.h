@@ -22,12 +22,17 @@
 
 #define ISHD(a)       (a == 1920)
 
+#define SM_X			1504			// side menu X offset
+#define SM_Y			90				// side menu Y offset for text
+#define SM_M			((CANVAS_W-SM_X) * CANVAS_H * 4)
+#define SM_TO			88				// side menu text offset
+
 #define IMG_MAX			 11             // bg + 10 image slots
 #define MAX_W			336
 #define MAX_H			336
 #define MAX_WH4			(MAX_W * MAX_H * 4)
 
-#define CENTER_TEXT  -1
+#define CENTER_TEXT  0
 
 
 // get pixel offset into framebuffer by x/y coordinates
@@ -87,6 +92,7 @@ typedef struct _DrawCtx {
 	uint32_t *canvas;             // addr of canvas
 	uint32_t *menu;               // addr of bottom menu stip
 	uint32_t *imgs;               // addr of images
+	uint32_t *side;				  // side menu
 	uint32_t *font_cache;         // addr of glyph bitmap cache buffer
 	CellFont font;
 	CellFontRenderer renderer;
@@ -108,9 +114,9 @@ void set_background_color(uint32_t color);
 void set_foreground_color(uint32_t color);
 void set_font(float_t font_w, float_t font_h, float_t weight, int32_t distance);
 void draw_background(void);
-int32_t print_text(uint32_t *texture, int32_t x, int32_t y, const char *str);
+int32_t print_text(uint32_t *texture, uint32_t text_width, uint32_t x, uint32_t y, const char *str);
 int32_t draw_png(int32_t idx, int32_t c_x, int32_t c_y, int32_t p_x, int32_t p_y, int32_t w, int32_t h);
-void set_texture_direct(uint32_t *texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t width2);
+void set_texture_direct(uint32_t *texture, uint32_t x, uint32_t y, uint32_t width, uint32_t height);
 void set_texture(uint8_t idx, uint32_t x, uint32_t y);
 void set_backdrop(uint8_t idx, uint8_t restore);
 void set_frame(uint8_t idx, uint64_t color);

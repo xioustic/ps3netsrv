@@ -106,8 +106,8 @@ static void saveBMP(char *path, bool notify_bmp)
 	// max frame line size = 1920 pixel * 4(byte per pixel) = 7680 byte = 8 KB
 	// max bmp buffer size = 1920 pixel * 3(byte per pixel) = 5760 byte = 6 KB
 
-	sys_addr_t sys_mem = NULL;
-	if(sys_memory_allocate_from_container(mem_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem) != CELL_OK) return;
+	sys_addr_t sysmem = NULL;
+	if(sys_memory_allocate_from_container(mem_size, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK) return;
 
 	{ BEEP2 }
 
@@ -120,8 +120,8 @@ static void saveBMP(char *path, bool notify_bmp)
 	uint32_t line_frame_size = w * 4;
 
 	// alloc buffers
-	uint64_t *line_frame = (uint64_t*)sys_mem;
-	uint8_t *bmp_buf = (uint8_t*)sys_mem + line_frame_size; // start offset: 8 KB
+	uint64_t *line_frame = (uint64_t*)sysmem;
+	uint8_t *bmp_buf = (uint8_t*)sysmem + line_frame_size; // start offset: 8 KB
 
 
 	// set bmp header
@@ -171,7 +171,7 @@ static void saveBMP(char *path, bool notify_bmp)
 	cellFsLseek(fd, pad, CELL_FS_SEEK_SET, 0);
 
 	cellFsClose(fd);
-	sys_memory_free((sys_addr_t)sys_mem);
+	sys_memory_free((sys_addr_t)sysmem);
 
 	// continue rsx rendering
 	rsx_fifo_pause(0);

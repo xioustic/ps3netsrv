@@ -143,7 +143,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 				cellFsUnlink(TEMP_NET_PSXISO);
 			}
 
-			sys_memory_free(sysmem);
+			sys_memory_free((sys_addr_t)sysmem);
 		}
 	}
 
@@ -360,7 +360,7 @@ static void netiso_thread(uint64_t arg)
 	int emu_mode, num_tracks;
 	unsigned int cd_sector_size_param = 0;
 
-	args = (netiso_args *)(uint32_t)arg;
+	args = (netiso_args *)(uint32_t)arg; if(!args) sys_ppu_thread_exit(0);
 
 	emu_mode = args->emu_mode & 0xF;
 
@@ -375,8 +375,7 @@ static void netiso_thread(uint64_t arg)
 
 	if(g_socket < 0)
 	{
-		sys_memory_free((sys_addr_t)args);
-		sys_ppu_thread_exit(0);
+		goto exit_netiso;
 	}
 
 	int ret = emu_mode;
@@ -384,8 +383,7 @@ static void netiso_thread(uint64_t arg)
 	ret64 = open_remote_file(g_socket, args->path, &ret);
 	if(ret64 < 0)
 	{
-		sys_memory_free((sys_addr_t)args);
-		sys_ppu_thread_exit(0);
+		goto exit_netiso;
 	}
 
 	discsize = (uint64_t)ret64;
@@ -394,8 +392,7 @@ static void netiso_thread(uint64_t arg)
 	if(ret != 0)
 	{
 		//DPRINTF("sys_event_port_create failed: %x\n", ret);
-		sys_memory_free((sys_addr_t)args);
-		sys_ppu_thread_exit(ret);
+		goto exit_netiso;
 	}
 
 	sys_event_queue_attribute_initialize(queue_attr);
@@ -403,8 +400,7 @@ static void netiso_thread(uint64_t arg)
 	if(ret != 0)
 	{
 		//DPRINTF("sys_event_queue_create failed: %x\n", ret);
-		sys_memory_free((sys_addr_t)args);
-		sys_ppu_thread_exit(ret);
+		goto exit_netiso;
 	}
 
 	if(emu_mode == EMU_PSX)
@@ -423,7 +419,7 @@ static void netiso_thread(uint64_t arg)
 		is_cd2352 = 0;
 	}
 
-	sys_memory_free((sys_addr_t)args);
+	sys_memory_free((sys_addr_t)args); args = NULL;
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
 	if(real_disctype != 0)
@@ -508,6 +504,10 @@ static void netiso_thread(uint64_t arg)
 		//DPRINTF("sys_event_port_send failed: %x\n", ret);
 		if(ret != 0) break;
 	}
+
+exit_netiso:
+
+	if(args) sys_memory_free((sys_addr_t)args);
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 	fake_eject_event(BDVD_DRIVE);
@@ -693,7 +693,7 @@ static int read_remote_dir(int s, sys_addr_t *data /*netiso_read_dir_result_data
 
 				if(recv(s, data2, len, MSG_WAITALL) != len)
 				{
-					sys_memory_free(data1);
+					sys_memory_free((sys_addr_t)data1);
 					*data = NULL;
 					return FAILED;
 				}

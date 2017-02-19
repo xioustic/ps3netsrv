@@ -920,7 +920,7 @@ static void rawseciso_thread(uint64_t arg)
 
 	int ret = 0; cd_sector_size_param = 0;
 
-	args = (rawseciso_args *)(uint32_t)arg;
+	args = (rawseciso_args *)(uint32_t)arg; if(!args) sys_ppu_thread_exit(ret);
 
 	//DPRINTF("Hello VSH\n");
 
