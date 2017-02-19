@@ -225,13 +225,35 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define THREAD_PRIO_FTP			-0x10
 #define THREAD_PRIO_NET			-0x1d8
 #define THREAD_PRIO_STOP		 0x000
-#define THREAD_PRIO_XML			2900
+#define THREAD_PRIO_HIGH		 2900
 
 #define THREAD_STACK_SIZE_8KB		0x02000UL
 #define THREAD_STACK_SIZE_16KB		0x04000UL
 #define THREAD_STACK_SIZE_32KB		0x08000UL
 #define THREAD_STACK_SIZE_64KB		0x10000UL
 #define THREAD_STACK_SIZE_128KB		0x20000UL
+
+#define THREAD_STACK_SIZE_FTP_SERVER	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_FTP_CLIENT	THREAD_STACK_SIZE_16KB
+
+#define THREAD_STACK_SIZE_WEB_SERVER	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_WEB_CLIENT	THREAD_STACK_SIZE_32KB
+
+#define THREAD_STACK_SIZE_NET_SERVER	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_NET_CLIENT	THREAD_STACK_SIZE_32KB
+
+#define THREAD_STACK_SIZE_PS3MAPI_SVR	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_PS3MAPI_CLI	THREAD_STACK_SIZE_32KB
+
+#define THREAD_STACK_SIZE_NET_ISO		THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_NTFS_ISO		THREAD_STACK_SIZE_8KB
+
+#define THREAD_STACK_SIZE_STOP_THREAD	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_INSTALL_PKG	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_POLL_THREAD	THREAD_STACK_SIZE_32KB
+#define THREAD_STACK_SIZE_UPDATE_XML	THREAD_STACK_SIZE_128KB
+#define THREAD_STACK_SIZE_MOUNT_GAME	THREAD_STACK_SIZE_128KB
+
 
 #define SYS_PPU_THREAD_CREATE_NORMAL	0x000
 
@@ -828,50 +850,50 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 	}
 	else
 	{
-		char templn[_2KB_];
+		char body[_2KB_];
 
 		if(*msg == '/')
-			{sprintf(templn, "%s : OK", msg+1); show_msg(templn);}
+			{sprintf(body, "%s : OK", msg+1); show_msg(body);}
 		else if(islike(msg, "http"))
-			sprintf(templn, "<a style=\"%s\" href=\"%s\">%s</a>", HTML_URL_STYLE, msg, msg);
+			sprintf(body, "<a style=\"%s\" href=\"%s\">%s</a>", HTML_URL_STYLE, msg, msg);
 #ifdef PKG_HANDLER
 		else if(code == CODE_INSTALL_PKG || code == CODE_DOWNLOAD_FILE)
 		{
-			sprintf(templn, "<style>a{%s}</style>%s", HTML_URL_STYLE, (code == CODE_INSTALL_PKG) ? "Installing " : "");
+			sprintf(body, "<style>a{%s}</style>%s", HTML_URL_STYLE, (code == CODE_INSTALL_PKG) ? "Installing " : "");
 			char *p = strchr((char*)msg, '\n');
 			if(p)
 			{
 				*p = NULL;
-				if(code == CODE_INSTALL_PKG) add_breadcrumb_trail(templn, (char *)msg + 11); else strcat(templn, msg);
-				if(code == CODE_DOWNLOAD_FILE || extcasecmp(pkg_path, ".p3t", 4) != 0) strcat(templn, "<p>To: \0"); add_breadcrumb_trail(templn, p + 5);
+				if(code == CODE_INSTALL_PKG) add_breadcrumb_trail(body, (char *)msg + 11); else strcat(body, msg);
+				if(code == CODE_DOWNLOAD_FILE || extcasecmp(pkg_path, ".p3t", 4) != 0) strcat(body, "<p>To: \0"); add_breadcrumb_trail(body, p + 5);
 			}
 			else
-				strcat(templn, msg);
+				strcat(body, msg);
 
 			code = CODE_HTTP_OK;
 		}
 #endif
 		else
-			sprintf(templn, "%s", msg);
+			sprintf(body, "%s", msg);
 
-		//if(ISDIGIT(*msg) && ( (code == CODE_SERVER_BUSY || code == CODE_BAD_REQUEST) )) show_msg((char*)templn + 4);
+		//if(ISDIGIT(*msg) && ( (code == CODE_SERVER_BUSY || code == CODE_BAD_REQUEST) )) show_msg((char*)body + 4);
 
 #ifndef EMBED_JS
 		if(css_exists)
 		{
-			sprintf(header, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(templn, header);
+			sprintf(header, "<LINK href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", COMMON_CSS); strcat(body, header);
 		}
 		if(common_js_exists)
 		{
-			sprintf(header, SCRIPT_SRC_FMT, COMMON_SCRIPT_JS); strcat(templn, header);
+			sprintf(header, SCRIPT_SRC_FMT, COMMON_SCRIPT_JS); strcat(body, header);
 		}
 #endif
 
 		sprintf(header, "<hr>" HTML_BUTTON_FMT "%s",
-						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == CODE_RETURN_TO_ROOT) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(templn, header);
+						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == CODE_RETURN_TO_ROOT) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(body, header);
 
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
-								(code == CODE_RETURN_TO_ROOT) ? CODE_HTTP_OK : code, url, HTTP_RESPONSE_TITLE_LEN + strlen(templn), HTML_BODY, HTML_RESPONSE_TITLE, templn);
+								(code == CODE_RETURN_TO_ROOT) ? CODE_HTTP_OK : code, url, HTTP_RESPONSE_TITLE_LEN + strlen(body), HTML_BODY, HTML_RESPONSE_TITLE, body);
 	}
 
 	send(conn_s, header, slen, 0);
@@ -1124,7 +1146,7 @@ static void handleclient(u64 conn_s_p)
 #endif
 
 		sys_ppu_thread_t t_id;
-		sys_ppu_thread_create(&t_id, update_xml_thread, conn_s_p, THREAD_PRIO, THREAD_STACK_SIZE_128KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+		sys_ppu_thread_create(&t_id, update_xml_thread, conn_s_p, THREAD_PRIO, THREAD_STACK_SIZE_UPDATE_XML, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
 		if(conn_s_p == START_DAEMON)
 		{
@@ -2451,7 +2473,7 @@ parse_request:
 				||  islike(param, "/unloadprx.ps3")
  #endif
 				||  islike(param, "/eject.ps3")
-				||  islike(param, "/insert.ps3")) ;
+				||  islike(param, "/insert.ps3")) small_alloc = true;
 
 			else
 			{
@@ -2626,44 +2648,31 @@ parse_request:
 
 			u32 BUFFER_SIZE_HTML = _64KB_;
 
-			if(islike(param, "/cpursx.ps3") || show_info_popup)
-			{
-				if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK)
-				{
-					http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
-					goto exit_handleclient;
-				}
-
-				is_cpursx = 1;
-			}
+			if(show_info_popup || islike(param, "/cpursx.ps3")) is_cpursx = 1;
 			else
+			if(!small_alloc || islike(param, "/index.ps3"))
 			{
-				if(!small_alloc || islike(param, "/index.ps3"))
-				{
-					sys_memory_container_t mc_app = get_app_memory_container();
-					if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _3MB_; else
-					if(mc_app && sys_memory_allocate_from_container(_2MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _2MB_; else
-					if(mc_app && sys_memory_allocate_from_container(_1MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _1MB_;
-
-					if(!sysmem)
-					{
-						BUFFER_SIZE_HTML = get_buffer_size(webman_config->foot);
-
-						_meminfo meminfo;
-						{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
-
-						if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(3); //MIN+
-						if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
-					}
-				}
-
-				while((!sysmem) && (BUFFER_SIZE_HTML > 0) && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK) BUFFER_SIZE_HTML -= _64KB_;
+				sys_memory_container_t mc_app = get_app_memory_container();
+				if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _3MB_;
 
 				if(!sysmem)
 				{
-					http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
-					goto exit_handleclient;
+					BUFFER_SIZE_HTML = get_buffer_size(webman_config->foot);
+
+					_meminfo meminfo;
+					{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+
+					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(3); //MIN+
+					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
 				}
+			}
+
+			while((!sysmem) && (BUFFER_SIZE_HTML > 0) && sys_memory_allocate(BUFFER_SIZE_HTML, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK) BUFFER_SIZE_HTML -= _64KB_;
+
+			if(!sysmem)
+			{
+				http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
+				goto exit_handleclient;
 			}
 
 			char *buffer = (char*)sysmem;
@@ -3337,9 +3346,9 @@ parse_request:
 							}
 						}
 
-						if(game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount)) auto_play(param);
+						if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
 
-						if(sysmem) sys_memory_free(sysmem);
+						if(game_mount(pbuffer, templn, param, tempstr, mount_ps3, forced_mount)) auto_play(param);
 
 						goto exit_handleclient;
 					}
@@ -3541,19 +3550,19 @@ static void wwwd_thread(uint64_t arg)
 	set_buffer_sizes(webman_config->foot);
 
 	if(!webman_config->ftpd)
-		sys_ppu_thread_create(&thread_id_ftpd, ftpd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTP); // start ftp daemon immediately
+		sys_ppu_thread_create(&thread_id_ftpd, ftpd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_FTP_SERVER, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTP); // start ftp daemon immediately
 
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_64KB, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, (webman_config->ftpd ? SYS_PPU_THREAD_CREATE_NORMAL : SYS_PPU_THREAD_CREATE_JOINABLE), THREAD_NAME_CMD);
 
 #ifdef PS3NET_SERVER
 	if(!webman_config->netsrvd)
-		sys_ppu_thread_create(&thread_id_netsvr, netsvrd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NETSVR);
+		sys_ppu_thread_create(&thread_id_netsvr, netsvrd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_NET_SERVER, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NETSVR);
 #endif
 
 #ifdef PS3MAPI
 	///////////// PS3MAPI BEGIN //////////////
-	sys_ppu_thread_create(&thread_id_ps3mapi, ps3mapi_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_PS3MAPI);
+	sys_ppu_thread_create(&thread_id_ps3mapi, ps3mapi_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_PS3MAPI_SVR, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_PS3MAPI);
 	///////////// PS3MAPI END //////////////
 #endif
 
@@ -3578,7 +3587,7 @@ again_debug:
 		fan_control(webman_config->temp0, 0);
 	}
 
-	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_32KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
+	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_POLL_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
 
 	led(GREEN, ON);
 
@@ -3635,7 +3644,7 @@ relisten:
 
 				sys_ppu_thread_t t_id;
 
-				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+				if(working) sys_ppu_thread_create(&t_id, handleclient, (u64)conn_s, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 				else {sclose(&conn_s); break;}
 			}
 			else
@@ -3657,7 +3666,7 @@ int wwwd_start(size_t args, void *argp)
 {
 	cellRtcGetCurrentTick(&rTick); gTick = rTick;
 
-	sys_ppu_thread_create(&thread_id_wwwd, wwwd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_SVR);
+	sys_ppu_thread_create(&thread_id_wwwd, wwwd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_WEB_SERVER, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_SVR);
 #ifndef CCAPI
 	_sys_ppu_thread_exit(0); // remove for ccapi compatibility
 #endif
@@ -3684,11 +3693,11 @@ static void wwwd_stop_thread(uint64_t arg)
 	sys_ppu_thread_t t_id;
 
 	#ifndef LITE_EDITION
-	sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+	sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 	sys_ppu_thread_join(t_id, &exit_code);
 	#endif
 
-	sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+	sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 	sys_ppu_thread_join(t_id, &exit_code);
 
 	while(netiso_loaded || rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
@@ -3761,7 +3770,7 @@ static void unload_prx_module(void)
 int wwwd_stop(void)
 {
 	sys_ppu_thread_t t_id;
-	int ret = sys_ppu_thread_create(&t_id, wwwd_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+	int ret = sys_ppu_thread_create(&t_id, wwwd_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 
 	uint64_t exit_code;
 	if (ret == 0) sys_ppu_thread_join(t_id, &exit_code);

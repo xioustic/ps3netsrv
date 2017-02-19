@@ -224,9 +224,10 @@ static void poll_thread(uint64_t poll)
 		poll = webman_config->poll;
 		if((poll == 0) && (sec >= 120)) // check USB drives each 120 seconds
 		{
-			uint8_t tmp[2048], f0 = 0;
+			uint8_t f0 = 0;
 			uint32_t usb_handle = NONE, r;
 
+			char tmp[_2KB_];
 			for(u8 i = 0; i < 6; i++)
 			{
 				f0 = (u8)val(drives[i + 1] + 8);
@@ -237,6 +238,8 @@ static void poll_thread(uint64_t poll)
 					//sprintf(tmp, "/dev_usb00%i: Read %i sectors @ %i offset", f0, r, to); show_msg(tmp);
 				}
 			}
+
+
 			sec = 0;
 		}
 		sec += step;
@@ -283,7 +286,7 @@ static void poll_thread(uint64_t poll)
 		{
 			loading_html++;
 			sys_ppu_thread_t t_id;
-			if(working) sys_ppu_thread_create(&t_id, handleclient, WM_FILE_REQUEST, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+			if(working) sys_ppu_thread_create(&t_id, handleclient, WM_FILE_REQUEST, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 		}
 #endif
 

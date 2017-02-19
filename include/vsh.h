@@ -131,6 +131,8 @@ static void explore_close_all(const char *path)
 
 static void explore_exec_push(u32 usecs, u8 focus_first)
 {
+	if(IS_INGAME) return;
+
 	if(explore_interface)
 	{
 		sys_ppu_thread_usleep(usecs);
@@ -200,7 +202,7 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 
 			for(n = 0; n < timeout; n++)
 			{
-				if(abort_autoplay()) return;
+				if(abort_autoplay() || IS_INGAME) return;
 
 				if((n < icon_found) && file_exists("/dev_hdd0/tmp/game/ICON0.PNG")) n = icon_found;
 

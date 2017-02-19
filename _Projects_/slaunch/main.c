@@ -270,9 +270,6 @@ static void draw_page(uint32_t game_idx)
 	set_textbox(0xff808080ff808080, 0, 890, CANVAS_W, 2);
 	set_textbox(0xff808080ff808080, 0, 1000, CANVAS_W, 2);
 
-//	load_rco_texture(ctx.text, "system_plugin", "tex_notification_info");
-//	set_texture_direct(ctx.text, 1820, 980, 100, 100, CANVAS_W);
-
 	// draw game icons (5x2)
 	j=(game_idx/10)*10;
 	for(i=j;(slot<10&&i<games);i++)
@@ -281,11 +278,11 @@ static void draw_page(uint32_t game_idx)
 
 		if(file_exists(slaunch[i].icon)==false)
 		{
-			if(strstr(slaunch[i].path, "PSX"))	sprintf(slaunch[i].icon, wm_icons[1]); else
-			if(strstr(slaunch[i].path, "PS2"))	sprintf(slaunch[i].icon, wm_icons[2]); else
-			if(strstr(slaunch[i].path, "PSP"))	sprintf(slaunch[i].icon, wm_icons[3]); else
-			if(strstr(slaunch[i].path, "DVD"))	sprintf(slaunch[i].icon, wm_icons[4]); else
-												sprintf(slaunch[i].icon, wm_icons[0]);
+			if((slaunch[i] == TYPE_PS1) || strstr(slaunch[i].path, "PSX"))	sprintf(slaunch[i].icon, wm_icons[1]); else
+			if((slaunch[i] == TYPE_PS2) || strstr(slaunch[i].path, "PS2"))	sprintf(slaunch[i].icon, wm_icons[2]); else
+			if((slaunch[i] == TYPE_PSP) || strstr(slaunch[i].path, "PSP"))	sprintf(slaunch[i].icon, wm_icons[3]); else
+			if((slaunch[i] == TYPE_VID) || strstr(slaunch[i].path, "DVD"))	sprintf(slaunch[i].icon, wm_icons[4]); else
+																			sprintf(slaunch[i].icon, wm_icons[0]);
 		}
 
 		load_img_bitmap(slot, slaunch[i].icon);

@@ -1024,10 +1024,11 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #ifndef ENGLISH_ONLY
 		if(!use_custom_icon_path) *onerror_prefix = *onerror_suffix = NULL;
 #endif
-		char icon[MAX_PATH_LEN], enc_dir_name[1024], subpath[MAX_PATH_LEN];
+		char icon[STD_PATH_LEN], subpath[STD_PATH_LEN], enc_dir_name[STD_PATH_LEN*3];
 
 		// filter html content
-		u8 filter0, filter1, b0, b1; char filter_name[MAX_PATH_LEN]; *filter_name = NULL, filter0 = filter1 = b0 = b1 = 0;
+		char filter_name[STD_PATH_LEN]; *filter_name = NULL;
+		u8 filter0, filter1, b0, b1; filter0 = filter1 = b0 = b1 = 0;
 
 		u8 div_size = mobile_mode ? 0 : GAME_DIV_SIZE;
 
@@ -1192,7 +1193,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 1) == FAILED) {v3_entry++; continue;}
 
-						if(*filter_name >=' ' && strcasestr(templn, filter_name) == NULL && strcasestr(param, filter_name) == NULL && strcasestr(data[v3_entry].name, filter_name) == NULL) {v3_entry++; continue;}
+						if(*filter_name >=' '   && !strcasestr(templn, filter_name)
+												&& !strcasestr(param, filter_name)
+												&& !strcasestr(data[v3_entry].name, filter_name)) {v3_entry++; continue;}
 
 						if(urlenc(tempstr, icon)) sprintf(icon, "%s", tempstr);
 
@@ -1302,10 +1305,9 @@ next_html_entry:
 #endif
 							}
 
-							if(*filter_name >= ' ' && !strcasestr(templn, filter_name) &&
+							if(*filter_name >= ' '  &&  !strcasestr(templn, filter_name) &&
 														!strcasestr(param,  filter_name) &&
-														!strcasestr(entry.d_name, filter_name))
-							{if(subfolder) goto next_html_entry; else continue;}
+														!strcasestr(entry.d_name, filter_name)) {if(subfolder) goto next_html_entry; else continue;}
 
 							get_default_icon(icon, param, entry.d_name, !is_iso, tempID, ns, abort_connection, f0, f1);
 

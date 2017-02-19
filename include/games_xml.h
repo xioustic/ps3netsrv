@@ -13,6 +13,8 @@
 
 #define XML_KEY_LEN 7
 
+#define USE_MC      99
+
 typedef struct
 {
 	char value[12];
@@ -39,7 +41,7 @@ static void refresh_xml(char *msg)
 	show_msg(msg);
 
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO_XML, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
 	while(refreshing_xml && working) sys_ppu_thread_usleep(300000);
 
@@ -124,7 +126,7 @@ static void make_fb_xml(char *myxml, char *templn)
 
 static u32 get_buffer_size(uint8_t footprint)
 {
-	if((webman_config->mc_app == 0) && (footprint == 99)) //mc_app
+	if((webman_config->mc_app == 0) && (footprint == USE_MC)) //mc_app
 	{
 		return _3MB_;
 	}
@@ -162,7 +164,7 @@ static void set_buffer_sizes(uint8_t footprint)
 	BUFFER_SIZE_PS2	= (  _64KB_);
 	BUFFER_SIZE_DVD	= (  _64KB_);
 
-	if(footprint == 99) //mc_app
+	if(footprint == USE_MC) //mc_app
 	{
 		BUFFER_SIZE_FTP	= ( _256KB_);
 
@@ -269,13 +271,12 @@ static bool update_mygames_xml(u64 conn_s_p)
 		if(!webman_config->refr || file_exists(xml) == false)
 		{
 			sys_ppu_thread_t t_id;
-			sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+			sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 		}
 
 		return true; // mount autoboot & refresh xml
 	}
 
-	set_buffer_sizes(webman_config->foot);
 	sys_addr_t sysmem = NULL;
 
 #ifdef USE_VM
@@ -287,12 +288,14 @@ static bool update_mygames_xml(u64 conn_s_p)
 	if(!webman_config->mc_app)
 	{
 		sys_memory_container_t mc_app = get_app_memory_container();
-		if(mc_app) sys_memory_allocate_from_container(BUFFER_SIZE_ALL, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem);
+		if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) set_buffer_sizes(USE_MC);
 	}
 
 	if(!sysmem)
 	{
 		_meminfo meminfo;
+		set_buffer_sizes(webman_config->foot);
+
 		{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
 		if( meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) set_buffer_sizes(3); //MIN+
 		if (meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) set_buffer_sizes(1); //MIN
@@ -443,10 +446,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	int fd;
 	t_keys skey[max_xmb_items];
 
-	char *icon = malloc(STD_PATH_LEN);
-	char *param = malloc(STD_PATH_LEN);
-	char *subpath = malloc(STD_PATH_LEN);
-	char *enc_dir_name = malloc(1024);
+	char param[STD_PATH_LEN], icon[STD_PATH_LEN], subpath[STD_PATH_LEN], enc_dir_name[1024];
 
 	u8 is_net = 0;
 	int abort_connection = 0;
@@ -1120,11 +1120,6 @@ continue_reading_folder_xml:
 	// --- release allocated memory
 
 	led(GREEN, ON);
-
-	free(icon);
-	free(param);
-	free(subpath);
-	free(enc_dir_name);
 
 #ifdef USE_VM
 	sys_vm_unmap(sysmem);

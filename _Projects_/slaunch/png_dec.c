@@ -23,16 +23,16 @@ static int32_t create_decoder(png_dec_info *dec_ctx)
 	CellPngDecThreadOutParam  out;
 
 	// set params
-	dec_ctx->cb_arg.mallocCallCounts	= 0;
-	dec_ctx->cb_arg.freeCallCounts	  = 0;
+	dec_ctx->cb_arg.mallocCallCounts = 0;
+	dec_ctx->cb_arg.freeCallCounts	 = 0;
 
-	in.spuThreadEnable	  = CELL_PNGDEC_SPU_THREAD_DISABLE;   // ppu only
+	in.spuThreadEnable		= CELL_PNGDEC_SPU_THREAD_DISABLE;   // ppu only
 	in.ppuThreadPriority	= 512;
 	in.spuThreadPriority	= 200;
-	in.cbCtrlMallocFunc	  = cb_malloc;
-	in.cbCtrlMallocArg	  = &dec_ctx->cb_arg;
-	in.cbCtrlFreeFunc	    = cb_free;
-	in.cbCtrlFreeArg		  = &dec_ctx->cb_arg;
+	in.cbCtrlMallocFunc		= cb_malloc;
+	in.cbCtrlMallocArg		= &dec_ctx->cb_arg;
+	in.cbCtrlFreeFunc		= cb_free;
+	in.cbCtrlFreeArg		= &dec_ctx->cb_arg;
 
 	// create png decoder
 	ret = PngDecCreate(&dec_ctx->main_h, &in, &out);

@@ -702,7 +702,7 @@ relisten:
 
 				// handle client
 				sys_ppu_thread_t t_id;
-				if(working) sys_ppu_thread_create(&t_id, handleclient_net, (uint64_t)index, THREAD_PRIO_NET, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NETSVRD);
+				if(working) sys_ppu_thread_create(&t_id, handleclient_net, (uint64_t)index, THREAD_PRIO_NET, THREAD_STACK_SIZE_NET_CLIENT, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NETSVRD);
 				else {sclose(&conn_s_net); break;}
 			}
 			else

@@ -748,7 +748,7 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 	bool is_ps3mapi_home = (*param == ' ');
 
 	char tmp_name[30];
-	char tmp_filename[256];
+	char tmp_filename[STD_PATH_LEN];
 
 	if(islike(param, "/vshplugin.ps3mapi?"))
 	{
@@ -800,8 +800,8 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 				pos = strstr(param, "prx=");
 				if(pos)
 				{
-					char prx_path[256];
-					get_value(prx_path, pos + 4, 256);
+					char prx_path[STD_PATH_LEN];
+					get_value(prx_path, pos + 4, STD_PATH_LEN);
 
 					if (!uslot ) uslot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); // find free slot if slot == 0
 
@@ -895,8 +895,8 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 				pos = strstr(param, "prx=");
 				if(pos)
 				{
-					char prx_path[256];
-					get_value(prx_path, pos + 4, 256);
+					char prx_path[STD_PATH_LEN];
+					get_value(prx_path, pos + 4, STD_PATH_LEN);
 					{system_call_6(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_LOAD_PROC_MODULE, (u64)pid, (u64)(u32)prx_path, NULL, 0); }
 				}
 			}
@@ -939,7 +939,7 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 					"Slot", "Name", "File name"); buffer += concat(buffer, templn);
 
 		char tmp_name[30];
-		char tmp_filename[256];
+		char tmp_filename[STD_PATH_LEN];
 		u32 mod_list[62];
 		memset(mod_list, 0, sizeof(mod_list));
 		{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_ALL_PROC_MODULE_PID, (u64)pid, (u64)(u32)mod_list);}
@@ -1664,7 +1664,7 @@ static void ps3mapi_thread(u64 arg)
 				if(sys_admin && ((conn_s_ps3mapi = accept(list_s, NULL, NULL)) > 0))
 				{
 					sys_ppu_thread_t t_id;
-					if(working) sys_ppu_thread_create(&t_id, handleclient_ps3mapi, (u64)conn_s_ps3mapi, THREAD_PRIO, THREAD_STACK_SIZE_64KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD02_NAME_PS3MAPI);
+					if(working) sys_ppu_thread_create(&t_id, handleclient_ps3mapi, (u64)conn_s_ps3mapi, THREAD_PRIO, THREAD_STACK_SIZE_PS3MAPI_CLI, SYS_PPU_THREAD_CREATE_NORMAL, THREAD02_NAME_PS3MAPI);
 					else {sclose(&conn_s_ps3mapi); break;}
 				}
 				else
@@ -1699,11 +1699,11 @@ end:
 static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload)
 {
 	char tmp_name[30];
-	char tmp_filename[256];
-	unsigned int slot;
+	char tmp_filename[STD_PATH_LEN];
 
 	bool find_free_slot = (!name || (*name == PS3MAPI_FIND_FREE_SLOT));
 
+	unsigned int slot;
 	for (slot = 1; slot < 7; slot++)
 	{
 		memset(tmp_name, 0, sizeof(tmp_name));

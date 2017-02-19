@@ -627,7 +627,7 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("ns" , "1", STR_NOSETUP,   _BR_, (webman_config->nosetup), buffer);
 
 	value = webman_config->nocov;
-	add_check_box("nc" , "1\" onclick=\"if(nc.checked)ic.value=1; else ic.value=0;", STR_MMCOVERS, " : ", (value == SHOW_ICON0), buffer);
+	add_check_box("nc" , "1\" onclick=\"ic.value=(nc.checked)?1:0;", STR_MMCOVERS, " : ", (value == SHOW_ICON0), buffer);
 
 	// icon type
 	strcat(buffer, "<select name=\"ic\" onchange=\"nc.checked=(ic.value==1);\" accesskey=\"C\">");

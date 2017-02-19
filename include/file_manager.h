@@ -504,8 +504,8 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		typedef struct
 		{
 			char path[_LINELEN];
-		}
-		t_line_entries;
+		} t_line_entries;
+
 		t_line_entries *line_entry = (t_line_entries *)sysmem_html;
 		u16 max_entries = ((BUFFER_SIZE_HTML - _12KB_) / _MAX_LINE_LEN) - 1;
 
@@ -761,7 +761,6 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		{   // sort html file entries
 			u16 n, m;
 			t_line_entries swap;
-
 			for(n = 0; n < (idx - 1); n++)
 				for(m = (n + 1); m < idx; m++)
 					if(sort_order * strncmp(line_entry[n].path, line_entry[m].path, FILE_MGR_KEY_LEN) > 0)

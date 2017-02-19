@@ -1,12 +1,16 @@
 #ifdef USE_NTFS
-#define MAX_SECTIONS		(int)((0x10000-sizeof(rawseciso_args))/8)
+#define MAX_SECTIONS	(int)((0x10000-sizeof(rawseciso_args))/8)
+
+//static char paths [13][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI", "ROMS"};
 
 enum ntfs_folders
 {
-	mPS3 = 0,
-	mPSX = 1,
-	mBLU = 2,
-	mDVD = 3,
+	mPS3 = 2,
+	mBLU = 3,
+	mDVD = 4,
+	mPS2 = 5,
+	mPSX = 6,
+	mMAX = 7,
 };
 
 static u8 prepntfs_working = false;
@@ -19,7 +23,6 @@ static int prepNTFS(u8 towait)
 	char path[256];
 
 	int i, parts, count = 0;
-	sys_ppu_thread_t t;
 
 	unsigned int num_tracks;
 	int emu_mode = 0;
@@ -34,7 +37,6 @@ static int prepNTFS(u8 towait)
 	struct stat st;
 	bool has_dirs, is_iso = false;
 
-	char c_path[4][8]={"PS3ISO", "PSXISO", "BDISO", "DVDISO"};
 	char prefix[2][8]={"/", "/PS3/"};
 
 	uint8_t  *plugin_args = NULL;
@@ -47,7 +49,7 @@ static int prepNTFS(u8 towait)
 	cellFsUnlink((char*)WMTMP "/games.html");
 	int fd = NONE;
 	u64 read = 0;
-	char path0[MAX_PATH_LEN], subpath[256], filename[256];
+	char path0[MAX_PATH_LEN], subpath[STD_PATH_LEN], filename[STD_PATH_LEN], sufix[8];
 
 	if(mountCount == -2)
 		for(i = 0; i < 2; i++)
@@ -77,24 +79,28 @@ static int prepNTFS(u8 towait)
 	sectionsP = (uint32_t *)malloc(_32KB_); if(!sectionsP) goto exit_prepntfs;
 	sections_sizeP = (uint32_t *)malloc(_32KB_); if(!sections_sizeP) goto exit_prepntfs;
 
-	size_t plen, nlen, extlen;
+	size_t plen, extlen;
 
-	for(u8 profile = 0; profile < 5; profile++)
+	for(i = 0; i < mountCount; i++)
 	{
-		for(i = 0; i < mountCount; i++)
+		for(u8 n = 0; n < 2; n++)
 		{
-			for(u8 n = 0; n < 2; n++)
+			for(u8 profile = 0; profile < 5; profile++)
 			{
-				for(u8 m = 0; m < 4; m++)
-				{
-					has_dirs = false;
+				sprintf(sufix, "%s", SUFIX(profile));
 
-					snprintf(path, sizeof(path), "%s:%s%s", mounts[i].name, prefix[n], c_path[m]);
+				for(u8 m = mPS3; m < mMAX; m++)
+				{
+					has_dirs = false; if(m == mPS2) continue;
+
+					snprintf(path, sizeof(path), "%s:%s%s", mounts[i].name, prefix[n], paths[m]);
 					pdir = ps3ntfs_diropen(path);
 					if(pdir!=NULL)
 					{
 						while(ps3ntfs_dirnext(pdir, dir.d_name, &st) == 0)
 						{
+							if(dir.d_name[0] == '.') continue;
+
 							is_iso = (  !extcasecmp(dir.d_name, ".iso", 4) ||
 										!extcasecmp(dir.d_name, ".iso.0", 6) ||
 										!extcasecmp(dir.d_name, ".img", 4) ||
@@ -105,7 +111,7 @@ static int prepNTFS(u8 towait)
 							//--- is SUBFOLDER?
 							if(!is_iso)
 							{
-								sprintf(subpath, "%s:%s%s%s/%s", mounts[i].name, prefix[n], c_path[m], SUFIX(profile), dir.d_name);
+								sprintf(subpath, "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
 								psubdir = ps3ntfs_diropen(subpath);
 								if(psubdir==NULL) continue;
 								sprintf(subpath, "%s", dir.d_name); has_dirs = true;
@@ -134,7 +140,7 @@ next_ntfs_entry:
 
 							if(is_iso)
 							{
-								plen = snprintf(path, sizeof(path), "%s:%s%s%s/%s", mounts[i].name, prefix[n], c_path[m], SUFIX(profile), dir.d_name);
+								plen = snprintf(path, sizeof(path), "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
 								extlen = 4;
 
 								parts = ps3ntfs_file_to_sectors(path, sectionsP, sections_sizeP, MAX_SECTIONS, 1);
@@ -187,6 +193,7 @@ next_ntfs_entry:
 										if(fd >= 0)
 										{
 											char *cue_buf = malloc(_2KB_);
+
 											int cue_size = ps3ntfs_read(fd, cue_buf, _2KB_);
 											ps3ntfs_close(fd);
 
@@ -260,12 +267,12 @@ next_ntfs_entry:
 										}
 									}
 
-									snprintf(path, sizeof(path), "%s/%s%s.ntfs[%s]", WMTMP, filename, SUFIX2(profile), c_path[m]);
+									snprintf(path, sizeof(path), "%s/%s%s.ntfs[%s]", WMTMP, filename, SUFIX2(profile), paths[m]);
 
 									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args)+(parts*sizeof(uint32_t))*2)+(num_tracks*sizeof(ScsiTrackDescriptor))); count++;
-
+/*
 									plen = snprintf(path, sizeof(path), "%s/%s", WMTMP, dir.d_name);
-									nlen = snprintf(path0, sizeof(path0), "%s:%s%s%s/%s", mounts[i].name, prefix[n], c_path[m], SUFIX(profile), dir.d_name);
+									nlen = snprintf(path0, sizeof(path0), "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
 
 									if(get_image_file(path, plen - extlen)) goto for_sfo;
 									if(get_image_file(path0, nlen - extlen) == false) goto for_sfo;
@@ -281,9 +288,10 @@ for_sfo:
 										{
 											if(isDir("/dev_bdvd")) do_umount(false);
 
-											sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)plugin_args, -0x1d8, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
+											sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)plugin_args, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
 											wait_for("/dev_bdvd/PS3_GAME/PARAM.SFO", 2);
+
 											if(file_exists("/dev_bdvd/PS3_GAME/PARAM.SFO"))
 											{
 												file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", path, COPY_WHOLE_FILE);
@@ -292,10 +300,12 @@ for_sfo:
 												file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", path, COPY_WHOLE_FILE);
 											}
 
-											sys_ppu_thread_create(&t, rawseciso_stop_thread, 0, 0, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+											sys_ppu_thread_t t;
+											sys_ppu_thread_create(&t, rawseciso_stop_thread, 0, 0, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 											while(rawseciso_loaded) {sys_ppu_thread_usleep(50000);}
 										}
 									}
+*/
 								}
 							}
 //////////////////////////////////////////////////////////////
@@ -313,6 +323,7 @@ exit_prepntfs:
 	if(plugin_args) free(plugin_args);
 	if(sectionsP) free(sectionsP);
 	if(sections_sizeP) free(sections_sizeP);
+
 	prepntfs_working = false;
 	return count;
 }

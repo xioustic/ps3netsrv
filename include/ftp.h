@@ -1285,7 +1285,7 @@ relisten:
 			if(sys_admin && ((conn_s_ftp = accept(list_s, NULL, NULL)) > 0))
 			{
 				sys_ppu_thread_t t_id;
-				if(working) sys_ppu_thread_create(&t_id, handleclient_ftp, (u64)conn_s_ftp, THREAD_PRIO_FTP, THREAD_STACK_SIZE_16KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTPD);
+				if(working) sys_ppu_thread_create(&t_id, handleclient_ftp, (u64)conn_s_ftp, THREAD_PRIO_FTP, THREAD_STACK_SIZE_FTP_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTPD);
 				else {sclose(&conn_s_ftp); break;}
 			}
 			else

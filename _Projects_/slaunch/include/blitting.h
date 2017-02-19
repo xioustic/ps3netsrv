@@ -87,7 +87,6 @@ typedef struct _DrawCtx {
 	uint32_t *canvas;             // addr of canvas
 	uint32_t *menu;               // addr of bottom menu stip
 	uint32_t *imgs;               // addr of images
-//	uint32_t *text;               // addr of RCO texture
 	uint32_t *font_cache;         // addr of glyph bitmap cache buffer
 	CellFont font;
 	CellFontRenderer renderer;

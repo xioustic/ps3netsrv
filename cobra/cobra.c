@@ -813,12 +813,9 @@ int cobra_disc_auth(void)
 
 	if (real_disctype == DEVICE_TYPE_PS3_BD || real_disctype == DEVICE_TYPE_PS3_DVD)
 	{
-		static uint8_t buf[1024];
-
-		memset(buf, 0, 1024);
+		static uint8_t buf[1024]; memset(buf, 0, 1024);
 
 		sys_ss_disc_auth(0x5007, (uint64_t)(uint32_t)buf);
-		free(buf);
 	}
 	else
 	{
@@ -1513,15 +1510,20 @@ int cobra_set_psp_umd(char *path, char *umd_root, char *icon_save_path)
 		return EABORT;
 	}
 
-	char sector[1024];
-	read_file(path, sector, sizeof(sector), 0x8000);
+	//char sector[1024];
+	//read_file(path, sector, sizeof(sector), 0x8000);
+	//if (sector[0] != 1 || memcmp(vol_descriptor, "CD001", 5) != 0) return EIO;
 
-	if (sector[0] != 1 || memcmp(sector + 1, "CD001", 5) != 0) {free(sector); return EIO;}
+	char vol_descriptor[8];
+	read_file(path, vol_descriptor, 6, 0x8000);
+	if (*vol_descriptor != 1 || memcmp(vol_descriptor + 1, "CD001", 5) != 0) return EIO;
 
 	unsigned int real_disctype, effective_disctype, iso_disctype;
 
 	char title_id[11];
-	memcpy(title_id, sector + 0x373, 10); title_id[10] = 0;
+	read_file(path, title_id, 10, 0x8373); title_id[10] = 0;
+
+	//memcpy(title_id, sector + 0x373, 10); title_id[10] = 0;
 
 	char *root;
 

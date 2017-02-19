@@ -410,6 +410,8 @@ static bool language(const char *key_name, char *label, const char *default_str)
 	sprintf(label, "%s", default_str);
 
 	bool do_retry = true;
+	//char buffer[MAX_LINE_LEN];
+	char *buffer = malloc(MAX_LINE_LEN);
 
 	if(fh == 0)
 	{
@@ -436,7 +438,6 @@ static bool language(const char *key_name, char *label, const char *default_str)
 	}
 
 	int fd = fh;
-	char *buffer = malloc(MAX_PATH_LEN);
 
 	do {
 		for(i = 0; i < key_len; )

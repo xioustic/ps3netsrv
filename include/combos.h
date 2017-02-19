@@ -499,7 +499,7 @@ show_popup:
 							if(!install_in_progress && IS_ON_XMB)
 							{
 								sys_ppu_thread_t thread_id;
-								sys_ppu_thread_create(&thread_id, installPKG_combo_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_INSTALLPKG);
+								sys_ppu_thread_create(&thread_id, installPKG_combo_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_INSTALL_PKG, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_INSTALLPKG);
 							}
 
 							n = 0;

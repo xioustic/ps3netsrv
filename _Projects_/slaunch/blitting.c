@@ -375,7 +375,6 @@ void init_graphic()
 	ctx.menu	   = mem_alloc(CANVAS_W * 96 * 4);			// info bar
 	ctx.font_cache = mem_alloc(FONT_CACHE_MAX * 32 * 32);	// glyph bitmap cache
 	ctx.imgs	   = mem_alloc(MAX_WH4);					// images (actually just 1 image with max 384x384 resolution)
-//	ctx.text	   = mem_alloc(MAX_WH4);					// for RCO texture
 	ctx.bg_color   = 0xFF000000;							// black, opaque
 	ctx.fg_color   = 0xFFFFFFFF;							// white, opaque
 

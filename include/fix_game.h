@@ -162,7 +162,9 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 	bool ret = false;
 
 	memset(titleID, 0, 10);
-	char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
+
+	char paramsfo[_4KB_];
+	unsigned char *mem = (u8*)paramsfo;
 
 	uint64_t sfo_size = read_file(filename, paramsfo, _4KB_, 0);
 
@@ -298,7 +300,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 	if(islike(iso_file, "/net") || strstr(iso_file, ".ntfs[")) ; else
 	if(fix_aborted || (cellFsStat(iso_file, &buf) != CELL_FS_SUCCEEDED) || (c_firmware >= LATEST_CFW)) return;
 
-	int fd; char titleID[10], update_path[MAX_PATH_LEN];
+	int fd; char titleID[10], update_path[STD_PATH_LEN];
 
 #ifdef COPY_PS3
 	sprintf(current_file, "%s", iso_file);
@@ -458,7 +460,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 
 		{
 			// -- get TitleID from PARAM.SFO
-			char filename[MAX_PATH_LEN];
+			char filename[STD_PATH_LEN];
 
 			char *p = strstr(game_path, "/PS3_GAME"); if(!p) p = strstr(game_path, "/USRDIR"); if(p) *p = NULL;
 
@@ -470,14 +472,14 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 			if(file_exists(filename) == false) sprintf(filename, "%s/PS3_GAME/PARAM.SFO", game_path);
 			if(file_exists(filename) == false) {wait_for("/dev_bdvd", 10); sprintf(filename, "/dev_bdvd/PS3_GAME/PARAM.SFO");}
 
-			char paramsfo[_4KB_]; unsigned char *mem = (u8*)paramsfo;
-			uint64_t bytes_read = 0;
+			char paramsfo[_4KB_];
+			unsigned char *mem = (u8*)paramsfo;
 
-			bytes_read = read_file(filename, paramsfo, _4KB_, 0);
+			uint64_t bytes_read = read_file(filename, paramsfo, _4KB_, 0);
 			if(is_sfo(mem))
 			{
 				// fix ps3 extra or bgm + remoteplay + ps3 extra
-				char tmp_path[MAX_PATH_LEN]; sprintf(tmp_path, "%s/PS3_EXTRA", game_path); bool has_ps3_extra = isDir(tmp_path);
+				char tmp_path[STD_PATH_LEN]; sprintf(tmp_path, "%s/PS3_EXTRA", game_path); bool has_ps3_extra = isDir(tmp_path);
 				if((fix_type == FIX_GAME_FORCED || (has_ps3_extra && fix_type != FIX_GAME_DISABLED)) && fix_sfo_attribute(mem, (u16)bytes_read))
 				{
 					save_file(filename, paramsfo, bytes_read);

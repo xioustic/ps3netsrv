@@ -918,7 +918,7 @@ static void rawseciso_thread(uint64_t arg)
 
 	sys_event_queue_attribute_t queue_attr;
 
-	int ret; cd_sector_size_param = 0;
+	int ret = 0; cd_sector_size_param = 0;
 
 	args = (rawseciso_args *)(uint32_t)arg;
 
@@ -1045,8 +1045,7 @@ static void rawseciso_thread(uint64_t arg)
 			if(ret != CELL_OK)
 			{
 				//DPRINTF("sys_storage_open failed: %x\n", ret);
-				sys_memory_free((sys_addr_t)args);
-				sys_ppu_thread_exit(ret);
+				goto exit_rawseciso;
 			}
 		}
 	}
@@ -1055,9 +1054,7 @@ static void rawseciso_thread(uint64_t arg)
 	if(ret != CELL_OK)
 	{
 		//DPRINTF("sys_event_port_create failed: %x\n", ret);
-		if(handle != SYS_DEVICE_HANDLE_NONE) sys_storage_close(handle);
-		sys_memory_free((sys_addr_t)args);
-		sys_ppu_thread_exit(ret);
+		goto exit_rawseciso;
 	}
 
 	sys_event_queue_attribute_initialize(queue_attr);
@@ -1065,10 +1062,7 @@ static void rawseciso_thread(uint64_t arg)
 	if(ret != CELL_OK)
 	{
 		//DPRINTF("sys_event_queue_create failed: %x\n", ret);
-		sys_event_port_destroy(result_port);
-		if(handle != SYS_DEVICE_HANDLE_NONE) sys_storage_close(handle);
-		sys_memory_free((sys_addr_t)args);
-		sys_ppu_thread_exit(ret);
+		goto exit_rawseciso;
 	}
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
@@ -1094,12 +1088,8 @@ static void rawseciso_thread(uint64_t arg)
 
 	if(ret != CELL_OK)
 	{
-		sys_event_port_disconnect(result_port);
 		// Queue destroyed in stop thread sys_event_queue_destroy(command_queue_ntfs);
-		sys_event_port_destroy(result_port);
-		if(handle != SYS_DEVICE_HANDLE_NONE) sys_storage_close(handle);
-		sys_memory_free((sys_addr_t)args);
-		sys_ppu_thread_exit(0);
+		goto exit_rawseciso;
 	}
 
 	rawseciso_loaded = ntfs_running = 1;
@@ -1219,9 +1209,11 @@ static void rawseciso_thread(uint64_t arg)
 		if(ret != CELL_OK) break;
 	}
 
-	do_run = eject_running = 0;
+	ret = 0;
 
-	sys_memory_free((sys_addr_t)args);
+exit_rawseciso:
+
+	do_run = eject_running = 0;
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 	fake_eject_event(BDVD_DRIVE);
@@ -1231,6 +1223,8 @@ static void rawseciso_thread(uint64_t arg)
 	{
 		fake_insert_event(BDVD_DRIVE, real_disctype);
 	}
+
+	if(args) sys_memory_free((sys_addr_t)args);
 
 	if(cd_cache)
 	{
@@ -1242,6 +1236,7 @@ static void rawseciso_thread(uint64_t arg)
 	if(discfd != NONE) cellFsClose(discfd);
 
 	sys_event_port_disconnect(result_port);
+
 	if(sys_event_port_destroy(result_port) != 0)
 	{
 		//DPRINTF("Error destroyng result_port\n");
@@ -1251,14 +1246,14 @@ static void rawseciso_thread(uint64_t arg)
 	rawseciso_loaded = 0;
 
 	//DPRINTF("Exiting main thread!\n");
-	sys_ppu_thread_exit(0);
+	sys_ppu_thread_exit(ret);
 }
 
 static void rawseciso_stop_thread(uint64_t arg)
 {
 	uint64_t exit_code;
 
-	ntfs_running = do_run = 0;
+	do_run = ntfs_running = 0;
 
 	if(command_queue_ntfs != SYS_EVENT_QUEUE_NONE)
 	{

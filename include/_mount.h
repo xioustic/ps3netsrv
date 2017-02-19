@@ -96,8 +96,8 @@ static void auto_play(char *param)
  #endif
 		{
 			char category[16], seg_name[40]; *category = *seg_name = NULL;
-			//if((atag && !l2) || (!atag && l2)) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name);} // L2 + X
-			sys_ppu_thread_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
+			if((atag && !l2) || (!atag && l2)) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name, true);} // L2 + X
+			//sys_ppu_thread_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
 
 			autoplay = false;
 		}
@@ -120,7 +120,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 	{
 		do_umount(true);
 
-		strcat(buffer, STR_GAMEUM);
+		if(!mount_ps3) strcat(buffer, STR_GAMEUM);
 	}
 
 	// -----------------
@@ -131,7 +131,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 	{
 		do_umount_ps2disc(false);
 
-		strcat(buffer, STR_GAMEUM);
+		if(!mount_ps3) strcat(buffer, STR_GAMEUM);
 	}
 #endif
 
@@ -151,7 +151,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		if(islike(param, "/copy.ps3")) {plen = IS_COPY; pos = strstr(param, "&to="); if(pos) {strcpy(target, pos + 4); *pos = NULL;}}
 		bool is_copy = ((plen == IS_COPY) && (copy_in_progress == false));
 #endif
-		char enc_dir_name[1024], *source = param + plen;
+		char enc_dir_name[STD_PATH_LEN*3], *source = param + plen;
 		max_mapped = 0;
 
 		// ----------------------------
@@ -208,7 +208,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			}
 			else
 #endif
-			if(!forced_mount && get_game_info())
+			if(!mount_ps3 && !forced_mount && get_game_info())
 			{
 				sprintf(tempstr, "<H3>%s : <a href=\"/mount.ps3/unmount\">%s %s</a></H3><hr><a href=\"/mount_ps3%s\">", STR_UNMOUNTGAME, _game_TitleID, _game_Title, templn); strcat(buffer, tempstr);
 			}
@@ -803,10 +803,10 @@ static void do_umount(bool clean)
 			uint64_t exit_code;
 
  #ifndef LITE_EDITION
-			sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+			sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 			sys_ppu_thread_join(t_id, &exit_code);
  #endif
-			sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
+			sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 			sys_ppu_thread_join(t_id, &exit_code);
 		}
 
@@ -815,7 +815,6 @@ static void do_umount(bool clean)
  #else
 		while(rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
  #endif
-
 		{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 	}
 
@@ -968,9 +967,16 @@ static void mount_autoboot(void)
 	}
 }
 
-static bool mount_with_mm(const char *_path0, u8 do_eject)
+/***********************************************/
+/* mount_thread parameters                     */
+/***********************************************/
+static char *_path0;
+static bool mount_ret = false;
+/***********************************************/
+
+static void mount_thread(u64 do_eject)
 {
-	if(is_mounting) return false;
+	bool ret = false;
 
 	automount = 0;
 
@@ -986,17 +992,15 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 		int ret_val = NONE; { system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); ret_val = (int)p1;}
 
-		if(ret_val < 0) { show_msg((char*)STR_CFWSYSALRD); { PS3MAPI_DISABLE_ACCESS_SYSCALL8 } return false; }
+		if(ret_val < 0) { show_msg((char*)STR_CFWSYSALRD); { PS3MAPI_DISABLE_ACCESS_SYSCALL8 } goto finish; }
 		if(ret_val > 1) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 1); }
 	}
 
 #else
 
-	if(syscalls_removed || peekq(TOC) == SYSCALLS_UNAVAILABLE) { show_msg(STR_CFWSYSALRD); return false; }
+	if(syscalls_removed || peekq(TOC) == SYSCALLS_UNAVAILABLE) { show_msg(STR_CFWSYSALRD); goto finish; }
 
 #endif
-
-	is_mounting = true;
 
 	// -----------------
 	// fix mount errors
@@ -1015,7 +1019,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 	// exit if mounting a path from /dev_bdvd
 	// ---------------------------------------
 
-	if(islike(_path0, "/dev_bdvd")) {do_umount(false); is_mounting = false; return false;}
+	if(islike(_path0, "/dev_bdvd")) {do_umount(false); goto finish;}
 
 
 	// ---------------
@@ -1024,7 +1028,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 	char _path[STD_PATH_LEN], titleID[10];
 
-	bool ret = true;
+	ret = true;
 
 	mount_unk = EMU_OFF;
 
@@ -1049,10 +1053,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 		else
 			ret = false;
 
-		is_mounting = false;
-
-		led(GREEN, ON);
-		return ret;
+		goto finish;
 	}
 
 	// -----------------
@@ -1402,23 +1403,21 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 
 			if(!extcasecmp(_path, ".iso.0", 6))
 			{
-				path_len -= 2;
-				for(u8 n = 1; n < MAX_ISO_PARTS; n++)
+				for(; iso_parts < MAX_ISO_PARTS; iso_parts++)
 				{
-					sprintf(templn + path_len, ".%i", n);
+					sprintf(templn + path_len - 2, ".%i", iso_parts);
 					if(file_exists(templn) == false) break;
-					iso_parts++;
 				}
+				templn[path_len - 2] = NULL;
 			}
 
-			char *cobra_iso_list[iso_parts], iso_list[iso_parts][STD_PATH_LEN];
+			char *cobra_iso_list[iso_parts], iso_list[iso_parts][path_len + 2];
 
 			sprintf(iso_list[0], "%s", _path);
 			cobra_iso_list[0] = (char*)iso_list[0];
 
 			for(u8 n = 1; n < iso_parts; n++)
 			{
-				templn[path_len] = NULL;
 				sprintf(iso_list[n], "%s.%i", templn, n);
 				cobra_iso_list[n] = (char*)iso_list[n];
 			}
@@ -1435,7 +1434,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					char *rawiso_data = (char*)addr;
 					if(read_file(_path, rawiso_data, _64KB_, 0) > 32)
 					{
-						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
+						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
 						wait_for("/dev_bdvd", 3);
 
@@ -1543,7 +1542,7 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 							sprintf(_netiso_args->path, "/***DVD***%s", netpath);
 					}
 
-					sys_ppu_thread_create(&thread_id_net, netiso_thread, (uint64_t)sysmem, THREAD_PRIO, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
+					sys_ppu_thread_create(&thread_id_net, netiso_thread, (uint64_t)sysmem, THREAD_PRIO, THREAD_STACK_SIZE_NET_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
 
 					if(_netiso_args->emu_mode == EMU_PS3)
 					{
@@ -1740,16 +1739,19 @@ static bool mount_with_mm(const char *_path0, u8 do_eject)
 					sys_ppu_thread_usleep(2500);
 					cobra_send_fake_disc_insert_event();
 
-					wait_for("/dev_bdvd", 5);
+					if(!mount_unk)
+					{
+						wait_for("/dev_bdvd", 5);
 
-					// re-mount with media type
-					if(isDir("/dev_bdvd/PS3_GAME")) mount_unk = EMU_PS3; else
-					if(isDir("/dev_bdvd/VIDEO_TS")) mount_unk = EMU_DVD; else
-					if(file_exists("/dev_bdvd/SYSTEM.CNF") || strcasestr(_path, "PS2")) mount_unk = EMU_PS2_DVD; else
-					if(strcasestr(_path, "PSP")!=NULL && !extcasecmp(_path, ".iso", 4)) mount_unk = EMU_PSP; else
-					if(!isDir("/dev_bdvd")) mount_unk = EMU_PSX; // failed to mount PSX CD as bd disc
+						// re-mount with media type
+						if(isDir("/dev_bdvd/PS3_GAME")) mount_unk = EMU_PS3; else
+						if(isDir("/dev_bdvd/VIDEO_TS")) mount_unk = EMU_DVD; else
+						if(file_exists("/dev_bdvd/SYSTEM.CNF") || strcasestr(_path, "PS2")) mount_unk = EMU_PS2_DVD; else
+						if(strcasestr(_path, "PSP")!=NULL && !extcasecmp(_path, ".iso", 4)) mount_unk = EMU_PSP; else
+						if(!isDir("/dev_bdvd")) mount_unk = EMU_PSX; // failed to mount PSX CD as bd disc
 
-					if(mount_unk) goto mount_again;
+						if(mount_unk) goto mount_again;
+					}
 
 					mount_unk = EMU_BD;
 				}
@@ -2189,9 +2191,28 @@ mounting_done:
 	// exit function
 	// --------------
 
+finish:
+
 	led(GREEN, ON);
 	max_mapped = 0;
 	is_mounting = false;
 
-	return ret;
+	mount_ret = ret;
+	sys_ppu_thread_exit(0);
+}
+
+static bool mount_with_mm(const char *path, u8 action)
+{
+	if(is_mounting) return false; is_mounting = true;
+
+	_path0 = (char*)path;
+
+	sys_ppu_thread_t t_id;
+	sys_ppu_thread_create(&t_id, mount_thread, (uint64_t)action, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_MOUNT_GAME, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+
+	while(is_mounting && working) sys_ppu_thread_usleep(500000); // wait until thread mount game
+
+	_path0 = NULL;
+
+	return mount_ret;
 }
