@@ -1,5 +1,5 @@
 #ifdef USE_NTFS
-#define MAX_SECTIONS	(int)((0x10000-sizeof(rawseciso_args))/8)
+#define MAX_SECTIONS	(int)((_64KB_-sizeof(rawseciso_args))/8)
 
 //static char paths [13][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI", "ROMS"};
 
@@ -49,7 +49,7 @@ static int prepNTFS(u8 towait)
 	cellFsUnlink((char*)WMTMP "/games.html");
 	int fd = NONE;
 	u64 read = 0;
-	char path0[MAX_PATH_LEN], subpath[STD_PATH_LEN], filename[STD_PATH_LEN], sufix[8];
+	char path0[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], *filename = path0;
 
 	if(mountCount == -2)
 		for(i = 0; i < 2; i++)

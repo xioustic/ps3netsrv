@@ -335,7 +335,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 
 	if(is_ntfs1 || cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		sys_addr_t sysmem = NULL; uint64_t chunk_size = _256KB_;
+		sys_addr_t sysmem = NULL; uint64_t chunk_size = (buf.st_size <= _64KB_) ? _64KB_ : _256KB_;
 
 		if(g_sysmem) sysmem = g_sysmem; else
 		{

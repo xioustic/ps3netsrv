@@ -139,10 +139,15 @@ static uint8_t cpu_rsx = 0;
 
 static uint32_t frame = 0;
 
+#define SC_SYS_POWER 					(379)
+#define SYS_SOFT_REBOOT 				0x0200
+#define SYS_HARD_REBOOT					0x1200
+#define SYS_REBOOT						0x8201 /*load LPAR id 1*/
+#define SYS_SHUTDOWN					0x1100
+
 #define SC_COBRA_SYSCALL8			 				(8)
 #define SYSCALL8_OPCODE_PS3MAPI			 			0x7777
 #define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
-
 
 static int LoadPluginById(int id, void *handler)
 {
@@ -182,7 +187,7 @@ static unsigned int get_vsh_plugin_slot_by_name(const char *name)
 
 		{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO, (uint64_t)slot, (uint64_t)(uint32_t)tmp_name, (uint64_t)(uint32_t)tmp_filename); }
 
-		if(!strstr(tmp_name, name)) break;
+		if(strstr(tmp_name, name)) break;
 	}
 	return slot;
 }
@@ -200,8 +205,8 @@ static inline void _sys_ppu_thread_exit(uint64_t val)
 ////////////////////////////////////////////////////////////////////////
 static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 {
-  system_call_1(461, (uint64_t)(uint32_t)addr);
-  return (int32_t)p1;
+	system_call_1(461, (uint64_t)(uint32_t)addr);
+	return (int32_t)p1;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -330,10 +335,10 @@ static void draw_page(uint32_t game_idx, uint8_t key_repeat)
 
 		if(file_exists(slaunch[i].icon)==false)
 		{
-			if((slaunch[i].type == TYPE_PS1) || !strstr(slaunch[i].path, "PSX"))	sprintf(slaunch[i].icon, wm_icons[TYPE_PS1]); else
-			if((slaunch[i].type == TYPE_PS2) || !strstr(slaunch[i].path, "PS2"))	sprintf(slaunch[i].icon, wm_icons[TYPE_PS2]); else
-			if((slaunch[i].type == TYPE_PSP) || !strstr(slaunch[i].path, "PSP"))	sprintf(slaunch[i].icon, wm_icons[TYPE_PSP]); else
-			if((slaunch[i].type == TYPE_VID) || !strstr(slaunch[i].path, "DVD"))	sprintf(slaunch[i].icon, wm_icons[TYPE_DVD]); else
+			if((slaunch[i].type == TYPE_PS1) || strstr(slaunch[i].path, "PSX"))	sprintf(slaunch[i].icon, wm_icons[TYPE_PS1]); else
+			if((slaunch[i].type == TYPE_PS2) || strstr(slaunch[i].path, "PS2"))	sprintf(slaunch[i].icon, wm_icons[TYPE_PS2]); else
+			if((slaunch[i].type == TYPE_PSP) || strstr(slaunch[i].path, "PSP"))	sprintf(slaunch[i].icon, wm_icons[TYPE_PSP]); else
+			if((slaunch[i].type == TYPE_VID) || strstr(slaunch[i].path, "DVD"))	sprintf(slaunch[i].icon, wm_icons[TYPE_DVD]); else
 																					sprintf(slaunch[i].icon, wm_icons[TYPE_PS3]);
 		}
 
@@ -352,21 +357,26 @@ static void draw_page(uint32_t game_idx, uint8_t key_repeat)
 static void draw_selection(uint32_t game_idx)
 {
 	uint8_t slot = 1 + game_idx % 10;
-	char one_of[32], mode[8], *path = slaunch[game_idx].path;
+	char one_of[32], mode[8];
 
-	// game name
-	if(ISHD(w))	set_font(32.f, 32.f, 1.0f, 1);
-	else		set_font(32.f, 32.f, 3.0f, 1);
-	ctx.fg_color=0xffc0c0c0;
-	print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 0, slaunch[game_idx].name );
+	if(games)
+	{
+		char *path = slaunch[game_idx].path;
 
-	// game path
-	if(ISHD(w))	set_font(24.f, 16.f, 1.0f, 1);
-	else		set_font(32.f, 16.f, 2.0f, 1);
-	ctx.fg_color=0xff808080;
+		// game name
+		if(ISHD(w))	set_font(32.f, 32.f, 1.0f, 1);
+		else		set_font(32.f, 32.f, 3.0f, 1);
+		ctx.fg_color=0xffc0c0c0;
+		print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 0, slaunch[game_idx].name );
 
-	if(*path == '/' && path[10] == '/') path += 10;
-	if(*path == '/') print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 40, path);
+		// game path
+		if(ISHD(w))	set_font(24.f, 16.f, 1.0f, 1);
+		else		set_font(32.f, 16.f, 2.0f, 1);
+		ctx.fg_color=0xff808080;
+
+		if(*path == '/' && path[10] == '/') path += 10;
+		if(*path == '/') print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 40, path);
+	}
 
 	// game index
 	if(ISHD(w))	set_font(20.f, 20.f, 1.0f, 1);
@@ -482,19 +492,37 @@ static uint8_t draw_side_menu(void)
 	return option;
 }
 
-static void show_no_content(uint32_t type)
+static void show_no_content(void)
 {
 	char no_content[32];
-	if(type == TYPE_MAX)
-		sprintf(no_content, "webMAN is not loaded.");
+	if(gmode >= TYPE_MAX)
+		{sprintf(no_content, "webMAN is not loaded."); gmode = TYPE_ALL;}
 	else
-		sprintf(no_content, "There are no %stitles.", game_type[type]);
+		sprintf(no_content, "There are no %stitles.", game_type[gmode]);
 
 	ctx.fg_color=0xffc0c0c0;
 	set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, CANVAS_W, 0, 520, no_content);
 	flip_frame((uint64_t*)ctx.canvas);
 
-	if(type) load_background();
+	sys_timer_usleep(50000);
+
+	if(gmode) load_background();
+}
+
+static void show_content(void)
+{
+	menu_running = 1;
+
+	if(games)
+	{
+		draw_page(cur_game, 0);
+	}
+	else	// no content
+	{
+		if(menu_mode) {menu_mode = 0; return;}
+
+		show_no_content();
+	}
 }
 
 static void load_data(void)
@@ -507,7 +535,7 @@ static void load_data(void)
 	if(menu_mode) sprintf(filename, "%s/slaunch%i.bin", WMTMP, menu_mode); else sprintf(filename, "%s/slaunch.bin", WMTMP);
 
 	uint64_t size = file_exists(filename);
-	if(menu_mode && (size == 0)) {menu_mode = TYPE_ALL; cur_game = cur_game_; goto exit_load;}
+	if(menu_mode && (size == 0)) {menu_mode = TYPE_ALL; cur_game = cur_game_; if(cur_game>=games) _cur_game=cur_game=0; goto exit_load;}
 	if(menu_mode == 0) cur_game = cur_game_;
 
 	games=size/sizeof(_slaunch);
@@ -515,7 +543,7 @@ static void load_data(void)
 	if(games>=MAX_GAMES) games=MAX_GAMES-1;
 	if(cur_game>=games) _cur_game=cur_game=0;
 
-	size_t name_len = 127;
+	size_t name_len = 111;
 
 reload:
 	reset_heap();
@@ -597,18 +625,7 @@ reload:
 		games = 0;
 
 exit_load:
-
-	if(games)
-	{
-		menu_running = 1;
-		draw_page(cur_game, 0);
-	}
-	else	// no content
-	{
-		if(menu_mode) {menu_mode = 0; return;}
-
-		show_no_content(gmode);
-	}
+	show_content();
 }
 
 static void reload_data(uint32_t curpad)
@@ -746,28 +763,7 @@ static void slaunch_thread(uint64_t arg)
 					oldpad = curpad;
 					_cur_game=cur_game;
 
-						 if(curpad & PAD_DOWN)	cur_game+=5;
-					else if(curpad & PAD_UP)	cur_game-=5;
-					else if(curpad & PAD_RIGHT) cur_game+=1;
-					else if(curpad & PAD_LEFT)	if(!cur_game) cur_game=games-1; else cur_game-=1;
-					else if(curpad & PAD_R1)	{can_skip=1; cur_game+=10;}
-					else if(curpad & PAD_L1)	{can_skip=1; if(!cur_game) cur_game=games-1; else cur_game-=10;}
-
-					else if((curpad & PAD_SQUARE) && !menu_mode && !(curpad & PAD_L2)) {gmode++; if(gmode>=TYPE_MAX) gmode=TYPE_ALL; dmode=TYPE_ALL; reload_data(curpad);}
-					else if((curpad & PAD_SQUARE) && !menu_mode &&  (curpad & PAD_L2)) {dmode++; if(dmode>=DEVS_MAX) dmode=TYPE_ALL; reload_data(curpad);}
-
-					else if(curpad & PAD_R3)	{return_to_xmb(); send_wm_request("/popup.ps3"); break;}
-					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh.ps3"); break;}
-					else if(curpad & PAD_SELECT)
-					{
-						play_rco_sound("snd_cursor");
-						if(menu_mode == 0) cur_game_ = cur_game;
-						menu_mode++; if(menu_mode > 1) menu_mode = TYPE_ALL;
-						reload_data(curpad);
-						sys_timer_usleep(40000);
-						continue;
-					}
-					else if(curpad & PAD_TRIANGLE)
+					if(curpad & PAD_TRIANGLE)
 					{
 						uint8_t option=draw_side_menu();
 						if(option)
@@ -775,30 +771,47 @@ static void slaunch_thread(uint64_t arg)
 							return_to_xmb();
 								 if(option==1) send_wm_request("/mount_ps3/unmount");
 							else if(option==2) send_wm_request("/refresh.ps3");
-							else if(option==3) send_wm_request("/restart.ps3");
-							else if(option==4) send_wm_request("/shutdown.ps3");
+							else if(option==3) {system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}   //send_wm_request("/restart.ps3");
+							else if(option==4) {system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);} //send_wm_request("/shutdown.ps3");
 							else if(option==5) {LoadPluginById(0x1B, (void *)web_browser);}
 							break;
 						}
-						if(!games)
-						{
-							show_no_content(gmode);
-							sys_timer_usleep(40000);
-						}
-						else
-							draw_page(cur_game, 0);
+						show_content();
 					}
 					else if(curpad & PAD_CIRCLE)					// back to XMB
 					{
-						if(menu_mode) {menu_mode=0; reload_data(curpad); cur_game = cur_game;}
+						if(menu_mode) {menu_mode=0; reload_data(curpad);}
 						else
 						{
-							curpad=oldpad=0;
+							cur_game_ = cur_game;
 							play_rco_sound("snd_cancel");
 							stop_VSH_Menu(); /*return_to_xmb();*/
 						}
 						break;
 					}
+					else if(curpad & PAD_SELECT)
+					{
+						play_rco_sound("snd_cursor");
+						if(menu_mode == 0) cur_game_ = cur_game;
+						menu_mode^=1;
+						reload_data(curpad);
+						sys_timer_usleep(40000);
+						continue;
+					}
+					else if(curpad & PAD_R3)	{return_to_xmb(); send_wm_request("/popup.ps3"); break;}
+					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh.ps3"); break;}
+					else if((curpad & PAD_SQUARE) && !menu_mode && !(curpad & PAD_L2)) {gmode++; if(gmode>=TYPE_MAX) gmode=TYPE_ALL; dmode=TYPE_ALL; reload_data(curpad);}
+					else if((curpad & PAD_SQUARE) && !menu_mode &&  (curpad & PAD_L2)) {dmode++; if(dmode>=DEVS_MAX) dmode=TYPE_ALL; reload_data(curpad);}
+
+					if(!games) continue;
+
+						 if(curpad & PAD_DOWN)	cur_game+=5;
+					else if(curpad & PAD_UP)	cur_game-=5;
+					else if(curpad & PAD_RIGHT) cur_game+=1;
+					else if(curpad & PAD_LEFT)	if(!cur_game) cur_game=games-1; else cur_game-=1;
+					else if(curpad & PAD_R1)	{can_skip=1; cur_game+=10;}
+					else if(curpad & PAD_L1)	{can_skip=1; if(!cur_game) cur_game=games-1; else cur_game-=10;}
+
 					else if(curpad & PAD_CROSS && games)			// execute action & return to XMB
 					{
 						play_rco_sound("snd_system_ok");
@@ -810,6 +823,8 @@ static void slaunch_thread(uint64_t arg)
 
 						char path[128];
 						sprintf(path, "%s", slaunch[cur_game].path);
+
+						cur_game_ = cur_game;
 
 						return_to_xmb();
 						send_wm_request(path);

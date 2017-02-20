@@ -590,7 +590,7 @@ static int process_read_psx_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 }
 #endif
 
-static void my_memcpy(uint8_t *dst, uint8_t *src, int size)
+static inline void my_memcpy(uint8_t *dst, uint8_t *src, int size)
 {
 	for(int i = 0; i < size; i++) dst[i] = src[i];
 }

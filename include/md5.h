@@ -20,7 +20,7 @@ static void calc_md5(char *filename, char *md5)
 
 	if(sysmem || (!sysmem && sys_memory_allocate(buffer_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 	{
-		if (cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == 0)
+		if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			CellMd5WorkArea workarea;
 
@@ -28,7 +28,7 @@ static void calc_md5(char *filename, char *md5)
 
 			uint8_t *buf = (uint8_t *)sysmem;
 
-			for(uint64_t nread; nread > 0; )
+			for(uint64_t nread = buffer_size; nread > 0; )
 			{
 				cellFsRead(fd, buf, buffer_size, &nread);
 

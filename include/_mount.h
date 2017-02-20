@@ -1180,15 +1180,16 @@ static void mount_thread(u64 do_eject)
 		if(!extcmp(_path, ".ntfs[PSXISO]", 13) || (strstr(_path, ".ntfs[") != NULL && strstr(_path, "[raw]") != NULL))
 		{
 			u8 n;
-			const char raw_iso_sprx[4][40] = {  "/dev_flash/vsh/module/raw_iso.sprx",
+			const char raw_iso_sprx[5][40] = {  "/dev_flash/vsh/module/raw_iso.sprx",
 												"/dev_hdd0/raw_iso.sprx",
 												"/dev_hdd0/plugins/raw_iso.sprx",
-												"/dev_hdd0/game/IRISMAN00/sprx_iso" };
+												"/dev_hdd0/game/IRISMAN00/sprx_iso",
+												WMTMP "/sman.ntf"};
 
-			for(n = 0; n < 4; n++)
+			for(n = 0; n < 5; n++)
 				if(file_exists(raw_iso_sprx[n])) break;
 
-			if(n < 4)
+			if(n < 5)
 			{
 				cellFsChmod(_path, MODE);
 
@@ -1197,7 +1198,7 @@ static void mount_thread(u64 do_eject)
 				{
 					char *sprx_data = (char *)addr;
 					uint64_t msiz = read_file(_path, sprx_data, _64KB_, 0);
-					if(msiz > _4KB_)
+					if(msiz > 0)
 					{
 						do_umount(false); if(!extcmp(_path, ".ntfs[PSXISO]", 13)) {mount_unk = EMU_PSX; select_ps1emu(_path);}
 
@@ -1432,7 +1433,7 @@ static void mount_thread(u64 do_eject)
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
 					char *rawiso_data = (char*)addr;
-					if(read_file(_path, rawiso_data, _64KB_, 0) > 32)
+					if(read_file(_path, rawiso_data, _64KB_, 0) > 0)
 					{
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
