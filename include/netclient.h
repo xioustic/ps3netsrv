@@ -15,7 +15,7 @@ typedef struct _netiso_args
 	uint32_t num_tracks;
 	uint16_t port;
 	uint8_t pad[6];
-	ScsiTrackDescriptor tracks[1];
+	ScsiTrackDescriptor tracks[32];
 } __attribute__((packed)) netiso_args;
 
 static int g_socket = NONE;

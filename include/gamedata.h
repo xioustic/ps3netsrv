@@ -19,7 +19,7 @@ static u8 extgd = 0;       //external gameDATA
 static int set_gamedata_status(u8 status, bool do_mount)
 {
 	char msg[100];
-	char gamei_path[MAX_PATH_LEN]; u8 n = 0;
+	char gamei_path[STD_PATH_LEN]; u8 n = 0;
 
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 

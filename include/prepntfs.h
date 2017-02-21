@@ -194,39 +194,43 @@ next_ntfs_entry:
 										{
 											char *cue_buf = malloc(_2KB_);
 
-											int cue_size = ps3ntfs_read(fd, cue_buf, _2KB_);
-											ps3ntfs_close(fd);
-
-											if(cue_size > 13)
+											if(cue_buf)
 											{
-												cue = 1;
-												num_tracks = 0;
+												int cue_size = ps3ntfs_read(fd, cue_buf, _2KB_);
+												ps3ntfs_close(fd);
 
-												tracks[0].lba = 0;
-												tracks[0].is_audio = 0;
-
-												u8 use_pregap = 0;
-												int lba, lp = 0; char *templn = path;
-
-												while (lp < cue_size)
+												if(cue_size > 13)
 												{
-													lp = get_line(templn, cue_buf, cue_size, lp);
-													if(lp < 1) break;
+													cue = 1;
+													num_tracks = 0;
 
-													if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-													if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
+													tracks[0].lba = 0;
+													tracks[0].is_audio = 0;
 
-													lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
+													u8 use_pregap = 0;
+													int lba, lp = 0; char *templn = path;
 
-													tracks[num_tracks].lba = lba;
-													if(num_tracks) tracks[num_tracks].is_audio = 1;
+													while (lp < cue_size)
+													{
+														lp = get_line(templn, cue_buf, cue_size, lp);
+														if(lp < 1) break;
 
-													num_tracks++; if(num_tracks>=32) break;
+														if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
+														if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
+
+														lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
+
+														tracks[num_tracks].lba = lba;
+														if(num_tracks) tracks[num_tracks].is_audio = 1;
+
+														num_tracks++; if(num_tracks>=32) break;
+													}
+
+													num_tracks++; if(num_tracks >= 32) break;
 												}
 
-												num_tracks++; if(num_tracks >= 32) break;
+												free(cue_buf);
 											}
-											free(cue_buf);
 										}
 									}
 

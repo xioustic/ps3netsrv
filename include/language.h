@@ -447,15 +447,7 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 			if(i == key_len)
 			{
-				// skip blanks
-				while(lang_pos < size)
-				{
-					if(c == '[') break;
-
-					{ GET_NEXT_BYTE }
-				};
-
-				size_t str_len = 0;
+				size_t str_len = 0; u8 copy = 0;
 
 				// set value
 				while(lang_pos < size)
@@ -464,7 +456,9 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 					if(c == ']' || lang_pos >= size) break;
 
-					label[str_len++] = c;
+					if(copy) label[str_len++] = c;
+
+					if(c == '[') copy = 1;
 				}
 
 				label[str_len] = NULL;
@@ -589,7 +583,7 @@ static void update_language(void)
 	if(lang ==  2) id = 5;  // it
 	if(lang ==  3) id = 3;  // es
 	if(lang ==  4) id = 4;  // de
-	if(lang ==  5) id = 6;  // nl
+    if(lang ==  5) id = 6;  // nl
 	if(lang ==  6) id = 7;  // pt
 	if(lang ==  7) id = 8;  // ru
 	if(lang ==  9) id = 16; // pl

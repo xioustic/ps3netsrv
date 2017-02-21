@@ -46,11 +46,11 @@ int32_t rsx_fifo_pause(uint8_t pause);
 
 //uint32_t load_rco_texture(uint32_t* texture, const char *plugin, const char *texture_name);
 void play_rco_sound(const char *sound);
-void buzzer(uint8_t mode);
+//void buzzer(uint8_t mode);
 
-uint64_t lv2peek(uint64_t addr);
-uint64_t lv2poke(uint64_t addr, uint64_t value);
-uint64_t lv1peek(uint64_t addr);
-uint64_t lv1poke(uint64_t addr, uint64_t value);
+//uint64_t lv2peek(uint64_t addr);
+//uint64_t lv2poke(uint64_t addr, uint64_t value);
+//uint64_t lv1peek(uint64_t addr);
+//uint64_t lv1poke(uint64_t addr, uint64_t value);
 
 #endif // __MISC_H__

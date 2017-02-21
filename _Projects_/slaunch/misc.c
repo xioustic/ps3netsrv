@@ -136,6 +136,7 @@ void play_rco_sound(const char *sound)
 /***********************************************************************
 * ring buzzer
 ***********************************************************************/
+/*
 void buzzer(uint8_t mode)
 {
 	uint16_t param = 0;
@@ -150,11 +151,12 @@ void buzzer(uint8_t mode)
 
 	system_call_3(392, 0x1007, 0xA, param);
 }
-
+*/
 
 /***********************************************************************
 * peek & poke
 ***********************************************************************/
+/*
 uint64_t lv2peek(uint64_t addr)
 {
   system_call_1(6, addr);
@@ -178,3 +180,4 @@ uint64_t lv1poke(uint64_t addr, uint64_t value)
   system_call_2(9, addr, value);
   return_to_user_prog(uint64_t);
 }
+*/

@@ -531,4 +531,56 @@ static int get_line(char *templn, const char *cue_buf, int buf_size, int start)
 
 	return lp;
 }
+
+/*
+static int read_text_line(int fd, char *line, unsigned int size, int *eof)
+{
+	unsigned int i = 0;
+	int line_started = 0;
+	if (size == 0)
+		return -1;
+	*eof = 0;
+	while (i < (size-1))
+	{
+		uint8_t ch;
+		uint64_t r;
+		if (cellFsRead(fd, &ch, 1, &r) != 0 || r != 1)
+		{
+			*eof = 1;
+			break;
+		}
+		if (!line_started)
+		{
+			if (ch > ' ')
+			{
+				line[i++] = (char)ch;
+				line_started = 1;
+			}
+		}
+		else
+		{
+			if (ch == '\n' || ch == '\r')
+				break;
+			line[i++] = (char)ch;
+		}
+	}
+	line[i] = 0;
+
+	// Remove space chars at end
+	for (int j = i-1; j >= 0; j--)
+	{
+		if (line[j] <= ' ')
+		{
+			line[j] = 0;
+			i = j;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return i;
+}
+*/
 #endif

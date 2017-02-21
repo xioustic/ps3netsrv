@@ -795,7 +795,7 @@ static void do_umount(bool clean)
 			char gamei_mapping[32];
 			sprintf(gamei_mapping, "/dev_hdd0/game/%s", map_title_id);
 			sys_map_path(gamei_mapping, NULL);
-			sys_map_path("/dev_hdd0/game/PKGLAUNCH", NULL);
+			sys_map_path(PKGLAUNCH_DIR, NULL);
 		}
  #endif
 		{
@@ -1133,13 +1133,14 @@ static void mount_thread(u64 do_eject)
 		}
 		else
 		{
-			bool found = false;
-			for(u8 n = 0; n < MAX_LAST_GAMES; n++)
+			u8 n;
+
+			for(n = 0; n < MAX_LAST_GAMES; n++)
 			{
-				if(IS(lastgames.game[n].path, _path)) {found = true; break;}
+				if(IS(lastgames.game[n].path, _path)) break;
 			}
 
-			if(!found)
+			if(n >= MAX_LAST_GAMES)
 			{
 				lastgames.last++;
 				if(lastgames.last >= MAX_LAST_GAMES) lastgames.last = 0;
@@ -1155,7 +1156,7 @@ static void mount_thread(u64 do_eject)
 	// save last mounted game
 	// -----------------------
 
-	if(*_path == '_' || strchr(_path, '/') == NULL) goto exit_mount;
+	if(*_path != '/') goto exit_mount;
 	else
 	{
 		save_file(WMTMP "/last_game.txt", _path, SAVE_ALL);
@@ -1169,6 +1170,8 @@ static void mount_thread(u64 do_eject)
 	if(do_eject == EXPLORE_CLOSE_ALL) {do_eject = 1; explore_close_all(_path);}
 
 	if(do_eject) show_msg(_path);
+
+	cellFsUnlink(WMNOSCAN); // remove wm_noscan if a PS2ISO has been mounted
 
 
 	// ------------------------------------------------------------------------------------------------------------
@@ -1184,7 +1187,7 @@ static void mount_thread(u64 do_eject)
 												"/dev_hdd0/raw_iso.sprx",
 												"/dev_hdd0/plugins/raw_iso.sprx",
 												"/dev_hdd0/game/IRISMAN00/sprx_iso",
-												WMTMP "/sman.ntf"};
+												WMTMP "/res/sman.ntf"};
 
 			for(n = 0; n < 5; n++)
 				if(file_exists(raw_iso_sprx[n])) break;
@@ -1196,18 +1199,17 @@ static void mount_thread(u64 do_eject)
 				sys_addr_t addr = 0;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
-					char *sprx_data = (char *)addr;
+					char *sprx_data = (char *)addr; ret = false;
 					uint64_t msiz = read_file(_path, sprx_data, _64KB_, 0);
 					if(msiz > 0)
 					{
 						do_umount(false); if(!extcmp(_path, ".ntfs[PSXISO]", 13)) {mount_unk = EMU_PSX; select_ps1emu(_path);}
 
-						if(cobra_load_vsh_plugin(0, (char*)raw_iso_sprx[n], (u8*)sprx_data, msiz) != CELL_OK) ret = false;
-
-						sys_memory_free(addr);
-						goto exit_mount;
+						if(cobra_load_vsh_plugin(0, (char*)raw_iso_sprx[n], (u8*)sprx_data, msiz) == CELL_OK) ret = true;
 					}
 					sys_memory_free(addr);
+
+					if(ret) goto exit_mount;
 				}
 			}
 		}
@@ -1222,7 +1224,7 @@ static void mount_thread(u64 do_eject)
 		char *pos = strstr(_path, "/GAMEI/");
 		if(pos)
 		{
-			sys_map_path("/dev_hdd0/game/PKGLAUNCH", _path0);
+			sys_map_path(PKGLAUNCH_DIR, _path0);
 			strncpy(map_title_id, pos + 7, 9); map_title_id[9] = NULL;
 			sprintf(_path, "/dev_hdd0/game/%s", map_title_id);
 			sys_map_path(_path, _path0);
@@ -1237,7 +1239,7 @@ static void mount_thread(u64 do_eject)
 	// mount ROMS game
 	// ------------------
  #ifdef MOUNT_ROMS
-	if(isDir("/dev_hdd0/game/PKGLAUNCH"))
+	if(isDir(PKGLAUNCH_DIR))
 	{
 		int plen = strlen(_path) - 4;
 		if(plen < 0) plen = 0;
@@ -1248,12 +1250,12 @@ static void mount_thread(u64 do_eject)
 		{
 			do_umount_eject();
 
-			sys_map_path("/dev_hdd0/game/PKGLAUNCH", NULL);
-			sys_map_path("/dev_hdd0/game/PKGLAUNCH/PS3_GAME/USRDIR/cores", "/dev_hdd0/game/SSNE10000/USRDIR/cores");
+			sys_map_path(PKGLAUNCH_DIR, NULL);
+			sys_map_path(PKGLAUNCH_DIR "/PS3_GAME/USRDIR/cores", "/dev_hdd0/game/SSNE10000/USRDIR/cores");
 
-			cobra_map_game("/dev_hdd0/game/PKGLAUNCH", "PKGLAUNCH", 0);
+			cobra_map_game(PKGLAUNCH_DIR, "PKGLAUNCH", 0);
 
-			save_file("/dev_hdd0/game/PKGLAUNCH/USRDIR/launch.txt", _path, 0);
+			save_file(PKGLAUNCH_DIR "/USRDIR/launch.txt", _path, 0);
 			mount_unk = EMU_ROMS;
 			goto mounting_done; //goto exit_mount;
 		}
@@ -1513,7 +1515,8 @@ static void mount_thread(u64 do_eject)
 
 					char *netpath = _path + 5;
 
-					sprintf(_netiso_args->path, "%s", netpath);
+					size_t len = sprintf(_netiso_args->path, "%s", netpath);
+
 					if(islike(netpath, "/PS3ISO")) _netiso_args->emu_mode = EMU_PS3; else
 					if(islike(netpath, "/PS2ISO")) goto copy_ps2iso_to_hdd0;         else
 					if(islike(netpath, "/PSPISO")) goto copy_pspiso_to_hdd0;         else
@@ -1521,14 +1524,80 @@ static void mount_thread(u64 do_eject)
 					if(islike(netpath, "/DVDISO")) _netiso_args->emu_mode = EMU_DVD; else
 					if(islike(netpath, "/PSX")   )
 					{
-						TrackDef tracks[1];
+						TrackDef tracks[32];
 						tracks[0].lba = 0;
 						tracks[0].is_audio = 0;
+						unsigned int num_tracks = 0;
+						int abort_connection = 0;
+
+						sprintf(_netiso_args->path + len - 3, "cue");
+
+						int ns = connect_to_server(_netiso_args->server, _netiso_args->port);
+						if(ns >= 0)
+						{
+							if(open_remote_file(ns, _netiso_args->path, &abort_connection) < 1)
+							{
+								sprintf(_netiso_args->path + len - 3, "CUE");
+								if(open_remote_file(ns, _netiso_args->path, &abort_connection) < 1) goto cancel_net;
+							}
+
+							char cue_buf[_2KB_];
+							int64_t cue_size = read_remote_file(ns, cue_buf, 0, _2KB_, &abort_connection);
+							open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
+
+							if(cue_size > 10)
+							{
+								TrackDef tracks[32];
+								tracks[0].lba = 0;
+								tracks[0].is_audio = 0;
+
+								u8 use_pregap = 0;
+								int lba, lp = 0;
+
+								while(lp < cue_size)
+								{
+									lp = get_line(templn, cue_buf, cue_size, lp);
+									if(lp < 1) break;
+
+									if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
+									if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
+
+									lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
+
+									tracks[num_tracks].lba = lba;
+									if(num_tracks) tracks[num_tracks].is_audio = 1;
+
+									num_tracks++; if(num_tracks >= 32) break;
+								}
+							}
+						}
+cancel_net:
+						if(ns >= 0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+
+						if(!num_tracks) num_tracks++;
 
 						_netiso_args->emu_mode = EMU_PSX;
-						_netiso_args->num_tracks = 1;
+						_netiso_args->num_tracks = num_tracks;
+						sprintf(_netiso_args->path, "%s", netpath);
 
-						memcpy(_netiso_args->tracks, tracks, sizeof(TrackDef));
+						ScsiTrackDescriptor *scsi_tracks;
+						scsi_tracks = (ScsiTrackDescriptor *)&_netiso_args->tracks[0];
+
+						if(num_tracks == 1)
+						{
+							scsi_tracks[0].adr_control = 0x14;
+							scsi_tracks[0].track_number = 1;
+							scsi_tracks[0].track_start_addr = 0;
+						}
+						else
+						{
+							for(u8 j = 0; j < num_tracks; j++)
+							{
+								scsi_tracks[j].adr_control = (tracks[j].is_audio) ? 0x10 : 0x14;
+								scsi_tracks[j].track_number = j+1;
+								scsi_tracks[j].track_start_addr = tracks[j].lba;
+							}
+						}
 					}
 					else if(islike(netpath, "/GAMES") || islike(netpath, "/GAMEZ"))
 					{
@@ -1562,11 +1631,12 @@ static void mount_thread(u64 do_eject)
 
 				goto exit_mount;
 			}
-			else
 	#endif //#ifndef LITE_EDITION
-			{
-				cellFsUnlink(WMNOSCAN); // remove wm_noscan if PS2ISO was already mounted
 
+			// ------------------------------------------------------------------
+			// mount PS3ISO / PSPISO / PS2ISO / DVDISO / BDISO stored on hdd0/usb
+			// ------------------------------------------------------------------
+			{
 				ret = file_exists(cobra_iso_list[0]); if(!ret) goto exit_mount;
 
 
@@ -1683,7 +1753,7 @@ static void mount_thread(u64 do_eject)
 					{
 						char cue_buf[_2KB_];
 						int cue_size = read_file(_path, cue_buf, _2KB_, 0);
-						if(cue_size > 13)
+						if(cue_size > 10)
 						{
 							unsigned int num_tracks = 0;
 
@@ -2196,9 +2266,9 @@ finish:
 
 	led(GREEN, ON);
 	max_mapped = 0;
-	is_mounting = false;
-
 	mount_ret = ret;
+
+	is_mounting = false;
 	sys_ppu_thread_exit(0);
 }
 
@@ -2209,7 +2279,7 @@ static bool mount_with_mm(const char *path, u8 action)
 	_path0 = (char*)path;
 
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, mount_thread, (uint64_t)action, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_MOUNT_GAME, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, mount_thread, (uint64_t)action, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_MOUNT_GAME, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_CMD);
 
 	while(is_mounting && working) sys_ppu_thread_usleep(500000); // wait until thread mount game
 

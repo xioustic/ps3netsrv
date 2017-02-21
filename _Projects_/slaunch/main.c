@@ -81,15 +81,15 @@ typedef struct
 #define TYPE_MAX 7
 #define DEVS_MAX 5
 
-char game_type[TYPE_MAX][8]=
+static char game_type[TYPE_MAX][8]=
 {
 	"\0",
-	"PS1 ",
-	"PS2 ",
-	"PS3 ",
-	"PSP ",
-	"Video ",
-	"ROMS "
+	"PS1",
+	"PS2",
+	"PS3",
+	"PSP",
+	"Video",
+	"ROMS"
 };
 
 static _slaunch *slaunch = NULL;
@@ -128,10 +128,10 @@ static void slaunch_thread(uint64_t arg);
 
 static void draw_selection(uint32_t game_idx);
 
-#define NTFS  3
+#define HDD0  1
+#define NTFS  2
 
-static char drives[4][12] = {"dev_hdd0", "dev_usb", "ntfs", "net"};
-static char gmodes[6][8]  = {"PSX", "PS2", "PS3", "PSP", "VIDEO", "ROMS"};
+static char drives[4][12] = {"dev_hdd0", "ntfs", "dev_usb", "net"};
 
 static uint8_t gmode = TYPE_ALL;
 static uint8_t dmode = TYPE_ALL;
@@ -149,7 +149,7 @@ static uint32_t frame = 0;
 #define SYSCALL8_OPCODE_PS3MAPI			 			0x7777
 #define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
 
-static int LoadPluginById(int id, void *handler)
+static int load_plugin_by_id(int id, void *handler)
 {
 	xmm0_interface = (xmb_plugin_xmm0 *)paf_23AFB290((uint32_t)paf_F21655F3("xmb_plugin"), 0x584D4D30);
 	return xmm0_interface->LoadPlugin3(id, handler,0);
@@ -161,7 +161,7 @@ static void web_browser(void)
 	if(webbrowser_interface) webbrowser_interface->PluginWakeupWithUrl("http://127.0.0.1/setup.ps3");
 }
 /*
-static int UnloadPluginById(int id, void *handler)
+static int unload_plugin_by_id(int id, void *handler)
 {
 	xmm0_interface = (xmb_plugin_xmm0 *)paf_23AFB290((uint32_t)paf_F21655F3("xmb_plugin"), 0x584D4D30);//'XMM0'
 	if(xmm0_interface) return xmm0_interface->Shutdown(id, handler, 1); else return 0;
@@ -249,7 +249,7 @@ static void sclose(int *socket_e)
 	}
 }
 
-static void send_wm_request(const char *cmd)
+static int send_wm_request(const char *cmd)
 {
 	// send command
 	int conn_s = NONE;
@@ -257,9 +257,9 @@ static void send_wm_request(const char *cmd)
 
 	struct timeval tv;
 	tv.tv_usec = 0;
-	tv.tv_sec = 3;
+	tv.tv_sec = 10;
 	setsockopt(conn_s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-	setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+//	setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
 	if(conn_s >= 0)
 	{
@@ -288,6 +288,7 @@ static void send_wm_request(const char *cmd)
 		send(conn_s, proxy_action, pa, 0);
 		sclose(&conn_s);
 	}
+	return conn_s;
 }
 
 static void pad_read(void)
@@ -307,7 +308,16 @@ static uint64_t file_exists(const char* path)
 
 static void load_background(void)
 {
-	load_img_bitmap(0, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-storegame.jpg");
+	char path[64];
+
+	if(gmode) sprintf(path, "%s_%s.jpg", "/dev_hdd0/plugins/images/slaunch", game_type[gmode]);
+
+	if(!gmode || !file_exists(path)) sprintf(path, "%s.jpg", "/dev_hdd0/plugins/images/slaunch");
+
+	if(file_exists(path))
+		load_img_bitmap(0, path);
+	else
+		load_img_bitmap(0, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-storegame.jpg");
 }
 
 static void draw_page(uint32_t game_idx, uint8_t key_repeat)
@@ -386,7 +396,7 @@ static void draw_selection(uint32_t game_idx)
 	print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 64, one_of );
 
 	// game list mode
-	if(gmode) sprintf(mode, "%s", gmodes[gmode-1]);
+	if(gmode) sprintf(mode, "%s", game_type[gmode]);
 
 	if(menu_mode)
 		print_text(ctx.menu, CANVAS_W, 80, 64, "MENU");
@@ -498,7 +508,7 @@ static void show_no_content(void)
 	if(gmode >= TYPE_MAX)
 		{sprintf(no_content, "webMAN is not loaded."); gmode = TYPE_ALL;}
 	else
-		sprintf(no_content, "There are no %stitles.", game_type[gmode]);
+		sprintf(no_content, "There are no %s%stitles.", game_type[gmode], gmode ? " " : "\0");
 
 	ctx.fg_color=0xffc0c0c0;
 	set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, CANVAS_W, 0, 520, no_content);
@@ -567,23 +577,26 @@ reload:
 			if(gmode)
 			{
 				// filter games
+
+				ngames = 0;
+
 				if(old_struct)
-					for(int32_t n=games-1; n >= 0; n--)
+					for(uint32_t n=0; n < games; n++)
 					{
 						if(
-							((gmode == TYPE_PS3) && (!strstr(slaunch[n].path, "PS3") && !strstr(slaunch[n].path, "/GAME"))) ||
-							((gmode == TYPE_PS1) && (!strstr(slaunch[n].path, "PSX"))) ||
-							((gmode == TYPE_PS2) && (!strstr(slaunch[n].path, "PS2"))) ||
-							((gmode == TYPE_PSP) && (!strstr(slaunch[n].path, "PSP"))) ||
-							((gmode == TYPE_VID) && (!strstr(slaunch[n].path, "BDISO") && !strstr(slaunch[n].path, "DVDISO"))) ||
-							((gmode == TYPE_ROM) && (!strstr(slaunch[n].path, "ROMS")))
+							((gmode == TYPE_PS3) && (strstr(slaunch[n].path, "PS3")!=NULL   || strstr(slaunch[n].path, "/GAME")!=NULL)) ||
+							((gmode == TYPE_PS1) && (strstr(slaunch[n].path, "PSX")!=NULL)) ||
+							((gmode == TYPE_PS2) && (strstr(slaunch[n].path, "PS2")!=NULL)) ||
+							((gmode == TYPE_PSP) && (strstr(slaunch[n].path, "PSP")!=NULL)) ||
+							((gmode == TYPE_VID) && (strstr(slaunch[n].path, "BDISO")!=NULL || strstr(slaunch[n].path, "DVDISO")!=NULL)) ||
+							((gmode == TYPE_ROM) && (strstr(slaunch[n].path, "ROMS")!=NULL))
 						  )
-							{memset(slaunch[n].name, 0xFF, name_len); ngames--;}
+							slaunch[ngames++] = slaunch[n];
 					}
 				else
-					for(int32_t n=games-1; n >= 0; n--)
+					for(uint32_t n=0; n < games; n++)
 					{
-						if(slaunch[n].type != gmode) {memset(slaunch[n].name, 0xFF, name_len); ngames--;}
+						if(slaunch[n].type == gmode) slaunch[ngames++] = slaunch[n];
 					}
 
 				if(ngames == 0) {gmode++; if(gmode >= TYPE_MAX) gmode = TYPE_ALL; goto reload;}
@@ -592,13 +605,24 @@ reload:
 			if(dmode)
 			{
 				int8_t dlen = strlen(drives[dmode-1]);
-				for(int32_t n=games-1; n >= 0; n--)
+
+				games = ngames; ngames = 0;
+
+				for(uint32_t n=0; n < games; n++)
 				{
-					if((slaunch[n].name[0] & 0xFF) == 0xFF) continue; // skip filtered content
-					if(((dmode == NTFS) && !strstr(slaunch[n].path+11, drives[dmode-1])) || ((dmode != NTFS) && memcmp(slaunch[n].path+11, drives[dmode-1], dlen))) {memset(slaunch[n].name, 0xFF, name_len); ngames--;}
+					if( ((dmode == NTFS) && (strncmp(slaunch[n].path+10, "/dev_hdd0/tmp", 13)  ==0)) ||
+						((dmode == HDD0) && (strncmp(slaunch[n].path+11, drives[dmode-1], dlen)==0) && (slaunch[n].path[10+10]!='t')) ||
+						((dmode >  NTFS) && (strncmp(slaunch[n].path+11, drives[dmode-1], dlen)==0))
+					  )
+						slaunch[ngames++] = slaunch[n];
 				}
+
 				if(ngames == 0) {dmode++; if(dmode >= DEVS_MAX) dmode = TYPE_ALL; goto reload;}
 			}
+
+			if(games > ngames) mem_free((games - ngames) * sizeof(_slaunch));
+
+			games = ngames;
 
 			// sort game list
 			if(games>1)
@@ -617,8 +641,6 @@ reload:
 					}
 				}
 			}
-
-			games = ngames;
 		}
 	}
 	else
@@ -630,6 +652,8 @@ exit_load:
 
 static void reload_data(uint32_t curpad)
 {
+	load_background();
+
 	play_rco_sound("snd_cursor");
 
 	if(curpad & PAD_R2) gmode=dmode=TYPE_ALL;
@@ -750,7 +774,7 @@ static void slaunch_thread(uint64_t arg)
 
 				if(curpad)
 				{
-					if(curpad==oldpad)	// key-repeat
+					if(curpad==oldpad)				// key-repeat
 					{
 						init_delay++;
 						if(init_delay<=40) continue;
@@ -763,7 +787,7 @@ static void slaunch_thread(uint64_t arg)
 					oldpad = curpad;
 					_cur_game=cur_game;
 
-					if(curpad & PAD_TRIANGLE)
+					if(curpad & PAD_TRIANGLE)		// open side-menu
 					{
 						uint8_t option=draw_side_menu();
 						if(option)
@@ -773,12 +797,12 @@ static void slaunch_thread(uint64_t arg)
 							else if(option==2) send_wm_request("/refresh.ps3");
 							else if(option==3) {system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}   //send_wm_request("/restart.ps3");
 							else if(option==4) {system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);} //send_wm_request("/shutdown.ps3");
-							else if(option==5) {LoadPluginById(0x1B, (void *)web_browser);}
+							else if(option==5) {load_plugin_by_id(0x1B, (void *)web_browser);}
 							break;
 						}
 						show_content();
 					}
-					else if(curpad & PAD_CIRCLE)					// back to XMB
+					else if(curpad & PAD_CIRCLE)	// back to XMB
 					{
 						if(menu_mode) {menu_mode=0; reload_data(curpad);}
 						else
@@ -789,7 +813,7 @@ static void slaunch_thread(uint64_t arg)
 						}
 						break;
 					}
-					else if(curpad & PAD_SELECT)
+					else if(curpad & PAD_SELECT)	// alternate menu
 					{
 						play_rco_sound("snd_cursor");
 						if(menu_mode == 0) cur_game_ = cur_game;
@@ -812,7 +836,7 @@ static void slaunch_thread(uint64_t arg)
 					else if(curpad & PAD_R1)	{can_skip=1; cur_game+=10;}
 					else if(curpad & PAD_L1)	{can_skip=1; if(!cur_game) cur_game=games-1; else cur_game-=10;}
 
-					else if(curpad & PAD_CROSS && games)			// execute action & return to XMB
+					else if(curpad & PAD_CROSS && games)	// execute action & return to XMB
 					{
 						play_rco_sound("snd_system_ok");
 						for(uint8_t u=0;u<6;u++)
@@ -831,7 +855,7 @@ static void slaunch_thread(uint64_t arg)
 						break;
 					}
 
-					if(cur_game!=_cur_game && games)
+					if(cur_game!=_cur_game && games)		// draw backgrop
 					{
 						play_rco_sound("snd_cursor");
 						tick=0xc0;
