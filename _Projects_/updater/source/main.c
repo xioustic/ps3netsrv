@@ -564,7 +564,7 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_eject.png", XMLMANPLS_IMAGES_DIR "/icon_wm_eject.png");
 	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  , XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
 
-	CopyFile(APP_USRDIR "/wm_proxy.sprx", TMP_DIR "wm_proxy.sprx");
+	CopyFile(APP_USRDIR "/wm_proxy.sprx", TMP_DIR "idle_plugin.sprx");
 	CopyFile(APP_USRDIR "/slaunch1.bin",  TMP_DIR "wmtmp/slaunch1.bin");
 
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
