@@ -1183,11 +1183,11 @@ static void mount_thread(u64 do_eject)
 		if(!extcmp(_path, ".ntfs[PSXISO]", 13) || (strstr(_path, ".ntfs[") != NULL && strstr(_path, "[raw]") != NULL))
 		{
 			u8 n;
-			const char raw_iso_sprx[5][40] = {  "/dev_flash/vsh/module/raw_iso.sprx",
-												"/dev_hdd0/raw_iso.sprx",
-												"/dev_hdd0/plugins/raw_iso.sprx",
-												"/dev_hdd0/game/IRISMAN00/sprx_iso",
-												WMTMP "/res/sman.ntf"};
+			const char *raw_iso_sprx[5] = { "/dev_flash/vsh/module/raw_iso.sprx",
+											"/dev_hdd0/raw_iso.sprx",
+											"/dev_hdd0/plugins/raw_iso.sprx",
+											"/dev_hdd0/game/IRISMAN00/sprx_iso",
+											WMTMP "/res/sman.ntf"};
 
 			for(n = 0; n < 5; n++)
 				if(file_exists(raw_iso_sprx[n])) break;
@@ -1733,18 +1733,18 @@ cancel_net:
 
 					else if(!extcasecmp(_path, ".cue", 4))
 					{
-						char extensions[8][8] = {".bin", ".iso", ".img", ".mdf", ".BIN", ".ISO", ".IMG", ".MDF"};
+						const char *extensions[8] = {".bin", ".iso", ".img", ".mdf", ".BIN", ".ISO", ".IMG", ".MDF"};
 						for(u8 e = 0; e < 8; e++)
 						{
-							cobra_iso_list[0][flen] = NULL; strcat(cobra_iso_list[0], extensions[e]);
+							sprintf(cobra_iso_list[0] + flen, "%s", extensions[e]);
 							mount_iso = file_exists(cobra_iso_list[0]); if(mount_iso) break;
 						}
 					}
 					else if(_path[flen] == '.')
 					{
-						_path[flen] = NULL; strcat(_path, ".cue");
-						if(file_exists(_path) == false) {_path[flen] = NULL; strcat(_path, ".CUE");
-						if(file_exists(_path) == false) sprintf(_path, "%s", cobra_iso_list[0]);}
+						sprintf(_path + flen, "%s", ".cue");
+						if(file_exists(_path) == false) sprintf(_path + flen, "%s", ".CUE");
+						if(file_exists(_path) == false) sprintf(_path, "%s", cobra_iso_list[0]);
 					}
 
 					mount_iso = mount_iso || file_exists(cobra_iso_list[0]); ret = mount_iso;

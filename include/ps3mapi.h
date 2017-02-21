@@ -722,7 +722,20 @@ static void add_plugins_list(char *buffer, char *templn)
 	if(!strstr(buffer, "<datalist id=\"plugins\">"))
 	{
 		strcat(buffer, "<div style=\"display:none\"><datalist id=\"plugins\">");
-		int fd, cnt = 0; char paths[10][48] = {"/dev_hdd0", "/dev_hdd0/plugins", "/dev_hdd0/plugins/ps3xpad", "/dev_hdd0/plugins/ps3_menu", "/dev_hdd0/plugins/PS3Lock", "/dev_usb000", "/dev_usb001", "/dev_hdd0/game/UPDWEBMOD/USRDIR", "/dev_hdd0/game/UPDWEBMOD/USRDIR/official", "/dev_hdd0/tmp"};
+		int fd, cnt = 0;
+
+		const char *paths[10] = {
+									"/dev_hdd0",
+									"/dev_hdd0/plugins",
+									"/dev_hdd0/plugins/ps3xpad",
+									"/dev_hdd0/plugins/ps3_menu",
+									"/dev_hdd0/plugins/PS3Lock",
+									"/dev_usb000",
+									"/dev_usb001",
+									"/dev_hdd0/game/UPDWEBMOD/USRDIR",
+									"/dev_hdd0/game/UPDWEBMOD/USRDIR/official",
+									"/dev_hdd0/tmp"
+								};
 
 		for(u8 i = 0; i < 10; i++)
 		if(cellFsOpendir(paths[i], &fd) == CELL_FS_SUCCEEDED)

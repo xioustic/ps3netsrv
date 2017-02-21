@@ -91,7 +91,7 @@ static u8 ex[4] = {0, 1, 2, 3};
 
 static const char ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
 
-static const char cpath[5][32] = {MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"};
+static const char *cpath[5] = {MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"};
 
 static bool HAS(char *icon)
 {
@@ -102,7 +102,7 @@ static bool get_image_file(char *icon, int flen)
 {
 	for(u8 e = 0; e < 4; e++)
 	{
-		sprintf(icon + flen, "%s", ext[ex[e]]);
+		strcpy(icon + flen, ext[ex[e]]);
 		if(file_exists(icon)) {if(e>0) {u8 s=ex[e];ex[e]=ex[0],ex[0]=s;}; return true;}
 	}
 	return false;
@@ -163,13 +163,13 @@ static bool get_cover_by_titleid(char *icon, char *tempID)
 		if(covers_exist[1] && *tempID == 'S')
 		{
 			for(u8 p = 0; p < 3; p++)
-				{
-					flen = sprintf(icon, "%s/covers_retro/psx/%c%c%c%c_%c%c%c.%c%c_COV", cpath[p],
-									tempID[0], tempID[1], tempID[2], tempID[3],
-									tempID[4], tempID[5], tempID[6], tempID[7], tempID[8]);
+			{
+				flen = sprintf(icon, "%s/covers_retro/psx/%c%c%c%c_%c%c%c.%c%c_COV", cpath[p],
+								tempID[0], tempID[1], tempID[2], tempID[3],
+								tempID[4], tempID[5], tempID[6], tempID[7], tempID[8]);
 
-					if(get_image_file(icon, flen)) return true;
-				}
+				if(get_image_file(icon, flen)) return true;
+			}
 		}
 
 		for(u8 p = 1; p < 6; p++)
@@ -637,7 +637,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 
 	if(data[v3_entry].is_directory && IS_ISO_FOLDER)
 	{
-		char iso_ext[8][4] = {"iso", "ISO", "bin", "BIN", "mdf", "MDF", "img", "IMG"};
+		const char *iso_ext[8] = {"iso", "ISO", "bin", "BIN", "mdf", "MDF", "img", "IMG"};
 		for(u8 e = 0; e < 10; e++)
 		{
 			if(e >= 8) return FAILED;

@@ -57,10 +57,6 @@ static char _game_Title  [64]; //#define _game_Title    _game_info+0x14
 //static char _game_info[0x120];
 static char search_url[50];
 
-#define WM_PROXY_SPRX	"idle_plugin"		// idle_plugin.sprx
-//#define WM_PROXY_SPRX	"kensaku_plugin"	// the plugin used for "Internet Search" in the Network Column
-//#define WM_PROXY_SPRX	"xai_plugin"		// free plugin
-
 #ifdef COBRA_ONLY
  #include "cobra/netiso.h"
 
@@ -676,7 +672,7 @@ static bool common_js_exists = false;
 
 static char html_base_path[MAX_PATH_LEN];
 
-static char smonth[12][4]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+static const char smonth[12][4]  = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 static char drives[16][12] = {"/dev_hdd0", "/dev_usb000", "/dev_usb001", "/dev_usb002", "/dev_usb003", "/dev_usb006", "/dev_usb007", "/net0", "/net1", "/net2", "/net3", "/net4", "/dev_ntfs", "/dev_sd", "/dev_ms", "/dev_cf"};
 static char paths [13][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS2ISO", "PSXISO", "PSXGAMES", "PSPISO", "ISO", "video", "GAMEI", "ROMS"};
