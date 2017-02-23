@@ -1,4 +1,4 @@
-#define SLAUNCH_FILE		"/dev_hdd0/tmp/wmtmp/slaunch.bin"
+#define SLAUNCH_FILE		"/dev_hdd0/tmp/wmtmp/slist.bin"
 
 #define MAX_SLAUNCH_ITEMS	1000
 
@@ -12,14 +12,14 @@
 #define TYPE_MAX 7
 
 #ifdef SLAUNCH_FILE
-typedef struct
+typedef struct // 1MB for 2000+1 titles
 {
-	char path[128];
-	char icon[128];
-	char name[112];
-	char padding[5];
-	char id[10];
-	uint8_t type;
+	uint8_t  type;
+	char     id[10];
+	uint8_t  path_pos; // start position of path
+	uint16_t icon_pos; // start position of icon
+	uint16_t padd;
+	char     name[508]; // name + path + icon
 } __attribute__((packed)) _slaunch;
 
 static int create_slaunch_file(void)
@@ -40,11 +40,17 @@ static void add_slaunch_entry(int fd, const char *neth, const char *path, const 
 	char enc_filename[MAX_PATH_LEN]; urlenc_ex(enc_filename, filename, false);
 
 	slaunch.type = IS_ROMS_FOLDER ? TYPE_ROM : IS_PS3_TYPE ? TYPE_PS3 : IS_PSX_FOLDER ? TYPE_PS1 : IS_PS2_FOLDER ? TYPE_PS2 : IS_PSP_FOLDER ? TYPE_PSP : TYPE_VID;
+/*
+	snprintf(slaunch.path, 160, "/mount_ps3%s%s/%s", neth, path, enc_filename);
+	snprintf(slaunch.icon, 160, "%s", icon);
+	snprintf(slaunch.name, 140, "%s", name);
+	snprintf(slaunch.id,   sizeof(slaunch.id), "%s", id);
+*/
+	snprintf(slaunch.id, sizeof(slaunch.id), "%s", id);
 
-	snprintf(slaunch.path, 127, "/mount_ps3%s%s/%s", neth, path, enc_filename);
-	snprintf(slaunch.icon, 127, "%s", icon);
-	snprintf(slaunch.name, 110, "%s", name);
-	snprintf(slaunch.id,   sizeof(slaunch.id),   "%s", id);
+	slaunch.path_pos = snprintf(slaunch.name, 128, "%s", name) + 1;
+	slaunch.icon_pos = snprintf(slaunch.name + slaunch.path_pos, 454 - slaunch.path_pos, "/mount_ps3%s%s/%s", neth, path, enc_filename) + slaunch.path_pos + 1;
+					   snprintf(slaunch.name + slaunch.icon_pos, 507 - slaunch.icon_pos, "%s", icon);
 
 	cellFsWrite(fd, (void *)&slaunch, sizeof(_slaunch), NULL);
 }

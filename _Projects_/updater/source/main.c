@@ -565,7 +565,6 @@ int main()
 	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  , XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
 
 	CopyFile(APP_USRDIR "/wm_proxy.sprx", TMP_DIR "/idle_plugin.sprx");
-	CopyFile(APP_USRDIR "/slaunch1.bin",  TMP_DIR "/wmtmp/slaunch1.bin");
 
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 
@@ -584,6 +583,14 @@ int main()
 		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_6.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_6.png", PLUGINS_DIR "/images/wm_vsh_menu_6.png");
 		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_5.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_7.png", PLUGINS_DIR "/images/wm_vsh_menu_7.png");
 		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_6.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_8.png", PLUGINS_DIR "/images/wm_vsh_menu_8.png");
+
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_fav.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_fav.jpg",   PLUGINS_DIR "/images/slaunch_fav.jpg");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PS1.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PS1.jpg",   PLUGINS_DIR "/images/slaunch_PS1.jpg");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PS2.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PS2.jpg",   PLUGINS_DIR "/images/slaunch_PS2.jpg");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PS3.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PS3.jpg",   PLUGINS_DIR "/images/slaunch_PS3.jpg");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PSP.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PSP.jpg",   PLUGINS_DIR "/images/slaunch_PSP.jpg");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_ROMS.jpg",  &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_ROMS.jpg",  PLUGINS_DIR "/images/slaunch_ROMS.jpg");
+		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_video.jpg", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_video.jpg", PLUGINS_DIR "/images/slaunch_video.jpg");
 
 		// append path if installing for first time
 		if(sysLv2FsStat(PLUGINS_DIR "/wm_vsh_menu.sprx", &stat) != SUCCESS)

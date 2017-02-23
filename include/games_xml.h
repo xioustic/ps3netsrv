@@ -366,7 +366,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	u32 key = 0, max_xmb_items = ((u32)(BUFFER_SIZE_ALL / AVG_ITEM_SIZE));
 
-	char templn[1024];
+	char *templn = malloc(1024); //char templn[1024];
 
 	make_fb_xml(myxml, templn);
 
@@ -1128,6 +1128,7 @@ continue_reading_folder_xml:
 #endif
 
 	// --- release allocated memory
+	if(templn) free(templn);
 
 	led(GREEN, ON);
 

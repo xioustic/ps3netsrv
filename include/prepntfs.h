@@ -287,7 +287,7 @@ next_ntfs_entry:
 for_sfo:
 									if(m == mPS3) // mount PS3ISO
 									{
-										path[plen-3]='S', path[plen-2]='F', path[plen-1]='O';
+										strcpy(path + plen - 3, "SFO");
 										if(file_exists(path) == false)
 										{
 											if(isDir("/dev_bdvd")) do_umount(false);
@@ -300,7 +300,7 @@ for_sfo:
 											{
 												file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", path, COPY_WHOLE_FILE);
 
-												path[plen-3]='P', path[plen-2]='N', path[plen-1]='G';
+												strcpy(path + plen - 3, "PNG");
 												file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", path, COPY_WHOLE_FILE);
 											}
 

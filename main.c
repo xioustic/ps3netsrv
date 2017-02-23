@@ -1340,7 +1340,20 @@ parse_request:
  #ifdef WM_REQUEST
 			if(wm_request) { for(size_t n = 0; param[n]; n++) {if(param[n] == 9) param[n] = ' ';} } wm_request = 0;
  #endif
-			if(!islike(param, "/setup.ps3?")) { mc = strstr(param, ";/"); if(mc) {*mc = NULL; strcpy(header, param);} }
+
+			if(islike(param, "/refresh_ps3") && refreshing_xml == 0)
+			{
+				refresh_xml(param);
+				#ifdef WM_REQUEST
+				if(!wm_request)
+				#endif
+				http_response(conn_s, header, param, CODE_HTTP_OK, param);
+				goto exit_handleclient;
+			}
+
+			bool is_setup = islike(param, "/setup.ps3?");
+
+			if(!is_setup) { mc = strstr(param, ";/"); if(mc) {*mc = NULL; strcpy(header, param);} }
 
 			bool allow_retry_response = true, small_alloc = true; u8 mobile_mode = false;
 
@@ -1361,11 +1374,11 @@ parse_request:
 							|| islike(param, "/cpursx")
 
 							|| islike(param, "/mount")
+							|| islike(param, "/refresh.ps3")
 							|| islike(param, "/index.ps3")
 							|| islike(param, "/games.ps3")
 							|| islike(param, "/play.ps3")
 
-							|| islike(param, "/refresh.ps3")
 							|| islike(param, "/eject.ps3")
 							|| islike(param, "/insert.ps3")
 	#ifdef EXT_GDATA
@@ -2567,9 +2580,11 @@ parse_request:
 			//-- select content profile
 			if(strstr(param, ".ps3?"))
 			{
-				u8 uprofile = profile; char url[10]; bool is_index_ps3 = islike(param, "/index.ps3?");
+				u8 uprofile = profile; char url[10];
 
-				if(is_index_ps3 || islike(param, "/refresh.ps3")) {char mode, *cover_mode = strstr(param, "?cover="); if(cover_mode) {mode = *(cover_mode + 7) | 0x20, *cover_mode = NULL; webman_config->nocov = (mode == 'o') ? ONLINE_COVERS : (mode == 'd' || mode == 'n') ? SHOW_DISC : (mode == 'i') ? SHOW_ICON0 : SHOW_MMCOVERS;}}
+				bool is_index_ps3 = islike(param, "/index.ps3?");
+
+				if( is_index_ps3 || islike(param, "/refresh.ps3") ) {char mode, *cover_mode = strstr(param, "?cover="); if(cover_mode) {mode = *(cover_mode + 7) | 0x20, *cover_mode = NULL; webman_config->nocov = (mode == 'o') ? ONLINE_COVERS : (mode == 'd' || mode == 'n') ? SHOW_DISC : (mode == 'i') ? SHOW_ICON0 : SHOW_MMCOVERS;}}
 
 				for(u8 i = 0; i < 5; i++)
 				{
@@ -2684,7 +2699,7 @@ parse_request:
 
 			//else	// text page
 			{
-				if((is_binary != FOLDER_LISTING) && islike(param, "/setup.ps3?"))
+				if((is_binary != FOLDER_LISTING) && is_setup)
 				{
 					setup_parse_settings(param + 11);
 				}
@@ -2965,7 +2980,7 @@ parse_request:
 							mount_all_ntfs_volumes();
 
 							int ngames = 0; *header = NULL;
-							if(islike(param + 12, "?prepntfs")) {ngames = prepNTFS(strstr(param, "0") ? 0 : 1); sprintf(header, " • <a href=\"/dev_hdd0/tmp/wmtmp\">%i %s</a>", ngames, STR_GAMES);}
+							if(islike(param + 12, "?prepntfs")) {ngames = prepNTFS(strstr(param, "0") ? 0 : 1); sprintf(header, " • <a href=\"%s\">%i %s</a>", WMTMP, ngames, STR_GAMES);}
 
 							sprintf(param, "NTFS VOLUMES: %i%s", mountCount, header); is_busy = false;
 
@@ -2975,6 +2990,7 @@ parse_request:
 #endif
 
 						refresh_xml(templn);
+
  #ifndef ENGLISH_ONLY
 						char STR_XMLRF[280];
 
@@ -2988,7 +3004,7 @@ parse_request:
  #endif
 					}
 					else
-					if(islike(param, "/setup.ps3?"))
+					if(is_setup)
 					{
 						// /setup.ps3?          reset webman settings
 						// /setup.ps3?<params>  save settings
