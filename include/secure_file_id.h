@@ -2,7 +2,7 @@
 
 #include "../vsh/ps3_savedata_plugin.h"
 
-static int (*ps3_savedata_plugin_init)(void*);
+static int (*ps3_savedata_plugin_init)(void *);
 
 static bool securfileid_hooked = false;
 
@@ -51,7 +51,7 @@ static void hook_savedata_plugin(void)
 {
 	if(securfileid_hooked)
 	{
-		restore_func((void*)ps3_savedata_plugin_init, (void*)ps3_savedata_plugin_init_bk);
+		restore_func((void *)ps3_savedata_plugin_init, (void*)ps3_savedata_plugin_init_bk);
 		securfileid_hooked = false;
 	}
 	else
@@ -59,7 +59,7 @@ static void hook_savedata_plugin(void)
 		// init
 		ps3_savedata_plugin_init = getNIDfunc("vshmain", 0xBEF63A14, -(0x130*2));
 
-		hook_func((void*)ps3_savedata_plugin_init, (void*)ps3_savedata_plugin_init_bk, (void*)ps3_savedata_plugin_init_hook );
+		hook_func((void *)ps3_savedata_plugin_init, (void*)ps3_savedata_plugin_init_bk, (void*)ps3_savedata_plugin_init_hook );
 		securfileid_hooked = true;
 	}
 }

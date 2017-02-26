@@ -1274,6 +1274,8 @@ relisten:
 		else goto end;
 	}
 
+	active_socket[0] = list_s;
+
 	//if(list_s >= 0)
 	{
 		while(working)

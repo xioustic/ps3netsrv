@@ -261,7 +261,7 @@ static void fix_game_folder(char *path)
 						ps3_sys_version = CFW_420;
 
 						cellFsLseek(fdw, offset, CELL_FS_SEEK_SET, &bytes_read);
-						cellFsWrite(fdw, (void*)(&ps3_sys_version), 8, NULL);
+						cellFsWrite(fdw, (void *)(&ps3_sys_version), 8, NULL);
 					}
 					cellFsClose(fdw);
 				}
@@ -406,7 +406,7 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 						{
 							ps3_sys_version = CFW_420;
 							cellFsLseek(fd, lba+offset, CELL_FS_SEEK_SET, &bytes_read);
-							cellFsWrite(fd, (void*)(&ps3_sys_version), 8, NULL);
+							cellFsWrite(fd, (void *)(&ps3_sys_version), 8, NULL);
 						}
 						else goto exit_fix;
 

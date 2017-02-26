@@ -20,7 +20,7 @@ static int32_t create_decoder(jpg_dec_info *dec_ctx)
 	CellJpgDecThreadOutParam  out;
 
 	// set params
-	dec_ctx->cb_arg_j.mallocCallCounts	= 0;
+	dec_ctx->cb_arg_j.mallocCallCounts	=
 	dec_ctx->cb_arg_j.freeCallCounts	= 0;
 
 	in.spuThreadEnable		= CELL_JPGDEC_SPU_THREAD_ENABLE; //CELL_JPGDEC_SPU_THREAD_DISABLE;   //
@@ -46,10 +46,10 @@ static int32_t open_jpg(jpg_dec_info *dec_ctx, const char *file_path)
 	// set stream source
 	src.srcSelect  = CELL_JPGDEC_FILE;        // source is file
 	src.fileName   = file_path;               // path to source file
-	src.fileOffset = 0;
-	src.fileSize   = 0;
-	src.streamPtr  = NULL;
+	src.fileOffset =
+	src.fileSize   =
 	src.streamSize = 0;
+	src.streamPtr  = NULL;
 
 	// spu thread disable
 	src.spuThreadEnable = CELL_JPGDEC_SPU_THREAD_ENABLE;
@@ -68,7 +68,7 @@ static int32_t set_dec_param(jpg_dec_info	*dec_ctx)
 	CellJpgDecOutParam  out;
 
 	// read jpg header
-	cellJpgDecReadHeader(dec_ctx->main_h, dec_ctx->sub_h, &info);
+	if(cellJpgDecReadHeader(dec_ctx->main_h, dec_ctx->sub_h, &info)!=CELL_OK) return -1;
 
 	jpg_w = info.imageWidth;
 	jpg_h = info.imageHeight;
@@ -100,7 +100,6 @@ static int32_t decode_jpg_stream(jpg_dec_info	*dec_ctx, void *buf)
 	uint8_t *out;
 	CellJpgDecDataCtrlParam  param;
 	CellJpgDecDataOutInfo    info;
-
 
 	param.outputBytesPerLine = jpg_w * 4;
 	out = (void*)buf;
@@ -141,9 +140,12 @@ Buffer load_jpg(const char *file_path, void* buf_addr)
 {
 	Buffer tmp;
 	jpg_dec_info dec_ctx;
-	jpg_w=jpg_h=0;
 	tmp.addr = (uint32_t*)buf_addr;
-	tmp.w=0; tmp.h=0;
+
+	tmp.b= // no transparency
+	tmp.w=tmp.h=
+	tmp.x=tmp.y=
+	jpg_w=jpg_h=0;
 
 	// create jpg decoder
 	if(create_decoder(&dec_ctx)==CELL_OK)
@@ -159,18 +161,14 @@ Buffer load_jpg(const char *file_path, void* buf_addr)
 				tmp.w = jpg_w;
 				tmp.h = jpg_h;
 			}
+
 			// close jpg stream
 			cellJpgDecClose(dec_ctx.main_h, dec_ctx.sub_h);
 		}
+
 		// destroy jpg decoder
 		cellJpgDecDestroy(dec_ctx.main_h);
 	}
-
-	// store jpg values
-
-	tmp.b = 0; // no transparency
-	tmp.x = 0;
-	tmp.y = 0;
 
 	return tmp;
 }

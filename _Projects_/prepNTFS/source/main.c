@@ -73,7 +73,7 @@ int main(int argc, const char* argv[])
 {
 	detect_firmware();
 
-	int i, parts;
+	int i, parts, dlen;
 	unsigned int num_tracks;
 	u8 cue = 0; int ext_len = 4;
 
@@ -234,7 +234,13 @@ next_ntfs_entry:
 								if(dir.d_name[0]=='.') goto next_ntfs_entry;
 
 								sprintf(direntry, "%s/%s", subpath, dir.d_name);
-								flen = sprintf(filename, "[%s] %s", subpath, dir.d_name);
+
+								dlen = strlen(dir.d_name) - ext_len;
+
+								if((dlen < 0) || strncmp(subpath, dir.d_name, dlen))
+									flen = sprintf(filename, "[%s] %s", subpath, dir.d_name);
+								else
+									flen = sprintf(filename, "%s", dir.d_name);
 
 								ext_len = 4;
 								if(flen < ext_len) goto next_ntfs_entry; ext = filename + flen - ext_len;

@@ -745,7 +745,7 @@ void draw_line(int32_t x, int32_t y, int32_t x2, int32_t y2)
 {
 	int32_t i = 0, dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
 	int32_t w = x2 - x;
-  int32_t h = y2 - y;
+	int32_t h = y2 - y;
 
 
 	if(w < 0) dx1 = -1; else if(w > 0) dx1 = 1;

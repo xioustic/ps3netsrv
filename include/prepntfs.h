@@ -22,7 +22,7 @@ static int prepNTFS(u8 towait)
 
 	char path[256];
 
-	int i, parts, count = 0;
+	int i, parts, dlen, count = 0;
 
 	unsigned int num_tracks;
 	int emu_mode = 0;
@@ -129,8 +129,14 @@ next_ntfs_entry:
 
 								if(is_iso)
 								{
+									dlen = strlen(path) - !extcasecmp(path, ".iso.0", 6) ? 6 : 4;
+
+									if((dlen < 0) || strncmp(subpath, path, dlen))
+										sprintf(filename, "[%s] %s", subpath, path);
+									else
+										sprintf(filename, "%s", path);
+
 									sprintf(dir.d_name, "%s/%s", subpath, path);
-									sprintf(filename, "[%s] %s", subpath, path);
 								}
 							}
 							else
@@ -196,7 +202,7 @@ next_ntfs_entry:
 
 											if(cue_buf)
 											{
-												int cue_size = ps3ntfs_read(fd, cue_buf, _2KB_);
+												int cue_size = ps3ntfs_read(fd, (void *)cue_buf, _2KB_);
 												ps3ntfs_close(fd);
 
 												if(cue_size > 13)

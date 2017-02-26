@@ -335,6 +335,9 @@ extern int stdc_E48348E9(const char *format, va_list arg);                      
 extern int stdc_273B9711(char *str, const char *fmt, ...);                            // sprintf()
 #define sprintf stdc_273B9711
 
+extern int stdc_3A840AE3(char *str, size_t size, const char *fmt, ...);               // snprintf()
+#define snprintf stdc_3A840AE3
+
 extern int stdc_7AE82E0F(char *str, const char *format, va_list arg);                 // vsprintf()
 #define vsprintf stdc_7AE82E0F
 
@@ -343,9 +346,6 @@ extern int stdc_FAEC8C60(FILE *stream, const char *fmt, ...);                   
 
 extern int stdc_FB2081FD(FILE *stream, const char *fmt, va_list arg);                 // vfprintf()
 #define vfprintf stdc_FB2081FD
-
-extern int stdc_3A840AE3(char *str, size_t size, const char *fmt, ...);               // snprintf()
-#define snprintf stdc_3A840AE3
 
 extern int stdc_99A72146(char *s, size_t n, const char *fmt, va_list arg);            // vsnprintf()
 #define vsnprintf stdc_99A72146

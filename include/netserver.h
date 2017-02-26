@@ -681,6 +681,8 @@ relisten:
 		else goto end;
 	}
 
+	active_socket[3] = list_s;
+
 	//if(list_s >= 0)
 	{
 		while(working)

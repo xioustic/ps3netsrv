@@ -13,12 +13,7 @@
 #include "include/vsh_exports.h"
 #include "include/network.h"
 
-
-
 static int db_s = -1;											 // debug socket
-
-
-
 
 /***********************************************************************
 * create a udp/tcp connection
@@ -105,22 +100,27 @@ void close_conn(int32_t *s)
 /***********************************************************************
 * debug init
 ***********************************************************************/
+/*
 void dbg_init(void)
 {
 	db_s = create_conn(DB_IP, DB_PORT, 1);
 }
+*/
 
 /***********************************************************************
 * debug finilize
 ***********************************************************************/
+/*
 void dbg_fini(void)
 {
 	close_conn(&db_s);
 }
+*/
 
 /***********************************************************************
 * debug Printf
 ***********************************************************************/
+/*
 void dbg_printf(const char* fmt, ...)
 {
   char buf[0x200];
@@ -130,4 +130,4 @@ void dbg_printf(const char* fmt, ...)
   va_end(arg);
   send(db_s, buf, strlen(buf), 0);
 }
-
+*/

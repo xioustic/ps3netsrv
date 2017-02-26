@@ -1,5 +1,5 @@
 //#define ENGLISH_ONLY	1	// uncomment for english only version
-#define WM_PROXY_SPRX	"idle_plugin"		// idle_plugin.sprx
+#define WM_PROXY_SPRX	"eula_cddb_plugin"		// plugin used as xmb proxy to mount games
 
 //// EDITIONS ////
 

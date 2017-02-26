@@ -758,6 +758,7 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "</select>");
 #endif
 	strcat(buffer, HTML_BLU_SEPARATOR);
+	buffer += strlen(buffer);
 
 #ifndef LITE_EDITION
 	//default content profile
@@ -896,6 +897,8 @@ static void setup_form(char *buffer, char *templn)
 	add_option_item("2009" , "PCM 1536K" , (rec_audio_format==0x2009) , buffer);
 	strcat(buffer, "</select>");
 #endif
+
+	buffer += strlen(buffer);
 
 	//combos
 	sprintf(templn, HTML_BLU_SEPARATOR "<b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);

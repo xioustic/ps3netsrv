@@ -1354,7 +1354,7 @@ static void mount_thread(u64 do_eject)
 
 			else if(strstr(_path, "/GAME"))
 			{
-				char extgdfile[STD_PATH_LEN + 24], *extgdini = extgdfile;
+				char extgdfile[strlen(_path) + 24], *extgdini = extgdfile;
 				sprintf(extgdfile, "%s/PS3_GAME/PS3GAME.INI", _path);
 				if(read_file(extgdfile, extgdini, 12, 0))
 				{

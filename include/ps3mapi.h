@@ -1025,8 +1025,6 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 #define THREAD_NAME_PS3MAPI						"ps3m_api_server"
 #define THREAD02_NAME_PS3MAPI					"ps3m_api_client"
 
-#define PS3MAPIPORT			(7887)
-
 #define PS3MAPI_RECV_SIZE  2048
 
 #define PS3MAPI_MAX_LEN    383
@@ -1665,6 +1663,8 @@ static void ps3mapi_thread(u64 arg)
 			if(working) goto relisten;
 			else goto end;
 		}
+
+		active_socket[2] = list_s;
 
 		//if(list_s >= 0)
 		{

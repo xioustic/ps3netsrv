@@ -77,7 +77,7 @@ static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, c
 		if(((IS_PSP_FOLDER) || ((IS_NTFS) && !extcmp(entry_name + plen, ".ntfs[PSPISO]", 13))) && xml_len[gPSP] < (BUFFER_SIZE_PSP - ITEMS_BUFFER(gPSP)))
 		{xml_len[gPSP] += concat(myxml_psp + xml_len[gPSP], tempstr); *skey=PSP, ++item_count[gPSP];}
 		else
-		if(((IS_BLU_FOLDER) || (IS_DVD_FOLDER) || ((IS_NTFS) && (!extcmp(entry_name + plen, ".ntfs[DVDISO]", 13) || !extcmp(entry_name, ".ntfs[BDISO]", 12) || !extcmp(entry_name, ".ntfs[BDFILE]", 13)))) && xml_len[gDVD] < (BUFFER_SIZE_DVD - ITEMS_BUFFER(gDVD)))
+		if(((IS_BLU_FOLDER) || (IS_DVD_FOLDER) || ((IS_NTFS) && (!extcmp(entry_name + plen, ".ntfs[DVDISO]", 13) || !extcmp(entry_name + plen, ".ntfs[BDISO]", 12) || !extcmp(entry_name + plen, ".ntfs[BDFILE]", 13)))) && xml_len[gDVD] < (BUFFER_SIZE_DVD - ITEMS_BUFFER(gDVD)))
 		{xml_len[gDVD] += concat(myxml_dvd + xml_len[gDVD], tempstr); *skey=BLU, ++item_count[gDVD];}
 #endif
 		else
@@ -94,15 +94,8 @@ static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, c
 	return (true);
 }
 
-static void make_fb_xml(char *myxml, char *templn)
+static void make_fb_xml(char *myxml)
 {
-	sprintf(templn, WM_ICONS_PATH "/icon_wm_root.png");
-
-	if(file_exists(templn))
-		sprintf(templn, XML_PAIR("icon", WM_ICONS_PATH "/icon_wm_root.png"));
-	else
-		sprintf(templn, XML_PAIR("icon_rsc", "item_tex_ps3util"));
-
  #ifndef ENGLISH_ONLY
 	char STR_LOADGAMES[72];//	= "Load games with webMAN";
 
@@ -119,7 +112,10 @@ static void make_fb_xml(char *myxml, char *templn)
 							  "</Table>"
 							  "%s"
 							  QUERY_XMB("mgames", "xmb://localhost%s#seg_mygames")
-							  "%s</XMBML>", XML_HEADER, templn, STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
+							  "%s</XMBML>", XML_HEADER,
+							  file_exists(WM_ICONS_PATH "/icon_wm_root.png") ?
+								XML_PAIR("icon", WM_ICONS_PATH "/icon_wm_root.png") : XML_PAIR("icon_rsc", "item_tex_ps3util"),
+							  STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
 
 	save_file(FB_XML, myxml, size);
 }
@@ -253,22 +249,20 @@ static void set_buffer_sizes(uint8_t footprint)
 
 static bool update_mygames_xml(u64 conn_s_p)
 {
-	char xml[48]; sprintf(xml, MY_GAMES_XML);
-
 	if(conn_s_p == START_DAEMON)
 	{
 		if((webman_config->refr==1) || from_reboot)
 		{
 			cellFsUnlink(WMNOSCAN);
 
-			if(file_exists(xml))
+			if(file_exists(MY_GAMES_XML))
 			{
 				if(file_exists(FB_XML)) return true; // skip refresh xml & mount autoboot
 			}
 		}
 
 		// start a new thread for refresh xml content at start up
-		if(!webman_config->refr || file_exists(xml) == false)
+		if(!webman_config->refr || file_exists(MY_GAMES_XML) == false)
 		{
 			sys_ppu_thread_t t_id;
 			sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
@@ -306,41 +300,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 	}
 #endif
 
-
-#ifndef ENGLISH_ONLY
-	char STR_WMSETUP2[56];//	= "Setup webMAN options";
-
-	char STR_EJECTDISC[32];//	= "Eject Disc";
-
-	char STR_PS3FORMAT[40];//	= "PS3 format games";
-	char STR_PS2FORMAT[48];//	= "PS2 format games";
-	char STR_PS1FORMAT[48];//	= "PSOne format games";
-	char STR_PSPFORMAT[48];//	= "PSP\xE2\x84\xA2 format games";
-
-	char STR_VIDFORMAT[56];//	= "Blu-ray\xE2\x84\xA2 and DVD";
-	char STR_VIDEO[40];//		= "Video content";
-
-	char STR_LAUNCHPSP[144];//	= "Launch PSP ISO mounted through webMAN or mmCM";
-	char STR_LAUNCHPS2[48];//	= "Launch PS2 Classic";
-
-	language("STR_WMSETUP2", STR_WMSETUP2, "Setup webMAN options");
-
-	language("STR_EJECTDISC", STR_EJECTDISC, "Eject Disc");
-
-	language("STR_PS3FORMAT", STR_PS3FORMAT, "PS3 format games");
-	language("STR_PS2FORMAT", STR_PS2FORMAT, "PS2 format games");
-	language("STR_PS1FORMAT", STR_PS1FORMAT, "PSOne format games");
-	language("STR_PSPFORMAT", STR_PSPFORMAT, "PSP\xE2\x84\xA2 format games");
-
-	language("STR_VIDFORMAT", STR_VIDFORMAT, "Blu-ray\xE2\x84\xA2 and DVD");
-	language("STR_VIDEO", STR_VIDEO, "Video content");
-
-	language("STR_LAUNCHPSP", STR_LAUNCHPSP, "Launch PSP ISO mounted through webMAN or mmCM");
-	language("STR_LAUNCHPS2", STR_LAUNCHPS2, "Launch PS2 Classic");
-
-	language("/CLOSEFILE", NULL, NULL);
-#endif
-
 	sys_addr_t sysmem_psx = sysmem + (BUFFER_SIZE);
 	sys_addr_t sysmem_psp = sysmem + (BUFFER_SIZE) + (BUFFER_SIZE_PSX);
 	sys_addr_t sysmem_ps2 = sysmem + (BUFFER_SIZE) + (BUFFER_SIZE_PSX) + (BUFFER_SIZE_PSP);
@@ -366,9 +325,11 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	u32 key = 0, max_xmb_items = ((u32)(BUFFER_SIZE_ALL / AVG_ITEM_SIZE));
 
+	make_fb_xml(myxml);
+
 	char *templn = malloc(1024); //char templn[1024];
 
-	make_fb_xml(myxml, templn);
+	if(!templn) {sys_memory_free(sysmem); return false;}
 
 	// --- build group headers ---
 	char *tempstr, *folder_name, *url; tempstr = myxml; memset(tempstr, 0, _4KB_); folder_name = myxml + (3*KB), url = myxml + _2KB_;
@@ -376,7 +337,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	u16 item_count[6]; u32 xml_len[6];
 	for(u8 i = 0; i < 6; i++) item_count[i] = xml_len[i] = 0;
 
-	cellFsUnlink(xml);
+	cellFsUnlink(MY_GAMES_XML);
 
 	key = 0;
 
@@ -401,6 +362,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 			xml_len[gPS2] =  sprintf(myxml_ps2, "<View id=\"seg_wm_ps2_items\"><Attributes>");
 			if(webman_config->ps2l && file_exists("/dev_hdd0/game/PS2U10000"))
 			{
+#ifndef ENGLISH_ONLY
+				char *STR_LAUNCHPS2 =  tempstr; //[48];//	= "Launch PS2 Classic";
+				language("STR_LAUNCHPS2", STR_LAUNCHPS2, "Launch PS2 Classic");
+#endif
 				sprintf(templn, "<Table key=\"ps2_classic_launcher\">"
 								XML_PAIR("icon","/dev_hdd0/game/PS2U10000/ICON0.PNG")
 								XML_PAIR("title","PS2 Classic Launcher")
@@ -415,6 +380,10 @@ static bool update_mygames_xml(u64 conn_s_p)
 			xml_len[gPSP] =  sprintf(myxml_psp, "<View id=\"seg_wm_psp_items\"><Attributes>");
 			if(webman_config->pspl && file_exists("/dev_hdd0/game/PSPC66820"))
 			{
+#ifndef ENGLISH_ONLY
+				char *STR_LAUNCHPSP =  tempstr; //[144];//	= "Launch PSP ISO mounted through webMAN or mmCM";
+				language("STR_LAUNCHPSP", STR_LAUNCHPSP, "Launch PSP ISO mounted through webMAN or mmCM");
+#endif
 				sprintf(templn, "<Table key=\"cobra_psp_launcher\">"
 								XML_PAIR("icon","/dev_hdd0/game/PSPC66820/ICON0.PNG")
 								XML_PAIR("title","PSP Launcher")
@@ -446,7 +415,11 @@ static bool update_mygames_xml(u64 conn_s_p)
 	int fd;
 	t_keys skey[max_xmb_items];
 
-	char param[STD_PATH_LEN], icon[STD_PATH_LEN], subpath[STD_PATH_LEN], enc_dir_name[1024];
+	//char param[STD_PATH_LEN], icon[STD_PATH_LEN], subpath[STD_PATH_LEN], enc_dir_name[1024];
+	char *param = malloc(STD_PATH_LEN);
+	char *icon = malloc(STD_PATH_LEN);
+	char *subpath = malloc(STD_PATH_LEN);
+	char *enc_dir_name = malloc(STD_PATH_LEN * 3);
 
 	u8 is_net = 0;
 	int abort_connection = 0;
@@ -458,7 +431,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	check_cover_folders(tempstr);
 
 #ifdef WM_PROXY_SPRX
-	bool use_wm_proxy = file_exists(WMTMP "/" WM_PROXY_SPRX ".sprx");
+	bool use_wm_proxy = file_exists(TMP_DIR "/" WM_PROXY_SPRX ".sprx");
 #endif
 
 #ifdef SLAUNCH_FILE
@@ -790,6 +763,10 @@ continue_reading_folder_xml:
 #endif
 	}
 
+	if(icon)	free(icon);
+	if(subpath)	free(subpath);
+	if(enc_dir_name) free(enc_dir_name);
+
 #ifdef SLAUNCH_FILE
 	close_slaunch_file(fdsl);
 #endif
@@ -948,14 +925,22 @@ continue_reading_folder_xml:
 #endif
 	}
 
+#ifndef ENGLISH_ONLY
+	char *buffer = malloc(64);
+#endif
+
 	// --- build xml headers
-	memset(myxml, 0, 4300);
 	sprintf(myxml,  "%s"
 					"<View id=\"seg_mygames\">"
 					"<Attributes>", XML_HEADER);
 
 	if(!add_xmbm_plus)
 	{
+#ifndef ENGLISH_ONLY
+		char *STR_EJECTDISC = buffer; //[32];//	= "Eject Disc";
+		language("STR_EJECTDISC", STR_EJECTDISC, "Eject Disc");
+#endif
+
 #ifdef WM_PROXY_SPRX
 		if(use_wm_proxy)
 			sprintf(templn, "<Table key=\"eject\">"
@@ -975,29 +960,53 @@ continue_reading_folder_xml:
 		strcat(myxml, templn);
 	}
 
-	if( !(webman_config->nogrp))
+	if(!(webman_config->nogrp))
 	{
+#ifndef ENGLISH_ONLY
+		char *STR_PS3FORMAT = buffer; //[40];//	= "PS3 format games";
+		language("STR_PS3FORMAT", STR_PS3FORMAT, "PS3 format games");
+#endif
 		if( !(webman_config->cmask & PS3)) {sprintf(templn, "<Table key=\"wm_ps3\">"
 															XML_PAIR("icon","%s")
 															XML_PAIR("title","PLAYSTATION\xC2\xAE\x33")
 															XML_PAIR("info","%'i %s") "%s",
 															wm_icons[gPS3], item_count[gPS3], STR_PS3FORMAT, STR_NOITEM_PAIR); strcat(myxml, templn);}
+#ifndef ENGLISH_ONLY
+		char *STR_PS2FORMAT = buffer; //[48];//	= "PS2 format games";
+		language("STR_PS2FORMAT", STR_PS2FORMAT, "PS2 format games");
+#endif
 		if( !(webman_config->cmask & PS2)) {sprintf(templn, "<Table key=\"wm_ps2\">"
 															XML_PAIR("icon","%s")
 															XML_PAIR("title","PLAYSTATION\xC2\xAE\x32")
 															XML_PAIR("info","%'i %s") "%s",
 															wm_icons[gPS2], item_count[gPS2], STR_PS2FORMAT, STR_NOITEM_PAIR); strcat(myxml, templn);}
 #ifdef COBRA_ONLY
+
+#ifndef ENGLISH_ONLY
+		char *STR_PS1FORMAT = buffer; //[48];//	= "PSOne format games";
+		language("STR_PS1FORMAT", STR_PS1FORMAT, "PSOne format games");
+#endif
 		if( !(webman_config->cmask & PS1)) {sprintf(templn, "<Table key=\"wm_psx\">"
 															XML_PAIR("icon","%s")
 															XML_PAIR("title","PLAYSTATION\xC2\xAE")
 															XML_PAIR("info","%'i %s") "%s",
 															wm_icons[gPSX], item_count[gPSX], STR_PS1FORMAT, STR_NOITEM_PAIR);strcat(myxml, templn);}
+#ifndef ENGLISH_ONLY
+		char *STR_PSPFORMAT = buffer; //[48];//	= "PSP\xE2\x84\xA2 format games";
+		language("STR_PSPFORMAT", STR_PSPFORMAT, "PSP\xE2\x84\xA2 format games");
+#endif
 		if( !(webman_config->cmask & PSP)) {sprintf(templn, "<Table key=\"wm_psp\">"
 															XML_PAIR("icon","%s")
 															XML_PAIR("title","PLAYSTATION\xC2\xAEPORTABLE")
 															XML_PAIR("info","%'i %s") "%s",
 															wm_icons[gPSP], item_count[gPSP], STR_PSPFORMAT, STR_NOITEM_PAIR);strcat(myxml, templn);}
+#ifndef ENGLISH_ONLY
+		char *STR_VIDFORMAT = buffer; //[56];//	= "Blu-ray\xE2\x84\xA2 and DVD";
+		char *STR_VIDEO = buffer + 100; //[40];//		= "Video content";
+
+		language("STR_VIDFORMAT", STR_VIDFORMAT, "Blu-ray\xE2\x84\xA2 and DVD");
+		language("STR_VIDEO", STR_VIDEO, "Video content");
+#endif
 		if( !(webman_config->cmask & DVD) ||
 			!(webman_config->cmask & BLU)) {sprintf(templn, "<Table key=\"wm_dvd\">"
 															XML_PAIR("icon","%s")
@@ -1021,6 +1030,10 @@ continue_reading_folder_xml:
 
 	if(!webman_config->nosetup)
 	{
+#ifndef ENGLISH_ONLY
+		char *STR_WMSETUP2 = buffer; //[56];//	= "Setup webMAN options";
+		language("STR_WMSETUP2", STR_WMSETUP2, "Setup webMAN options");
+#endif
 		sprintf(templn, "<Table key=\"setup\">"
 						 XML_PAIR("icon","%s")
 						 XML_PAIR("title","%s")
@@ -1035,6 +1048,11 @@ continue_reading_folder_xml:
 
 		strcat(myxml, "</Table>");
 	}
+
+#ifndef ENGLISH_ONLY
+	free(buffer);
+	language("/CLOSEFILE", NULL, NULL);
+#endif
 
 	if(!(webman_config->nogrp))
 	{
@@ -1073,7 +1091,7 @@ continue_reading_folder_xml:
 
 	// --- save xml file
 	int fdxml = 0, slen;
-	if(cellFsOpen(xml, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdxml, NULL, 0) == CELL_FS_SUCCEEDED)
+	if(cellFsOpen(MY_GAMES_XML, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdxml, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
 		cellFsWrite(fdxml, (char*)myxml, strlen(myxml), NULL);
 
@@ -1101,20 +1119,8 @@ continue_reading_folder_xml:
 
 		cellFsWrite(fdxml, (char*)myxml, slen, NULL);
 		cellFsClose(fdxml);
-		cellFsChmod(xml, MODE);
-/*
-#ifndef LITE_EDITION
-		// --- replace & with ^ for droidMAN
-		slen = read_file(xml, myxml_ps3, BUFFER_SIZE_ALL, 0);
-		if(slen)
-		{
-			for(int n = 0; n < slen; n++) if(myxml_ps3[n] == '&') myxml_ps3[n] = '^';
 
-			strcpy(xml + 37, ".droid\0"); // .xml -> .droid
-			save_file(xml, myxml_ps3, slen);
-		}
-#endif
-*/
+		cellFsChmod(MY_GAMES_XML, MODE);
 	}
 
 #ifdef LAUNCHPAD
@@ -1128,7 +1134,8 @@ continue_reading_folder_xml:
 #endif
 
 	// --- release allocated memory
-	if(templn) free(templn);
+	if(templn)	free(templn);
+	if(param)	free(param);
 
 	led(GREEN, ON);
 

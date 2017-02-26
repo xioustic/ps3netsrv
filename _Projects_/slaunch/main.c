@@ -85,7 +85,7 @@ typedef struct // 1MB for 2000+1 titles
 } __attribute__((packed)) _slaunch;
 
 #define TYPE_ALL 0
-#define TYPE_PS1 1
+#define TYPE_PSX 1
 #define TYPE_PS2 2
 #define TYPE_PS3 3
 #define TYPE_PSP 4
@@ -98,7 +98,7 @@ typedef struct // 1MB for 2000+1 titles
 static char game_type[TYPE_MAX][8]=
 {
 	"\0",
-	"PS1",
+	"PSX",
 	"PS2",
 	"PS3",
 	"PSP",
@@ -126,22 +126,22 @@ static uint16_t init_delay=0;
 static uint16_t games = 0;
 static uint16_t cur_game=0, _cur_game=0, cur_game_=0;
 
-int32_t w=0;
-int32_t h=0;
+uint32_t w=0;
+uint32_t h=0;
 
 static uint8_t key_repeat=0, can_skip=0;
 
 static uint64_t tick=0x80;
 static int8_t   delta=5;
 
-CellPadData pdata;
+static CellPadData pdata;
 
 #define NONE   -1
 #define SYS_PPU_THREAD_NONE        (sys_ppu_thread_t)NONE
 
 static sys_ppu_thread_t slaunch_tid = SYS_PPU_THREAD_NONE;
 static int32_t running = 1;
-static uint8_t menu_running = 0;	// vsh menu off(0) or on(1)
+static uint8_t slaunch_running = 0;	// vsh menu off(0) or on(1)
 static uint8_t fav_mode = 0;
 
 static void return_to_xmb(void);
@@ -412,9 +412,12 @@ static void draw_selection(uint16_t game_idx)
 		ctx.fg_color=WHITE_TEXT;
 		print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 0, slaunch[game_idx].name );
 
+
+		float s = (float)(int)(strlen(path)/8); if(s>30) s=30;
+
 		// game path
-		if(ISHD(w))	set_font(24.f, 16.f, 1.0f, 1);
-		else		set_font(32.f, 16.f, 2.0f, 1);
+		if(ISHD(w))	set_font(36.f-s, 16.f, 1.0f, 1);
+		else		set_font(42.f-s, 16.f, 2.0f, 1);
 		ctx.fg_color=GRAY_TEXT;
 
 		if(*path == '/' && path[10] == '/') path += 10;
@@ -495,7 +498,7 @@ static uint8_t draw_side_menu(void)
 
 	draw_side_menu_option(option);
 
-	while(menu_running)
+	while(slaunch_running)
 	{
 		pad_read();
 
@@ -556,7 +559,7 @@ static void show_no_content(void)
 
 static void show_content(void)
 {
-	menu_running = 1;
+	slaunch_running = 1;
 
 	if(games)
 	{
@@ -723,7 +726,7 @@ static void start_VSH_Menu(void)
 static void stop_VSH_Menu(void)
 {
 	// menu off
-	menu_running = 0;
+	slaunch_running = 0;
 
 	// unbind renderer and kill font-instance
 	font_finalize();
@@ -828,7 +831,7 @@ static void slaunch_thread(uint64_t arg)
 
 	while(running)
 	{
-		if(!menu_running)												// VSH menu is not running, normal XMB execution
+		if(!slaunch_running)												// VSH menu is not running, normal XMB execution
 		{
 			sys_timer_usleep(500000);
 			pdata.len = 0;
@@ -861,7 +864,7 @@ static void slaunch_thread(uint64_t arg)
 		}
 		else // menu is running
 		{
-			while(menu_running && running)
+			while(slaunch_running && running)
 			{
 				pad_read();
 
@@ -940,8 +943,8 @@ static void slaunch_thread(uint64_t arg)
 
 						blink_option(RED, DARK_RED, 75000);
 
-						char path[160];
-						snprintf(path, 160, "%s", slaunch[cur_game].name + slaunch[cur_game].path_pos);
+						char path[512];
+						snprintf(path, 512, "%s", slaunch[cur_game].name + slaunch[cur_game].path_pos);
 
 						cur_game_ = cur_game;
 
@@ -975,7 +978,7 @@ static void slaunch_thread(uint64_t arg)
 		}
 	}
 
-	if(menu_running)
+	if(slaunch_running)
 		stop_VSH_Menu();
 
 	sys_ppu_thread_exit(0);
@@ -997,7 +1000,7 @@ int32_t slaunch_start(uint64_t arg)
 ***********************************************************************/
 static void slaunch_stop_thread(uint64_t arg)
 {
-	if(menu_running) stop_VSH_Menu();
+	if(slaunch_running) stop_VSH_Menu();
 
 	running = 0;
 

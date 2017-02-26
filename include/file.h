@@ -380,7 +380,7 @@ next_part:
 					if(is_ntfs1)
 					{
 						ps3ntfs_seek64(fd1, pos, SEEK_SET);
-						read = ps3ntfs_read(fd1, chunk, chunk_size);
+						read = ps3ntfs_read(fd1, (void *)chunk, chunk_size);
 					}
 					else
 #endif

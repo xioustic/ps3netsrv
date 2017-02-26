@@ -242,18 +242,10 @@ static char STR_NOTFOUND[40];//		= "Not found!";
 
 static char COVERS_PATH[100];//		= "";
 
-#ifdef COBRA_ONLY
-static const char *STR_DISCOBRA		= "COBRA TOGGLE";
-#endif
-#ifdef REX_ONLY
-static const char *STR_RBGMODE		= "RBG MODE TOGGLE";
-static const char *STR_RBGNORM		= "NORM MODE TOGGLE";
-static const char *STR_RBGMENU		= "MENU TOGGLE";
-#endif
-
-#endif
-
-#ifndef ENGLISH_ONLY
+#define STR_DISCOBRA	"COBRA TOGGLE"
+#define STR_RBGMODE		"RBG MODE TOGGLE"
+#define STR_RBGNORM		"NORM MODE TOGGLE"
+#define STR_RBGMENU		"MENU TOGGLE"
 
 /*
 static uint32_t get_xreg_value(const char *key, u32 default_value)
