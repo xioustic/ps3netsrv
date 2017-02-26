@@ -58,7 +58,7 @@ struct timeval {
 	int64_t tv_usec;		/* and microseconds */
 };
 
-#define MAX_GAMES 1000
+#define MAX_GAMES 2000
 #define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
 #define WM_ICONS_PATH		"/dev_hdd0/tmp/wm_icons"			// webMAN icons folder
 
@@ -759,9 +759,9 @@ static void start_VSH_Menu(void)
 {
 	int32_t ret, mem_size;
 
-	uint64_t gamelist_size = file_exists(WMTMP "/" SLIST ".bin");
+	uint64_t gamelist_size = file_exists(WMTMP "/" SLIST ".bin"); if(gamelist_size>(MAX_GAMES*sizeof(_slaunch))) gamelist_size=MAX_GAMES*sizeof(_slaunch);
 
-	mem_size = ((CANVAS_W * CANVAS_H * 4) + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4) + (SM_M) + (gamelist_size) + MB(1)) / MB(1);
+	mem_size = ((CANVAS_W * CANVAS_H * 4)   + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4) + (SM_M) + (gamelist_size+sizeof(_slaunch)) + MB(1)) / MB(1);
 
 	// create VSH Menu heap memory from memory container 1("app")
 	ret = create_heap(mem_size);

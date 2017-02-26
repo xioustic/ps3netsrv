@@ -2,7 +2,7 @@
 #define __MEM_H__
 
 
-#define MB(x)      ((x)*1024*1024)
+#define MB(x)      ((x)*0x100000UL)
 
 
 int32_t create_heap(int32_t size);
