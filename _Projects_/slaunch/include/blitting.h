@@ -20,14 +20,14 @@
 #define CANVAS_W      1920              // canvas width in pixel
 #define CANVAS_H      1080              // canvas height in pixel
 
-#define ISHD(a)       (a == 1920)
+#define ISHD(a)         (a == 1920)
 
 #define SM_X			1504			// side menu X offset
 #define SM_Y			90				// side menu Y offset for text
 #define SM_M			((CANVAS_W-SM_X) * CANVAS_H * 4)
 #define SM_TO			88				// side menu text offset
 
-#define IMG_MAX			 11             // bg + 10 image slots
+#define IMG_MAX			 41             // bg + 10 image slots
 #define MAX_W			336
 #define MAX_H			336
 #define MAX_WH4			(MAX_W * MAX_H * 4)
@@ -54,7 +54,7 @@
 //#define OFFSET(x, y) OFFSET_720p(x, y)
 //#define OFFSET(x, y) OFFSET_576p(x, y)
 //#define OFFSET(x, y) OFFSET_480p(x, y)
-#define OFFSET(x, y) ( (uint32_t) ( BASE_offset + (h==1080?((	( ((x)<<2) + (y) * 8192) )):(h==720?((	(( ((((x)* 2)/3)<<2) + (((y)* 2)/ 3) * 5120) ) & 0xfffffff8)):(h==576?((	(( ((((x)* 3)/8)<<2) + (((y)* 8)/15) * 3072) ) & 0xfffffff8)):((	(( ((((x)* 3)/8)<<2) + (((y)* 4)/ 9) * 3072) ) & 0xfffffff8))))) ) )
+#define OFFSET(x, y) ( (uint32_t) ( BASE_offset + (disp_h==1080?((	( ((x)<<2) + (y) * 8192) )):(disp_h==720?((	(( ((((x)* 2)/3)<<2) + (((y)* 2)/ 3) * 5120) ) & 0xfffffff8)):(disp_h==576?((	(( ((((x)* 3)/8)<<2) + (((y)* 8)/15) * 3072) ) & 0xfffffff8)):((	(( ((((x)* 3)/8)<<2) + (((y)* 4)/ 9) * 3072) ) & 0xfffffff8))))) ) )
 
 extern int32_t LINE_HEIGHT;
 
@@ -109,7 +109,7 @@ int32_t load_img_bitmap(int32_t idx, const char *path);
 void flip_frame(uint64_t *canvas);
 void dim_bg(float ds, float de);
 void dim_img(float dim);
-void dump_bg(void);
+void dump_bg(uint32_t x, uint32_t y, uint32_t w, uint32_t h);
 void set_background_color(uint32_t color);
 void set_foreground_color(uint32_t color);
 void set_font(float_t font_w, float_t font_h, float_t weight, int32_t distance);

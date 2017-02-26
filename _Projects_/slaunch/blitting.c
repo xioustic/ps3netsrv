@@ -6,7 +6,8 @@
 
 #include <cell/rtc.h>
 //#include "include/network.h"	// debug
-extern uint32_t w,h;
+extern uint32_t disp_w, disp_h;
+extern uint32_t gpp;
 
 // display values
 static uint32_t BASE_offset = 0;
@@ -320,47 +321,29 @@ void dim_img(float dim)
 void dim_bg(float ds, float de)
 {
 	uint32_t i, k, CANVAS_WW = CANVAS_W/2;
-	uint64_t *canvas = (uint64_t*)ctx.canvas;
-	uint64_t new_pixel=0;
-	uint64_t new_pixel_R0, new_pixel_G0, new_pixel_B0, new_pixel_R1, new_pixel_G1, new_pixel_B1;
 
-	for(float dim=ds; dim>=de; dim-=0.35f)
 	for(i = 0; i < CANVAS_H/2+1 ; i++)
+	{
 		for(k = 0; k < CANVAS_WW; k++)
 		{
-			new_pixel = canvas[k + i * CANVAS_WW];
-			new_pixel_B0 = (uint8_t)((float)((new_pixel)     & 0xff)*dim);
-			new_pixel_G0 = (uint8_t)((float)((new_pixel>> 8) & 0xff)*dim);
-			new_pixel_R0 = (uint8_t)((float)((new_pixel>>16) & 0xff)*dim);
-			new_pixel_B1 = (uint8_t)((float)((new_pixel>>32) & 0xff)*dim);
-			new_pixel_G1 = (uint8_t)((float)((new_pixel>>40) & 0xff)*dim);
-			new_pixel_R1 = (uint8_t)((float)((new_pixel>>48) & 0xff)*dim);
-			new_pixel = new_pixel_R1<<48 | new_pixel_G1<<40 | new_pixel_B1<<32 | new_pixel_R0<<16 | new_pixel_G0<< 8 | new_pixel_B0;
-			*(uint64_t*)(OFFSET(k*2, i)) = new_pixel;
-
-			new_pixel = canvas[k + (CANVAS_H-i) * CANVAS_WW];
-			new_pixel_B0 = (uint8_t)((float)((new_pixel)     & 0xff)*dim);
-			new_pixel_G0 = (uint8_t)((float)((new_pixel>> 8) & 0xff)*dim);
-			new_pixel_R0 = (uint8_t)((float)((new_pixel>>16) & 0xff)*dim);
-			new_pixel_B1 = (uint8_t)((float)((new_pixel>>32) & 0xff)*dim);
-			new_pixel_G1 = (uint8_t)((float)((new_pixel>>40) & 0xff)*dim);
-			new_pixel_R1 = (uint8_t)((float)((new_pixel>>48) & 0xff)*dim);
-			new_pixel = new_pixel_R1<<48 | new_pixel_G1<<40 | new_pixel_B1<<32 | new_pixel_R0<<16 | new_pixel_G0<< 8 | new_pixel_B0;
-			*(uint64_t*)(OFFSET(k*2, (CANVAS_H-i))) = new_pixel;
+			*(uint64_t*)(OFFSET(k*2, i)) = 0;
+			*(uint64_t*)(OFFSET(k*2, (CANVAS_H-i-1))) = 0;
 		}
+		sys_timer_usleep(250);
+	}
 }
 
 /***********************************************************************
 * dump background
 ***********************************************************************/
-void dump_bg(void)
+void dump_bg(uint32_t x, uint32_t y, uint32_t w, uint32_t h)
 {
-	uint32_t i, k, CANVAS_WW = CANVAS_W/2;
+	uint32_t i, k, CANVAS_WW = w/2;
 	uint64_t *bg = (uint64_t*)ctx.canvas;
 
-	for(i = 0; i < CANVAS_H; i++)
+	for(i = 0; i < h; i++)
 		for(k = 0; k < CANVAS_WW; k++)
-			bg[k + i * CANVAS_WW] = *(uint64_t*)(OFFSET((k*2), (i)));
+			bg[k + i * CANVAS_WW] = *(uint64_t*)(OFFSET(((k*2)+x), (i+y)));
 }
 
 /***********************************************************************
@@ -415,10 +398,10 @@ int32_t load_img_bitmap(int32_t idx, const char *path)
 		memset(buf, 0x80808080, 260 * 300 * 4);
 	}
 
-	if(ctx.img[idx].w<=(MAX_W/2) && ctx.img[idx].h<=(MAX_H/2))
+	if(gpp==10 && ctx.img[idx].w<=(MAX_W/2) && ctx.img[idx].h<=(MAX_H/2))
 	{
 		//upscale x2
-		uint32_t tw=2*ctx.img[idx].w;
+		uint32_t tw=ctx.img[idx].w*2;
 		uint32_t pixel;
 
 		for( int32_t y=ctx.img[idx].h-1; y>=0; y--)
@@ -434,6 +417,23 @@ int32_t load_img_bitmap(int32_t idx, const char *path)
 
 		ctx.img[idx].w<<=1;
 		ctx.img[idx].h<<=1;
+	}
+
+	if(gpp==40 && idx && (ctx.img[idx].w>168 || ctx.img[idx].h>168))
+	{
+		//downscale x2
+		uint32_t tw;
+downscale:
+		tw=ctx.img[idx].w/2;
+
+		for(uint32_t y=0; y<ctx.img[idx].h; y+=2)
+		for(uint32_t x=0; x<ctx.img[idx].w; x+=2)
+			buf[x/2   + y/2    *tw]=buf[x+(y*ctx.img[idx].w)];
+
+		ctx.img[idx].w>>=1;
+		ctx.img[idx].h>>=1;
+
+		if(ctx.img[idx].w>168 || ctx.img[idx].h>168) goto downscale;
 	}
 
 	return 0;
@@ -677,7 +677,7 @@ int32_t print_text(uint32_t *texture, uint32_t text_width, uint32_t x, uint32_t 
 			  for(k = 0; k < glyph->w; k++)
 			    if((glyph->image[i * glyph->w + k]) && (t_x + k < text_width) && (t_y + i < CANVAS_H))
 				{
-					canvas[(t_y + i + 1) * text_width + t_x + k + 1] = (w==1920 ? 0 : 0xff333333);
+					canvas[(t_y + i + 1) * text_width + t_x + k + 1] = (disp_w==1920 ? 0 : 0xff333333);
 					canvas[(t_y + i) * text_width + t_x + k] =
 					mix_color(canvas[(t_y + i) * text_width + t_x + k],
 							 ((uint32_t)glyph->image[i * glyph->w + k] <<24) |

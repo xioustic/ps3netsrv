@@ -1541,35 +1541,40 @@ static void mount_thread(u64 do_eject)
 								if(open_remote_file(ns, _netiso_args->path, &abort_connection) < 1) goto cancel_net;
 							}
 
-							char cue_buf[_2KB_];
-							int64_t cue_size = read_remote_file(ns, cue_buf, 0, _2KB_, &abort_connection);
-							open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
-
-							if(cue_size > 10)
+							sys_addr_t sysmem = 0;
+							if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 							{
-								TrackDef tracks[32];
-								tracks[0].lba = 0;
-								tracks[0].is_audio = 0;
+								char *cue_buf = (char*)sysmem;
+								int64_t cue_size = read_remote_file(ns, cue_buf, 0, _64KB_, &abort_connection);
 
-								u8 use_pregap = 0;
-								int lba, lp = 0;
-
-								while(lp < cue_size)
+								if(cue_size > 10)
 								{
-									lp = get_line(templn, cue_buf, cue_size, lp);
-									if(lp < 1) break;
+									TrackDef tracks[32];
+									tracks[0].lba = 0;
+									tracks[0].is_audio = 0;
 
-									if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-									if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
+									u8 use_pregap = 0;
+									int lba, lp = 0;
 
-									lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
+									while(lp < cue_size)
+									{
+										lp = get_line(templn, cue_buf, cue_size, lp);
+										if(lp < 1) break;
 
-									tracks[num_tracks].lba = lba;
-									if(num_tracks) tracks[num_tracks].is_audio = 1;
+										if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
+										if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
 
-									num_tracks++; if(num_tracks >= 32) break;
+										lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
+
+										tracks[num_tracks].lba = lba;
+										if(num_tracks) tracks[num_tracks].is_audio = 1;
+
+										num_tracks++; if(num_tracks >= 32) break;
+									}
 								}
+								sys_memory_free(sysmem);
 							}
+							open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
 						}
 cancel_net:
 						if(ns >= 0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
@@ -1751,38 +1756,44 @@ cancel_net:
 
 					if(!extcasecmp(_path, ".cue", 4))
 					{
-						char cue_buf[_2KB_];
-						int cue_size = read_file(_path, cue_buf, _2KB_, 0);
-						if(cue_size > 10)
+						sys_addr_t sysmem = 0;
+						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 						{
-							unsigned int num_tracks = 0;
+							char *cue_buf = (char*)sysmem;
+							int cue_size = read_file(_path, cue_buf, _64KB_, 0);
 
-							TrackDef tracks[32];
-							tracks[0].lba = 0;
-							tracks[0].is_audio = 0;
-
-							u8 use_pregap = 0;
-							int lba, lp = 0;
-
-							while(lp < cue_size)
+							if(cue_size > 10)
 							{
-								lp = get_line(templn, cue_buf, cue_size, lp);
-								if(lp < 1) break;
+								unsigned int num_tracks = 0;
 
-								if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-								if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
+								TrackDef tracks[32];
+								tracks[0].lba = 0;
+								tracks[0].is_audio = 0;
 
-								lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
+								u8 use_pregap = 0;
+								int lba, lp = 0;
 
-								tracks[num_tracks].lba = lba;
-								if(num_tracks) tracks[num_tracks].is_audio = 1;
+								while(lp < cue_size)
+								{
+									lp = get_line(templn, cue_buf, cue_size, lp);
+									if(lp < 1) break;
 
-								num_tracks++; if(num_tracks >= 32) break;
+									if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
+									if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
+
+									lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
+
+									tracks[num_tracks].lba = lba;
+									if(num_tracks) tracks[num_tracks].is_audio = 1;
+
+									num_tracks++; if(num_tracks >= 32) break;
+								}
+
+								if(!num_tracks) num_tracks++;
+								cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
+								mount_iso = false;
 							}
-
-							if(!num_tracks) num_tracks++;
-							cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
-							mount_iso = false;
+							sys_memory_free(sysmem);
 						}
 					}
 

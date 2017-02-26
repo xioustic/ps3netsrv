@@ -327,9 +327,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	make_fb_xml(myxml);
 
-	char *templn = malloc(1024); //char templn[1024];
-
-	if(!templn) {sys_memory_free(sysmem); return false;}
+	char templn[1024];
 
 	// --- build group headers ---
 	char *tempstr, *folder_name, *url; tempstr = myxml; memset(tempstr, 0, _4KB_); folder_name = myxml + (3*KB), url = myxml + _2KB_;
@@ -415,11 +413,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	int fd;
 	t_keys skey[max_xmb_items];
 
-	//char param[STD_PATH_LEN], icon[STD_PATH_LEN], subpath[STD_PATH_LEN], enc_dir_name[1024];
-	char *param = malloc(STD_PATH_LEN);
-	char *icon = malloc(STD_PATH_LEN);
-	char *subpath = malloc(STD_PATH_LEN);
-	char *enc_dir_name = malloc(STD_PATH_LEN * 3);
+	char param[STD_PATH_LEN], icon[STD_PATH_LEN], subpath[STD_PATH_LEN], enc_dir_name[1024];
 
 	u8 is_net = 0;
 	int abort_connection = 0;
@@ -763,10 +757,6 @@ continue_reading_folder_xml:
 #endif
 	}
 
-	if(icon)	free(icon);
-	if(subpath)	free(subpath);
-	if(enc_dir_name) free(enc_dir_name);
-
 #ifdef SLAUNCH_FILE
 	close_slaunch_file(fdsl);
 #endif
@@ -926,7 +916,7 @@ continue_reading_folder_xml:
 	}
 
 #ifndef ENGLISH_ONLY
-	char *buffer = malloc(64);
+	char *buffer = enc_dir_name;
 #endif
 
 	// --- build xml headers
@@ -1050,7 +1040,6 @@ continue_reading_folder_xml:
 	}
 
 #ifndef ENGLISH_ONLY
-	free(buffer);
 	language("/CLOSEFILE", NULL, NULL);
 #endif
 
@@ -1133,12 +1122,9 @@ continue_reading_folder_xml:
 	}
 #endif
 
-	// --- release allocated memory
-	if(templn)	free(templn);
-	if(param)	free(param);
-
 	led(GREEN, ON);
 
+	// --- release allocated memory
 #ifdef USE_VM
 	sys_vm_unmap(sysmem);
 #else

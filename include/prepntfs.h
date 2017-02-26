@@ -198,11 +198,11 @@ next_ntfs_entry:
 
 										if(fd >= 0)
 										{
-											char *cue_buf = malloc(_2KB_);
-
-											if(cue_buf)
+											sys_addr_t sysmem = 0;
+											if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 											{
-												int cue_size = ps3ntfs_read(fd, (void *)cue_buf, _2KB_);
+												char *cue_buf = (char*)sysmem;
+												int cue_size = ps3ntfs_read(fd, (void *)cue_buf, _64KB_);
 												ps3ntfs_close(fd);
 
 												if(cue_size > 13)
@@ -232,10 +232,9 @@ next_ntfs_entry:
 														num_tracks++; if(num_tracks>=32) break;
 													}
 
-													num_tracks++; if(num_tracks >= 32) break;
+													if(!num_tracks) num_tracks++;
 												}
-
-												free(cue_buf);
+												sys_memory_free(sysmem);
 											}
 										}
 									}

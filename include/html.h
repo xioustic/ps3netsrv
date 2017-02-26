@@ -489,10 +489,10 @@ static int parse_lba(const char *templn, bool use_pregap)
 	char *time=strrchr(templn, ' '); if(!time) return FAILED;
 	char tcode[10];
 
-	int tcode_len = snprintf(tcode, 8, "%s", time + 1); tcode[8] = NULL;
+	int tcode_len = snprintf(tcode, 9, "%s", time + 1); tcode[8] = NULL;
 	if((tcode_len != 8) || tcode[2]!=':' || tcode[5]!=':') return FAILED;
 
-	u8 tmin = 0, tsec = 0, tfrm = 0;
+	unsigned int tmin, tsec, tfrm;
 	tmin = (tcode[0]-'0')*10 + (tcode[1]-'0');
 	tsec = (tcode[3]-'0')*10 + (tcode[4]-'0');
 	tfrm = (tcode[6]-'0')*10 + (tcode[7]-'0');

@@ -2,6 +2,7 @@
 #include "include/mem.h"
 #include "include/vsh_exports.h"
 
+extern int32_t gpp; // games per page
 static int32_t jpg_w = 0, jpg_h = 0;
 
 static int32_t create_decoder(jpg_dec_info *dec_ctx);
@@ -82,11 +83,21 @@ static int32_t set_dec_param(jpg_dec_info	*dec_ctx)
 	in.outputColorAlpha		= 0xFF;
 	in.downScale			= 1;
 
-	if(!ISHD(jpg_w) && ((jpg_w*jpg_h*4)>(MAX_WH4) || jpg_w>MAX_W || jpg_h>MAX_H))
+	if(!ISHD(jpg_w) && ((jpg_w*jpg_h*4)>(MAX_WH4) || jpg_w>MAX_W || jpg_h>MAX_H || gpp==40))
 	{
-		in.downScale = 2;
-		jpg_w/=2; jpg_w+=(jpg_w%4);
-		jpg_h/=2;
+		if(gpp==10)
+		{
+			in.downScale = 2;
+			jpg_w/=2; jpg_w+=(jpg_w%4);
+			jpg_h/=2;
+		}
+		else
+		if(jpg_w>168 || jpg_h>168)
+		{
+			in.downScale = 2;
+			jpg_w/=2; jpg_w+=(jpg_w%2);
+			jpg_h/=2;
+		}
 	}
 
 	return cellJpgDecSetParameter(dec_ctx->main_h, dec_ctx->sub_h, &in, &out);
