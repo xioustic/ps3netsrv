@@ -20,8 +20,6 @@ static int prepNTFS(u8 towait)
 	if(prepntfs_working) return 0;
 	prepntfs_working = true;
 
-	char path[256];
-
 	int i, parts, dlen, count = 0;
 
 	unsigned int num_tracks;
@@ -43,13 +41,12 @@ static int prepNTFS(u8 towait)
 	uint32_t *sectionsP = NULL;
 	uint32_t *sections_sizeP = NULL;
 
-	snprintf(path, sizeof(path), WMTMP);
-	cellFsMkdir(path, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
-	cellFsChmod(path, S_IFDIR | 0777);
+	cellFsMkdir(WMTMP, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
+	cellFsChmod(WMTMP, S_IFDIR | 0777);
 	cellFsUnlink((char*)WMTMP "/games.html");
 	int fd = NONE;
 	u64 read = 0;
-	char path0[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], *filename = path0;
+	char path[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], filename[STD_PATH_LEN];
 
 	if(mountCount == -2)
 		for(i = 0; i < 2; i++)
@@ -61,23 +58,30 @@ static int prepNTFS(u8 towait)
 
 	if(!towait || mountCount <= 0)
 	{
-		if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
+		if(cellFsOpendir(WMTMP, &fd) == CELL_FS_SUCCEEDED)
 		{
 			char *ext;
 			while(!cellFsReaddir(fd, &dir, &read) && read)
 			{
 				ext = strstr(dir.d_name, ".ntfs[");
-				if(ext && !IS(ext, ".ntfs[BDFILE]")) {sprintf(path0, "%s/%s", path, dir.d_name); cellFsUnlink(path0);}
+				if(ext && !IS(ext, ".ntfs[BDFILE]")) {sprintf(path, "%s/%s", WMTMP, dir.d_name); cellFsUnlink(path);}
 			}
 			cellFsClosedir(fd);
 		}
 	}
 
-	if(mountCount <= 0) {mountCount=-2; goto exit_prepntfs;}
+	sys_addr_t addr = NULL;
 
-	plugin_args = (uint8_t *)malloc(_64KB_); if(!plugin_args) goto exit_prepntfs;
-	sectionsP = (uint32_t *)malloc(_32KB_); if(!sectionsP) goto exit_prepntfs;
-	sections_sizeP = (uint32_t *)malloc(_32KB_); if(!sections_sizeP) goto exit_prepntfs;
+	if(mountCount <= 0) {mountCount=-2; goto exit_prepntfs;}
+	{
+		sys_memory_container_t mc_app = get_app_memory_container();
+		if(mc_app) sys_memory_allocate_from_container(_64KB_, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &addr);
+		if(!addr && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) != CELL_OK) goto exit_prepntfs;
+	}
+
+	plugin_args    = (uint8_t *)(addr);
+	sectionsP      = (uint32_t*)(addr + sizeof(rawseciso_args));
+	sections_sizeP = (uint32_t*)(addr + sizeof(rawseciso_args) + _32KB_);
 
 	size_t plen, extlen;
 
@@ -119,7 +123,7 @@ next_ntfs_entry:
 								if(ps3ntfs_dirnext(psubdir, dir.d_name, &st) < 0) {has_dirs = false; continue;}
 								if(dir.d_name[0]=='.') goto next_ntfs_entry;
 
-								sprintf(path, "%s", dir.d_name);
+								dlen = sprintf(path, "%s", dir.d_name);
 
 								is_iso = (  !extcasecmp(path, ".iso", 4) ||
 											!extcasecmp(path, ".iso.0", 6) ||
@@ -129,7 +133,7 @@ next_ntfs_entry:
 
 								if(is_iso)
 								{
-									dlen = strlen(path) - !extcasecmp(path, ".iso.0", 6) ? 6 : 4;
+									dlen -= !extcasecmp(path, ".iso.0", 6) ? 6 : 4;
 
 									if((dlen < 0) || strncmp(subpath, path, dlen))
 										sprintf(filename, "[%s] %s", subpath, path);
@@ -239,12 +243,11 @@ next_ntfs_entry:
 										}
 									}
 
-									p_args = (rawseciso_args *)plugin_args; memset(p_args, 0x0, _64KB_);
+									p_args = (rawseciso_args *)plugin_args; memset(p_args, 0x0, sizeof(rawseciso_args));
 									p_args->device = USB_MASS_STORAGE((mounts[i].interface->ioType & 0xff) - '0');
 									p_args->emu_mode = emu_mode;
 									p_args->num_sections = parts;
 
-									memcpy(plugin_args + sizeof(rawseciso_args), sectionsP, parts * sizeof(uint32_t));
 									memcpy(plugin_args + sizeof(rawseciso_args) + (parts * sizeof(uint32_t)), sections_sizeP, parts * sizeof(uint32_t));
 
 									if(emu_mode == EMU_PSX)
@@ -257,7 +260,7 @@ next_ntfs_entry:
 										}
 
 										p_args->num_tracks = num_tracks;
-										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args +sizeof(rawseciso_args)+(2*parts*sizeof(uint32_t)));
+										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args + sizeof(rawseciso_args) + (2 * (parts * sizeof(uint32_t))));
 
 										if(!cue)
 										{
@@ -278,7 +281,7 @@ next_ntfs_entry:
 
 									snprintf(path, sizeof(path), "%s/%s%s.ntfs[%s]", WMTMP, filename, SUFIX2(profile), paths[m]);
 
-									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args)+(parts*sizeof(uint32_t))*2)+(num_tracks*sizeof(ScsiTrackDescriptor))); count++;
+									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args) + (2 * (parts * sizeof(uint32_t))) + (num_tracks * sizeof(ScsiTrackDescriptor)))); count++;
 /*
 									plen = snprintf(path, sizeof(path), "%s/%s", WMTMP, dir.d_name);
 									nlen = snprintf(path0, sizeof(path0), "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
@@ -329,9 +332,11 @@ for_sfo:
 	}
 
 exit_prepntfs:
-	if(plugin_args) free(plugin_args);
-	if(sectionsP) free(sectionsP);
-	if(sections_sizeP) free(sections_sizeP);
+	//if(plugin_args) free(plugin_args);
+	//if(sectionsP) free(sectionsP);
+	//if(sections_sizeP) free(sections_sizeP);
+
+	if(addr) sys_memory_free(addr);
 
 	prepntfs_working = false;
 	return count;

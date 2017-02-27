@@ -120,7 +120,6 @@ static char game_type[TYPE_MAX][8]=
 
 static _slaunch *slaunch = NULL;
 
-
 #define GRAY_TEXT   0xff808080
 #define LIGHT_TEXT  0xffa0a0a0
 #define WHITE_TEXT  0xffc0c0c0
@@ -904,11 +903,11 @@ static void slaunch_thread(uint64_t arg)
 	sys_timer_sleep(15);												// wait 15s and not interfere with boot process
 	play_rco_sound("snd_system_ng");
 
-	uint8_t gpl;
+	uint8_t gpl; uint16_t pg_idx;
 
 	while(running)
 	{
-		if(!slaunch_running)												// VSH menu is not running, normal XMB execution
+		if(!slaunch_running)											// VSH menu is not running, normal XMB execution
 		{
 			sys_timer_usleep(500000);
 			pdata.len = 0;
@@ -959,7 +958,11 @@ static void slaunch_thread(uint64_t arg)
 					can_skip=0;
 					oldpad = curpad;
 
-					uint16_t _cur_game=cur_game;
+					uint16_t _cur_game = cur_game;
+					if(curpad & (PAD_SELECT | PAD_SQUARE | PAD_CIRCLE | PAD_CROSS))
+					{
+						if(fav_mode) fav_game = cur_game; else cur_game_ = cur_game;
+					}
 
 					if(curpad & PAD_TRIANGLE)		// open side-menu
 					{
@@ -982,7 +985,6 @@ static void slaunch_thread(uint64_t arg)
 					{
 						//if(fav_mode) {fav_mode=0; reload_data(curpad);} else
 						{
-							if(fav_mode) fav_game = cur_game; else cur_game_ = cur_game;
 							play_rco_sound("snd_cancel");
 							stop_VSH_Menu(); /*return_to_xmb();*/
 						}
@@ -991,7 +993,6 @@ static void slaunch_thread(uint64_t arg)
 					else if(curpad & PAD_SELECT)	// alternate menu
 					{
 						play_rco_sound("snd_cursor");
-						if(fav_mode) fav_game = cur_game; else cur_game_ = cur_game;
 						fav_mode^=1;
 						reload_data(curpad);
 						sys_timer_usleep(40000);
@@ -1001,8 +1002,8 @@ static void slaunch_thread(uint64_t arg)
 					else if(curpad & PAD_R3 && games)	{gpp^=34; draw_page(cur_game, 0);}
 
 					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh_ps3"); break;}
-					else if((curpad & PAD_SQUARE) && !fav_mode && !(curpad & PAD_L2)) {gmode++; if(gmode>=TYPE_MAX) gmode=TYPE_ALL; dmode=TYPE_ALL; reload_data(curpad);}
-					else if((curpad & PAD_SQUARE) && !fav_mode &&  (curpad & PAD_L2)) {dmode++; if(dmode>=DEVS_MAX) dmode=TYPE_ALL; reload_data(curpad);}
+					else if((curpad & PAD_SQUARE) && !fav_mode && !(curpad & PAD_L2)) {gmode++; if(gmode>=TYPE_MAX) gmode=TYPE_ALL; dmode=TYPE_ALL; reload_data(curpad); continue;}
+					else if((curpad & PAD_SQUARE) && !fav_mode &&  (curpad & PAD_L2)) {dmode++; if(dmode>=DEVS_MAX) dmode=TYPE_ALL; reload_data(curpad); continue;}
 					else if((curpad == PAD_START) && games)	// favorite game XMB
 					{
 						if(fav_mode) remove_game(); else add_game();
@@ -1029,8 +1030,6 @@ static void slaunch_thread(uint64_t arg)
 						char path[512];
 						snprintf(path, 512, "%s", slaunch[cur_game].name + slaunch[cur_game].path_pos);
 
-						cur_game_ = cur_game;
-
 						return_to_xmb();
 						send_wm_request(path);
 						break;
@@ -1040,7 +1039,7 @@ static void slaunch_thread(uint64_t arg)
 					{
 						tick=0xc0;
 						play_rco_sound("snd_cursor");
-						uint16_t pg_idx=(1+_cur_game%gpp);
+						pg_idx=(1 + _cur_game % gpp);
 						if(pg_idx<=games) set_backdrop(pg_idx, 1);
 						if(cur_game>=games) cur_game=0;
 						if((cur_game/gpp)*gpp != (_cur_game/gpp)*gpp)
@@ -1051,8 +1050,9 @@ static void slaunch_thread(uint64_t arg)
 				}
 				else
 				{
-					init_delay=0, oldpad=0, tick+=delta;			// pulsing selection frame
-					if(games) set_frame(1 + cur_game % gpp, 0xff000000ff000000|tick<<48|tick<<16);
+					init_delay=0, oldpad=0, tick+=delta;	// pulsing selection frame
+					pg_idx=(1 + cur_game % gpp);
+					if(pg_idx<=games) set_frame(1 + cur_game % gpp, 0xff000000ff000000|tick<<48|tick<<16); else cur_game=0;
 					if(tick<0x80 || tick>0xF0)delta=-delta;
 
 					// update temperature

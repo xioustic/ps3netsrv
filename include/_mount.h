@@ -96,8 +96,8 @@ static void auto_play(char *param)
  #endif
 		{
 			char category[16], seg_name[40]; *category = *seg_name = NULL;
-			if((atag && !l2) || (!atag && l2)) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name, true);} // L2 + X
-			//sys_ppu_thread_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));		// L2 + X
+			//if((atag && !l2) || (!atag && l2)) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name, true);} // L2 + X
+			if(!(webman_config->combo2 & PLAY_DISC) || atag) {sys_ppu_thread_sleep(1); launch_disc(category, seg_name, ((atag && !l2) || (!atag && l2)));}		// L2 + X
 
 			autoplay = false;
 		}

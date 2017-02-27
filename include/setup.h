@@ -431,68 +431,64 @@ static void setup_form(char *buffer, char *templn)
 	char STR_FANCTRL2[48];//	= "CTRL FAN";
 	char STR_FANCTRL4[72];//	= "CTRL DYN FAN";
 	char STR_FANCTRL5[88];//	= "CTRL MIN FAN";
-	//char STR_UPDN[16]			= "&#8593;/&#8595;"; //↑/↓
-	//char STR_LFRG[16]			= "&#8592;/&#8594;"; //←/→
 
-	language("STR_SCAN1", STR_SCAN1, "Scan these devices");
-	language("STR_PSPL", STR_PSPL, "Show PSP Launcher");
-	language("STR_PS2L", STR_PS2L, "Show PS2 Classic Launcher");
-	language("STR_RXVID", STR_RXVID, "Show Video sub-folder");
-	language("STR_LPG", STR_LPG, "Load last-played game on startup");
-	language("STR_AUTOB", STR_AUTOB, "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup");
-	language("STR_DELAYAB", STR_DELAYAB, "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)");
-	language("STR_DEVBL", STR_DEVBL, "Enable /dev_blind (writable /dev_flash) on startup");
-	language("STR_CONTSCAN", STR_CONTSCAN, "Disable content scan on startup");
-	language("STR_USBPOLL", STR_USBPOLL, "Disable USB polling");
-	language("STR_FTPSVC", STR_FTPSVC, "Disable FTP service");
-	language("STR_FIXGAME", STR_FIXGAME, "Disable auto-fix game");
-	language("STR_COMBOS", STR_COMBOS, "Disable all PAD shortcuts");
-	language("STR_MMCOVERS", STR_MMCOVERS, "Disable multiMAN covers");
-	language("STR_ACCESS", STR_ACCESS, "Disable remote access to FTP/WWW services");
-	language("STR_NOSETUP", STR_NOSETUP, "Disable webMAN Setup entry in \"webMAN Games\"");
-	language("STR_NOSPOOF", STR_NOSPOOF, "Disable firmware version spoofing");
-	language("STR_NOGRP", STR_NOGRP, "Disable grouping of content in \"webMAN Games\"");
-	language("STR_NOWMDN", STR_NOWMDN, "Disable startup notification of WebMAN on the XMB");
+	language("STR_SCAN1",     STR_SCAN1,     "Scan these devices");
+	language("STR_PSPL",      STR_PSPL,      "Show PSP Launcher");
+	language("STR_PS2L",      STR_PS2L,      "Show PS2 Classic Launcher");
+	language("STR_RXVID",     STR_RXVID,     "Show Video sub-folder");
+	language("STR_LPG",       STR_LPG,       "Load last-played game on startup");
+	language("STR_AUTOB",     STR_AUTOB,     "Check for /dev_hdd0/PS3ISO/AUTOBOOT.ISO on startup");
+	language("STR_DELAYAB",   STR_DELAYAB,   "Delay loading of AUTOBOOT.ISO/last-game (Disc Auto-start)");
+	language("STR_DEVBL",     STR_DEVBL,     "Enable /dev_blind (writable /dev_flash) on startup");
+	language("STR_CONTSCAN",  STR_CONTSCAN,  "Disable content scan on startup");
+	language("STR_USBPOLL",   STR_USBPOLL,   "Disable USB polling");
+	language("STR_FTPSVC",    STR_FTPSVC,    "Disable FTP service");
+	language("STR_FIXGAME",   STR_FIXGAME,   "Disable auto-fix game");
+	language("STR_COMBOS",    STR_COMBOS,    "Disable all PAD shortcuts");
+	language("STR_MMCOVERS",  STR_MMCOVERS,  "Disable multiMAN covers");
+	language("STR_ACCESS",    STR_ACCESS,    "Disable remote access to FTP/WWW services");
+	language("STR_NOSETUP",   STR_NOSETUP,   "Disable webMAN Setup entry in \"webMAN Games\"");
+	language("STR_NOSPOOF",   STR_NOSPOOF,   "Disable firmware version spoofing");
+	language("STR_NOGRP",     STR_NOGRP,     "Disable grouping of content in \"webMAN Games\"");
+	language("STR_NOWMDN",    STR_NOWMDN,    "Disable startup notification of WebMAN on the XMB");
 #ifdef NOSINGSTAR
-	language("STR_NOSINGSTAR", STR_NOSINGSTAR, "Remove SingStar icon");
+	language("STR_NOSINGSTAR",STR_NOSINGSTAR, "Remove SingStar icon");
 #endif
 	language("STR_AUTO_PLAY", STR_AUTO_PLAY, "Auto-Play");
 	language("STR_RESET_USB", STR_RESET_USB, "Disable Reset USB Bus");
-	language("STR_TITLEID", STR_TITLEID, "Include the ID as part of the title of the game");
-	language("STR_FANCTRL", STR_FANCTRL, "Enable dynamic fan control");
-	language("STR_NOWARN", STR_NOWARN, "Disable temperature warnings");
-	language("STR_AUTOAT", STR_AUTOAT, "Auto at");
-	language("STR_LOWEST", STR_LOWEST, "Lowest");
-	language("STR_FANSPEED", STR_FANSPEED, "fan speed");
+	language("STR_TITLEID",   STR_TITLEID,   "Include the ID as part of the title of the game");
+	language("STR_FANCTRL",   STR_FANCTRL,   "Enable dynamic fan control");
+	language("STR_NOWARN",    STR_NOWARN,    "Disable temperature warnings");
+	language("STR_AUTOAT",    STR_AUTOAT,    "Auto at");
+	language("STR_LOWEST",    STR_LOWEST,    "Lowest");
+	language("STR_FANSPEED",  STR_FANSPEED,  "fan speed");
 
-	language("STR_PS2EMU", STR_PS2EMU, "PS2 Emulator");
-	language("STR_LANGAMES", STR_LANGAMES, "Scan for LAN games/videos");
-	language("STR_ANYUSB", STR_ANYUSB, "Wait for any USB device to be ready");
-	language("STR_ADDUSB", STR_ADDUSB, "Wait additionally for each selected USB device to be ready");
-	language("STR_SPOOFID", STR_SPOOFID, "Change idps and psid in lv2 memory at system startup");
+	language("STR_PS2EMU",    STR_PS2EMU,    "PS2 Emulator");
+	language("STR_LANGAMES",  STR_LANGAMES,  "Scan for LAN games/videos");
+	language("STR_ANYUSB",    STR_ANYUSB,    "Wait for any USB device to be ready");
+	language("STR_ADDUSB",    STR_ADDUSB,    "Wait additionally for each selected USB device to be ready");
+	language("STR_SPOOFID",   STR_SPOOFID,   "Change idps and psid in lv2 memory at system startup");
 	language("STR_DELCFWSYS", STR_DELCFWSYS, "Disable CFW syscalls and delete history files at system startup");
-	language("STR_MEMUSAGE", STR_MEMUSAGE, "Plugin memory usage");
-	language("STR_PLANG", STR_PLANG, "Plugin language");
-	language("STR_PROFILE", STR_PROFILE, "Profile");
-	language("STR_DEFAULT", STR_DEFAULT, "Default");
-	language("STR_COMBOS2", STR_COMBOS2, "XMB/In-Game PAD SHORTCUTS");
-	language("STR_FAILSAFE", STR_FAILSAFE, "FAIL SAFE");
-	language("STR_SHOWTEMP", STR_SHOWTEMP, "SHOW TEMP");
-	language("STR_SHOWIDPS", STR_SHOWIDPS, "SHOW IDPS");
-	language("STR_PREVGAME", STR_PREVGAME, "PREV GAME");
-	language("STR_NEXTGAME", STR_NEXTGAME, "NEXT GAME");
+	language("STR_MEMUSAGE",  STR_MEMUSAGE,  "Plugin memory usage");
+	language("STR_PLANG",     STR_PLANG,     "Plugin language");
+	language("STR_PROFILE",   STR_PROFILE,   "Profile");
+	language("STR_DEFAULT",   STR_DEFAULT,   "Default");
+	language("STR_COMBOS2",   STR_COMBOS2,   "XMB/In-Game PAD SHORTCUTS");
+	language("STR_FAILSAFE",  STR_FAILSAFE,  "FAIL SAFE");
+	language("STR_SHOWTEMP",  STR_SHOWTEMP,  "SHOW TEMP");
+	language("STR_SHOWIDPS",  STR_SHOWIDPS,  "SHOW IDPS");
+	language("STR_PREVGAME",  STR_PREVGAME,  "PREV GAME");
+	language("STR_NEXTGAME",  STR_NEXTGAME,  "NEXT GAME");
 	language("STR_SHUTDOWN2", STR_SHUTDOWN2, "SHUTDOWN ");
-	language("STR_RESTART2", STR_RESTART2, "RESTART&nbsp; ");
+	language("STR_RESTART2",  STR_RESTART2,  "RESTART&nbsp; ");
 	#ifdef REMOVE_SYSCALLS
-	language("STR_DELCFWSYS2", STR_DELCFWSYS2, "DEL CFW SYSCALLS");
+	language("STR_DELCFWSYS2",STR_DELCFWSYS2, "DEL CFW SYSCALLS");
 	#endif
 
 	language("STR_UNLOADWM", STR_UNLOADWM, "UNLOAD WM");
 	language("STR_FANCTRL2", STR_FANCTRL2, "CTRL FAN");
 	language("STR_FANCTRL4", STR_FANCTRL4, "CTRL DYN FAN");
 	language("STR_FANCTRL5", STR_FANCTRL5, "CTRL MIN FAN");
-	//language("STR_UPDN", STR_UPDN);
-	//language("STR_LFRG", STR_LFRG);
 
 	language("/CLOSEFILE", NULL, NULL);
  #endif
@@ -945,8 +941,6 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("prs", "1", STR_RESTART2,   " : <b>L3+R2+O</b><br>"          , !(webman_config->combo & RESTARTPS),  buffer);
 #endif
 	add_check_box("puw", "1", STR_UNLOADWM,   " : <b>L3+R2+R3</b><br>"         , !(webman_config->combo & UNLOAD_WM),  buffer);
-//	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+"                  , !(webman_config->combo & MANUALFAN),  buffer); sprintf(templn, "%s</b><br>", STR_UPDN); strcat(buffer, templn);
-//	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+"                  , !(webman_config->combo & MINDYNFAN),  buffer); sprintf(templn, "%s</b><br>", STR_LFRG); strcat(buffer, templn);
 	add_check_box("pf1", "1", STR_FANCTRL2,   " : <b>SELECT+&#8593;/&#8595;</b><br>", !(webman_config->combo & MANUALFAN),  buffer);
 	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+&#8592;/&#8594;</b><br>", !(webman_config->combo & MINDYNFAN),  buffer);
 #ifdef REMOVE_SYSCALLS
@@ -1181,6 +1175,8 @@ static void reset_settings(void)
 	webman_config->minfan = RANGE(webman_config->minfan, MIN_FANSPEED, 99);   // %
 	webman_config->ps2temp = RANGE(webman_config->ps2temp, MIN_FANSPEED, 99); // %
 	webman_config->temp1 = RANGE(webman_config->temp1, 40, MAX_TEMPERATURE);  //°C
+
+	for(u8 id = 0; id < 5; id++) if(!webman_config->netp[id]) webman_config->netp[id] = NETPORT;
 
 	if(webman_config->netsrvp  < 1)   webman_config->netsrvp = NETPORT;
 	if(webman_config->ftp_port < 1 || webman_config->ftp_port == WWWPORT) webman_config->ftp_port = FTPPORT;

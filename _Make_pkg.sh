@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "Building webMAN_MOD_1.46.xx_Updater.pkg ..."
+echo "Building webMAN_MOD_1.47.xx_Updater.pkg ..."
 
 mv webftp_server_lite.sprx                _Projects_/updater/pkgfiles/USRDIR/webftp_server_lite.sprx
 mv webftp_server_full.sprx                _Projects_/updater/pkgfiles/USRDIR/webftp_server_full.sprx
@@ -16,4 +16,4 @@ clear
 cd _Projects_/updater
 sh Make_PKG.sh 2>&1
 
-mv webMAN_MOD_1.46.xx_Updater.pkg ../../webMAN_MOD_1.46.xx_Updater.pkg
+mv webMAN_MOD_1.47.xx_Updater.pkg ../../webMAN_MOD_1.47.xx_Updater.pkg
