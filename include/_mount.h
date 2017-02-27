@@ -732,7 +732,6 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 static void do_umount_iso(void)
 {
 	unsigned int real_disctype, effective_disctype, iso_disctype;
-
 	cobra_get_disc_type(&real_disctype, &effective_disctype, &iso_disctype);
 
 	// If there is an effective disc in the system, it must be ejected

@@ -246,6 +246,10 @@ static void setup_parse_settings(char *param)
 	webman_config->foot=get_valuen(param, "fp=", 0, 7); set_buffer_sizes(webman_config->foot);
 	if(!strstr(param, "mc=1")) webman_config->mc_app = 1;
 
+#ifdef REMOVE_SYSCALLS
+	if(strstr(param, "dsc=1")) webman_config->dsc=1;
+#endif
+
 	webman_config->spp = 0;
 #ifdef COBRA_ONLY
 	#ifdef REMOVE_SYSCALLS
@@ -945,15 +949,17 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("pf2", "1", STR_FANCTRL5,   " : <b>SELECT+&#8592;/&#8594;</b><br>", !(webman_config->combo & MINDYNFAN),  buffer);
 #ifdef REMOVE_SYSCALLS
 	add_check_box("psc", "1", STR_DELCFWSYS2, " : <b>R2+&#8710;</b> ("         , !(webman_config->combo & DISABLESH),  buffer);
+	add_check_box("dsc", "1", "PS3 DISC", " ", (webman_config->dsc), buffer);
 	add_check_box("kcc", "1", "CCAPI", " ",  !(webman_config->keep_ccapi), buffer);
 
  #ifdef COBRA_ONLY
 	strcat(buffer, "• PS3MAPI <select name=\"sc8\">");
 	add_option_item("1", STR_ENABLED,  (webman_config->sc8mode != 4), buffer);
 	add_option_item("0", STR_DISABLED, (webman_config->sc8mode == 4), buffer);
-	strcat(buffer, "</select>");
- #endif
+	strcat(buffer, "</select>)<br>");
+ #else
 	strcat(buffer, ")<br>");
+ #endif
 #endif
 
 #ifndef LITE_EDITION

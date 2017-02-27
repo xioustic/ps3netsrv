@@ -332,10 +332,6 @@ for_sfo:
 	}
 
 exit_prepntfs:
-	//if(plugin_args) free(plugin_args);
-	//if(sectionsP) free(sectionsP);
-	//if(sections_sizeP) free(sections_sizeP);
-
 	if(addr) sys_memory_free(addr);
 
 	prepntfs_working = false;

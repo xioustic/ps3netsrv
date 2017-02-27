@@ -26,6 +26,7 @@ copy /y pkgfiles\USRDIR\setup.png     pkgfiles-rebugification_theme\USRDIR>>nul
 
 mkdir pkgfiles-rebugification_theme\USRDIR\images>>nul
 copy /y pkgfiles\USRDIR\images\*.png pkgfiles-rebugification_theme\USRDIR\images>>nul
+copy /y pkgfiles\USRDIR\images\*.jpg pkgfiles-rebugification_theme\USRDIR\images>>nul
 mkdir pkgfiles-rebugification_theme\USRDIR\official>>nul
 copy /y pkgfiles\USRDIR\official\*.sprx pkgfiles-rebugification_theme\USRDIR\official>>nul
 
@@ -86,6 +87,7 @@ del /s/q pkgfiles-rebugification_theme\USRDIR\refresh.png>>nul
 del /s/q pkgfiles-rebugification_theme\USRDIR\setup.png>>nul
 
 del /s/q pkgfiles-rebugification_theme\USRDIR\images\*.png>>nul
+del /s/q pkgfiles-rebugification_theme\USRDIR\images\*.jpg>>nul
 del /s/q pkgfiles-rebugification_theme\USRDIR\official\*.sprx>>nul
 del /s/q pkgfiles-rebugification_theme\ICON0.PNG>>nul
 del /s/q pkgfiles-rebugification_theme\PARAM.SFO>>nul

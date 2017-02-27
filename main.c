@@ -534,8 +534,9 @@ typedef struct
 	uint8_t spp;    //disable syscalls, offline: lock PSN, offline ingame
 	uint8_t noss;   //no singstar
 	uint8_t nosnd0; //no snd0.at3
+	uint8_t dsc;    //disable syscalls if physical disc is inserted
 
-	uint8_t padding3[5];
+	uint8_t padding3[4];
 
 	// fan control settings
 

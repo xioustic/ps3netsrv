@@ -1,3 +1,5 @@
+#define _IS_ON_XMB_		((sec & 1) && (gTick.tick == rTick.tick))
+
 static void poll_start_play_time(void)
 {
 	#ifdef OFFLINE_INGAME
@@ -246,36 +248,49 @@ static void poll_thread(uint64_t poll)
 
 #ifdef PKG_HANDLER
 		// Poll downloaded pkg files (if is on XMB)
-		if((sec & 1) && (gTick.tick == rTick.tick)) poll_downloaded_pkg_files(msg);
+		if(_IS_ON_XMB_) poll_downloaded_pkg_files(msg);
 #endif
 
 		// Auto-mount JB game found on root of USB device
-		if((webman_config->autob) && (sec & 1) && (gTick.tick == rTick.tick) && (!is_mounting))
+		if((_IS_ON_XMB_) && (!is_mounting))
 		{
 			if(!isDir("/dev_bdvd"))
 			{
-				for(u8 f0 = 1; f0 < 16; f0++)
-				{
-					if(IS_NET || IS_NTFS) continue;
-
-					if(!check_drive(f0))
+				if(webman_config->autob)
+					for(u8 f0 = 1; f0 < 16; f0++)
 					{
-						if(automount != f0)
+						if(IS_NET || IS_NTFS) continue;
+
+						if(!check_drive(f0))
 						{
-#ifdef COBRA_ONLY
-							sprintf(msg, "%s/AUTOMOUNT.ISO", drives[f0]);
-							if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
-							else
-#endif
+							if(automount != f0)
 							{
-								sprintf(msg, "%s/PS3_GAME/PARAM.SFO", drives[f0]);
+#ifdef COBRA_ONLY
+								sprintf(msg, "%s/AUTOMOUNT.ISO", drives[f0]);
 								if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
+								else
+#endif
+								{
+									sprintf(msg, "%s/PS3_GAME/PARAM.SFO", drives[f0]);
+									if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
+								}
 							}
+							else if(!isDir(drives[f0])) automount = 0;
 						}
-						else if(!isDir(drives[f0])) automount = 0;
 					}
+			}
+#ifdef REMOVE_SYSCALLS
+			else if(!syscalls_removed && webman_config->dsc)
+			{
+				unsigned int real_disctype, effective_disctype, iso_disctype;
+				cobra_get_disc_type(&real_disctype, &effective_disctype, &iso_disctype);
+
+				if(real_disctype == DISC_TYPE_PS3_BD && iso_disctype == DISC_TYPE_NONE)
+				{
+					disable_cfw_syscalls(webman_config->keep_ccapi);
 				}
 			}
+#endif
 		}
 
 #ifdef DO_WM_REQUEST_POLLING

@@ -274,7 +274,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/refreshxml.png</String></Pair>
 				<Pair key="title"><String>Обновить меню 'Игры'</String></Pair>
 				<Pair key="info"><String>Обновить список игр в XMB, потребуется перезагрузка [Select+R3]</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/refresh.ps3</String></Pair>
 			</Table>
@@ -374,7 +374,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net0</String></Pair>
 				<Pair key="info"><String>Монтировать '/net0' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/.</String></Pair>
 			</Table>
@@ -389,7 +389,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
 				<Pair key="info"><String>Монтировать '/net0/PKG' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/PKG</String></Pair>
 			</Table>
@@ -404,7 +404,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
 				<Pair key="info"><String>Монтировать '/net0/VIDEO' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/VIDEO</String></Pair>
 			</Table>
@@ -419,7 +419,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
 				<Pair key="info"><String>Монтировать '/net0/MUSIC' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/MUSIC</String></Pair>
 			</Table>
@@ -434,7 +434,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net0/PICTURE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/PICTURE</String></Pair>
 			</Table>
@@ -449,7 +449,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
 				<Pair key="info"><String>Монтировать '/net0/ROMS' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/ROMS</String></Pair>
 			</Table>
@@ -464,7 +464,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать FIRMWARE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net0/FIRMWARE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net0/FIRMWARE</String></Pair>
 			</Table>
@@ -479,7 +479,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net1</String></Pair>
 				<Pair key="info"><String>Монтировать '/net1' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/.</String></Pair>
 			</Table>
@@ -494,7 +494,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
 				<Pair key="info"><String>Монтировать '/net1/PKG' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/PKG</String></Pair>
 			</Table>
@@ -509,7 +509,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
 				<Pair key="info"><String>Монтировать '/net1/VIDEO' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/VIDEO</String></Pair>
 			</Table>
@@ -524,7 +524,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
 				<Pair key="info"><String>Монтировать '/net1/MUSIC' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/MUSIC</String></Pair>
 			</Table>
@@ -539,7 +539,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net1/PICTURE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/PICTURE</String></Pair>
 			</Table>
@@ -554,7 +554,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
 				<Pair key="info"><String>Монтировать '/net1/ROMS' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/ROMS</String></Pair>
 			</Table>
@@ -569,7 +569,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать FIRMWARE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net1/FIRMWARE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net1/FIRMWARE</String></Pair>
 			</Table>
@@ -584,7 +584,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net2</String></Pair>
 				<Pair key="info"><String>Монтировать '/net2' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/.</String></Pair>
 			</Table>
@@ -599,7 +599,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
 				<Pair key="info"><String>Монтировать '/net2/PKG' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/PKG</String></Pair>
 			</Table>
@@ -614,7 +614,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
 				<Pair key="info"><String>Монтировать '/net2/VIDEO' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/VIDEO</String></Pair>
 			</Table>
@@ -629,7 +629,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
 				<Pair key="info"><String>Монтировать '/net2/MUSIC' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/MUSIC</String></Pair>
 			</Table>
@@ -644,7 +644,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net2/PICTURE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/PICTURE</String></Pair>
 			</Table>
@@ -659,7 +659,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
 				<Pair key="info"><String>Монтировать '/net2/ROMS' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/ROMS</String></Pair>
 			</Table>
@@ -674,7 +674,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String></String>Монтировать FIRMWARE</Pair>
 				<Pair key="info"><String>Монтировать '/net2/FIRMWARE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net2/FIRMWARE</String></Pair>
 			</Table>
@@ -689,7 +689,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net3</String></Pair>
 				<Pair key="info"><String>Монтировать '/net3' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/.</String></Pair>
 			</Table>
@@ -704,7 +704,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
 				<Pair key="info"><String>Монтировать '/net3/PKG' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/PKG</String></Pair>
 			</Table>
@@ -719,7 +719,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
 				<Pair key="info"><String>Монтировать '/net3/VIDEO' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/VIDEO</String></Pair>
 			</Table>
@@ -734,7 +734,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
 				<Pair key="info"><String>Монтировать '/net3/MUSIC' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/MUSIC</String></Pair>
 			</Table>
@@ -749,7 +749,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net3/PICTURE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/PICTURE</String></Pair>
 			</Table>
@@ -764,7 +764,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
 				<Pair key="info"><String>Монтировать '/net3/ROMS' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/ROMS</String></Pair>
 			</Table>
@@ -779,7 +779,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать FIRMWARE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net3/FIRMWARE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net3/FIRMWARE</String></Pair>
 			</Table>
@@ -794,7 +794,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать net4</String></Pair>
 				<Pair key="info"><String>Монтировать '/net4' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/.</String></Pair>
 			</Table>
@@ -809,7 +809,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PKG</String></Pair>
 				<Pair key="info"><String>Монтировать '/net4/PKG' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/PKG</String></Pair>
 			</Table>
@@ -824,7 +824,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать VIDEO</String></Pair>
 				<Pair key="info"><String>Монтировать '/net4/VIDEO' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/VIDEO</String></Pair>
 			</Table>
@@ -839,7 +839,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать MUSIC</String></Pair>
 				<Pair key="info"><String>Монтировать '/net4/MUSIC' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/MUSIC</String></Pair>
 			</Table>
@@ -854,7 +854,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать PICTURE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net4/PICTURE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/PICTURE</String></Pair>
 			</Table>
@@ -869,7 +869,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать ROMS</String></Pair>
 				<Pair key="info"><String>Монтировать '/net4/ROMS' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/ROMS</String></Pair>
 			</Table>
@@ -884,7 +884,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/network.png</String></Pair>
 				<Pair key="title"><String>Монтировать FIRMWARE</String></Pair>
 				<Pair key="info"><String>Монтировать '/net4/FIRMWARE' как '/dev_bdvd'</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/net4/FIRMWARE</String></Pair>
 			</Table>
@@ -899,7 +899,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/blockpsn.png</String></Pair>
 				<Pair key="title"><String>Offline-режим</String></Pair>
 				<Pair key="info"><String>Блокировка доступа к серверам PSN в LV1/LV2</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/browser.ps3$block_servers</String></Pair>
 			</Table>
@@ -914,7 +914,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/gamedata.png</String></Pair>
 				<Pair key="title"><String>Расположение gameDATA</String></Pair>
 				<Pair key="info"><String>Изменить место сохранение игровых данных на внешнее USB-устройство и обратно, данные не переносятся [Select+■]</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/extgd.ps3</String></Pair>
 			</Table>
@@ -943,7 +943,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/icon_wm_eject.png</String></Pair>
 				<Pair key="title"><String>Размонтировать</String></Pair>
 				<Pair key="info"><String>Текущая смонтированная игра/папка будет выгружена [Select+O]</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/unmount</String></Pair>
 			</Table>
@@ -958,7 +958,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/icon_wm_ps3.png</String></Pair>
 				<Pair key="title"><String>Вставить диск</String></Pair>
 				<Pair key="info"><String>Диск, извлечённый из привода PS3, будет вставлен</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/mount_ps3/insert.ps3</String></Pair>
 			</Table>
@@ -973,7 +973,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/unload.png</String></Pair>
 				<Pair key="title"><String>Выгрузить webMAN</String></Pair>
 				<Pair key="info"><String>webMAN будет выгружен из памяти [R2+L3+R3]</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/quit.ps3</String></Pair>
 			</Table>
@@ -988,7 +988,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/vshmenu.png</String></Pair>
 				<Pair key="title"><String>VSH Меню</String></Pair>
 				<Pair key="info"><String>Отобразить VSH Меню [Select - 3сек]</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/loadprx.ps3?slot=5&prx=/dev_hdd0/plugins/wm_vsh_menu.sprx</String></Pair>
 			</Table>
@@ -1003,7 +1003,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/restartps3.png</String></Pair>
 				<Pair key="title"><String>Перезагрузить PS3</String></Pair>
 				<Pair key="info"><String>Консоль будет перезагружена [L3+R2+O]</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/restart.ps3</String></Pair>
 			</Table>
@@ -1018,7 +1018,7 @@
 				<Pair key="icon"><String>/dev_hdd0/game/XMBMANPLS/USRDIR/IMAGES/shutdownps3.png</String></Pair>
 				<Pair key="title"><String>Выключить PS3</String></Pair>
 				<Pair key="info"><String>Консоль будет выключена [L3+R2+X]</String></Pair>
-				<Pair key="module_name"><String>idle_plugin</String></Pair>
+				<Pair key="module_name"><String>eula_cddb_plugin</String></Pair>
 				<Pair key="bar_action"><String>none</String></Pair>
 				<Pair key="module_action"><String>/shutdown.ps3</String></Pair>
 			</Table>
