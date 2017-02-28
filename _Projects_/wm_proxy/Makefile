@@ -14,6 +14,8 @@ CRT_HEAD                += $(shell ppu-lv2-gcc -print-file-name'='crtbegin.o)
 CRT_TAIL                += $(shell ppu-lv2-gcc -print-file-name'='crtend.o)
 CRT_HEAD                += $(shell ppu-lv2-gcc -print-file-name'='ecrtn.o)
 
+ROOT_PATH = ../..
+
 PPU_SRCS = libc.c main.c 
 PPU_PRX_TARGET = wm_proxy.prx
 PPU_PRX_LDFLAGS += $(PRX_LDFLAGS_EXTRA)

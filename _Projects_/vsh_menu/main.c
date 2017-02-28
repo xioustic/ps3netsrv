@@ -738,7 +738,7 @@ static int del(char *path, bool recursive)
 	return CELL_FS_SUCCEEDED;
 }
 
-static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload)
+static unsigned int get_vsh_plugin_slot_by_name(const char *name, bool unload)
 {
 	char tmp_name[30];
 	char tmp_filename[256];

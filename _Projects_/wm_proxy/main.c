@@ -61,7 +61,7 @@ static void show_msg(const char* msg)
 
 static void wm_plugin_init (int view);
 static int  wm_plugin_start(void * view);
-static int  wm_plugin_stop (void);
+//static int  wm_plugin_stop (void);
 static void wm_plugin_exit (void);
 static void wm_plugin_action(const char * action);
 static int setInterface(unsigned int view);
@@ -73,8 +73,10 @@ static void *wm_plugin_action_if[3] = {(void*)(wm_plugin_action), 0, 0};
 
 static void wm_plugin_init (int view)		{plugin_SetInterface( view, 0x41435430 /*ACT0*/, wm_plugin_action_if);}
 static int  wm_plugin_start(void * view)	{return SYS_PRX_START_OK;}
-static int  wm_plugin_stop (void)			{return SYS_PRX_STOP_OK;}
+//static int  wm_plugin_stop (void)			{return SYS_PRX_STOP_OK;}
 static void wm_plugin_exit (void)			{return;}
+
+#define wm_plugin_stop prx_stop
 
 static void *wm_plugin_functions[4] =
 	{
@@ -139,7 +141,7 @@ static void wm_plugin_action(const char * action)
 	int s = connect_to_webman();
 	if(s >= 0)
 	{
-		char proxy_action[256];
+		char proxy_action[512];
 		memcpy(proxy_action, "GET ", 4);
 
 		u32 pa = 4;
@@ -147,7 +149,7 @@ static void wm_plugin_action(const char * action)
 		if(*action != '/') action += 16; // using http://127.0.0.1/
 		if(*action == '/')
 		{
-			for(;*action && (pa < 250); action++)
+			for(;*action && (pa < 505); action++)
 			{
 				if(*action != 0x20)
 					proxy_action[pa++] = *action;
@@ -170,7 +172,6 @@ int prx_start(size_t args, void *argp)
 	setInterface(*(unsigned int*)argp);
 	return SYS_PRX_RESIDENT;
 }
-
 
 int prx_stop(void)
 {
