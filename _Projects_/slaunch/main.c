@@ -37,9 +37,14 @@ SYS_MODULE_STOP(slaunch_stop);
 #define STR_UNMOUNT		"Unmount"
 #define STR_REFRESH		"Refresh"
 #define STR_GAMEDATA	"gameDATA"
+#define STR_SYSCALLS	"CFW Syscalls"
 #define STR_RESTART		"Restart"
 #define STR_SHUTDOWN	"Shutdown"
 #define STR_SETUP		"Setup"
+#define STR_FILEMNGR	"File Manager"
+#define STR_UNLOAD		"Unload webMAN"
+#define STR_QUIT		"Quit"
+
 
 typedef struct {
 	uint8_t  gmode;
@@ -145,6 +150,10 @@ uint32_t gpp=10;
 
 static uint8_t key_repeat=0, can_skip=0;
 
+static uint8_t opt_mode=0;
+static uint8_t web_page=0;
+static uint8_t unload_mode=0;
+
 static uint64_t tick=0x80;
 static int8_t   delta=5;
 
@@ -182,6 +191,7 @@ static uint32_t frame = 0;
 #define SC_COBRA_SYSCALL8			 				(8)
 #define SYSCALL8_OPCODE_PS3MAPI			 			0x7777
 #define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
+#define SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN			0x364F
 
 static int load_plugin_by_id(int id, void *handler)
 {
@@ -192,7 +202,7 @@ static int load_plugin_by_id(int id, void *handler)
 static void web_browser(void)
 {
 	webbrowser_interface = (webbrowser_plugin_interface *)paf_23AFB290((uint32_t)paf_F21655F3("webbrowser_plugin"), 1);
-	if(webbrowser_interface) webbrowser_interface->PluginWakeupWithUrl("http://127.0.0.1/setup.ps3");
+	if(webbrowser_interface) webbrowser_interface->PluginWakeupWithUrl(web_page ? "http://127.0.0.1/" : "http://127.0.0.1/setup.ps3");
 }
 
 /*
@@ -215,7 +225,7 @@ static unsigned int get_vsh_plugin_slot_by_name(const char *name)
 	char tmp_filename[256];
 	unsigned int slot;
 
-	for (slot = 1; slot < 7; slot++)
+	for(slot = 1; slot < 7; slot++)
 	{
 		memset(tmp_name, 0, sizeof(tmp_name));
 		memset(tmp_filename, 0, sizeof(tmp_filename));
@@ -503,13 +513,15 @@ static void draw_side_menu_option(uint8_t option)
 	ctx.fg_color=(option==2 ? WHITE_TEXT : GRAY_TEXT);
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=2)*32, SM_Y+6*24, STR_REFRESH);
 	ctx.fg_color=(option==3 ? WHITE_TEXT : GRAY_TEXT);
-	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=3)*32, SM_Y+8*24, STR_GAMEDATA);
+	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=3)*32, SM_Y+8*24, opt_mode ? STR_SYSCALLS : STR_GAMEDATA);
 	ctx.fg_color=(option==4 ? WHITE_TEXT : GRAY_TEXT);
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=4)*32, SM_Y+10*24, STR_RESTART);
 	ctx.fg_color=(option==5 ? WHITE_TEXT : GRAY_TEXT);
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=5)*32, SM_Y+12*24, STR_SHUTDOWN);
 	ctx.fg_color=(option==6 ? WHITE_TEXT : GRAY_TEXT);
-	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=6)*32, SM_Y+19*24, STR_SETUP);
+	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=6)*32, SM_Y+19*24, web_page ? STR_FILEMNGR : STR_SETUP);
+	ctx.fg_color=(option==7 ? WHITE_TEXT : GRAY_TEXT);
+	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=7)*32, SM_Y+21*24, unload_mode ? STR_UNLOAD : STR_QUIT);
 
 	set_texture_direct(ctx.side, SM_X, 0, (CANVAS_W-SM_X), CANVAS_H);
 	set_textbox(GRAY, SM_X+SM_TO, SM_Y+28,    CANVAS_W-SM_X-SM_TO*2, 1);
@@ -548,11 +560,18 @@ static uint8_t draw_side_menu(void)
 
 			oldpad = curpad;
 
+			if(curpad & (PAD_LEFT | PAD_RIGHT))
+			{
+				if(option == 3) opt_mode^=1;
+				if(option == 6) web_page^=1;
+				if(option == 7) unload_mode^=1;
+			}
+
 			if(curpad & PAD_UP)		option--;
 			if(curpad & PAD_DOWN)	option++;
 
-			if(option<1) option=6;
-			if(option>6) option=1;
+			if(option<1) option=7;
+			if(option>7) option=1;
 
 			if(curpad & PAD_TRIANGLE || curpad & PAD_CIRCLE) {option=0; play_rco_sound("snd_cancel"); break;}
 
@@ -971,11 +990,31 @@ static void slaunch_thread(uint64_t arg)
 						{
 							if(option==1) send_wm_request("/mount_ps3/unmount");
 							if(option==2) send_wm_request("/refresh_ps3");
-							if(option==3) send_wm_request("/extgd.ps3");
+							if(option==3)
+							{
+								if(opt_mode)
+								{
+									send_wm_request("/popup.ps3?CFW%20Syscalls%20disabled!");
+									send_wm_request("/syscall.ps3mapi?scd=1");
+								}
+								else
+									send_wm_request("/extgd.ps3");
+							}
 							return_to_xmb();
 							if(option==4) send_wm_request("/restart.ps3");
 							if(option==5) send_wm_request("/shutdown.ps3");
 							if(option==6) {load_plugin_by_id(0x1B, (void *)web_browser);}
+							if(option==7)
+							{
+								send_wm_request("/popup.ps3?sLaunch%20unloaded!");
+								if(unload_mode)
+									send_wm_request("/quit.ps3");
+								else
+								{
+									send_wm_request("/unloadprx.ps3?prx=sLaunch");
+								}
+								running=0;
+							}
 							break;
 						}
 						else

@@ -182,8 +182,8 @@ next_ntfs_entry:
 								}
 								else if(parts > 0)
 								{
-									u8 cue = 0;
 									num_tracks = 1;
+
 										 if(m == mPS3) emu_mode = EMU_PS3;
 									else if(m == mBLU) emu_mode = EMU_BD;
 									else if(m == mDVD) emu_mode = EMU_DVD;
@@ -209,35 +209,9 @@ next_ntfs_entry:
 												int cue_size = ps3ntfs_read(fd, (void *)cue_buf, _64KB_);
 												ps3ntfs_close(fd);
 
-												if(cue_size > 13)
-												{
-													cue = 1;
-													num_tracks = 0;
+												char *templn = path;
+												num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
 
-													tracks[0].lba = 0;
-													tracks[0].is_audio = 0;
-
-													u8 use_pregap = 0;
-													int lba, lp = 0; char *templn = path;
-
-													while (lp < cue_size)
-													{
-														lp = get_line(templn, cue_buf, cue_size, lp);
-														if(lp < 1) break;
-
-														if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-														if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
-
-														lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
-
-														tracks[num_tracks].lba = lba;
-														if(num_tracks) tracks[num_tracks].is_audio = 1;
-
-														num_tracks++; if(num_tracks>=32) break;
-													}
-
-													if(!num_tracks) num_tracks++;
-												}
 												sys_memory_free(sysmem);
 											}
 										}
@@ -262,7 +236,7 @@ next_ntfs_entry:
 										p_args->num_tracks = num_tracks;
 										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args + sizeof(rawseciso_args) + (2 * (parts * sizeof(uint32_t))));
 
-										if(!cue)
+										if(num_tracks == 1)
 										{
 											scsi_tracks[0].adr_control = 0x14;
 											scsi_tracks[0].track_number = 1;
@@ -270,11 +244,11 @@ next_ntfs_entry:
 										}
 										else
 										{
-											for(u8 j = 0; j < num_tracks; j++)
+											for(u8 t = 0; t < num_tracks; t++)
 											{
-												scsi_tracks[j].adr_control = (tracks[j].is_audio) ? 0x10 : 0x14;
-												scsi_tracks[j].track_number = j+1;
-												scsi_tracks[j].track_start_addr = tracks[j].lba;
+												scsi_tracks[t].adr_control = (tracks[t].is_audio) ? 0x10 : 0x14;
+												scsi_tracks[t].track_number = t + 1;
+												scsi_tracks[t].track_start_addr = tracks[t].lba;
 											}
 										}
 									}

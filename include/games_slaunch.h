@@ -40,12 +40,7 @@ static void add_slaunch_entry(int fd, const char *neth, const char *path, const 
 	char enc_filename[MAX_PATH_LEN]; urlenc_ex(enc_filename, filename, false);
 
 	slaunch.type = IS_ROMS_FOLDER ? TYPE_ROM : IS_PS3_TYPE ? TYPE_PS3 : IS_PSX_FOLDER ? TYPE_PS1 : IS_PS2_FOLDER ? TYPE_PS2 : IS_PSP_FOLDER ? TYPE_PSP : TYPE_VID;
-/*
-	snprintf(slaunch.path, 160, "/mount_ps3%s%s/%s", neth, path, enc_filename);
-	snprintf(slaunch.icon, 160, "%s", icon);
-	snprintf(slaunch.name, 140, "%s", name);
-	snprintf(slaunch.id,   sizeof(slaunch.id), "%s", id);
-*/
+
 	snprintf(slaunch.id, sizeof(slaunch.id), "%s", id);
 
 	slaunch.path_pos = snprintf(slaunch.name, 128, "%s", name) + 1;

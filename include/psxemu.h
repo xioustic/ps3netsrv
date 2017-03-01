@@ -7,8 +7,8 @@ static void select_ps1emu(char *path)
 
 	if(pad_data.len > 0)
 	{
-		if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) webman_config->ps1emu = 1; else
 		if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2) webman_config->ps1emu = 0; else
+		if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2) webman_config->ps1emu = 1; else
 		if(pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R1) webman_config->ps1emu = !webman_config->ps1emu;
 	}
 

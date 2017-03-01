@@ -278,9 +278,10 @@ static void poll_thread(uint64_t poll)
 							else if(!isDir(drives[f0])) automount = 0;
 						}
 					}
+				else automount = 0;
 			}
 #ifdef REMOVE_SYSCALLS
-			else if(!syscalls_removed && webman_config->dsc)
+			else if(!syscalls_removed && webman_config->dsc && (automount == 0))
 			{
 				unsigned int real_disctype, effective_disctype, iso_disctype;
 				cobra_get_disc_type(&real_disctype, &effective_disctype, &iso_disctype);
@@ -289,6 +290,7 @@ static void poll_thread(uint64_t poll)
 				{
 					disable_cfw_syscalls(webman_config->keep_ccapi);
 				}
+				automount = 99;
 			}
 #endif
 		}

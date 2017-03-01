@@ -454,15 +454,11 @@ static bool update_mygames_xml(u64 conn_s_p)
 			{
 				wait_for(drives[f0], webman_config->boots);
 			}
-#ifdef USE_NTFS
-			if(IS_NTFS && webman_config->ntfs) prepNTFS(1);
-#endif
 		}
-#ifdef USE_NTFS
-		else
-			if(IS_NTFS && webman_config->ntfs) prepNTFS(0);
-#endif
 
+#ifdef USE_NTFS
+		if(IS_NTFS && webman_config->ntfs) prepNTFS((conn_s_p == START_DAEMON));
+#endif
 		is_net = IS_NET;
 
 		if(!(is_net || IS_NTFS) && (isDir(drives[f0]) == false)) continue;
@@ -752,7 +748,7 @@ continue_reading_folder_xml:
 		}
 #ifdef COBRA_ONLY
  #ifndef LITE_EDITION
-		if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns=-2;}
+		if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns = -2;}
  #endif
 #endif
 	}

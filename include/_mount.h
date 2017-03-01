@@ -1182,14 +1182,14 @@ static void mount_thread(u64 do_eject)
 		if(!extcmp(_path, ".ntfs[PSXISO]", 13) || (strstr(_path, ".ntfs[") != NULL && strstr(_path, "[raw]") != NULL))
 		{
 			u8 n;
-			const char *raw_iso_sprx[5] = { "/dev_flash/vsh/module/raw_iso.sprx",
-											"/dev_hdd0/raw_iso.sprx",
-											"/dev_hdd0/plugins/raw_iso.sprx",
-											"/dev_hdd0/game/IRISMAN00/sprx_iso",
-											WMTMP "/res/sman.ntf"};
+			const char *rawseciso_sprx[5] = { "/dev_flash/vsh/module/raw_iso.sprx",
+											  "/dev_hdd0/raw_iso.sprx",
+											  "/dev_hdd0/plugins/raw_iso.sprx",
+											  "/dev_hdd0/game/IRISMAN00/sprx_iso",
+											  WMTMP "/res/sman.ntf"};
 
 			for(n = 0; n < 5; n++)
-				if(file_exists(raw_iso_sprx[n])) break;
+				if(file_exists(rawseciso_sprx[n])) break;
 
 			if(n < 5)
 			{
@@ -1198,13 +1198,13 @@ static void mount_thread(u64 do_eject)
 				sys_addr_t addr = 0;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
-					char *sprx_data = (char *)addr; ret = false;
-					uint64_t msiz = read_file(_path, sprx_data, _64KB_, 0);
-					if(msiz > 0)
+					char *rawseciso_data = (char *)addr; ret = false;
+					uint64_t msiz = read_file(_path, rawseciso_data, _64KB_, 0);
+					if(msiz > sizeof(rawseciso_args))
 					{
 						do_umount(false); if(!extcmp(_path, ".ntfs[PSXISO]", 13)) {mount_unk = EMU_PSX; select_ps1emu(_path);}
 
-						if(cobra_load_vsh_plugin(0, (char*)raw_iso_sprx[n], (u8*)sprx_data, msiz) == CELL_OK) ret = true;
+						if(cobra_load_vsh_plugin(0, (char*)rawseciso_sprx[n], (u8*)rawseciso_data, msiz) == CELL_OK) ret = true;
 					}
 					sys_memory_free(addr);
 
@@ -1433,8 +1433,8 @@ static void mount_thread(u64 do_eject)
 				sys_addr_t addr = 0;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
-					char *rawiso_data = (char*)addr;
-					if(read_file(_path, rawiso_data, _64KB_, 0) > 0)
+					char *rawseciso_data = (char*)addr;
+					if(read_file(_path, rawseciso_data, _64KB_, 0) > sizeof(rawseciso_args))
 					{
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
@@ -1514,103 +1514,78 @@ static void mount_thread(u64 do_eject)
 
 					char *netpath = _path + 5;
 
-					size_t len = sprintf(_netiso_args->path, "%s", netpath);
+					/*size_t len = */ sprintf(_netiso_args->path, "%s", netpath);
 
-					if(islike(netpath, "/PS3ISO")) _netiso_args->emu_mode = EMU_PS3; else
+					if(islike(netpath, "/PS3ISO")) mount_unk = _netiso_args->emu_mode = EMU_PS3; else
 					if(islike(netpath, "/PS2ISO")) goto copy_ps2iso_to_hdd0;         else
 					if(islike(netpath, "/PSPISO")) goto copy_pspiso_to_hdd0;         else
-					if(islike(netpath, "/BDISO" )) _netiso_args->emu_mode = EMU_BD;  else
-					if(islike(netpath, "/DVDISO")) _netiso_args->emu_mode = EMU_DVD; else
+					if(islike(netpath, "/BDISO" )) mount_unk = _netiso_args->emu_mode = EMU_BD;  else
+					if(islike(netpath, "/DVDISO")) mount_unk = _netiso_args->emu_mode = EMU_DVD; else
 					if(islike(netpath, "/PSX")   )
 					{
-						TrackDef tracks[32];
-						tracks[0].lba = 0;
-						tracks[0].is_audio = 0;
-						unsigned int num_tracks = 0;
-						int abort_connection = 0;
-
-						sprintf(_netiso_args->path + len - 3, "cue");
+//						TrackDef tracks[32];
+						unsigned int num_tracks = 1;
+/*
+						cellFsUnlink(TEMP_NET_PSXISO);
 
 						int ns = connect_to_server(_netiso_args->server, _netiso_args->port);
 						if(ns >= 0)
 						{
-							if(open_remote_file(ns, _netiso_args->path, &abort_connection) < 1)
+							sprintf(_netiso_args->path + len - 3, "cue");
+							copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_);
+							if(file_exists(TEMP_NET_PSXISO) == false)
 							{
 								sprintf(_netiso_args->path + len - 3, "CUE");
-								if(open_remote_file(ns, _netiso_args->path, &abort_connection) < 1) goto cancel_net;
+								copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_);
+								if(file_exists(TEMP_NET_PSXISO) == false) goto cancel_net;
 							}
 
-							sys_addr_t sysmem = 0;
-							if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
-							{
-								char *cue_buf = (char*)sysmem;
-								int64_t cue_size = read_remote_file(ns, cue_buf, 0, _64KB_, &abort_connection);
+							char *cue_buf = (char*)sysmem;
+							int64_t cue_size = read_file(TEMP_NET_PSXISO, cue_buf, _4KB_, 0);
 
-								if(cue_size > 10)
-								{
-									TrackDef tracks[32];
-									tracks[0].lba = 0;
-									tracks[0].is_audio = 0;
-
-									u8 use_pregap = 0;
-									int lba, lp = 0;
-
-									while(lp < cue_size)
-									{
-										lp = get_line(templn, cue_buf, cue_size, lp);
-										if(lp < 1) break;
-
-										if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-										if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
-
-										lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
-
-										tracks[num_tracks].lba = lba;
-										if(num_tracks) tracks[num_tracks].is_audio = 1;
-
-										num_tracks++; if(num_tracks >= 32) break;
-									}
-								}
-								sys_memory_free(sysmem);
-							}
-							open_remote_file(ns, (char*)"/CLOSEFILE", &abort_connection);
+							num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
 						}
 cancel_net:
 						if(ns >= 0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+						cellFsUnlink(TEMP_NET_PSXISO);
 
-						if(!num_tracks) num_tracks++;
-
-						_netiso_args->emu_mode = EMU_PSX;
+						memset(_netiso_args, 0, _64KB_);
+						sprintf(_netiso_args->server, "%s", webman_config->neth[netiso_svrid]);
+						_netiso_args->port = webman_config->netp[netiso_svrid];
+*/
+						mount_unk = _netiso_args->emu_mode = EMU_PSX;
 						_netiso_args->num_tracks = num_tracks;
 						sprintf(_netiso_args->path, "%s", netpath);
 
 						ScsiTrackDescriptor *scsi_tracks;
 						scsi_tracks = (ScsiTrackDescriptor *)&_netiso_args->tracks[0];
 
-						if(num_tracks == 1)
+//						if(num_tracks == 1)
 						{
 							scsi_tracks[0].adr_control = 0x14;
 							scsi_tracks[0].track_number = 1;
 							scsi_tracks[0].track_start_addr = 0;
 						}
+/*
 						else
 						{
-							for(u8 j = 0; j < num_tracks; j++)
+							for(u8 t = 0; t < num_tracks; t++)
 							{
-								scsi_tracks[j].adr_control = (tracks[j].is_audio) ? 0x10 : 0x14;
-								scsi_tracks[j].track_number = j+1;
-								scsi_tracks[j].track_start_addr = tracks[j].lba;
+								scsi_tracks[t].adr_control = (tracks[t].is_audio) ? 0x10 : 0x14;
+								scsi_tracks[t].track_number = t + 1;
+								scsi_tracks[t].track_start_addr = tracks[t].lba;
 							}
 						}
+*/
 					}
 					else if(islike(netpath, "/GAMES") || islike(netpath, "/GAMEZ"))
 					{
-						_netiso_args->emu_mode = EMU_PS3;
+						mount_unk = _netiso_args->emu_mode = EMU_PS3;
 						sprintf(_netiso_args->path, "/***PS3***%s", netpath);
 					}
 					else
 					{
-						_netiso_args->emu_mode = EMU_DVD;
+						mount_unk = _netiso_args->emu_mode = EMU_DVD;
 						if(!extcasecmp(netpath, ".iso", 4) || !extcasecmp(netpath, ".mdf", 4) || !extcasecmp(netpath, ".img", 4) || !extcasecmp(netpath, ".bin", 4)) ;
 						else
 							sprintf(_netiso_args->path, "/***DVD***%s", netpath);
@@ -1761,34 +1736,11 @@ cancel_net:
 							char *cue_buf = (char*)sysmem;
 							int cue_size = read_file(_path, cue_buf, _64KB_, 0);
 
-							if(cue_size > 10)
+							if(cue_size > 16)
 							{
-								unsigned int num_tracks = 0;
-
 								TrackDef tracks[32];
-								tracks[0].lba = 0;
-								tracks[0].is_audio = 0;
+								unsigned int num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
 
-								u8 use_pregap = 0;
-								int lba, lp = 0;
-
-								while(lp < cue_size)
-								{
-									lp = get_line(templn, cue_buf, cue_size, lp);
-									if(lp < 1) break;
-
-									if(strstr(templn, "PREGAP")) {use_pregap = 1; continue;}
-									if(!strstr(templn, "INDEX 01") && !strstr(templn, "INDEX 1 ")) continue;
-
-									lba = parse_lba(templn, use_pregap && num_tracks); if(lba < 0) continue;
-
-									tracks[num_tracks].lba = lba;
-									if(num_tracks) tracks[num_tracks].is_audio = 1;
-
-									num_tracks++; if(num_tracks >= 32) break;
-								}
-
-								if(!num_tracks) num_tracks++;
 								cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, num_tracks);
 								mount_iso = false;
 							}

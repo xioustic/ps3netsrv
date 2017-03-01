@@ -815,6 +815,7 @@ static char current_file[STD_PATH_LEN+1];
 #include "include/stealth.h"
 #include "include/video_rec.h"
 #include "include/secure_file_id.h"
+#include "include/cue_file.h"
 
 #include "include/games_html.h"
 #include "include/games_slaunch.h"
