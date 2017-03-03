@@ -669,7 +669,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				if(is_ntfs)
 				{
 					if(ps3ntfs_dirnext(pdir, entry.d_name, &bufn)) break;
-					if(entry.d_name[0]=='$' && param[12] == 0) continue;
+					if(entry.d_name[0] == '$' && param[12] == 0) continue;
 
 					buf.st_mode = bufn.st_mode;
 					buf.st_size = bufn.st_size;

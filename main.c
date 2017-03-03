@@ -2040,15 +2040,34 @@ parse_request:
 				// /netstatus.ps3?0        disable network access in registry
 				// /netstatus.ps3?disable  disable network access in registry
 
-				// /netstatus.ps3?stop     stop net server
-				// /netstatus.ps3?netsrv   netsrv is running
+				// /netstatus.ps3?ftp      ftp is running?
+				// /netstatus.ps3?netsrv   netsrv is running?
+				// /netstatus.ps3?ps3mapi  ps3mapi is running?
+
+				// /netstatus.ps3?stop-ftp      stop ftp server
+				// /netstatus.ps3?stop-netsrv   stop net server
+				// /netstatus.ps3?stop-ps3mapi  stop ps3mapi server
+				// /netstatus.ps3?stop          stop ps3mapi+net+ftp servers
 
 				int32_t status = 0;
 
 #ifdef PS3NET_SERVER
 				if( param[15] == 'n') status = net_working; else //netsrv
-				if( param[15] == 's') net_working = 0;      else //stop
 #endif
+#ifdef PS3MAPI
+				if( param[15] == 'p') status = ps3mapi_working; else //ps3mapi
+#endif
+				if( param[15] == 's') //stop
+				{
+					if( param[19] == 0 || param[20] == 'f') ftp_working = 0; //ftp
+#ifdef PS3NET_SERVER
+					if( param[19] == 0 || param[20] == 'n') net_working = 0; //netsrv
+#endif
+#ifdef PS3MAPI
+					if( param[19] == 0 || param[20] == 'p') ps3mapi_working = 0; //ps3mapi
+#endif
+				}
+				else
 				if( param[15] & 1) xsetting_F48C0548()->SetSettingNet_enable(1); else //enable
 				if(~param[15] & 1) xsetting_F48C0548()->SetSettingNet_enable(0);      //disable
 
@@ -3329,6 +3348,7 @@ parse_request:
 					{
 						ps3mapi_gameplugin(pbuffer, templn, param);
 					}
+
  #endif // #ifdef PS3MAPI
 
  #ifdef DEBUG_MEM
@@ -3599,8 +3619,9 @@ static void wwwd_thread(uint64_t arg)
 #endif
 
 #ifdef PS3MAPI
-	///////////// PS3MAPI BEGIN //////////////
-	sys_ppu_thread_create(&thread_id_ps3mapi, ps3mapi_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_PS3MAPI_SVR, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_PS3MAPI);
+	///////////// PS3MAPI BEGIN ////////////
+	if(!webman_config->ftpd)
+		sys_ppu_thread_create(&thread_id_ps3mapi, ps3mapi_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_PS3MAPI_SVR, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_PS3MAPI);
 	///////////// PS3MAPI END //////////////
 #endif
 

@@ -438,7 +438,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							}
 							else
 							{
-								mount_with_mm(cwd, 1);
+								mount_with_mm(cwd, 0);
 							}
 						}
  #endif //#ifdef COBRA_ONLY

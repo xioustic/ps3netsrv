@@ -74,6 +74,8 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param);
 static void ps3mapi_gameplugin(char *buffer, char *templn, char *param);
 static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload);
 
+static ps3mapi_working = 0;
+
 static int is_syscall_disabled(u32 sc)
 {
 	int ret_val = NONE;
@@ -170,7 +172,7 @@ static void ps3mapi_buzzer(char *buffer, char *templn, char *param)
 {
 	bool is_ps3mapi_home = (*param == ' ');
 
-	if(islike(param, "/buzzer.ps3mapi?"))
+	if(islike(param, "/buzzer.ps3mapi") && param[15] == '?')
 	{
 		char *value = strstr(param, "mode="); if(value) value += 5;
 
@@ -204,7 +206,7 @@ static void ps3mapi_led(char *buffer, char *templn, char *param)
 {
 	bool is_ps3mapi_home = (*param == ' ');
 
-	if(islike(param, "/led.ps3mapi?"))
+	if(islike(param, "/led.ps3mapi") && param[12] == '?')
 	{
 		int color = 0, mode = OFF; char *value;
 
@@ -646,7 +648,7 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 		strcat(buffer, templn);
 	}
 
-	if(length ==0) strcat(buffer, "<script>val.value=output.value</script>");
+	if(length == 0) strcat(buffer, "<script>val.value=output.value</script>");
 
 	if(!is_ps3mapi_home) strcat(buffer, "<br>" HTML_RED_SEPARATOR); else strcat(buffer, "<br>");
 }
@@ -660,7 +662,7 @@ static void ps3mapi_setidps(char *buffer, char *templn, char *param)
 	u64 _new_IDPS[2] = { IDPS[0], IDPS[1]};
 	u64 _new_PSID[2] = { PSID[0], PSID[1]};
 
-	if(islike(param, "/setidps.ps3mapi?"))
+	if(islike(param, "/setidps.ps3mapi") && param[16] == '?')
 	{
 		char *pos;
 		pos = strstr(param, "idps1=");
@@ -763,7 +765,7 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 	char tmp_name[30];
 	char tmp_filename[STD_PATH_LEN];
 
-	if(islike(param, "/vshplugin.ps3mapi?"))
+	if(islike(param, "/vshplugin.ps3mapi") && param[18] == '?')
 	{
 		char *pos;
 		unsigned int uslot = 99;
@@ -887,7 +889,7 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 
 	u32 pid = 0;
 
-	if(islike(param, "/gameplugin.ps3mapi?"))
+	if(islike(param, "/gameplugin.ps3mapi") && param[19] == '?')
 	{
 		unsigned int prx_id = 99;
 
@@ -1647,6 +1649,8 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 
 static void ps3mapi_thread(u64 arg)
 {
+	ps3mapi_working = 1;
+
 	int core_minversion = 0;
 	{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_MINVERSION); core_minversion = (int)(p1); }
 	if((core_minversion !=0) &&(PS3MAPI_CORE_MINVERSION == core_minversion)) //Check if ps3mapi core has a compatible min_version.
@@ -1668,11 +1672,11 @@ static void ps3mapi_thread(u64 arg)
 
 		//if(list_s >= 0)
 		{
-			while(working)
+			while(working && ps3mapi_working)
 			{
 				sys_ppu_thread_usleep(100000);
 				int conn_s_ps3mapi;
-				if (!working) goto end;
+				if (!working || !ps3mapi_working) goto end;
 
 				if(sys_admin && ((conn_s_ps3mapi = accept(list_s, NULL, NULL)) > 0))
 				{
@@ -1701,7 +1705,7 @@ end:
 ///////////// PS3MAPI END //////////////
 ////////////////////////////////////////
 
-#endif
+#endif // #ifdef PS3MAPI
 
 #ifdef COBRA_ONLY
  #ifndef SYSCALL8_OPCODE_PS3MAPI

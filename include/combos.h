@@ -101,11 +101,11 @@
  #ifndef LITE_EDITION
 							if(!(webman_config->combo2 & MOUNTNET0) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2))
-							{if(is_netsrv_enabled(0)) mount_with_mm((char*)"/net0", 1);} // SELECT+SQUARE+R2 / SELECT+R2+SQUARE
+							{if(is_netsrv_enabled(0)) mount_with_mm((char*)"/net0", EXPLORE_CLOSE_ALL);} // SELECT+SQUARE+R2 / SELECT+R2+SQUARE
 							else
 							if(!(webman_config->combo2 & MOUNTNET1) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))
-							{if(is_netsrv_enabled(1)) mount_with_mm((char*)"/net1", 1);} // SELECT+SQUARE+L2 / SELECT+L2+SQUARE
+							{if(is_netsrv_enabled(1)) mount_with_mm((char*)"/net1", EXPLORE_CLOSE_ALL);} // SELECT+SQUARE+L2 / SELECT+L2+SQUARE
 							else
  #endif
 #endif

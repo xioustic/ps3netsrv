@@ -144,6 +144,7 @@ static uint32_t oldpad=0, curpad=0;
 static uint16_t init_delay=0;
 static uint16_t games = 0;
 static uint16_t cur_game=0, cur_game_=0, fav_game=0;
+static uint8_t do_once = 1;
 
 uint32_t disp_w=0;
 uint32_t disp_h=0;
@@ -803,9 +804,14 @@ static void start_VSH_Menu(void)
 
 	if(!games)
 	{
-		send_wm_request("/refresh_ps3");
 		return_to_xmb();
-		load_plugin_by_id(0x1B, (void *)web_browser);
+
+		if(do_once)
+		{
+			do_once = 0;
+			send_wm_request("/refresh_ps3");
+			load_plugin_by_id(0x1B, (void *)web_browser);
+		}
 	}
 }
 

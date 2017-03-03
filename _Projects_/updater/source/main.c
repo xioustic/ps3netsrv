@@ -516,6 +516,7 @@ int main()
 		CopyFile(APP_DIR "/ICON0.PNG", XMLMANPLS_DIR "/ICON0.PNG");
 
 	CopyFile(APP_USRDIR "/webMAN.xml"    , XMLMANPLS_FEATS_DIR "/webMAN.xml");
+	CopyFile(APP_USRDIR "/webMAN_EN.xml" , XMLMANPLS_FEATS_DIR "/webMAN_EN.xml");
 	CopyFile(APP_USRDIR "/webMAN_AR.xml" , XMLMANPLS_FEATS_DIR "/webMAN_AR.xml");
 	CopyFile(APP_USRDIR "/webMAN_CN.xml" , XMLMANPLS_FEATS_DIR "/webMAN_CN.xml");
 	CopyFile(APP_USRDIR "/webMAN_DE.xml" , XMLMANPLS_FEATS_DIR "/webMAN_DE.xml");

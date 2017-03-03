@@ -27,6 +27,12 @@ typedef struct
 
 #define IS_COPY		9
 
+#define MOUNT_SILENT	0	// only mount game/folder
+#define MOUNT_NORMAL	1	// store last game + show msg + allow Auto-enable external gameDATA
+// MOUNT_EXT_GDATA		2	// mount /dev_usb/GAMEI as /dev_hdd0/game on non-Cobra edition
+// EXPLORE_CLOSE_ALL	3	// same MOUNT_NORMAL but close all first
+
+
 // /mount_ps3/<path>[?random=<x>[&emu={ ps1_netemu.self / ps1_emu.self / ps2_netemu.self / ps2_emu.self }][offline={0/1}]
 // /mount.ps3/<path>[?random=<x>[&emu={ ps1_netemu.self / ps1_emu.self / ps2_netemu.self / ps2_emu.self }][offline={0/1}]
 // /mount.ps3/unmount
@@ -194,6 +200,12 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		{
 			char *p = strstr(param, "/PS3_"); if(p) *p = NULL;
 
+			int discboot = 0xff;
+			xsetting_0AF1F161()->GetSystemDiscBootFirstEnabled(&discboot);
+
+			if(discboot == 1)
+				xsetting_0AF1F161()->SetSystemDiscBootFirstEnabled(0);
+
 #ifdef PS2_DISC
 			if(islike(param, "/mount.ps2"))
 			{
@@ -213,7 +225,12 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				sprintf(tempstr, "<H3>%s : <a href=\"/mount.ps3/unmount\">%s %s</a></H3><hr><a href=\"/mount_ps3%s\">", STR_UNMOUNTGAME, _game_TitleID, _game_Title, templn); strcat(buffer, tempstr);
 			}
 			else
-				mounted = mount_with_mm(source, 1);
+			{
+				mounted = mount_with_mm(source, MOUNT_NORMAL);
+			}
+
+			if(discboot == 1)
+				xsetting_0AF1F161()->SetSystemDiscBootFirstEnabled(1);
 		}
 
 		// -------------------
@@ -844,7 +861,7 @@ static void do_umount(bool clean)
 		//eject_insert(1, 1);
 
 		if(isDir("/dev_flash/pkg"))
-			mount_with_mm((char*)"/dev_flash/pkg", 0);
+			mount_with_mm((char*)"/dev_flash/pkg", MOUNT_SILENT);
 	}
 
 #endif //#ifdef COBRA_ONLY
@@ -980,7 +997,7 @@ static void mount_autoboot(void)
 #ifndef COBRA_ONLY
 		if(strstr(path, ".ntfs[") == NULL)
 #endif
-		mount_with_mm(path, 1); // mount path & do eject
+		mount_with_mm(path, MOUNT_NORMAL); // mount path & do eject
 	}
 }
 
@@ -991,7 +1008,7 @@ static char *_path0;
 static bool mount_ret = false;
 /***********************************************/
 
-static void mount_thread(u64 do_eject)
+static void mount_thread(u64 action)
 {
 	bool ret = false;
 
@@ -1105,14 +1122,14 @@ static void mount_thread(u64 do_eject)
 
 #ifndef COBRA_ONLY
  #ifdef EXT_GDATA
-	if(do_eject == MOUNT_EXT_GDATA) goto install_mm_payload;
+	if(action == MOUNT_EXT_GDATA) goto install_mm_payload;
  #endif
 #endif
 
 	// ----------
 	// last game
 	// ----------
-	if(do_eject)
+	if(action)
 	{
 		// load last_games.bin
 		_lastgames lastgames;
@@ -1184,9 +1201,9 @@ static void mount_thread(u64 do_eject)
 	// show start mounting message (game path)
 	// ----------------------------------------
 
-	if(do_eject == EXPLORE_CLOSE_ALL) {do_eject = 1; explore_close_all(_path);}
+	if(action == EXPLORE_CLOSE_ALL) {action = MOUNT_NORMAL; explore_close_all(_path);}
 
-	if(do_eject) show_msg(_path);
+	if(action) show_msg(_path);
 
 	cellFsUnlink(WMNOSCAN); // remove wm_noscan if a PS2ISO has been mounted
 
@@ -1367,7 +1384,7 @@ static void mount_thread(u64 do_eject)
 		 #ifdef EXT_GDATA
 		{
 			// auto-enable external GD
-			if(do_eject != 1) ;
+			if(action != MOUNT_NORMAL) ;
 
 			else if(strstr(_path, "/GAME"))
 			{
@@ -1870,7 +1887,7 @@ install_mm_payload:
 
 	install_peek_poke();
 
-	if(do_eject) eject_insert(1, 1);
+	if(action) eject_insert(1, 1);
 
 	pokeq(0x8000000000000000ULL+MAP_ADDR, 0x0000000000000000ULL);
 	pokeq(0x8000000000000008ULL+MAP_ADDR, 0x0000000000000000ULL);
@@ -1967,7 +1984,7 @@ install_mm_payload:
 	// re-load last game
 	//------------------
 
-	if(do_eject == MOUNT_EXT_GDATA) // extgd
+	if(action == MOUNT_EXT_GDATA) // extgd
 	{
 		// get last game path
 		get_last_game(_path);
@@ -1998,7 +2015,7 @@ install_mm_payload:
 
 	if(*path)
 	{
-		if(do_eject)
+		if(action)
 		{
 			add_to_map("/dev_bdvd", path);
 			add_to_map("//dev_bdvd", path);
@@ -2024,7 +2041,7 @@ install_mm_payload:
 	// auto-map /dev_hdd0/game to dev_usbxxx/GAMEI
 	//---------------------------------------------
 
-	if(do_eject != 1) ;
+	if(action != MOUNT_NORMAL) ;
 
 	else if(strstr(_path, "/GAME"))
 	{
@@ -2072,13 +2089,13 @@ install_mm_payload:
 		else
 			sprintf(expplg, "%s/none", app_sys);
 
-		if(do_eject && file_exists(expplg))
+		if(action && file_exists(expplg))
 			add_to_map("/dev_flash/vsh/module/explore_plugin.sprx", expplg);
 
 		//---------------
 		// New libfs.sprx
 		//---------------
-		if(do_eject && (c_firmware >= 4.20f))
+		if(action && (c_firmware >= 4.20f))
 		{
 			sprintf(expplg, "%s/ILFS0_000.BIN", app_sys);
 			if(file_exists(NEW_LIBFS_PATH)) sprintf(expplg, "%s", NEW_LIBFS_PATH);
@@ -2115,7 +2132,7 @@ install_mm_payload:
 
 	if(isDir("/dev_bdvd")) sys_ppu_thread_sleep(2);
 
-	//if(do_eject) eject_insert(0, 1);
+	//if(action) eject_insert(0, 1);
 
 #endif //#ifndef COBRA_ONLY
 
@@ -2124,6 +2141,8 @@ exit_mount:
 	// -------------------------------
 	// show 2nd message: "xxx" loaded
 	// -------------------------------
+
+	if(action == MOUNT_SILENT) goto mounting_done;
 
 	if(ret && *_path == '/')
 	{

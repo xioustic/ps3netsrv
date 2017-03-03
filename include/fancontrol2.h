@@ -267,12 +267,12 @@ static void poll_thread(uint64_t poll)
 							{
 #ifdef COBRA_ONLY
 								sprintf(msg, "%s/AUTOMOUNT.ISO", drives[f0]);
-								if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
+								if(file_exists(msg)) {mount_with_mm(msg, MOUNT_SILENT); automount = f0; break;}
 								else
 #endif
 								{
 									sprintf(msg, "%s/PS3_GAME/PARAM.SFO", drives[f0]);
-									if(file_exists(msg)) {mount_with_mm(msg, 0); automount = f0; break;}
+									if(file_exists(msg)) {mount_with_mm(msg, MOUNT_SILENT); automount = f0; break;}
 								}
 							}
 							else if(!isDir(drives[f0])) automount = 0;
