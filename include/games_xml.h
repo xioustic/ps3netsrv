@@ -43,7 +43,7 @@ static void refresh_xml(char *msg)
 	sys_ppu_thread_t t_id;
 	sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
-	while(refreshing_xml && working) sys_ppu_thread_usleep(300000);
+	while(refreshing_xml && working) sys_ppu_thread_usleep(200000);
 
 	sprintf(msg, "%s XML%s: OK", STR_REFRESH, SUFIX2(profile));
 	show_msg(msg);
@@ -162,7 +162,7 @@ static void set_buffer_sizes(uint8_t footprint)
 
 	if(footprint == USE_MC) //mc_app
 	{
-		BUFFER_SIZE_FTP	= ( _256KB_);
+		BUFFER_SIZE_FTP	= ( _128KB_);
 
 		//BUFFER_SIZE	= (1792*KB);
 		BUFFER_SIZE_PSX	= (_384KB_);
@@ -438,10 +438,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 	int ns = -2; u8 uprofile = profile;
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 	if(g_socket >= 0 && open_remote_dir(g_socket, "/", &abort_connection) < 0) do_umount(false);
- #endif
 #endif
 
 	for(u8 f0 = 0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
@@ -463,10 +461,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 
 		if(!(is_net || IS_NTFS) && (isDir(drives[f0]) == false)) continue;
 //
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 		if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
- #endif
 #endif
 		ns = -2; uprofile = profile;
 		for(u8 f1 = 0; f1 < f1_len; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
@@ -483,21 +479,17 @@ static bool update_mygames_xml(u64 conn_s_p)
 			if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
 			if(IS_NTFS)  {if(f1 > 8) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 			if(is_net)
 			{
 				if(f1 > 8) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 			}
- #endif
 #endif
 			if(check_content(f1)) continue;
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 			if(is_net && (netiso_svrid == (f0-7)) && (g_socket != -1)) ns = g_socket; /* reuse current server connection */ else
 			if(is_net && (ns<0)) ns = connect_to_remote_server(f0-7);
- #endif
 #endif
 			if(is_net && (ns<0)) break;
 //
@@ -507,8 +499,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 			subfolder = 0; uprofile = profile;
 		read_folder_xml:
 //
-#ifndef LITE_EDITION
- #ifdef COBRA_ONLY
+#ifdef NET_SUPPORT
 			if(is_net)
 			{
 				char ll[4]; if(li) sprintf(ll, "/%c", '@'+li); else *ll = NULL;
@@ -517,7 +508,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 				if(li == 99) sprintf(param, "/%s%s", paths[f1], AUTOPLAY_TAG);
 			}
 			else
- #endif
 #endif
 			{
 				if(IS_NTFS)
@@ -529,10 +519,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 				}
 			}
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				if(is_net && open_remote_dir(ns, param, &abort_connection) < 0) goto continue_reading_folder_xml; //continue;
- #endif
 #endif
 			//led(YELLOW, ON);
 			{
@@ -541,8 +529,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 				char tempID[12];
 				u8 is_iso = 0;
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				sys_addr_t data2 = NULL;
 				int v3_entries, v3_entry; v3_entries=v3_entry=0;
 				netiso_read_dir_result_data *data=NULL; char neth[8];
@@ -552,7 +539,6 @@ static bool update_mygames_xml(u64 conn_s_p)
 					if(!data2) goto continue_reading_folder_xml; //continue;
 					data=(netiso_read_dir_result_data*)data2; sprintf(neth, "/net%i", (f0-7));
 				}
- #endif
 #endif
 				if(!is_net && file_exists(param) == false) goto continue_reading_folder_xml; //continue;
 				if(!is_net && cellFsOpendir(param, &fd) != CELL_FS_SUCCEEDED) goto continue_reading_folder_xml; //continue;
@@ -560,16 +546,13 @@ static bool update_mygames_xml(u64 conn_s_p)
 				plen = strlen(param);
 
 				while((!is_net && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 					|| (is_net && (v3_entry < v3_entries))
- #endif
 #endif
 					)
 				{
 					if(key >= max_xmb_items) break;
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 					if(is_net)
 					{
 						if((ls == false) && (li==0) && (f1>1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1]==NULL)) ls=true; // single letter folder was found
@@ -602,8 +585,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 						v3_entry++;
 					}
 					else
- #endif
-#endif
+#endif // #ifdef NET_SUPPORT
 					{
 						if(entry.d_name[0] == '.') continue;
 
@@ -730,10 +712,8 @@ next_xml_entry:
 
 				if(!is_net) cellFsClosedir(fd);
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				if(data2) {sys_memory_free((sys_addr_t)data2); data2 = NULL;}
- #endif
 #endif
 			}
 //
@@ -746,10 +726,8 @@ continue_reading_folder_xml:
 			}
 //
 		}
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 		if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns = -2;}
- #endif
 #endif
 	}
 

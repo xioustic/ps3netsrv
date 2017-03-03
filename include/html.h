@@ -79,12 +79,14 @@ char *strcasestr(const char *s1, const char *s2);
 
 static bool IS(const char *a, const char *b)
 {
+	if(!*a) return false;
 	while(*a && (*a == *b)) a++,b++;
 	return !(*a-*b); // compare two strings. returns true if they are identical
 }
 
 static bool _IS(const char *a, const char *b)
 {
+	if(!*a) return false;
 	return (strcasecmp(a, b) == 0);	// compare two strings. returns true if they are identical (case insensitive)
 }
 
@@ -438,7 +440,7 @@ int val(const char *c)
 		else
 			previous_result = result;
 
-		result += (*c - '0');
+		result += (*c & 0x0F);
 		if(result < previous_result)
 			return(0); // overflow
 		else

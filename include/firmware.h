@@ -26,7 +26,7 @@ static float get_firmware_version(void)
 {
 	lv2_get_platform_info(&info);
 	char FW[8]; sprintf(FW, "%02X", info.firmware_version);
-	return (float)(FW[0] - '0') + val(FW + 2)*0.00001f;
+	return (float)(FW[0] & 0x0F) + val(FW + 2)*0.00001f;
 }
 
 static int get_kernel_type(void)

@@ -75,5 +75,5 @@ static void setPluginExit(void)
 	setAutoPowerOff(false);
 	#endif
 
-	{ DELETE_TURNOFF }
+	{ del_turnoff(); }
 }

@@ -75,7 +75,7 @@ int main(int argc, const char* argv[])
 
 	int i, parts, dlen;
 	unsigned int num_tracks;
-	u8 cue = 0; int ext_len = 4;
+	int ext_len = 4;
 
 	int emu_mode;
 	TrackDef tracks[100];
@@ -291,13 +291,31 @@ next_ntfs_entry:
 											sysLv2FsLink(wm_path, mmCM_path);
 									}
 
-									sprintf(wm_path, "%s:/%s%s/%s.PNG", mounts[i].name, c_path[m], SUFIX(profile), filename);
-									if(file_exists(wm_path) == false)
-										ExtractFileFromISO(path, "/PS3_GAME/ICON0.PNG;1", wm_path);
+									int plen = sprintf(image_file, "%s", path) - ext_len;
 
-									sprintf(wm_path, "/dev_hdd0/tmp/wmtmp/%s.PNG", filename);
-									if(file_exists(wm_path) == false)
-										ExtractFileFromISO(path, "/PS3_GAME/ICON0.PNG;1", wm_path);
+									u8 e;
+									for(e = 0; e < 4; e++)
+									{
+										sprintf(image_file + plen, "%s", cover_ext[e]);
+										if(file_exists(image_file))
+										{
+											sprintf(wm_path, "/dev_hdd0/tmp/wmtmp/%s%s", filename, cover_ext[e]);
+											if(file_exists(wm_path) == false)
+												copy_file(image_file, wm_path);
+											break;
+										}
+									}
+
+									if(e >= 4)
+									{
+										sprintf(wm_path, "%s:/%s%s/%s.PNG", mounts[i].name, c_path[m], SUFIX(profile), filename);
+										if(file_exists(wm_path) == false)
+											ExtractFileFromISO(path, "/PS3_GAME/ICON0.PNG;1", wm_path);
+
+										sprintf(wm_path, "/dev_hdd0/tmp/wmtmp/%s.PNG", filename);
+										if(file_exists(wm_path) == false)
+											ExtractFileFromISO(path, "/PS3_GAME/ICON0.PNG;1", wm_path);
+									}
 
 									if(mmCM_found && titleID[0]>' ' && file_exists(wm_path))
 									{
@@ -313,19 +331,18 @@ next_ntfs_entry:
 								else
 								{
 									// cache cover image for BDISO, DVDISO, PSXISO
-									int e, plen = sprintf(image_file, "%s", path) - ext_len;
+									int plen = sprintf(image_file, "%s", path) - ext_len;
 
-									for(e = 0; e < 4; e++)
+									for(u8 e = 0; e < 4; e++)
 									{
-										image_file[plen] = '\0'; strcat(image_file, cover_ext[e]);
-										if(file_exists(image_file)) break;
-									}
-
-									if(e < 4)
-									{
-										sprintf(wm_path, "/dev_hdd0/tmp/wmtmp/%s%s", filename, cover_ext[e]);
-										if(file_exists(wm_path) == false)
-											copy_file(image_file, wm_path);
+										sprintf(image_file + plen, "%s", cover_ext[e]);
+										if(file_exists(image_file))
+										{
+											sprintf(wm_path, "/dev_hdd0/tmp/wmtmp/%s%s", filename, cover_ext[e]);
+											if(file_exists(wm_path) == false)
+												copy_file(image_file, wm_path);
+											break;
+										}
 									}
 								}
 
@@ -364,7 +381,6 @@ next_ntfs_entry:
 									if(m == PSXISO)
 									{
 										emu_mode = EMU_PSX;
-										cue = 0;
 										int fd;
 
 										// detect CD sector size
@@ -380,11 +396,11 @@ next_ntfs_entry:
 										}
 
 										// parse CUE file
-										path[path_len - 3] = 'C'; path[path_len - 2] = 'U'; path[path_len - 1]='E';
+										strcpy(path + path_len - 3, "CUE");
 										fd = ps3ntfs_open(path, O_RDONLY, 0);
 										if(fd < 0)
 										{
-											path[path_len - 3] = 'c'; path[path_len - 2] = 'u'; path[path_len - 1] = 'e';
+											strcpy(path + path_len - 3, "cue");
 											fd = ps3ntfs_open(path, O_RDONLY, 0);
 										}
 
@@ -400,10 +416,7 @@ next_ntfs_entry:
 												if (cobra_parse_cue(cue_buf, r, tracks, 100, &num_tracks, dummy, sizeof(dummy)-1) != 0)
 												{
 													num_tracks = 1;
-													cue = 0;
 												}
-												else
-													cue = 1;
 											}
 										}
 									}
@@ -417,8 +430,10 @@ next_ntfs_entry:
 									memcpy(plugin_args + sizeof(rawseciso_args), sections, parts*sizeof(uint32_t));
 									memcpy(plugin_args + sizeof(rawseciso_args) + (parts * sizeof(uint32_t)), sections_size, parts * sizeof(uint32_t));
 
-									if (emu_mode == EMU_PSX)
+									if(emu_mode == EMU_PSX)
 									{
+										if(num_tracks < 1) num_tracks = 1;
+
 										int max = MAX_SECTIONS - ((num_tracks * sizeof(ScsiTrackDescriptor)) / 8);
 
 										if (parts == max) continue;
@@ -430,7 +445,7 @@ next_ntfs_entry:
 
 										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args + sizeof(rawseciso_args) + (2 * parts * sizeof(uint32_t)));
 
-										if (!cue)
+										if(num_tracks <= 1)
 										{
 											scsi_tracks[0].adr_control = 0x14;
 											scsi_tracks[0].track_number = 1;
@@ -438,14 +453,16 @@ next_ntfs_entry:
 										}
 										else
 										{
-											for (u8 j = 0; j < num_tracks; j++)
+											for (u8 t = 0; t < num_tracks; t++)
 											{
-												scsi_tracks[j].adr_control = (tracks[j].is_audio) ? 0x10 : 0x14;
-												scsi_tracks[j].track_number = j + 1;
-												scsi_tracks[j].track_start_addr = tracks[j].lba;
+												scsi_tracks[t].adr_control = (tracks[t].is_audio) ? 0x10 : 0x14;
+												scsi_tracks[t].track_number = t + 1;
+												scsi_tracks[t].track_start_addr = tracks[t].lba;
 											}
 										}
 									}
+									else
+										num_tracks = 0;
 
 									//--- write .ntfs[ file
 									FILE *flistW;
@@ -453,7 +470,8 @@ next_ntfs_entry:
 									flistW = fopen(path, "wb");
 									if(flistW!=NULL)
 									{
-										fwrite(plugin_args, sizeof(plugin_args), 1, flistW);
+										//fwrite(plugin_args, sizeof(plugin_args), 1, flistW);
+										fwrite(plugin_args, (sizeof(rawseciso_args) + (2 * (parts * sizeof(uint32_t))) + (num_tracks * sizeof(ScsiTrackDescriptor))), 1, flistW);
 										fclose(flistW);
 										sysFsChmod(path, 0666);
 									}

@@ -356,7 +356,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 									poke_lv1(lv2_offset + 0x10, 0x6C76325F73656C66ULL);
 
 									working = 0;
-									{ DELETE_TURNOFF }
+									{ del_turnoff(); }
 									save_file(WMNOSCAN, NULL, 0);
 									{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} /*load LPAR id 1*/
 									sys_ppu_thread_exit(0);
@@ -575,59 +575,77 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			// show mounted game
 			// ------------------
 			{
-#ifndef ENGLISH_ONLY
-				char STR_GAMETOM[48];//		= "Game to mount";
-				char STR_GAMELOADED[288];//	= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
-				char STR_PSPLOADED[232]; //	= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr>";
-				char STR_PS2LOADED[240]; //	= "Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr>";
-
-				char STR_MOVIETOM[48];//	= "Movie to mount";
-				char STR_MOVIELOADED[272];//= "Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie.";
-
-				sprintf(STR_PSPLOADED,   "Game %s%s%s</b>.<hr>",
-										 "loaded successfully. Start the ", "game using <b>", "PSP Launcher");
-				sprintf(STR_PS2LOADED,   "Game %s%s%s</b>.<hr>",
-										 "loaded successfully. Start the ", "game using <b>", "PS2 Classic Launcher");
-				sprintf(STR_GAMELOADED,  "Game %s%s%sgame.",
-										 "loaded successfully. Start the ", "game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry", ".</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the ");
-				sprintf(STR_MOVIELOADED, "Movie %s%s%smovie.",
-										 "loaded successfully. Start the ", "movie from the disc icon<br>under the Video column"                , ".</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the ");
-
-				language("STR_GAMETOM", STR_GAMETOM, "Game to mount");
-				language("STR_GAMELOADED", STR_GAMELOADED, STR_GAMELOADED);
-				language("STR_PSPLOADED", STR_PSPLOADED, STR_PSPLOADED);
-				language("STR_PS2LOADED", STR_PS2LOADED, STR_PS2LOADED);
-
-				language("STR_MOVIETOM", STR_MOVIETOM, "Movie to mount");
-				language("STR_MOVIELOADED", STR_MOVIELOADED, STR_MOVIELOADED);
-
-				language("/CLOSEFILE", NULL, NULL);
-#endif
 				bool is_gamei = false;
 				bool is_movie = strstr(param, "/BDISO") || strstr(param, "/DVDISO") || !extcmp(param, ".ntfs[BDISO]", 12) || !extcmp(param, ".ntfs[DVDISO]", 13);
+
+#ifndef ENGLISH_ONLY
+				char buf[296];
+				char *STR_GAMETOM  = buf; //[48];//	= "Game to mount";
+				char *STR_MOVIETOM = buf; //[48];//	= "Movie to mount";
+				if(is_movie)	language("STR_MOVIETOM", STR_MOVIETOM, "Movie to mount");
+				else			language("STR_GAMETOM",  STR_GAMETOM,  "Game to mount");
+				language("/CLOSEFILE", NULL, NULL);
+#endif
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
 
 				//if(strstr(param, "/PSX")) {sprintf(tempstr, " <font size=2>[CD %i • %s]</font>", CD_SECTOR_SIZE_2352, (webman_config->ps1emu) ? "ps1_netemu.self" : "ps1_emu.self"); strcat(buffer, tempstr);}
 #ifdef PKG_LAUNCHER
 				is_gamei = strstr(param, "/GAMEI/");
-
-				if(is_gamei)
-				{
-					char *pos = strstr(STR_PSPLOADED, "PSP Launcher"); if(pos) strcpy(pos, "PKG Launcher");
-				}
 #endif
 				if(is_movie)
+				{
+#ifndef ENGLISH_ONLY
+					char *STR_MOVIELOADED = buf; //[272];//= "Movie loaded successfully. Start the movie from the disc icon<br>under the Video column.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the movie.";
+					sprintf(STR_MOVIELOADED, "Movie %s%s%smovie.",
+											 "loaded successfully. Start the ", "movie from the disc icon<br>under the Video column"                , ".</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the ");
+					language("STR_MOVIELOADED", STR_MOVIELOADED, STR_MOVIELOADED);
+#endif
 					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
 									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[strstr(param,"BDISO") ? iBDVD : iDVD], mounted ? STR_MOVIELOADED : STR_ERROR);
+				}
 				else if(!extcmp(param, ".BIN.ENC", 8))
+				{
+#ifndef ENGLISH_ONLY
+					char *STR_PS2LOADED = buf; //[240]; //	= "Game loaded successfully. Start the game using <b>PS2 Classic Launcher</b>.<hr>";
+					sprintf(STR_PS2LOADED,   "Game %s%s%s</b>.<hr>",
+											 "loaded successfully. Start the ", "game using <b>", "PS2 Classic Launcher");
+					language("STR_PS2LOADED", STR_PS2LOADED, STR_PS2LOADED);
+#endif
 					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
 									 "<hr>%s", enc_dir_name, wm_icons[iPS2], 300, mounted ? STR_PS2LOADED : STR_ERROR);
+				}
 				else if(((strstr(param, "/PSPISO") || strstr(param, "/ISO/")) && !extcasecmp(param, ".iso", 4)) || is_gamei)
+				{
+#ifndef ENGLISH_ONLY
+					char *STR_PSPLOADED = buf; //[232]; //	= "Game loaded successfully. Start the game using <b>PSP Launcher</b>.<hr>";
+					sprintf(STR_PSPLOADED,   "Game %s%s%s</b>.<hr>",
+											 "loaded successfully. Start the ", "game using <b>", "PSP Launcher");
+					language("STR_PSPLOADED", STR_PSPLOADED, STR_PSPLOADED);
+
+#endif
+#ifdef PKG_LAUNCHER
+					if(is_gamei)
+					{
+						char *pos = strstr(STR_PSPLOADED, "PSP Launcher"); if(pos) strcpy(pos, "PKG Launcher");
+					}
+#endif
 					sprintf(tempstr, "<hr><img src=\"%s\" onerror=\"this.src='%s';\" height=%i>"
 									 "<hr>%s", enc_dir_name, wm_icons[iPSP], strcasestr(enc_dir_name,".png") ? 200 : 300, mounted ? STR_PSPLOADED : STR_ERROR);
+				}
 				else
+				{
+#ifndef ENGLISH_ONLY
+					char *STR_GAMELOADED = buf; //[288];//	= "Game loaded successfully. Start the game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry.</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the game.";
+					sprintf(STR_GAMELOADED,  "Game %s%s%sgame.",
+											 "loaded successfully. Start the ", "game from the disc icon<br>or from <b>/app_home</b>&nbsp;XMB entry", ".</a><hr>Click <a href=\"/mount.ps3/unmount\">here</a> to unmount the ");
+					language("STR_GAMELOADED", STR_GAMELOADED, STR_GAMELOADED);
+#endif
 					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
 									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[default_icon], mounted ? STR_GAMELOADED : STR_ERROR);
+				}
+#ifndef ENGLISH_ONLY
+				language("/CLOSEFILE", NULL, NULL);
+#endif
 			}
 
 			strcat(buffer, tempstr);
@@ -713,7 +731,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				else
 				{
 					show_msg((char*)STR_CPYFINISH);
-					if(do_restart) { { DELETE_TURNOFF } { BEEP2 } vsh_reboot();}
+					if(do_restart) { { del_turnoff(); } { BEEP2 } vsh_reboot();}
 				}
 
 				setPluginInactive();
@@ -761,7 +779,7 @@ static void do_umount_iso(void)
 
 static void do_umount(bool clean)
 {
-	if(clean) cellFsUnlink(WMTMP "/last_game.txt");
+	if(clean) cellFsUnlink(LAST_GAME_TXT);
 
 	cellFsUnlink("/dev_hdd0/tmp/game/ICON0.PNG");
 
@@ -801,7 +819,7 @@ static void do_umount(bool clean)
 			sys_ppu_thread_t t_id;
 			uint64_t exit_code;
 
- #ifndef LITE_EDITION
+ #ifdef NET_SUPPORT
 			sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 			sys_ppu_thread_join(t_id, &exit_code);
  #endif
@@ -809,7 +827,7 @@ static void do_umount(bool clean)
 			sys_ppu_thread_join(t_id, &exit_code);
 		}
 
- #ifndef LITE_EDITION
+  #ifdef NET_SUPPORT
 		while(netiso_loaded || rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
  #else
 		while(rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
@@ -847,7 +865,7 @@ static void do_umount_eject(void)
 
 static void get_last_game(char *last_path)
 {
-	read_file(WMTMP "/last_game.txt", last_path, STD_PATH_LEN, 0);
+	read_file(LAST_GAME_TXT, last_path, STD_PATH_LEN, 0);
 }
 
 #ifdef COBRA_ONLY
@@ -1073,7 +1091,7 @@ static void mount_thread(u64 do_eject)
 
 	char netid = NULL;
 
-#ifndef LITE_EDITION
+ #ifdef NET_SUPPORT
 	if(islike(_path, "/net"))
 	{
 		netid = _path[4];
@@ -1098,7 +1116,7 @@ static void mount_thread(u64 do_eject)
 	{
 		// load last_games.bin
 		_lastgames lastgames;
-		if(read_file(WMTMP "/last_games.bin", (char*)&lastgames, sizeof(_lastgames), 0) == 0) lastgames.last = 0xFF;
+		if(read_file(LAST_GAMES_BIN, (char*)&lastgames, sizeof(_lastgames), 0) == 0) lastgames.last = 0xFF;
 
 		// find game being mounted in last_games.bin
 		bool _prev = false, _next = false;
@@ -1148,7 +1166,7 @@ static void mount_thread(u64 do_eject)
 		}
 
 		// save last_games.bin
-		save_file(WMTMP "/last_games.bin", (char *)&lastgames, sizeof(_lastgames));
+		save_file(LAST_GAMES_BIN, (char *)&lastgames, sizeof(_lastgames));
 	}
 
 	// -----------------------
@@ -1158,7 +1176,7 @@ static void mount_thread(u64 do_eject)
 	if(*_path != '/') goto exit_mount;
 	else
 	{
-		save_file(WMTMP "/last_game.txt", _path, SAVE_ALL);
+		save_file(LAST_GAME_TXT, _path, SAVE_ALL);
 	}
 
 
@@ -1428,7 +1446,8 @@ static void mount_thread(u64 do_eject)
 			// mount NTFS ISO
 			// ---------------
 
-			if(strstr(_path, ".ntfs["))
+			char *ntfs_ext = strstr(_path, ".ntfs[");
+			if(ntfs_ext)
 			{
 				sys_addr_t addr = 0;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
@@ -1440,7 +1459,7 @@ static void mount_thread(u64 do_eject)
 
 						wait_for("/dev_bdvd", 3);
 
-						if(!extcmp(_path, ".ntfs[PS3ISO]", 13))
+						if(IS(ntfs_ext, ".ntfs[PS3ISO]"))
 						{
 							get_name(templn, _path, NO_EXT);
 							cache_icon0_and_param_sfo(templn);
@@ -1450,8 +1469,8 @@ static void mount_thread(u64 do_eject)
 						}
 
 						// cache PS2ISO or PSPISO to HDD0
-						bool is_ps2 = (strstr(_path, ".ntfs[PS2ISO]") != NULL);
-						bool is_psp = (strstr(_path, ".ntfs[PSPISO]") != NULL);
+						bool is_ps2 = IS(ntfs_ext, ".ntfs[PS2ISO]");
+						bool is_psp = IS(ntfs_ext, ".ntfs[PSPISO]");
 
 						if(is_psp || is_ps2)
 						{
@@ -1486,7 +1505,7 @@ static void mount_thread(u64 do_eject)
 				goto exit_mount;
 			}
 
-	#ifndef LITE_EDITION
+	 #ifdef NET_SUPPORT
 
 			// -----------------------
 			// mount /net ISO or path
@@ -1497,16 +1516,11 @@ static void mount_thread(u64 do_eject)
 				sys_addr_t sysmem = 0; netiso_svrid = NONE;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 				{
-					netiso_svrid = netid - '0';
+					netiso_svrid = (netid & 0x0F);
 					netiso_args *_netiso_args = (netiso_args*)sysmem;
 					memset(_netiso_args, 0, _64KB_);
 
-					if( is_netsrv_enabled(netiso_svrid) )
-					{
-						sprintf(_netiso_args->server, "%s", webman_config->neth[netiso_svrid]);
-						_netiso_args->port = webman_config->netp[netiso_svrid];
-					}
-					else
+					if(is_netsrv_enabled(netiso_svrid) == false)
 					{
 						sys_memory_free(sysmem); ret = false;
 						goto exit_mount;
@@ -1514,69 +1528,64 @@ static void mount_thread(u64 do_eject)
 
 					char *netpath = _path + 5;
 
-					/*size_t len = */ sprintf(_netiso_args->path, "%s", netpath);
+					size_t len = sprintf(_netiso_args->path, "%s", netpath);
 
 					if(islike(netpath, "/PS3ISO")) mount_unk = _netiso_args->emu_mode = EMU_PS3; else
-					if(islike(netpath, "/PS2ISO")) goto copy_ps2iso_to_hdd0;         else
-					if(islike(netpath, "/PSPISO")) goto copy_pspiso_to_hdd0;         else
+					if(islike(netpath, "/PS2ISO")) goto copy_ps2iso_to_hdd0;                     else
+					if(islike(netpath, "/PSPISO")) goto copy_pspiso_to_hdd0;                     else
 					if(islike(netpath, "/BDISO" )) mount_unk = _netiso_args->emu_mode = EMU_BD;  else
 					if(islike(netpath, "/DVDISO")) mount_unk = _netiso_args->emu_mode = EMU_DVD; else
 					if(islike(netpath, "/PSX")   )
 					{
-//						TrackDef tracks[32];
+						TrackDef tracks[32];
 						unsigned int num_tracks = 1;
-/*
-						cellFsUnlink(TEMP_NET_PSXISO);
 
-						int ns = connect_to_server(_netiso_args->server, _netiso_args->port);
+						int ns = connect_to_remote_server(netiso_svrid);
 						if(ns >= 0)
 						{
-							sprintf(_netiso_args->path + len - 3, "cue");
-							copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_);
-							if(file_exists(TEMP_NET_PSXISO) == false)
+							cellFsUnlink(TEMP_NET_PSXISO);
+							strcpy(_netiso_args->path + len - 3, "CUE");
+							if(copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_) == FAILED)
 							{
-								sprintf(_netiso_args->path + len - 3, "CUE");
+								strcpy(_netiso_args->path + len - 3, "cue");
 								copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_);
-								if(file_exists(TEMP_NET_PSXISO) == false) goto cancel_net;
 							}
+							shutdown(ns, SHUT_RDWR); socketclose(ns);
 
-							char *cue_buf = (char*)sysmem;
-							int64_t cue_size = read_file(TEMP_NET_PSXISO, cue_buf, _4KB_, 0);
+							if(file_exists(TEMP_NET_PSXISO))
+							{
+								char *cue_buf = (char*)sysmem;
+								int64_t cue_size = read_file(TEMP_NET_PSXISO, cue_buf, _4KB_, 0);
+								cellFsUnlink(TEMP_NET_PSXISO);
 
-							num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
+								num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
+							}
+							memset(_netiso_args, 0, _4KB_);
 						}
-cancel_net:
-						if(ns >= 0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
-						cellFsUnlink(TEMP_NET_PSXISO);
 
-						memset(_netiso_args, 0, _64KB_);
-						sprintf(_netiso_args->server, "%s", webman_config->neth[netiso_svrid]);
-						_netiso_args->port = webman_config->netp[netiso_svrid];
-*/
 						mount_unk = _netiso_args->emu_mode = EMU_PSX;
 						_netiso_args->num_tracks = num_tracks;
 						sprintf(_netiso_args->path, "%s", netpath);
 
-						ScsiTrackDescriptor *scsi_tracks;
-						scsi_tracks = (ScsiTrackDescriptor *)&_netiso_args->tracks[0];
+						ScsiTrackDescriptor *scsi_tracks = (ScsiTrackDescriptor *)_netiso_args->tracks;
 
-//						if(num_tracks == 1)
+						if(num_tracks <= 1)
 						{
 							scsi_tracks[0].adr_control = 0x14;
 							scsi_tracks[0].track_number = 1;
 							scsi_tracks[0].track_start_addr = 0;
 						}
-/*
+
 						else
 						{
-							for(u8 t = 0; t < num_tracks; t++)
+							for(unsigned int t = 0; t < num_tracks; t++)
 							{
 								scsi_tracks[t].adr_control = (tracks[t].is_audio) ? 0x10 : 0x14;
 								scsi_tracks[t].track_number = t + 1;
 								scsi_tracks[t].track_start_addr = tracks[t].lba;
 							}
 						}
-*/
+
 					}
 					else if(islike(netpath, "/GAMES") || islike(netpath, "/GAMEZ"))
 					{
@@ -1590,6 +1599,9 @@ cancel_net:
 						else
 							sprintf(_netiso_args->path, "/***DVD***%s", netpath);
 					}
+
+					sprintf(_netiso_args->server, "%s", webman_config->neth[netiso_svrid]);
+					_netiso_args->port = webman_config->netp[netiso_svrid];
 
 					sys_ppu_thread_create(&thread_id_net, netiso_thread, (uint64_t)sysmem, THREAD_PRIO, THREAD_STACK_SIZE_NET_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
 
@@ -1610,7 +1622,8 @@ cancel_net:
 
 				goto exit_mount;
 			}
-	#endif //#ifndef LITE_EDITION
+
+	#endif // #ifdef NET_SUPPORT
 
 			// ------------------------------------------------------------------
 			// mount PS3ISO / PSPISO / PS2ISO / DVDISO / BDISO stored on hdd0/usb
@@ -1633,6 +1646,8 @@ cancel_net:
 						fix_in_progress=false;
 					}
 	#endif //#ifdef FIX_GAME
+
+					mount_unk = EMU_PS3;
 
 					cobra_mount_ps3_disc_image(cobra_iso_list, iso_parts);
 					sys_ppu_thread_usleep(2500);
@@ -1685,6 +1700,8 @@ cancel_net:
 
 					if(webman_config->ps2emu || strstr(_path, "[netemu]")) enable_ps2netemu_cobra(1); else enable_ps2netemu_cobra(0);
 
+					mount_unk = EMU_PS2_DVD;
+
 					if(file_exists(iso_list[0]))
 					{
 						TrackDef tracks[1];
@@ -1726,7 +1743,7 @@ cancel_net:
 						if(file_exists(_path) == false) sprintf(_path, "%s", cobra_iso_list[0]);
 					}
 
-					mount_iso = mount_iso || file_exists(cobra_iso_list[0]); ret = mount_iso;
+					mount_iso = mount_iso || file_exists(cobra_iso_list[0]); ret = mount_iso; mount_unk = EMU_PSX;
 
 					if(!extcasecmp(_path, ".cue", 4))
 					{
@@ -1734,7 +1751,7 @@ cancel_net:
 						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 						{
 							char *cue_buf = (char*)sysmem;
-							int cue_size = read_file(_path, cue_buf, _64KB_, 0);
+							int cue_size = read_file(_path, cue_buf, _4KB_, 0);
 
 							if(cue_size > 16)
 							{
@@ -2243,7 +2260,7 @@ static bool mount_with_mm(const char *path, u8 action)
 	sys_ppu_thread_t t_id;
 	sys_ppu_thread_create(&t_id, mount_thread, (uint64_t)action, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_MOUNT_GAME, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_CMD);
 
-	while(is_mounting && working) sys_ppu_thread_usleep(500000); // wait until thread mount game
+	while(is_mounting && working) sys_ppu_thread_usleep(200000); // wait until thread mount game
 
 	_path0 = NULL;
 

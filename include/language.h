@@ -401,7 +401,7 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 	sprintf(label, "%s", default_str);
 
-	bool do_retry = true;
+	u8 do_retry = 1;
 	char buffer[MAX_LINE_LEN];
 
 	if(fh == 0)
@@ -461,7 +461,7 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 	} while(lang_pos < size);
 
-	if(do_retry) {do_retry = false, lang_pos = 0; goto retry;}
+	if(do_retry) {do_retry--, lang_pos = 0; goto retry;}
 
 	return true;
 }

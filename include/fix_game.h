@@ -124,7 +124,7 @@ static bool fix_param_sfo(unsigned char *mem, char *titleID, u8 opcode, u16 sfo_
 		{
 			char version[8];
 			strncpy(version, (char *) &mem[pos], 7);
-			int fw_ver = 10000 * ((version[1] & 0xFF) - '0') + 1000 * ((version[3] & 0xFF) - '0') + 100 * ((version[4] & 0xFF) - '0');
+			int fw_ver = 10000 * ((version[1] & 0x0F)) + 1000 * ((version[3] & 0x0F)) + 100 * ((version[4] & 0x0F));
 			if((c_firmware >= 4.20f && c_firmware < LATEST_CFW) && (fw_ver > (int)(c_firmware * 10000.0f)))
 			{
 				if(opcode == SHOW_WARNING) {char text[64]; sprintf(text, "WARNING: Game requires firmware version %i.%i", (fw_ver / 10000), (fw_ver - 10000*(fw_ver / 10000)) / 100); show_msg((char*)text); break;}

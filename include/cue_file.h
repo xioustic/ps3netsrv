@@ -8,9 +8,9 @@ static int parse_lba(const char *templn, bool use_pregap)
 	if((tcode_len != 8) || tcode[2]!=':' || tcode[5]!=':') return FAILED;
 
 	unsigned int tmin, tsec, tfrm;
-	tmin = (tcode[0]-'0')*10 + (tcode[1]-'0');
-	tsec = (tcode[3]-'0')*10 + (tcode[4]-'0');
-	tfrm = (tcode[6]-'0')*10 + (tcode[7]-'0');
+	tmin = (tcode[0] & 0x0F)*10 + (tcode[1] & 0x0F);
+	tsec = (tcode[3] & 0x0F)*10 + (tcode[4] & 0x0F);
+	tfrm = (tcode[6] & 0x0F)*10 + (tcode[7] & 0x0F);
 
 	if(use_pregap) tsec += 2;
 

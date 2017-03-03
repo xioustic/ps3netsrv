@@ -533,7 +533,7 @@ show_popup:
 						{
 							// power off
 							working = 0;
-							{ DELETE_TURNOFF } { BEEP1 }
+							{ del_turnoff(); } { BEEP1 }
 
 							{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
 
@@ -543,7 +543,7 @@ show_popup:
 						{
 							// lpar restart
 							working = 0;
-							{ DELETE_TURNOFF }{ BEEP2 }
+							{ del_turnoff(); }{ BEEP2 }
 
 							{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 
@@ -574,7 +574,7 @@ show_popup:
 						{
 							// vsh shutdown
 							working = 0;
-							{ DELETE_TURNOFF }{ BEEP1 }
+							{ del_turnoff(); }{ BEEP1 }
 
 							vsh_shutdown(); // VSH shutdown
 
@@ -585,7 +585,7 @@ show_popup:
 						{
 							// vsh reboot
 							working = 0;
-							{ DELETE_TURNOFF }{ BEEP2 }
+							{ del_turnoff(); }{ BEEP2 }
 
 							vsh_reboot(); // VSH reboot
 
@@ -744,7 +744,7 @@ show_popup:
 reboot:
 					// vsh reboot
 					working = 0;
-					{ DELETE_TURNOFF }
+					{ del_turnoff(); }
 					save_file(WMNOSCAN, NULL, 0);
 
 					vsh_reboot(); // VSH reboot

@@ -25,6 +25,7 @@
 #define FTP_ERROR_RNFR_550	"550 RNFR Error\r\n"				// Requested action not taken. File unavailable
 
 static u8 ftp_active = 0;
+static u8 ftp_working = 0;
 
 #define FTP_RECV_SIZE  (STD_PATH_LEN + 20)
 
@@ -340,6 +341,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 #endif
 											  " SITE SHUTDOWN\r\n"
 											  " SITE RESTART\r\n"
+											  " SITE STOP\r\n"
 											  "214 End\r\n");
 						}
 						else
@@ -348,7 +350,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
 							if(sysmem) sys_memory_free(sysmem);
 							working = 0;
-							{ DELETE_TURNOFF }
+							{ del_turnoff(); }
 							if(_IS(cmd, "REBOOT")) save_file(WMNOSCAN, NULL, 0);
 							if(_IS(cmd, "SHUTDOWN")) {BEEP1; system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);} else {BEEP2; system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 							sys_ppu_thread_exit(0);
@@ -363,6 +365,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							ssend(conn_s_ftp, buffer);
 						}
 #endif
+						else
+						if(_IS(cmd, "STOP"))
+						{
+							if(working) ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
+							ftp_working = connactive = 0;
+							break;
+						}
 						else
 						if(_IS(cmd, "FLASH"))
 						{
@@ -1225,6 +1234,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						loggedin = 1;
 					}
 					else
+
 					{
 						ssend(conn_s_ftp, FTP_ERROR_430);	// Invalid username or password
 					}
@@ -1262,9 +1272,10 @@ static void ftpd_thread(uint64_t arg)
 {
 	int list_s = NONE;
 	ftp_active = 0;
+	ftp_working = 1;
 
 relisten:
-	if(working) list_s = slisten(webman_config->ftp_port, 4);
+	if(working && ftp_working) list_s = slisten(webman_config->ftp_port, 4);
 	else goto end;
 
 	if(list_s < 0)
@@ -1282,7 +1293,7 @@ relisten:
 		{
 			sys_ppu_thread_usleep(100000);
 			int conn_s_ftp;
-			if(!working) break;
+			if(!working || !ftp_working) break;
 
 			if(sys_admin && ((conn_s_ftp = accept(list_s, NULL, NULL)) > 0))
 			{

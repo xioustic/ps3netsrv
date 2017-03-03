@@ -7,6 +7,7 @@
 #define CLIENT_BUFFER_SIZE     (0x4000)
 
 static void handleclient_net(u64 arg);
+static u8 net_working = 0;
 
 typedef struct {
 	int s;
@@ -669,9 +670,10 @@ static void handleclient_net(uint64_t arg)
 static void netsvrd_thread(uint64_t arg)
 {
 	int list_s = NONE;
+	net_working = 1;
 
 relisten:
-	if(working) list_s = slisten(webman_config->netsrvp, 4);
+	if(working && net_working) list_s = slisten(webman_config->netsrvp, 4);
 	else goto end;
 
 	if(list_s < 0)
@@ -689,7 +691,7 @@ relisten:
 		{
 			sys_ppu_thread_usleep(1668);
 			int conn_s_net;
-			if(!working) break;
+			if(!working || !net_working) break;
 
 			if((conn_s_net = accept(list_s, NULL, NULL)) > 0)
 			{

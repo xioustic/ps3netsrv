@@ -2,6 +2,9 @@
 
 #define CD_SECTOR_SIZE_2048     2048
 
+#define LAST_SECTOR             1
+#define READ_SECTOR             0xFFFFFFFF
+
 #ifdef RAWISO_PSX_MULTI
 #define EMU_PSX_MULTI (EMU_PSX + 16)
 #endif
@@ -120,7 +123,7 @@ static u8 rawseciso_loaded = 0;
 
 static int mode_file = 0, cd_sector_size_param = 0;
 
-static uint64_t size_sector = 512ULL;
+static uint64_t sec_size = 512ULL;
 static uint32_t CD_SECTOR_SIZE_2352 = 2352;
 
 static sys_device_info_t disc_info;
@@ -151,7 +154,7 @@ static int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sy
 	return (int)p1;
 }
 
-static void get_next_read(uint64_t discoffset, uint64_t bufsize, uint64_t *offset, uint64_t *readsize, int *idx, uint64_t size_sector)
+static void get_next_read(uint64_t discoffset, uint64_t bufsize, uint64_t *offset, uint64_t *readsize, int *idx, uint64_t sec_size)
 {
 	uint64_t last, sz, base = 0;
 	*idx = NONE;
@@ -163,7 +166,7 @@ static void get_next_read(uint64_t discoffset, uint64_t bufsize, uint64_t *offse
 		if(i == 0 && mode_file > 1)
 			sz = (((uint64_t)sections_size[i]) * CD_SECTOR_SIZE_2048);
 		else
-			sz = (((uint64_t)sections_size[i]) * size_sector);
+			sz = (((uint64_t)sections_size[i]) * sec_size);
 
 		last = base + sz;
 
@@ -189,12 +192,12 @@ static void get_next_read(uint64_t discoffset, uint64_t bufsize, uint64_t *offse
 }
 
 uint8_t last_sect_buf[4096] __attribute__((aligned(16)));
-uint32_t last_sect = 0xFFFFFFFF;
+uint32_t last_sect = READ_SECTOR;
 
 static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size)
 {
 	uint64_t remaining;
-	int x;
+	int retry;
 
 	//DPRINTF("read iso: %p %lx %lx\n", buf, offset, size);
 	remaining = size;
@@ -209,9 +212,9 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 
 		if(!ntfs_running) return FAILED;
 
-		get_next_read(offset, remaining, &pos, &readsize, &idx, size_sector);
+		get_next_read(offset, remaining, &pos, &readsize, &idx, sec_size);
 
-		if(idx == NONE || sections[idx] == 0xFFFFFFFF)
+		if(idx == NONE || sections[idx] == 3)
 		{
 			memset(buf, 0, readsize);
 			buf += readsize;
@@ -220,27 +223,27 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 			continue;
 		}
 
-		if(pos % size_sector)
+		if(pos % sec_size)
 		{
 			uint64_t csize;
 
-			sector = sections[idx] + (pos / size_sector);
-			for(x = 0; x < 16; x++)
+			sector = sections[idx] + (pos / sec_size);
+			for(retry = 0; retry < 16; retry++)
 			{
 				r = 0;
 				if(last_sect == sector)
 				{
-					ret = CELL_OK; r = 1;
+					ret = CELL_OK; r = LAST_SECTOR;
 				}
 				else
 					ret = sys_storage_read(handle, 0, sector, 1, last_sect_buf, &r, 0);
 
-				if(ret == CELL_OK && r == 1)
+				if(ret == CELL_OK && r == LAST_SECTOR)
 					last_sect = sector;
 				else
-					last_sect = 0xFFFFFFFF;
+					last_sect = READ_SECTOR;
 
-				if(ret != CELL_OK || r != 1)
+				if(last_sect == READ_SECTOR)
 				{
 #ifdef RAWISO_PSX_MULTI
 					if(emu_mode == EMU_PSX_MULTI) return (int) 0x8001000A; // EBUSY
@@ -260,11 +263,11 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 							}
 							else sys_ppu_thread_usleep(7000000);
 						}
-						x = -1; continue;
+						retry = -1; continue;
 					}
 
 
-					if(x == 15 || !ntfs_running)
+					if(retry == 15 || !ntfs_running)
 					{
 						//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 						return FAILED;
@@ -274,11 +277,11 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 				else break;
 			}
 
-			csize = size_sector - (pos % size_sector);
+			csize = sec_size - (pos % sec_size);
 
 			if(csize > readsize) csize = readsize;
 
-			memcpy(buf, last_sect_buf + (pos % size_sector), csize);
+			memcpy(buf, last_sect_buf + (pos % sec_size), csize);
 			buf += csize;
 			offset += csize;
 			pos += csize;
@@ -288,12 +291,12 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 
 		if(readsize > 0)
 		{
-			uint32_t n = readsize / size_sector;
+			uint32_t n = readsize / sec_size;
 
 			if(n > 0)
 			{
-				sector = sections[idx] + (pos / size_sector);
-				for(x = 0; x < 16; x++)
+				sector = sections[idx] + (pos / sec_size);
+				for(retry = 0; retry < 16; retry++)
 				{
 					r = 0;
 					ret = sys_storage_read(handle, 0, sector, n, buf, &r, 0);
@@ -301,9 +304,9 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 					if(ret == CELL_OK && r == n)
 						last_sect = sector + n - 1;
 					else
-						last_sect = 0xFFFFFFFF;
+						last_sect = READ_SECTOR;
 
-					if(ret != CELL_OK || r != n)
+					if(last_sect == READ_SECTOR)
 					{
 #ifdef RAWISO_PSX_MULTI
 						if(emu_mode == EMU_PSX_MULTI) return (int) 0x8001000A; // EBUSY
@@ -323,10 +326,10 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 								}
 								else sys_ppu_thread_usleep(7000000);
 							}
-							x = -1; continue;
+							retry = -1; continue;
 						}
 
-						if(x == 15 || !ntfs_running)
+						if(retry == 15 || !ntfs_running)
 						{
 							//DPRINTF("sys_storage_read failed: %x %x -> %x\n", sector, n, ret);
 							return FAILED;
@@ -338,7 +341,7 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 
 				uint64_t s;
 
-				s = n * size_sector;
+				s = n * sec_size;
 				buf += s;
 				offset += s;
 				pos += s;
@@ -348,23 +351,23 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 
 			if(readsize > 0)
 			{
-				sector = sections[idx] + pos / size_sector;
-				for(x = 0; x < 16; x++)
+				sector = sections[idx] + pos / sec_size;
+				for(retry = 0; retry < 16; retry++)
 				{
 					r = 0;
 					if(last_sect == sector)
 					{
-						ret = CELL_OK; r = 1;
+						ret = CELL_OK; r = LAST_SECTOR;
 					}
 					else
 						ret = sys_storage_read(handle, 0, sector, 1, last_sect_buf, &r, 0);
 
-					if(ret == CELL_OK && r == 1)
+					if(ret == CELL_OK && r == LAST_SECTOR)
 						last_sect = sector;
 					else
-						last_sect = 0xFFFFFFFF;
+						last_sect = READ_SECTOR;
 
-					if(ret != CELL_OK || r != 1)
+					if(last_sect == READ_SECTOR)
 					{
 #ifdef RAWISO_PSX_MULTI
 						if(emu_mode == EMU_PSX_MULTI) return (int) 0x8001000A; // EBUSY
@@ -384,10 +387,10 @@ static int process_read_iso_cmd_iso(uint8_t *buf, uint64_t offset, uint64_t size
 								}
 								else sys_ppu_thread_usleep(7000000);
 							}
-							x = -1; continue;
+							retry = -1; continue;
 						}
 
-						if(x == 15 || !ntfs_running)
+						if(retry == 15 || !ntfs_running)
 						{
 							//DPRINTF("sys_storage_read failed: %x 1 -> %x\n", sector, ret);
 							return FAILED;
@@ -711,19 +714,19 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 }
 
 #ifdef RAWISO_PSX_MULTI
-static void get_psx_track_datas(void)
+static void get_psx_track_data(void)
 {
-	uint32_t track_datas[4];
+	uint32_t track_data[4];
 	uint8_t buff[CD_SECTOR_SIZE_2048];
 	uint64_t lv2_addr = 0x8000000000000050ULL;
 	lv2_addr+= 16ULL * psx_indx;
 
-	my_memcpy((uint8_t)(uint32_t) track_datas, lv2_addr, 16ULL);
+	my_memcpy((uint8_t)(uint32_t) track_data, lv2_addr, 16ULL);
 
 	int k = 4;
 	num_tracks = 0;
 
-	if(!track_datas[0])
+	if(!track_data[0])
 	{
 		tracks[num_tracks].adr_control = 0x14;
 		tracks[num_tracks].track_number = 1;
@@ -733,10 +736,10 @@ static void get_psx_track_datas(void)
 	}
 	else
 	{
-		lv2_addr = 0x8000000000000000ULL + (uint64_t) track_datas[2];
-		my_memcpy((uint8_t)(uint32_t) buff, lv2_addr, track_datas[3]);
+		lv2_addr = 0x8000000000000000ULL + (uint64_t) track_data[2];
+		my_memcpy((uint8_t)(uint32_t) buff, lv2_addr, track_data[3]);
 
-		while(k < (int) track_datas[3])
+		while(k < (int) track_data[3])
 		{
 			tracks[num_tracks].adr_control = (buff[k + 1] != 0x14) ? 0x10 : 0x14;
 			tracks[num_tracks].track_number = num_tracks+1;
@@ -885,7 +888,7 @@ static void eject_thread(uint64_t arg)
 			}
 			else if(ret == 1)
 			{
-				get_psx_track_datas();
+				get_psx_track_data();
 
 				sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
@@ -963,14 +966,14 @@ static void rawseciso_thread(uint64_t arg)
 
 	if(mode_file != 1)
 	{
-		size_sector = 512ULL;
+		sec_size = 512ULL;
 		if(args->device != 0)
 		{
-			for(int i = 0; i < 16; i++)
+			for(int retry = 0; retry < 16; retry++)
 			{
 				if(sys_storage_get_device_info(args->device, &disc_info) == 0)
 				{
-					size_sector  = (uint32_t) disc_info.sector_size;
+					sec_size = (uint32_t) disc_info.sector_size;
 					break;
 				}
 
@@ -980,7 +983,7 @@ static void rawseciso_thread(uint64_t arg)
 
 	}
 	else
-		size_sector = CD_SECTOR_SIZE_2048;
+		sec_size = CD_SECTOR_SIZE_2048;
 
 #ifdef RAWISO_PSX_MULTI
 	if(emu_mode == EMU_PSX_MULTI)
@@ -1017,7 +1020,7 @@ static void rawseciso_thread(uint64_t arg)
 
 		is_cd2352 = 1;
 
-		discsize = discsize * size_sector;
+		discsize = discsize * sec_size;
 
 		if(discsize % CD_SECTOR_SIZE_2352)
 		{
@@ -1028,7 +1031,7 @@ static void rawseciso_thread(uint64_t arg)
 	else
 	{
 		num_tracks = 0;
-		discsize = discsize * size_sector + ((mode_file > 1) ? (uint64_t) (CD_SECTOR_SIZE_2048 * sections[0] ) : 0ULL) ;
+		discsize = discsize * sec_size + ((mode_file > 1) ? (uint64_t) (CD_SECTOR_SIZE_2048 * sections[0] ) : 0ULL) ;
 		is_cd2352 = 0;
 	}
 
@@ -1075,7 +1078,7 @@ static void rawseciso_thread(uint64_t arg)
 #ifdef RAWISO_PSX_MULTI
 	if(emu_mode == EMU_PSX_MULTI)
 	{
-		get_psx_track_datas();
+		get_psx_track_data();
 
 		sys_ppu_thread_create(&thread_id_eject, eject_thread, 0, 3000, THREAD_STACK_SIZE_8KB, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_PSX_EJECT);
 	}

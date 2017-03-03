@@ -41,6 +41,26 @@
  #endif
 #endif
 
+#undef NET_SUPPORT
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+ #define NET_SUPPORT 1
+ #endif
+#endif
+
+#ifdef LAST_FIRMWARE_ONLY
+ #undef DECR_SUPPORT
+ #undef FIX_GAME
+#endif
+
+#ifdef PKG_LAUNCHER
+ #define MOUNT_ROMS 1
+#endif
+
+#ifndef WM_REQUEST
+ #undef WM_CUSTOM_COMBO
+#endif
+
 #include "types.h"
 #include "common.h"
 #include "cobra/cobra.h"
@@ -95,15 +115,6 @@ static char search_url[50];
 #define EDITION			EDITION_					// webMAN version
 #endif
 
-#ifdef LAST_FIRMWARE_ONLY
- #undef DECR_SUPPORT
- #undef FIX_GAME
-#endif
-
-#ifdef PKG_LAUNCHER
- #define MOUNT_ROMS 1
-#endif
-
 SYS_MODULE_INFO(WWWD, 0, 1, 1);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
@@ -139,6 +150,9 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 #define WMONLINE_GAMES		TMP_DIR "/wm_online_ids.txt"	// webMAN config file to skip disable network setting on these title ids
 #define WMOFFLINE_GAMES		TMP_DIR "/wm_offline_ids.txt"	// webMAN config file to disable network setting on specific title ids (overrides wm_online_ids.txt)
+
+#define LAST_GAME_TXT		WMTMP "/last_game.txt"
+#define LAST_GAMES_BIN		WMTMP "/last_games.bin"
 
 #define VSH_MENU_IMAGES		"/dev_hdd0/plugins/images"
 
@@ -184,24 +198,6 @@ SYS_MODULE_EXIT(wwwd_stop);
  #define PS3MAPI_RESTORE_SC8_DISABLE_STATUS
 #endif
 ///////////// PS3MAPI END //////////////
-
-#ifdef WM_REQUEST
- #ifdef WEB_CHAT
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff"); cellFsUnlink(WMREQUEST_FILE); cellFsUnlink(WMCHATFILE);}
- #else
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff"); cellFsUnlink(WMREQUEST_FILE);}
- #endif
-#else
- #ifdef WM_CUSTOM_COMBO
-  #undef WM_CUSTOM_COMBO
- #endif
-
- #ifdef WEB_CHAT
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff"); cellFsUnlink(WMCHATFILE);}
- #else
-  #define DELETE_TURNOFF	{do_umount(false); cellFsUnlink("/dev_hdd0/tmp/turnoff");}
- #endif
-#endif
 
 #define THREAD_NAME_SVR			"wwwdt"
 #define THREAD_NAME_WEB			"wwwd"
@@ -2044,10 +2040,21 @@ parse_request:
 				// /netstatus.ps3?0        disable network access in registry
 				// /netstatus.ps3?disable  disable network access in registry
 
+				// /netstatus.ps3?stop     stop net server
+				// /netstatus.ps3?netsrv   netsrv is running
+
+				int32_t status = 0;
+
+#ifdef PS3NET_SERVER
+				if( param[15] == 'n') status = net_working; else //netsrv
+				if( param[15] == 's') net_working = 0;      else //stop
+#endif
 				if( param[15] & 1) xsetting_F48C0548()->SetSettingNet_enable(1); else //enable
 				if(~param[15] & 1) xsetting_F48C0548()->SetSettingNet_enable(0);      //disable
 
-				int32_t status = 0;
+#ifdef PS3NET_SERVER
+				if( param[15] < 'n')
+#endif
 				xsetting_F48C0548()->GetSettingNet_enable(&status);
 
 				if(param[14] != '?') {status ^= 1; xsetting_F48C0548()->SetSettingNet_enable(status);}
@@ -2283,7 +2290,7 @@ parse_request:
 
 				if(sysmem) sys_memory_free(sysmem);
 
-				{ DELETE_TURNOFF } { BEEP1 }
+				{ del_turnoff(); } { BEEP1 }
 
 				if(param[13] == '?')
 					vsh_shutdown(); // shutdown using VSH
@@ -2333,7 +2340,7 @@ parse_request:
 
 				if(sysmem) sys_memory_free(sysmem);
 
-				{ DELETE_TURNOFF } { BEEP2 }
+				{ del_turnoff(); } { BEEP2 }
 
 				char *allow_scan = strstr(param,"?0");
 				if(allow_scan) *allow_scan = NULL; else save_file(WMNOSCAN, NULL, 0);
@@ -3370,7 +3377,7 @@ parse_request:
 								explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
  #ifdef PKG_LAUNCHER
 								if(webman_config->ps3l && strstr(param, "/GAMEI/"))
-									explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+									focus_first_item();
 								else
  #endif
 									explore_close_all(param);
@@ -3740,6 +3747,11 @@ static void wwwd_stop_thread(uint64_t arg)
 */
 
 	sys_ppu_thread_join(thread_id_wwwd, &exit_code);
+
+	if(thread_id_ftpd != SYS_PPU_THREAD_NONE)
+	{
+		sys_ppu_thread_join(thread_id_ftpd, &exit_code);
+	}
 
 #ifdef PS3NET_SERVER
 	if(thread_id_netsvr != SYS_PPU_THREAD_NONE)

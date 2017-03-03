@@ -153,6 +153,7 @@ static bool get_cover_by_titleid(char *icon, char *tempID)
 	if(SHOW_COVERS)
 	{
 #ifndef ENGLISH_ONLY
+		// Search covers in custom path
 		if(covers_exist[0] && (webman_config->nocov == SHOW_MMCOVERS && *COVERS_PATH == '/'))
 		{
 			flen = sprintf(icon, "%s/%s", COVERS_PATH, tempID);
@@ -160,9 +161,10 @@ static bool get_cover_by_titleid(char *icon, char *tempID)
 		}
 #endif
 
-		if(covers_exist[1] && *tempID == 'S')
+		// Search retro covers in MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL
+		for(u8 p = 0; p < 3; p++)
 		{
-			for(u8 p = 0; p < 3; p++)
+			if(covers_exist[p + 1] && *tempID == 'S')
 			{
 				flen = sprintf(icon, "%s/covers_retro/psx/%c%c%c%c_%c%c%c.%c%c_COV", cpath[p],
 								tempID[0], tempID[1], tempID[2], tempID[3],
@@ -172,19 +174,22 @@ static bool get_cover_by_titleid(char *icon, char *tempID)
 			}
 		}
 
-		for(u8 p = 1; p < 6; p++)
-			if(covers_exist[p])
+		// Search covers in MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"
+		for(u8 p = 0; p < 5; p++)
+			if(covers_exist[p + 1])
 			{
-				flen = sprintf(icon, "%s/covers/%s", cpath[p - 1], tempID);
+				flen = sprintf(icon, "%s/covers/%s", cpath[p], tempID);
 				if(get_image_file(icon, flen)) return true;
 			}
 
+		// Search covers in WMTMP
 		if(covers_exist[6])
 		{
 			flen = sprintf(icon, "%s/%s", WMTMP, tempID);
 			if(get_image_file(icon, flen)) return true;
 		}
 
+		// Search online covers
 #ifdef ENGLISH_ONLY
 		if(webman_config->nocov == ONLINE_COVERS)
 		{
@@ -349,8 +354,7 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 	//copy remote file
 	if(file_exists(icon) == false)
 	{
-#ifdef COBRA_ONLY
-#ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 		if(ns < 0) {*icon = NULL; return;}
 
 		char remote_file[MAX_PATH_LEN];
@@ -383,8 +387,7 @@ static void get_default_icon_for_iso(char *icon, const char *param, char *file, 
 				if(file_exists(icon)) return;
 			}
 		}
-#endif //#ifndef LITE_EDITION
-#endif //#ifdef COBRA_ONLY
+#endif //#ifdef NET_SUPPORT
 
 		*icon = NULL;
 	}
@@ -595,7 +598,7 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 	return CELL_OK;
 }
 
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry, char *neth, char *param, char *templn, char *tempstr, char *enc_dir_name, char *icon, char *tempID, u8 f1, u8 is_html)
 {
 	int abort_connection = 0, is_directory = 0; int64_t file_size; u64 mtime, ctime, atime;
@@ -613,7 +616,6 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 	}
 
 	*icon = *tempID = NULL;
-
 
 	if(IS_PS3_TYPE) //PS3 games only (0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video")
 	{
@@ -669,14 +671,14 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 	if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 	urlenc(enc_dir_name, data[v3_entry].name);
-	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection, (neth[4] - '0' + 7), f1);
+	get_default_icon(icon, param, data[v3_entry].name, data[v3_entry].is_directory, tempID, ns, abort_connection, ((neth[4] & 0x0F) + 7), f1);
 
 	if(SHOW_COVERS_OR_ICON0 && (NO_ICON || (webman_config->nocov == SHOW_ICON0))) {get_name(tempstr, data[v3_entry].name, GET_WMTMP); strcat(tempstr, ".PNG"); if(file_exists(tempstr)) strcpy(icon, tempstr);}
 
 	return CELL_OK;
 }
- #endif //#ifndef LITE_EDITION
-#endif //#ifdef COBRA_ONLY
+#endif // #ifdef NET_SUPPORT
+#endif // #ifdef COBRA_ONLY
 
 static void add_query_html(char *buffer, const char *param)
 {
@@ -791,13 +793,13 @@ static void add_launchpad_footer(char *tempstr)
 static void check_cover_folders(char *buffer)
 {
 #ifndef ENGLISH_ONLY
-														 covers_exist[0] = isDir(COVERS_PATH);
+													covers_exist[0] = isDir(COVERS_PATH); // online url or custom path
 #endif
-		for(u8 p = 1; p < 6; p++)
+		for(u8 p = 0; p < 5; p++)
 		{
-			sprintf(buffer, "%s/covers", cpath[p - 1]) ; covers_exist[p] = isDir(buffer);
+			sprintf(buffer, "%s/covers", cpath[p]); covers_exist[p + 1] = isDir(buffer);  // MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"
 		}
-														 covers_exist[6] = isDir(WMTMP) && SHOW_COVERS_OR_ICON0;
+													covers_exist[6] = isDir(WMTMP) && SHOW_COVERS_OR_ICON0; // WMTMP
 
 #ifndef ENGLISH_ONLY
 	if(!covers_exist[0]) {use_custom_icon_path = strstr(COVERS_PATH, "%s"); use_icon_region = strstr(COVERS_PATH, "%s/%s");} else {use_icon_region = use_custom_icon_path = false;}
@@ -845,14 +847,10 @@ static int check_drive(u8 f0)
 #endif
 
 	// is_net
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 	if(((f0 >= 7) && (f0 <= 11)) && !is_netsrv_enabled(f0 - 7)) return FAILED; //net
- #else
-	if(IS_NET) return FAILED; // is_net (LITE_EDITION)
- #endif
 #else
-	if(IS_NET) return FAILED; // is_net (nonCobra)
+	if(IS_NET) return FAILED; // is_net (LITE_EDITION)
 #endif
 
 	return CELL_OK;
@@ -955,7 +953,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		if(webman_config->roms) {add_query_html(pbuffer, "ROMS");}
  #endif
 
- #ifndef LITE_EDITION
+ #ifdef NET_SUPPORT
 		if(webman_config->netd[0] || webman_config->netd[1] || webman_config->netd[2] || webman_config->netd[3] || webman_config->netd[4]) add_query_html(pbuffer, "net");
  #endif
 		add_query_html(pbuffer, "hdd");
@@ -1053,20 +1051,16 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if(!b0 && strstr(param, "usb" ))  {filter0 = 1, b0 = 2;}
 			if(!b1 && strstr(param, "games")) {filter1 = 0, b1 = 2;}
 			if(!b1 && strstr(param, "?ps3"))  {filter1 = 0, b1 = 3;}
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 			if(!b0 && strstr(param, "net" ))  {filter0 = 7, b0=3;}
- #endif
 #endif
 			if(strstr(param, "?") != NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html") == NULL && strstr(param, "mobile") == NULL) strcpy(filter_name, strrchr(param, '?') + 1);
 		}
 
 		int ns = -2; u8 uprofile = profile; enum icon_type default_icon;
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 		if(g_socket >= 0 && open_remote_dir(g_socket, "/", &abort_connection) < 0) do_umount(false);
- #endif
 #endif
 
 		for(u8 f0 = filter0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
@@ -1077,10 +1071,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 			if(!(is_net || IS_NTFS) && (isDir(drives[f0]) == false)) continue;
 //
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 			if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
- #endif
 #endif
 			ns = -2; uprofile = profile;
 			for(u8 f1 = filter1; f1 < f1_len; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
@@ -1097,24 +1089,20 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
 				if(IS_NTFS)  {if(f1 > 8) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				if(is_net)
 				{
 					if(f1 > 8) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 				}
- #endif
 #endif
 				if(b0) {if((b0 == 2) && (f0 < 7)); else if((b0 == 3) && (!IS_NTFS)); else if(filter0!=f0) continue;}
 				if(b1) {if((b1 >= 2) && ((f1 < b1) || (f1 >= 10)) && (filter1 < 3)); else if(filter1!=f1) continue;}
 				else
 					if(check_content(f1)) continue;
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				if(is_net && (netiso_svrid == (f0-7)) && (g_socket != -1)) ns = g_socket; /* reuse current server connection */ else
 				if(is_net && (ns<0)) ns = connect_to_remote_server(f0-7);
- #endif
 #endif
 				if(is_net && (ns<0)) break;
 //
@@ -1124,8 +1112,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				subfolder = 0; uprofile = profile;
 		read_folder_html:
 //
-#ifndef LITE_EDITION
- #ifdef COBRA_ONLY
+#ifdef NET_SUPPORT
 				if(is_net)
 				{
 					char ll[4]; if(li) sprintf(ll, "/%c", '@'+li); else *ll = NULL;
@@ -1134,7 +1121,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					if(li == 99) sprintf(param, "/%s%s", paths[f1], AUTOPLAY_TAG);
 				}
 				else
- #endif
 #endif
 				{
 					if(IS_NTFS) //ntfs
@@ -1146,10 +1132,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					}
 				}
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				if(is_net && open_remote_dir(ns, param, &abort_connection) < 0) goto continue_reading_folder_html; //continue;
- #endif
 #endif
 
 
@@ -1158,8 +1142,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				char tempID[12];
 				u8 is_iso = 0;
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				sys_addr_t data2 = NULL;
 				int v3_entries, v3_entry; v3_entries=v3_entry=0;
 				netiso_read_dir_result_data *data=NULL; char neth[8];
@@ -1169,7 +1152,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					if(!data2) goto continue_reading_folder_html; //continue;
 					data = (netiso_read_dir_result_data*)data2; sprintf(neth, "/net%i", (f0-7));
 				}
- #endif
 #endif
 				if(!is_net && file_exists( param) == false) goto continue_reading_folder_html; //continue;
 				if(!is_net && cellFsOpendir( param, &fd) != CELL_FS_SUCCEEDED) goto continue_reading_folder_html; //continue;
@@ -1177,16 +1159,13 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				default_icon =  get_default_icon_by_type(f1);
 
 				while((!is_net && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 					|| (is_net && (v3_entry < v3_entries))
- #endif
 #endif
 					)
 				{
 					if(idx >= max_entries || tlen >= BUFFER_MAXSIZE) break;
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 					if(is_net)
 					{
 						if((ls == false) && (li == 0) && (f1 > 1) && (data[v3_entry].is_directory) && (data[v3_entry].name[1] == NULL)) ls = true; // single letter folder was found
@@ -1234,8 +1213,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 						tlen += (flen + div_size);
 					}
 					else
- #endif
-#endif
+#endif // #ifdef NET_SUPPORT
 					{
 						if(entry.d_name[0] == '.') continue;
 
@@ -1367,10 +1345,8 @@ next_html_entry:
 
 				if(!is_net) cellFsClosedir(fd);
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 				if(data2) {sys_memory_free((sys_addr_t)data2); data2 = NULL;}
- #endif
 #endif
 
 //
@@ -1384,10 +1360,8 @@ next_html_entry:
 //
 			}
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 			if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns = -2;}
- #endif
 #endif
 		}
 

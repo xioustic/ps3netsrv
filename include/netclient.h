@@ -1,5 +1,4 @@
-#ifndef LITE_EDITION
-#ifdef COBRA_ONLY
+#ifdef NET_SUPPORT
 
 #ifdef NET3NET4
 	const u8 netsrvs = 5;
@@ -230,7 +229,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 
 	if(remaining <= CD_CACHE_SIZE)
 	{
-		int dif = (int)cached_cd_sector-sector;
+		int dif = (int)cached_cd_sector - sector;
 
 		if(ABS(dif) < CD_CACHE_SIZE)
 		{
@@ -244,13 +243,13 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 				{
 					copy_ptr = cd_cache;
 					copy_offset = dif;
-					copy_size = remaining-dif;
+					copy_size = remaining - dif;
 				}
 			}
 			else
 			{
-				copy_ptr = cd_cache+((-dif) * CD_SECTOR_SIZE_2352);
-				copy_size = MIN((int)remaining, CD_CACHE_SIZE+dif);
+				copy_ptr = cd_cache + ((-dif) * CD_SECTOR_SIZE_2352);
+				copy_size = MIN((int)remaining, CD_CACHE_SIZE + dif);
 			}
 
 			if(copy_ptr)
@@ -406,7 +405,7 @@ static void netiso_thread(uint64_t arg)
 	if(emu_mode == EMU_PSX)
 	{
 		num_tracks = args->num_tracks;
-		tracks = &args->tracks[0];
+		tracks = args->tracks;
 
 		is_cd2352 = 1;
 
@@ -769,5 +768,4 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	return ret;
 }
-#endif
-#endif //#ifndef LITE_EDITION
+#endif //#ifdef NET_SUPPORT

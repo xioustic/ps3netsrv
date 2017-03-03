@@ -62,11 +62,11 @@ static void show_msg(char* msg)
 {
 	if(!vshtask_notify)
 		vshtask_notify = getNIDfunc("vshtask", 0xA02D46E7, 0);
+	if(!vshtask_notify) return;
 
 	if(strlen(msg) > 200) msg[200] = NULL; // truncate on-screen message
 
-	if(vshtask_notify)
-		vshtask_notify(0, msg);
+	vshtask_notify(0, msg);
 }
 
 static int get_game_info(void)
@@ -129,6 +129,14 @@ static void explore_close_all(const char *path)
 	}
 }
 
+static void focus_first_item(void)
+{
+	if(IS_ON_XMB)
+	{
+		explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+	}
+}
+
 static void explore_exec_push(u32 usecs, u8 focus_first)
 {
 	if(IS_INGAME) return;
@@ -139,17 +147,17 @@ static void explore_exec_push(u32 usecs, u8 focus_first)
 
 		if(focus_first)
 		{
-			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+			focus_first_item();
 		}
 
-		if(abort_autoplay()) return;
+		if(abort_autoplay() || IS_INGAME) return;
 
 		explore_interface->ExecXMBcommand("exec_push", 0, 0);
 
 		if(focus_first)
 		{
 			sys_ppu_thread_usleep(2000000);
-			explore_interface->ExecXMBcommand("focus_index 0", 0, 0);
+			focus_first_item();
 		}
 	}
 }

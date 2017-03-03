@@ -541,13 +541,12 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 		buf_len = tlen;
 
- #ifdef COBRA_ONLY
-  #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 		if(is_net)
 		{
 			int ns = FAILED, abort_connection = 0; char netid = param[4];
 
-			if(netid >= '0' && netid <= '4') ns = connect_to_remote_server((netid  & 0xFF) - '0');
+			if(netid >= '0' && netid <= '4') ns = connect_to_remote_server((netid  & 0x0F));
 
 			if(ns >= 0)
 			{
@@ -650,8 +649,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			}
 		}
 		else
-  #endif
- #endif
+#endif
 		{
 			CellFsDirent entry; u64 read_e;
 
@@ -735,8 +733,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		// add net entries to root //
 		/////////////////////////////
 
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
+#ifdef NET_SUPPORT
 		if(is_root)
 		{
 			for(u8 n = 0; n < 5; n++)
@@ -750,7 +747,6 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				}
 			}
 		}
- #endif
 #endif
 
 		///////////////////////
@@ -913,7 +909,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 			_lastgames lastgames;
 
-			if(read_file(WMTMP "/last_games.bin", (char*)&lastgames, sizeof(_lastgames), 0))
+			if(read_file(LAST_GAMES_BIN, (char*)&lastgames, sizeof(_lastgames), 0))
 			{
 				u8 n, m;
 				for(n = 0; n < MAX_LAST_GAMES; n++)

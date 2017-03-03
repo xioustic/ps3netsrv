@@ -45,6 +45,7 @@ SYS_MODULE_STOP(slaunch_stop);
 #define STR_UNLOAD		"Unload webMAN"
 #define STR_QUIT		"Quit"
 
+#define APP_VERSION		"1.07"
 
 typedef struct {
 	uint8_t  gmode;
@@ -387,17 +388,15 @@ static void draw_page(uint16_t game_idx, uint8_t key_repeat)
 
 	// draw background and menu strip
 	flip_frame((uint64_t*)ctx.canvas);
-	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+900*CANVAS_W*4, CANVAS_W*96*4);
+	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+INFOBAR_Y*CANVAS_W*4, CANVAS_W*INFOBAR_H*4);
 
-	//set_textbox(GRAY, 0,  890, CANVAS_W, 2);
-	//set_textbox(GRAY, 0, 1000, CANVAS_W, 2);
+	set_textbox(LIGHT_GRAY, 0, INFOBAR_Y - 10, CANVAS_W, 1);
+	set_textbox(GRAY,       0, INFOBAR_Y - 9,  CANVAS_W, 1);
+	set_textbox(DARK_GRAY,  0, INFOBAR_Y - 8,  CANVAS_W, 1);
 
-	set_textbox(LIGHT_GRAY, 0, 890, CANVAS_W, 1);
-	set_textbox(GRAY, 0, 891, CANVAS_W, 1);
-	set_textbox(DARK_GRAY, 0, 892, CANVAS_W, 1);
-	set_textbox(DARK_GRAY, 0, 998, CANVAS_W, 1);
-	set_textbox(GRAY, 0, 999, CANVAS_W, 1);
-	set_textbox(LIGHT_GRAY, 0, 1000, CANVAS_W, 1);
+	set_textbox(DARK_GRAY,  0, INFOBAR_Y + INFOBAR_H + 2, CANVAS_W, 1);
+	set_textbox(GRAY,       0, INFOBAR_Y + INFOBAR_H + 3, CANVAS_W, 1);
+	set_textbox(LIGHT_GRAY, 0, INFOBAR_Y + INFOBAR_H + 4, CANVAS_W, 1);
 
 	// draw game icons (5x2)
 	j=(game_idx/gpp)*gpp;
@@ -447,7 +446,7 @@ static void draw_selection(uint16_t game_idx)
 
 		// game name
 		if(ISHD(disp_w))	set_font(32.f, 32.f, 1.0f, 1);
-		else		set_font(32.f, 32.f, 3.0f, 1);
+		else				set_font(32.f, 32.f, 3.0f, 1);
 		ctx.fg_color=WHITE_TEXT;
 		print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 0, slaunch[game_idx].name );
 
@@ -456,7 +455,7 @@ static void draw_selection(uint16_t game_idx)
 
 		// game path
 		if(ISHD(disp_w))	set_font(36.f-s, 16.f, 1.0f, 1);
-		else		set_font(42.f-s, 16.f, 2.0f, 1);
+		else				set_font(42.f-s, 16.f, 2.0f, 1);
 		ctx.fg_color=GRAY_TEXT;
 
 		if(*path == '/' && path[10] == '/') path += 10;
@@ -465,7 +464,7 @@ static void draw_selection(uint16_t game_idx)
 
 	// game index
 	if(ISHD(disp_w))	set_font(20.f, 20.f, 1.0f, 1);
-	else		set_font(32.f, 20.f, 2.0f, 1);
+	else				set_font(32.f, 20.f, 2.0f, 1);
 	ctx.fg_color=LIGHT_TEXT;
 	sprintf(one_of, "%i / %i", game_idx+1, games);
 	print_text(ctx.menu, CANVAS_W, CENTER_TEXT, 64, one_of );
@@ -496,9 +495,9 @@ static void draw_selection(uint16_t game_idx)
 		print_text(ctx.menu, CANVAS_W, CANVAS_W - ((disp_h==720) ? 450 : 300), 64, s_temp);
 	}
 
-	// set frame buffer
-	set_texture_direct(ctx.menu, 0, 900, CANVAS_W, 96);
-	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+900*CANVAS_W*4, CANVAS_W*96*4);
+	// set frame buffer for menu strip
+	set_texture_direct(ctx.menu, 0, INFOBAR_Y, CANVAS_W, INFOBAR_H);
+	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+INFOBAR_Y*CANVAS_W*4, CANVAS_W*INFOBAR_H*4);
 	if(games) set_frame(slot, RED);
 }
 
@@ -506,7 +505,7 @@ static void draw_side_menu_option(uint8_t option)
 {
 	memset((uint8_t *)ctx.side, 0x40, SM_M);
 	ctx.fg_color=BRIGHT_TEXT;
-	set_font(28.f, 24.f, 1.f, 0); print_text(ctx.side, (CANVAS_W-SM_X), SM_TO, SM_Y, "sLaunch MOD 1.07");
+	set_font(28.f, 24.f, 1.f, 0); print_text(ctx.side, (CANVAS_W-SM_X), SM_TO, SM_Y, "sLaunch MOD " APP_VERSION);
 
 	ctx.fg_color=(option==1 ? WHITE_TEXT : GRAY_TEXT);
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=1)*32, SM_Y+4*24, STR_UNMOUNT);
@@ -519,13 +518,13 @@ static void draw_side_menu_option(uint8_t option)
 	ctx.fg_color=(option==5 ? WHITE_TEXT : GRAY_TEXT);
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=5)*32, SM_Y+12*24, STR_SHUTDOWN);
 	ctx.fg_color=(option==6 ? WHITE_TEXT : GRAY_TEXT);
-	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=6)*32, SM_Y+19*24, web_page ? STR_FILEMNGR : STR_SETUP);
+	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=6)*32, SM_Y+14*24, unload_mode ? STR_UNLOAD : STR_QUIT);
 	ctx.fg_color=(option==7 ? WHITE_TEXT : GRAY_TEXT);
-	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=7)*32, SM_Y+21*24, unload_mode ? STR_UNLOAD : STR_QUIT);
+	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=7)*32, SM_Y+20*24, web_page ? STR_FILEMNGR : STR_SETUP);
 
 	set_texture_direct(ctx.side, SM_X, 0, (CANVAS_W-SM_X), CANVAS_H);
 	set_textbox(GRAY, SM_X+SM_TO, SM_Y+28,    CANVAS_W-SM_X-SM_TO*2, 1);
-	set_textbox(GRAY, SM_X+SM_TO, SM_Y+16*24, CANVAS_W-SM_X-SM_TO*2, 1);
+	set_textbox(GRAY, SM_X+SM_TO, SM_Y+18*24, CANVAS_W-SM_X-SM_TO*2, 1);
 }
 
 static uint8_t draw_side_menu(void)
@@ -563,8 +562,8 @@ static uint8_t draw_side_menu(void)
 			if(curpad & (PAD_LEFT | PAD_RIGHT))
 			{
 				if(option == 3) opt_mode^=1;
-				if(option == 6) web_page^=1;
-				if(option == 7) unload_mode^=1;
+				if(option == 6) unload_mode^=1;
+				if(option == 7) web_page^=1;
 			}
 
 			if(curpad & PAD_UP)		option--;
@@ -604,7 +603,7 @@ static void show_no_content(void)
 	set_font(32.f, 32.f, 1.5f, 1); print_text(ctx.canvas, CANVAS_W, 0, 520, no_content);
 	flip_frame((uint64_t*)ctx.canvas);
 
-	sys_timer_usleep(50000);
+	sys_timer_usleep(1500000);
 
 	if(gmode) load_background();
 }
@@ -777,9 +776,9 @@ static void start_VSH_Menu(void)
 {
 	int32_t ret, mem_size;
 
-	uint64_t gamelist_size = file_exists(WMTMP "/" SLIST ".bin"); if(gamelist_size>(MAX_GAMES*sizeof(_slaunch))) gamelist_size=MAX_GAMES*sizeof(_slaunch);
+	uint64_t slist_size = file_exists(WMTMP "/" SLIST ".bin"); if(slist_size>(MAX_GAMES*sizeof(_slaunch))) slist_size=MAX_GAMES*sizeof(_slaunch);
 
-	mem_size = ((CANVAS_W * CANVAS_H * 4)   + (CANVAS_W * 96 * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4) + (SM_M) + (gamelist_size+sizeof(_slaunch)) + MB(1)) / MB(1);
+	mem_size = ((CANVAS_W * CANVAS_H * 4)   + (CANVAS_W * INFOBAR_H * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4) + (SM_M) + (slist_size+sizeof(_slaunch)) + MB(1)) / MB(1);
 
 	// create VSH Menu heap memory from memory container 1("app")
 	ret = create_heap(mem_size);
@@ -919,8 +918,9 @@ static void remove_game(void)
 ////////////////////////////////////////////////////////////////////////
 static void slaunch_thread(uint64_t arg)
 {
-	sys_timer_sleep(15);												// wait 15s and not interfere with boot process
-	play_rco_sound("snd_system_ng");
+	sys_timer_sleep(12);												// wait 12s and not interfere with boot process
+	send_wm_request("/popup.ps3?sLaunch%20MOD%20" APP_VERSION);
+	//play_rco_sound("snd_system_ng");
 
 	uint8_t gpl; uint16_t pg_idx;
 
@@ -1003,8 +1003,7 @@ static void slaunch_thread(uint64_t arg)
 							return_to_xmb();
 							if(option==4) send_wm_request("/restart.ps3");
 							if(option==5) send_wm_request("/shutdown.ps3");
-							if(option==6) {load_plugin_by_id(0x1B, (void *)web_browser);}
-							if(option==7)
+							if(option==6)
 							{
 								send_wm_request("/popup.ps3?sLaunch%20unloaded!");
 								if(unload_mode)
@@ -1015,6 +1014,7 @@ static void slaunch_thread(uint64_t arg)
 								}
 								running=0;
 							}
+							if(option==7) {load_plugin_by_id(0x1B, (void *)web_browser);}
 							break;
 						}
 						else

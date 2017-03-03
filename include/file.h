@@ -293,7 +293,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 #ifdef COBRA_ONLY
 		if(islike(file1, "/net"))
 		{
-			int ns = connect_to_remote_server((file1[4] & 0xFF) - '0');
+			int ns = connect_to_remote_server((file1[4] & 0x0F));
 			copy_net_file(file2, (char*)file1 + 5, ns, maxbytes);
 			if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
 
@@ -735,6 +735,19 @@ static void delete_history(bool delete_folders)
 		strcat(path, AUTOPLAY_TAG); 				 cellFsRmdir(path);
 	}
 	cellFsRmdir("/dev_hdd0/PKG");
+}
+
+static void del_turnoff(void)
+{
+	do_umount(false);
+	cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
+
+#ifdef WM_REQUEST
+	cellFsUnlink(WMREQUEST_FILE);
+#endif
+#ifdef WEB_CHAT
+	cellFsUnlink(WMCHATFILE);
+#endif
 }
 
 #ifdef COPY_PS3

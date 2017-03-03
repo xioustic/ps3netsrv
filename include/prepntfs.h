@@ -47,6 +47,7 @@ static int prepNTFS(u8 towait)
 	int fd = NONE;
 	u64 read = 0;
 	char path[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], filename[STD_PATH_LEN];
+	char *ext;
 
 	if(mountCount == -2)
 		for(i = 0; i < 2; i++)
@@ -60,7 +61,6 @@ static int prepNTFS(u8 towait)
 	{
 		if(cellFsOpendir(WMTMP, &fd) == CELL_FS_SUCCEEDED)
 		{
-			char *ext;
 			while(!cellFsReaddir(fd, &dir, &read) && read)
 			{
 				ext = strstr(dir.d_name, ".ntfs[");
@@ -71,6 +71,7 @@ static int prepNTFS(u8 towait)
 	}
 
 	sys_addr_t addr = NULL;
+	sys_addr_t sysmem = NULL;
 
 	if(mountCount <= 0) {mountCount=-2; goto exit_prepntfs;}
 	{
@@ -83,7 +84,7 @@ static int prepNTFS(u8 towait)
 	sectionsP      = (uint32_t*)(addr + sizeof(rawseciso_args));
 	sections_sizeP = (uint32_t*)(addr + sizeof(rawseciso_args) + _32KB_);
 
-	size_t plen, extlen;
+	size_t plen;
 
 	for(i = 0; i < mountCount; i++)
 	{
@@ -105,15 +106,9 @@ static int prepNTFS(u8 towait)
 						{
 							if(dir.d_name[0] == '.') continue;
 
-							is_iso = (  !extcasecmp(dir.d_name, ".iso", 4) ||
-										!extcasecmp(dir.d_name, ".iso.0", 6) ||
-										!extcasecmp(dir.d_name, ".img", 4) ||
-										!extcasecmp(dir.d_name, ".mdf", 4) ||
-										(m > mPS3 && !extcasecmp(dir.d_name, ".bin", 4)) );
-
 ////////////////////////////////////////////////////////
 							//--- is SUBFOLDER?
-							if(!is_iso)
+							if(st.st_mode & S_IFDIR)
 							{
 								sprintf(subpath, "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
 								psubdir = ps3ntfs_diropen(subpath);
@@ -123,17 +118,15 @@ next_ntfs_entry:
 								if(ps3ntfs_dirnext(psubdir, dir.d_name, &st) < 0) {has_dirs = false; continue;}
 								if(dir.d_name[0]=='.') goto next_ntfs_entry;
 
-								dlen = sprintf(path, "%s", dir.d_name);
+								dlen = sprintf(path, "%s", dir.d_name); ext = path + dlen -4;
 
-								is_iso = (  !extcasecmp(path, ".iso", 4) ||
-											!extcasecmp(path, ".iso.0", 6) ||
-											(m > mPS3 && !extcasecmp(path, ".bin", 4)) ||
-											!extcasecmp(path, ".img", 4) ||
-											!extcasecmp(path, ".mdf", 4) );
+								is_iso = (  _IS(ext, ".iso") ||
+											_IS(path + dlen - 6, ".iso.0") ||
+											(m > mPS3 && (_IS(ext, ".bin") || _IS(ext, ".img") || _IS(ext, ".mdf")) ));
 
 								if(is_iso)
 								{
-									dlen -= !extcasecmp(path, ".iso.0", 6) ? 6 : 4;
+									dlen -= _IS(path + dlen - 6, ".iso.0") ? 6 : 4;
 
 									if((dlen < 0) || strncmp(subpath, path, dlen))
 										sprintf(filename, "[%s] %s", subpath, path);
@@ -144,14 +137,18 @@ next_ntfs_entry:
 								}
 							}
 							else
-								sprintf(filename, "%s", dir.d_name);
+							{
+								dlen = sprintf(filename, "%s", dir.d_name); ext = filename + dlen -4;
 
+								is_iso = (  _IS(ext, ".iso") ||
+											_IS(path + dlen - 6, ".iso.0") ||
+											(m > mPS3 && (_IS(ext, ".bin") || _IS(ext, ".img") || _IS(ext, ".mdf")) ));
+							}
 ////////////////////////////////////////////////////////////
 
 							if(is_iso)
 							{
 								plen = snprintf(path, sizeof(path), "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
-								extlen = 4;
 
 								parts = ps3ntfs_file_to_sectors(path, sectionsP, sections_sizeP, MAX_SECTIONS, 1);
 
@@ -162,8 +159,6 @@ next_ntfs_entry:
 
 									size_t nlen = sprintf(iso_name, "%s", path);
 									iso_name[nlen - 1] = '\0';
-
-									extlen = 6;
 
 									for(u8 o = 1; o < 64; o++)
 									{
@@ -191,34 +186,31 @@ next_ntfs_entry:
 									{
 										emu_mode = EMU_PSX;
 
-										path[plen-3] = 'C', path[plen-2] = 'U', path[plen-1] = 'E';
+										strcpy(path + plen - 3, "CUE");
 
 										fd = ps3ntfs_open(path, O_RDONLY, 0);
 										if(fd < 0)
 										{
-											path[plen-3] = 'c', path[plen-2] = 'u', path[plen-1] = 'e';
+											strcpy(path + plen - 3, "cue");
 											fd = ps3ntfs_open(path, O_RDONLY, 0);
 										}
 
 										if(fd >= 0)
 										{
-											sys_addr_t sysmem = 0;
-											if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+											if(sysmem || sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 											{
 												char *cue_buf = (char*)sysmem;
-												int cue_size = ps3ntfs_read(fd, (void *)cue_buf, _64KB_);
+												int cue_size = ps3ntfs_read(fd, (void *)cue_buf, _4KB_);
 												ps3ntfs_close(fd);
 
 												char *templn = path;
 												num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
-
-												sys_memory_free(sysmem);
 											}
 										}
 									}
 
 									p_args = (rawseciso_args *)plugin_args; memset(p_args, 0x0, sizeof(rawseciso_args));
-									p_args->device = USB_MASS_STORAGE((mounts[i].interface->ioType & 0xff) - '0');
+									p_args->device = USB_MASS_STORAGE((mounts[i].interface->ioType & 0x0F));
 									p_args->emu_mode = emu_mode;
 									p_args->num_sections = parts;
 
@@ -236,7 +228,7 @@ next_ntfs_entry:
 										p_args->num_tracks = num_tracks;
 										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args + sizeof(rawseciso_args) + (2 * (parts * sizeof(uint32_t))));
 
-										if(num_tracks == 1)
+										if(num_tracks <= 1)
 										{
 											scsi_tracks[0].adr_control = 0x14;
 											scsi_tracks[0].track_number = 1;
@@ -244,7 +236,7 @@ next_ntfs_entry:
 										}
 										else
 										{
-											for(u8 t = 0; t < num_tracks; t++)
+											for(unsigned int t = 0; t < num_tracks; t++)
 											{
 												scsi_tracks[t].adr_control = (tracks[t].is_audio) ? 0x10 : 0x14;
 												scsi_tracks[t].track_number = t + 1;
@@ -306,6 +298,7 @@ for_sfo:
 	}
 
 exit_prepntfs:
+	if(sysmem) sys_memory_free(sysmem);
 	if(addr) sys_memory_free(addr);
 
 	prepntfs_working = false;

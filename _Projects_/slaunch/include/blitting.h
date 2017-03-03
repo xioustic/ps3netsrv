@@ -17,8 +17,11 @@
 
 // canvas constants
 #define BASE          0xC0000000UL     // local memory base ea
-#define CANVAS_W      1920              // canvas width in pixel
-#define CANVAS_H      1080              // canvas height in pixel
+#define CANVAS_W      1920             // canvas width in pixel
+#define CANVAS_H      1080             // canvas height in pixel
+
+#define INFOBAR_Y     900
+#define INFOBAR_H     96               // menu strip height in pixel
 
 #define ISHD(a)         (a == 1920)
 
