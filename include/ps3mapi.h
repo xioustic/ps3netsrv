@@ -74,7 +74,7 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param);
 static void ps3mapi_gameplugin(char *buffer, char *templn, char *param);
 static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload);
 
-static ps3mapi_working = 0;
+static u8 ps3mapi_working = 0;
 
 static int is_syscall_disabled(u32 sc)
 {

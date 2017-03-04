@@ -166,6 +166,8 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "vrc=1")) webman_config->combo2|=VIDRECORD;
 #endif
 
+	webman_config->info = get_valuen(param, "xi=", 0, 2); // XMB info level
+
 	if( strstr(param, "wn=1"))  webman_config->wmstart = 1;
 	if( strstr(param, "tid=1")) webman_config->tid  = 1;
 	if(!strstr(param, "sfo=1")) webman_config->use_filename = 1; // show filename instead of title in PARAM.SFO
@@ -640,7 +642,15 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "</select><br>");
 
 	add_check_box("tid", "1", STR_TITLEID, " • ", (webman_config->tid),  buffer);
-	add_check_box("sfo", "1", "PARAM.SFO",  _BR_,!(webman_config->use_filename), buffer);
+	add_check_box("sfo", "1", "PARAM.SFO", " • ",!(webman_config->use_filename), buffer);
+
+	value = webman_config->info;
+	strcat(buffer, "Info <select name=\"xi\">");
+	add_option_item("3" , "None", (value == 3), buffer);
+	add_option_item("2" , "ID",   (value == 2), buffer);
+	add_option_item("0" , "Path", (value == 0), buffer);
+	add_option_item("1" , "Path + ID", (value == 1), buffer);
+	strcat(buffer, "</select><br>");
 
 	//game mounting
 #ifdef COBRA_ONLY

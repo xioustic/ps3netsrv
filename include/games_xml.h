@@ -564,22 +564,35 @@ static bool update_mygames_xml(u64 conn_s_p)
 #endif
 #ifdef WM_PROXY_SPRX
 						if(use_wm_proxy)
-							sprintf(tempstr, "<Table key=\"%04i\">"
+							read_e = sprintf(tempstr, "<Table key=\"%04i\">"
 											 XML_PAIR("icon","%s")
 											 XML_PAIR("title","%s") "%s"
-											 XML_PAIR("module_action","/mount_ps3%s%s/%s")
-											 XML_PAIR("info","%s%s%s") "</Table>",
+											 XML_PAIR("module_action","/mount_ps3%s%s/%s"),
 											 key, icon,
-											 templn, XAI_LINK_PAIR, neth, param, enc_dir_name, neth, param, "");
+											 templn, XAI_LINK_PAIR, neth, param, enc_dir_name);
 						else
 #endif
-							sprintf(tempstr, "<Table key=\"%04i\">"
+							read_e = sprintf(tempstr, "<Table key=\"%04i\">"
 											 XML_PAIR("icon","%s")
 											 XML_PAIR("title","%s") "%s"
-											 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s")
-											 XML_PAIR("info","%s%s%s") "</Table>",
+											 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s"),
 											 key, icon,
-											 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name, neth, param, "");
+											 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name);
+
+						if(webman_config->info <= 1)
+						{
+							if((webman_config->info == 1) & IS_PS3_TYPE && HAS_TITLE_ID) {sprintf(folder_name, " | %s" , tempID);} else *folder_name = NULL;
+							read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s%s%s"), neth, param, folder_name);
+						}
+						else if(webman_config->info == 2)
+						{
+							if(IS_PS3_TYPE && HAS_TITLE_ID)
+								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s | %s"), tempID, drives[f0] + 1);
+							else
+								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s"), drives[f0] + 1);
+						}
+
+						sprintf(tempstr + read_e, "</Table>");
 
 						if(add_xmb_entry(f0, f1, plen + 6, tempstr, templn, skey[key].value, key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, data[v3_entry].name, item_count, xml_len, 0)) key++;
 
@@ -686,22 +699,35 @@ next_xml_entry:
 							}
 #ifdef WM_PROXY_SPRX
 							if(use_wm_proxy)
-								sprintf(tempstr, "<Table key=\"%04i\">"
+								read_e = sprintf(tempstr, "<Table key=\"%04i\">"
 												 XML_PAIR("icon","%s")
 												 XML_PAIR("title","%s") "%s"
-												 XML_PAIR("module_action","/mount_ps3%s%s/%s")
-												 XML_PAIR("info","%s%s%s") "</Table>",
+												 XML_PAIR("module_action","/mount_ps3%s%s/%s"),
 												 key, icon,
-												 templn, XAI_LINK_PAIR, "", param, enc_dir_name, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
+												 templn, XAI_LINK_PAIR, "", param, enc_dir_name);
 							else
 #endif
-								sprintf(tempstr, "<Table key=\"%04i\">"
+								read_e = sprintf(tempstr, "<Table key=\"%04i\">"
 												 XML_PAIR("icon","%s")
 												 XML_PAIR("title","%s") "%s"
-												 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s")
-												 XML_PAIR("info","%s%s%s") "</Table>",
+												 XML_PAIR("module_action","http://%s/mount_ps3%s%s/%s"),
 												 key, icon,
-												 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name, ((IS_NTFS) ? "/ntfs/" : param), ((IS_NTFS) ? paths[f1] : ""), folder_name);
+												 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name);
+
+							if(webman_config->info <= 1)
+							{
+								if((webman_config->info == 1) & IS_PS3_TYPE && HAS_TITLE_ID) {strcat(folder_name, " | "); strcat(folder_name, tempID);}
+								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s/%s%s"), drives[f0], paths[f1], folder_name);
+							}
+							else if(webman_config->info == 2)
+							{
+								if(IS_PS3_TYPE && HAS_TITLE_ID)
+									read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s | %s"), tempID, drives[f0] + 5);
+								else
+									read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s"), drives[f0] + 5);
+							}
+
+							sprintf(tempstr + read_e, "</Table>");
 
 							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key].value, key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, entry.d_name, item_count, xml_len, subfolder)) key++;
 						}

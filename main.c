@@ -68,6 +68,7 @@
 #include "vsh/game_plugin.h"
 #include "vsh/netctl_main.h"
 #include "vsh/xregistry.h"
+#include "vsh/vsh.h"
 #include "vsh/vshnet.h"
 #include "vsh/explore_plugin.h"
 
@@ -513,8 +514,9 @@ typedef struct
 	uint8_t ps3l;
 	uint8_t roms;
 	uint8_t mc_app; // allow allocation from app memory container
+	uint8_t info;
 
-	uint8_t padding2[16];
+	uint8_t padding2[15];
 
 	// start up settings
 
