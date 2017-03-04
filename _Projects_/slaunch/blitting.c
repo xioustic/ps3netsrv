@@ -8,6 +8,7 @@
 //#include "include/network.h"	// debug
 extern uint32_t disp_w, disp_h;
 extern uint32_t gpp;
+extern uint64_t file_exists(const char* path);
 
 // display values
 static uint32_t BASE_offset = 0;
@@ -379,17 +380,33 @@ void init_graphic()
 * int32_t idx      = index of img, max 11 (0 - 10)
 * const char *path = path to img file
 ***********************************************************************/
-int32_t load_img_bitmap(int32_t idx, const char *path)
+int32_t load_img_bitmap(int32_t idx, char *path, const char *default_img)
 {
 
 	if(idx > IMG_MAX) return -1;
 	uint32_t *buf=ctx.canvas;
 	if(idx) buf=ctx.imgs;
 
+	bool use_default = (*default_img == '/');
+
+	if(file_exists(path) == false)
+	{
+		strcpy(path, default_img); use_default = false;
+	}
+
+retry:
+
 	if(strstr((char*)path, ".png") || strstr((char*)path, ".PNG"))
 		ctx.img[idx] = load_png(path, buf);
 	else
 		ctx.img[idx] = load_jpg(path, buf);
+
+	if(use_default)
+		if(!ctx.img[idx].w || !ctx.img[idx].h)
+		{
+			strcpy(path, default_img); use_default = false;
+			goto retry;
+		}
 
 	if(!ctx.img[idx].w || !ctx.img[idx].h)
 	{

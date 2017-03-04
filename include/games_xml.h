@@ -51,7 +51,7 @@ static void refresh_xml(char *msg)
 	setPluginInactive();
 }
 
-static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u32 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *myxml_roms, char *entry_name, u16 *item_count, u32 *xml_len, u8 subfolder)
+static bool add_xmb_entry(u8 f0, u8 f1, int plen, char *tempstr, char *templn, char *skey, u16 key, char *myxml_ps3, char *myxml_ps2, char *myxml_psx, char *myxml_psp, char *myxml_dvd, char *myxml_roms, char *entry_name, u16 *item_count, u32 *xml_len, u8 subfolder)
 {
 	set_sort_key(skey, templn, key, subfolder, f1);
 
@@ -106,7 +106,8 @@ static void make_fb_xml(char *myxml)
 	u16 size = sprintf(myxml, "%s"
 							  "<View id=\"seg_fb\">"
 							  "<Attributes><Table key=\"mgames\">%s"
-							  XML_PAIR("icon_notation","WNT_XmbItemSavePS3")
+//							  XML_PAIR("icon_notation","WNT_XmbItemSavePS3")
+							  XML_PAIR("ingame","disable")
 							  XML_PAIR("title","%s%s")
 							  XML_PAIR("info","%s")
 							  "</Table>"
@@ -323,7 +324,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	cellFsMkdir("/dev_hdd0/xmlhost", MODE);
 	cellFsMkdir("/dev_hdd0/xmlhost/game_plugin", MODE);
 
-	u32 key = 0, max_xmb_items = ((u32)(BUFFER_SIZE_ALL / AVG_ITEM_SIZE));
+	u16 key = 0; const u16 max_xmb_items = ((u16)(BUFFER_SIZE_ALL / AVG_ITEM_SIZE));
 
 	make_fb_xml(myxml);
 

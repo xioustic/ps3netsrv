@@ -215,7 +215,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define STOP_THREAD_NAME 		"wwwds"
 
 #define THREAD_PRIO				-0x1d8
-#define THREAD_PRIO_FTP			-0x10
+#define THREAD_PRIO_FTP			950
 #define THREAD_PRIO_NET			-0x1d8
 #define THREAD_PRIO_STOP		 0x000
 #define THREAD_PRIO_HIGH		 2900
@@ -3047,7 +3047,6 @@ parse_request:
 
 						if(strstr(param, "&") == NULL)
 						{
-							cellFsUnlink(WMCONFIG);
 							reset_settings();
 						}
 						if(save_settings() == CELL_FS_SUCCEEDED)
@@ -3227,9 +3226,9 @@ parse_request:
 						// /delete.ps3?uninstall  uninstall webMAN MOD & delete files installed by updater
 
 						bool is_reset = false; char *param2 = param + 11; int ret = 0;
-						if(strstr(param, "?wmreset")) is_reset=true;
-						if(is_reset || strstr(param, "?wmconfig")) {cellFsUnlink(WMCONFIG); reset_settings(); sprintf(param, "/delete_ps3%s", WMCONFIG);}
-						if(is_reset || strstr(param, "?wmtmp")) sprintf(param, "/delete_ps3%s", WMTMP);
+						if(islike(param2, "?wmreset")) is_reset=true;
+						if(is_reset || islike(param2, "?wmconfig")) {reset_settings(); sprintf(param, "/delete_ps3%s", WMCONFIG);}
+						if(is_reset || islike(param2, "?wmtmp")) sprintf(param, "/delete_ps3%s", WMTMP);
 
 						bool is_dir = isDir(param2);
 
@@ -3558,31 +3557,10 @@ exit_handleclient:
 
 static void wwwd_thread(uint64_t arg)
 {
-	*backup = NULL;
 
-	detect_firmware();
-
-#ifdef PS3MAPI
- #ifdef REMOVE_SYSCALLS
-	backup_cfw_syscalls();
- #endif
-#endif
-
-	View_Find = getNIDfunc("paf", 0xF21655F3, 0);
-	plugin_GetInterface = getNIDfunc("paf", 0x23AFB290, 0);
-
-#ifdef SYS_BGM
-	BgmPlaybackEnable  = getNIDfunc("vshmain", 0xEDAB5E5E, 16*2);
-	BgmPlaybackDisable = getNIDfunc("vshmain", 0xEDAB5E5E, 17*2);
-#endif
-
-	//pokeq(0x8000000000003560ULL, 0x386000014E800020ULL); // li r3, 0 / blr
-	//pokeq(0x8000000000003D90ULL, 0x386000014E800020ULL); // li r3, 0 / blr
+	////////////////////////////////////////
 
 	led(YELLOW, BLINK_FAST);
-
-	//WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
-	reset_settings();
 
 #ifdef COPY_PS3
 	memset(cp_path, 0, STD_PATH_LEN);
@@ -3594,24 +3572,37 @@ static void wwwd_thread(uint64_t arg)
 
 	{from_reboot = file_exists(WMNOSCAN);}
 
-	if(webman_config->blind) enable_dev_blind(NO_MSG);
-
 #ifdef COBRA_ONLY
 	{sys_map_path("/app_home", NULL);}
 	{sys_map_path("/dev_bdvd/PS3_UPDATE", SYSMAP_PS3_UPDATE);} // redirect firmware update on BD disc to empty folder
 #endif
 
+	//WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
+	read_settings();
+
+	max_temp = 0;
+
+	if(webman_config->fanc)
+	{
+		if(webman_config->temp0 == FAN_AUTO) max_temp = webman_config->temp1;
+		fan_control(webman_config->temp0, 0);
+	}
+
+	if(webman_config->blind) enable_dev_blind(NO_MSG);
+
+	set_buffer_sizes(webman_config->foot);
+
 	#ifdef AUTO_POWER_OFF
 	restoreAutoPowerOff();
 	#endif
-
-	set_buffer_sizes(webman_config->foot);
 
 	if(!webman_config->ftpd)
 		sys_ppu_thread_create(&thread_id_ftpd, ftpd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_FTP_SERVER, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_FTP); // start ftp daemon immediately
 
 	sys_ppu_thread_t t_id;
 	sys_ppu_thread_create(&t_id, handleclient, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_CMD);
+
+	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_POLL_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
 
 #ifdef PS3NET_SERVER
 	if(!webman_config->netsrvd)
@@ -3625,9 +3616,6 @@ static void wwwd_thread(uint64_t arg)
 	///////////// PS3MAPI END //////////////
 #endif
 
-	led(YELLOW, OFF);
-	sys_ppu_thread_sleep(5);
-
 #ifdef USE_DEBUG
 	u8 d_retries = 0;
 again_debug:
@@ -3638,17 +3626,11 @@ again_debug:
 	ssend(debug_s, debug);
 #endif
 
-	max_temp = 0;
+	sys_ppu_thread_sleep(2);
 
-	if(webman_config->fanc)
-	{
-		if(webman_config->temp0 == FAN_AUTO) max_temp = webman_config->temp1;
-		fan_control(webman_config->temp0, 0);
-	}
+	led(YELLOW, OFF);
 
-	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_POLL_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
-
-	led(GREEN, ON);
+	////////////////////////////////////////
 
 	int list_s = NONE;
 
@@ -3727,7 +3709,31 @@ int wwwd_start(size_t args, void *argp)
 {
 	cellRtcGetCurrentTick(&rTick); gTick = rTick;
 
+	*backup = NULL;
+
+	detect_firmware();
+
+#ifdef PS3MAPI
+ #ifdef REMOVE_SYSCALLS
+	backup_cfw_syscalls();
+ #endif
+#endif
+
+	View_Find = getNIDfunc("paf", 0xF21655F3, 0);
+	plugin_GetInterface = getNIDfunc("paf", 0x23AFB290, 0);
+
+#ifdef SYS_BGM
+	BgmPlaybackEnable  = getNIDfunc("vshmain", 0xEDAB5E5E, 16*2);
+	BgmPlaybackDisable = getNIDfunc("vshmain", 0xEDAB5E5E, 17*2);
+#endif
+
+	//pokeq(0x8000000000003560ULL, 0x386000014E800020ULL); // li r3, 0 / blr
+	//pokeq(0x8000000000003D90ULL, 0x386000014E800020ULL); // li r3, 0 / blr
+
 	sys_ppu_thread_create(&thread_id_wwwd, wwwd_thread, NULL, THREAD_PRIO, THREAD_STACK_SIZE_WEB_SERVER, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_SVR);
+
+	led(GREEN, ON);
+
 #ifndef CCAPI
 	_sys_ppu_thread_exit(0); // remove for ccapi compatibility
 #endif

@@ -67,16 +67,19 @@ struct timeval {
 #define MAX_GAMES 2000
 #define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
 #define WM_ICONS_PATH		"/dev_hdd0/tmp/wm_icons"			// webMAN icons folder
+#define RB_ICONS_PATH		"/dev_flash/vsh/resource/explore/icon"
 
-#define XMLMANPLS_DIR        "/dev_hdd0/game/XMBMANPLS"
+#define XMLMANPLS_DIR		"/dev_hdd0/game/XMBMANPLS"
 #define XMLMANPLS_IMAGES_DIR XMLMANPLS_DIR "/USRDIR/IMAGES"
 
-static const char *wm_icons[5] = {
-									WM_ICONS_PATH "/icon_wm_dvd.png",       //023.png  [0]
-									WM_ICONS_PATH "/icon_wm_psx.png",       //026.png  [1]
-									WM_ICONS_PATH "/icon_wm_ps2.png",       //025.png  [2]
-									WM_ICONS_PATH "/icon_wm_ps3.png",       //024.png  [3]
-									WM_ICONS_PATH "/icon_wm_psp.png",       //022.png  [4]
+static char wm_icons[7][56] =	{
+									RB_ICONS_PATH "/icon_wm_ps3.png",       //020.png  [0]
+									RB_ICONS_PATH "/icon_wm_psx.png",       //021.png  [1]
+									RB_ICONS_PATH "/icon_wm_ps2.png",       //022.png  [2]
+									RB_ICONS_PATH "/icon_wm_ps3.png",       //023.png  [3]
+									RB_ICONS_PATH "/icon_wm_psp.png",       //024.png  [4]
+									RB_ICONS_PATH "/icon_wm_dvd.png",       //025.png  [5]
+									RB_ICONS_PATH "/icon_wm_dvd.png",       //026.png  [6]
 								};
 
 #define SLIST	"slist"
@@ -177,6 +180,7 @@ static void finalize_module(void);
 static void slaunch_stop_thread(uint64_t arg);
 static void slaunch_thread(uint64_t arg);
 
+uint64_t file_exists(const char* path);
 static void draw_selection(uint16_t game_idx);
 
 #define HDD0  1
@@ -345,7 +349,7 @@ static void pad_read(void)
 		{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
 }
 
-static uint64_t file_exists(const char* path)
+uint64_t file_exists(const char* path)
 {
 	struct CellFsStat s;
 	s.st_size=0;
@@ -366,13 +370,13 @@ static void load_background(void)
 	}
 
 	if(file_exists(path))
-		load_img_bitmap(0, path);
+		load_img_bitmap(0, path, "");
 	else if(fav_mode)
-		load_img_bitmap(0, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-whatsnew.jpg");
+		load_img_bitmap(0, (char*)"/dev_flash/vsh/resource/explore/icon/cinfo-bg-whatsnew.jpg", "");
 	else if(!gmode)
-		load_img_bitmap(0, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-storemain.jpg");
+		load_img_bitmap(0, (char*)"/dev_flash/vsh/resource/explore/icon/cinfo-bg-storemain.jpg", "");
 	else
-		load_img_bitmap(0, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-storegame.jpg");
+		load_img_bitmap(0, (char*)"/dev_flash/vsh/resource/explore/icon/cinfo-bg-storegame.jpg", "");
 }
 
 static void draw_page(uint16_t game_idx, uint8_t key_repeat)
@@ -405,12 +409,7 @@ static void draw_page(uint16_t game_idx, uint8_t key_repeat)
 	{
 		slot++;
 
-		if(file_exists(slaunch[i].name + slaunch[i].icon_pos)==false)
-		{
-			sprintf(slaunch[i].name + slaunch[i].icon_pos, wm_icons[slaunch[i].type]);
-		}
-
-		if(load_img_bitmap(slot, slaunch[i].name + slaunch[i].icon_pos)<0) break;
+		if(load_img_bitmap(slot, slaunch[i].name + slaunch[i].icon_pos, wm_icons[slaunch[i].type])<0) break;
 
 		if(gpp==10)
 		{
@@ -696,7 +695,7 @@ reload:
 
 		//if(!fav_mode)
 		{
-			uint16_t ngames = games;
+			uint16_t ngames = games; char *path;
 
 			if(gmode)		// filter games by type
 			{
@@ -718,7 +717,7 @@ reload:
 
 				for(uint16_t n=0; n < games; n++)
 				{
-					char *path = slaunch[n].name + slaunch[n].path_pos;
+					path = slaunch[n].name + slaunch[n].path_pos;
 
 					if( ((dmode == NTFS) && (strncmp(path+10, "/dev_hdd0/tmp", 13)  ==0)) ||
 						((dmode == HDD0) && (strncmp(path+11, drives[dmode-1], dlen)==0) && (path[10+10]!='t')) ||
@@ -730,6 +729,14 @@ reload:
 				if(ngames == 0) {dmode++; if(dmode >= DEVS_MAX) dmode = TYPE_ALL; goto reload;}
 			}
 
+			games = ngames; ngames = 0;
+
+			// filter empty entries
+			for(uint16_t n=0; n < games; n++)
+			{
+				if(*slaunch[n].name == 0 || *(slaunch[n].name + slaunch[n].path_pos) == 0) slaunch[ngames] = slaunch[n]; else ngames++;
+			}
+
 			if(games > ngames) mem_free((games - ngames) * sizeof(_slaunch));
 
 			games = ngames;
@@ -737,17 +744,35 @@ reload:
 			// sort game list
 			if(games>1)
 			{
-				_slaunch swap;
-				for(uint16_t n=0; n<(games-1); n++)
+				_slaunch swap; uint8_t sorted = 1; ngames=(games-1);
+				for(uint16_t n=0; n<ngames; n++)
 				{
-					for(uint16_t m=(n+1); m<games; m++)
+					if(strcasecmp(slaunch[n].name, slaunch[n+1].name)>0)
 					{
-						if(strcasecmp(slaunch[n].name, slaunch[m].name)>0)
+						sorted = 0; break;
+					}
+				}
+
+				if(!sorted)
+				{
+					for(uint16_t n=0; n<ngames; n++)
+					{
+						for(uint16_t m=(n+1); m<games; m++)
 						{
-							swap=slaunch[n];
-							slaunch[n]=slaunch[m];
-							slaunch[m]=swap;
+							if(strcasecmp(slaunch[n].name, slaunch[m].name)>0)
+							{
+								swap=slaunch[n];
+								slaunch[n]=slaunch[m];
+								slaunch[m]=swap;
+							}
 						}
+					}
+
+					if(!gmode && !dmode)
+					{
+						cellFsOpen(filename, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0);
+						cellFsWrite(fd, (void *)slaunch, sizeof(_slaunch)*games, NULL);
+						cellFsClose(fd);
 					}
 				}
 			}
@@ -802,7 +827,7 @@ static void start_VSH_Menu(void)
 	load_data();
 	show_content();
 
-	if(!games)
+	if(!games && !dmode && !gmode)
 	{
 		return_to_xmb();
 
@@ -927,6 +952,12 @@ static void slaunch_thread(uint64_t arg)
 	sys_timer_sleep(12);												// wait 12s and not interfere with boot process
 	send_wm_request("/popup.ps3?sLaunch%20MOD%20" APP_VERSION);
 	//play_rco_sound("snd_system_ng");
+
+	for(uint8_t n = 0; n < 7; n++)
+	{
+		if(file_exists(wm_icons[n]) == false) {sprintf(wm_icons[n], WM_ICONS_PATH "%s", wm_icons[n] + 36);
+		if(file_exists(wm_icons[n]) == false)  sprintf(wm_icons[n], "/dev_flash/vsh/resource/explore/user/0%i.png", n + 20);}
+	}
 
 	uint8_t gpl; uint16_t pg_idx;
 

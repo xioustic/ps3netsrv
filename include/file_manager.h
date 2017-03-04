@@ -656,9 +656,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 			if(is_ntfs && !param[11])
 			{
 				flen = sprintf(line_entry[idx].path, "!00000"
-											  "f\" href=\"%s\">..</a></td>"
-											  "<td> " HTML_URL HTML_ENTRY_DATE
-											, "/", "/", HTML_DIR);
+													  "f\" href=\"%s\">..</a></td>"
+													  "<td> " HTML_URL HTML_ENTRY_DATE
+													, "/", "/", HTML_DIR);
 				idx++, dirs++;
 				tlen += flen;
 			}

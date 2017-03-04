@@ -1060,7 +1060,7 @@ static int save_settings(void)
 	return save_file(WMCONFIG, (char*)wmconfig, sizeof(WebmanCfg));
 }
 
-static void reset_settings(void)
+static void read_settings(void)
 {
 	memset(webman_config, 0, sizeof(WebmanCfg));
 
@@ -1121,7 +1121,7 @@ static void reset_settings(void)
 	//webman_config->netsrvp  = NETPORT;
 	//webman_config->ftp_port = FTPPORT;
 
-	for(u8 id = 0; id < 5; id++) webman_config->netp[id] = NETPORT; // webman_config->netd[id] = 0; webman_config->neth[id][0] = NULL;
+	//for(u8 id = 0; id < 5; id++) webman_config->netp[id] = NETPORT; // webman_config->netd[id] = 0; webman_config->neth[id][0] = NULL;
 
 	webman_config->foot    = 1;       //MIN
 	webman_config->nospoof = 1;       //don't spoof fw version
@@ -1199,4 +1199,10 @@ static void reset_settings(void)
 	save_settings();
 
 	profile = webman_config->profile;
+}
+
+static void reset_settings(void)
+{
+	cellFsUnlink(WMCONFIG);
+	read_settings();
 }
