@@ -2,7 +2,6 @@
 int (*vshtask_notify)(int, const char *) = NULL;
 int (*View_Find)(const char *) = NULL;
 int (*plugin_GetInterface)(int,int) = NULL;
-int (*vsh_mc)(int32_t) = NULL;
 
 #ifdef SYS_BGM
 uint32_t (*BgmPlaybackDisable)(int, void *) = NULL;
@@ -53,9 +52,7 @@ static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
 static sys_memory_container_t get_app_memory_container(void)
 {
 	if(IS_INGAME || webman_config->mc_app) return 0;
-	if(!vsh_mc)	vsh_mc = (void*)((int)getNIDfunc("vsh", 0xE7C34044, 0));
-	if(vsh_mc)	return vsh_mc(1);
-	return 0;
+	return vsh_memory_container_by_id(1);
 }
 
 static void show_msg(char* msg)
