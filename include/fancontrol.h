@@ -6,6 +6,14 @@
 
 #define FAN_AUTO 				(0)
 
+#define ENABLED			(1)
+#define DISABLED		(0)
+#define TOGGLE_MODE		(2)
+#define ENABLE_SC8		(3)
+
+#define SET_PS2_MODE	(1)
+#define SYSCON_MODE		(0)
+
 static u8 fan_speed = 0x33;
 static u8 old_fan = 0x33;
 static u32 max_temp = MY_TEMP;
@@ -38,13 +46,13 @@ static int sys_sm_get_fan_policy(u8 id, u8 *st, u8 *mode, u8 *speed, u8 *unknown
 	return_to_user_prog(int);
 }
 
-static void fan_control(u8 set_fanspeed, u8 initial)
+static void fan_control(u8 set_fanspeed, u8 init)
 {
 	if(fan_ps2_mode) return; //do not change fan settings while PS2 game is mounted
 
 	if(get_fan_policy_offset)
 	{
-		if(!initial)
+		if(!init)
 		{
 			if(backup[0] == 0)
 			{
@@ -118,26 +126,26 @@ static void restore_fan(u8 set_ps2_temp)
 
 static void enable_fan_control(u8 enable, char *msg)
 {
-	if(enable == 3) webman_config->fanc = 1;		else
-	if(enable <  2) webman_config->fanc = enable;	else
-					webman_config->fanc = (webman_config->fanc ? 0 : 1);
+	if(enable == ENABLE_SC8) webman_config->fanc = 1;		else
+	if(enable <= ENABLED)	 webman_config->fanc = enable;	else
+							 webman_config->fanc = (webman_config->fanc ? DISABLED : ENABLED);
 
 	max_temp = 0;
 	if(webman_config->fanc)
 	{
 		if(webman_config->temp0 == FAN_AUTO) max_temp = webman_config->temp1;
-		fan_control(webman_config->temp0, 0);
+		fan_control(webman_config->temp0, false);
 		sprintf(msg, "%s %s", STR_FANCTRL3, STR_ENABLED);
 	}
 	else
 	{
-		restore_fan(0); //syscon
+		restore_fan(SYSCON_MODE); //syscon
 		sprintf(msg, "%s %s", STR_FANCTRL3, STR_DISABLED);
 	}
 	save_settings();
 	show_msg(msg);
 
-	if(enable == 3) { PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
+	if(enable == ENABLE_SC8) { PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 }
 
 static void reset_fan_mode(void)
@@ -146,7 +154,7 @@ static void reset_fan_mode(void)
 
 	webman_config->temp0 = (u8)(((float)(webman_config->manu + 1) * 255.f) / 100.f); // manual fan speed
 	webman_config->temp0 = RANGE(webman_config->temp0, 0x33, MAX_FANSPEED);
-	fan_control(webman_config->temp0, 0);
+	fan_control(webman_config->temp0, false);
 
 	if(max_temp) webman_config->temp0 = FAN_AUTO; // enable dynamic fan mode
 }

@@ -68,7 +68,7 @@
 			if(show_persistent_popup == PERSIST) {goto show_persistent_popup;}
 			if(show_info_popup) {show_info_popup = false; goto show_popup;}
 
-			if(!webman_config->nopad)
+			//if(!webman_config->nopad)
 			{
 #ifdef VIRTUAL_PAD
 				if(vcombo)
@@ -292,7 +292,7 @@ show_popup:
 
 								u8 speed = fan_speed;
 								if(fan_ps2_mode) speed=(int)(255.f*(float)(webman_config->ps2temp+1)/100.f); else
-								if((webman_config->fanc==0) && (get_fan_policy_offset>0))
+								if((webman_config->fanc == DISABLED) && (get_fan_policy_offset>0))
 								{
 									u8 st, mode, unknown;
 									backup[2]=peekq(get_fan_policy_offset);
@@ -323,7 +323,7 @@ show_popup:
 								char cfw_info[20];
 								get_cobra_version(cfw_info);
 
-								char smax[32]; if(fan_ps2_mode) sprintf(smax, "   PS2 Mode"); else if(max_temp) sprintf(smax, "   MAX: %i°C", max_temp); else if(webman_config->fanc==0) sprintf(smax, "   SYSCON"); else memset(smax, 0, 16);
+								char smax[32]; if(fan_ps2_mode) sprintf(smax, "   PS2 Mode"); else if(max_temp) sprintf(smax, "   MAX: %i°C", max_temp); else if(webman_config->fanc == DISABLED) sprintf(smax, "   SYSCON"); else memset(smax, 0, 16);
 
 								sprintf(tmp, "CPU: %i°C  RSX: %i°C  FAN: %i%%   \n"
 											 "%s: %id %02d:%02d:%02d%s\n"
@@ -363,7 +363,7 @@ show_popup:
 							else
 #endif
 							{
-								if(webman_config->fanc==0) enable_fan_control(3, msg);
+								if(webman_config->fanc == DISABLED) enable_fan_control(ENABLE_SC8, msg);
 
 								if(max_temp) //auto mode
 								{
@@ -396,7 +396,7 @@ show_popup:
 							else
 #endif
 							{
-								if(webman_config->fanc==0) enable_fan_control(3, msg);
+								if(webman_config->fanc == DISABLED) enable_fan_control(ENABLE_SC8, msg);
 
 								if(max_temp) //auto mode
 								{
@@ -428,9 +428,9 @@ show_popup:
 							else
 #endif
 							{
-								if(webman_config->fanc==0) enable_fan_control(3, msg);
+								if(webman_config->fanc == DISABLED) enable_fan_control(ENABLE_SC8, msg);
 
-								if(webman_config->minfan-5>=MIN_FANSPEED) webman_config->minfan-=5;
+								if(webman_config->minfan-5>=MIN_FANSPEED) webman_config->minfan -= 5;
 								sprintf(msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
 
 								save_settings();
@@ -448,9 +448,9 @@ show_popup:
 							else
 #endif
 							{
-								if(webman_config->fanc==0) enable_fan_control(3, msg);
+								if(webman_config->fanc == DISABLED) enable_fan_control(ENABLE_SC8, msg);
 
-								if(webman_config->minfan+5<100) webman_config->minfan+=5;
+								if(webman_config->minfan+5<100) webman_config->minfan += 5;
 								sprintf(msg, "%s\n%s %i%%", STR_FANCH0, STR_FANCH3, webman_config->minfan);
 
 								save_settings();
@@ -553,7 +553,7 @@ show_popup:
 						{
 							wm_unload_combo = 1;
 
-							restore_settings(!webman_config->fanc || (webman_config->ps2temp < 33));
+							restore_settings();
 
 							stop_prx_module();
 							sys_ppu_thread_exit(0);
@@ -561,7 +561,7 @@ show_popup:
 						}
 						else if(!(webman_config->combo & DISABLEFC) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_START) ) // L3+R2+START (enable/disable fancontrol)
 						{
-							enable_fan_control(2, msg);
+							enable_fan_control(TOGGLE_MODE, msg);
 
 							n = 0;
 							break;

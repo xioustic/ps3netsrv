@@ -115,8 +115,11 @@ static void make_fb_xml(char *myxml)
 							  QUERY_XMB("mgames", "xmb://localhost%s#seg_mygames")
 							  "%s</XMBML>", XML_HEADER,
 							  file_exists(WM_ICONS_PATH "/icon_wm_root.png") ?
-								XML_PAIR("icon", WM_ICONS_PATH "/icon_wm_root.png") : XML_PAIR("icon_rsc", "item_tex_ps3util"),
-							  STR_MYGAMES, SUFIX2(profile), STR_LOADGAMES, "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
+									XML_PAIR("icon", WM_ICONS_PATH "/icon_wm_root.png") :
+									XML_PAIR("icon_rsc", "item_tex_ps3util"),
+							  STR_MYGAMES, SUFIX2(profile),
+							  STR_LOADGAMES,
+							  "</Attributes><Items>", MY_GAMES_XML, "</Items></View>");
 
 	save_file(FB_XML, myxml, size);
 }

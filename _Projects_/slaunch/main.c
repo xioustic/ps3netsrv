@@ -268,6 +268,14 @@ static void get_temperature(uint32_t _dev, uint32_t *_temp)
 	system_call_2(383, (uint64_t)(uint32_t) _dev, (uint64_t)(uint32_t) _temp); *_temp >>= 24;
 }
 
+#define SC_PEEK_LV1 					(8)
+
+static inline uint64_t peek_lv1(uint64_t addr)
+{
+	system_call_1(SC_PEEK_LV1, (uint64_t) addr);
+	return (uint64_t) p1;
+}
+
 static int connect_to_webman(void)
 {
 	struct sockaddr_in sin;
@@ -965,10 +973,17 @@ static void slaunch_thread(uint64_t arg)
 	{
 		if(!slaunch_running)											// VSH menu is not running, normal XMB execution
 		{
-			sys_timer_usleep(500000);
 			pdata.len = 0;
 			for(uint8_t p = 0; p < 2; p++)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
+
+			// remote start
+			if(peek_lv1(0x80) == 0xDEADBABE)
+			{
+				start_VSH_Menu();
+				init_delay=0;
+				continue;
+			}
 
 			if(pdata.len)					// if pad data and we are on XMB
 			{
@@ -993,6 +1008,8 @@ static void slaunch_thread(uint64_t arg)
 					sys_timer_sleep(2);
 				}
 			}
+
+			sys_timer_usleep(500000);
 		}
 		else // menu is running
 		{

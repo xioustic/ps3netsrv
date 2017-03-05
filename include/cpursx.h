@@ -106,7 +106,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	_meminfo meminfo;
 	{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
 
-	if((webman_config->fanc == 0) && (get_fan_policy_offset > 0))
+	if((webman_config->fanc == DISABLED) && (get_fan_policy_offset > 0))
 	{
 		u8 st, mode, unknown;
 		backup[2]=peekq(get_fan_policy_offset);
@@ -114,7 +114,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		sys_sm_get_fan_policy(0, &st, &mode, &fan_speed, &unknown);
 		pokeq(get_fan_policy_offset, backup[2]);
 
-		if(strstr(param, "?u")) enable_fan_control(3, templn);
+		if(strstr(param, "?u")) enable_fan_control(ENABLE_SC8, templn);
 	}
 
 #ifdef SPOOF_CONSOLEID
@@ -140,18 +140,18 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	if(strstr(param, "?"))
 	{
 		char *pos = strstr(param, "fan=");
-		if(pos) {u32 read = get_valuen(param, "fan=", 0, 99); max_temp = 0; if(!read) enable_fan_control(0, templn); else {webman_config->manu = read; if(webman_config->fanc == 0) enable_fan_control(1, templn);}}
+		if(pos) {u32 read = get_valuen(param, "fan=", 0, 99); max_temp = 0; if(!read) enable_fan_control(DISABLED, templn); else {webman_config->manu = read; if(webman_config->fanc == DISABLED) enable_fan_control(ENABLE_SC8, templn);}}
 		else {pos = strstr(param, "max=");
 		if(pos) {max_temp = get_valuen(param, "max=", 40, MAX_TEMPERATURE);}
 		else
-		if(strstr(param, "?m")) {if((max_temp && !strstr(param, "dyn")) || strstr(param, "man")) max_temp=0; else {max_temp=webman_config->temp1;} if(webman_config->fanc == 0) enable_fan_control(1, templn);}}
+		if(strstr(param, "?m")) {if((max_temp && !strstr(param, "dyn")) || strstr(param, "man")) max_temp=0; else {max_temp=webman_config->temp1;} if(webman_config->fanc == DISABLED) enable_fan_control(ENABLE_SC8, templn);}}
 
 		if(max_temp) //auto mode
 		{
 			if(strstr(param, "?u")) max_temp++;
 			if(strstr(param, "?d")) max_temp--;
-			webman_config->temp1=RANGE(max_temp, 40, MAX_TEMPERATURE); // dynamic fan max temperature in °C
-			webman_config->temp0=FAN_AUTO;
+			webman_config->temp1 = RANGE(max_temp, 40, MAX_TEMPERATURE); // dynamic fan max temperature in °C
+			webman_config->temp0 = FAN_AUTO;
 
 			fan_ps2_mode=false;
 		}
@@ -159,7 +159,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 		{
 			if(strstr(param, "?u")) webman_config->manu++;
 			if(strstr(param, "?d")) webman_config->manu--;
-			webman_config->manu=RANGE(webman_config->manu, 20, 95); //%
+			webman_config->manu = RANGE(webman_config->manu, 20, 95); //%
 
 			reset_fan_mode();
 		}
@@ -174,7 +174,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	{
 		sprintf(max_temp1, " (PS2 Mode: %i%%)", webman_config->ps2temp);
 	}
-	else if((webman_config->fanc == 0) || (!webman_config->temp0 && !max_temp))
+	else if((webman_config->fanc == DISABLED) || (!webman_config->temp0 && !max_temp))
 		sprintf(max_temp1, " <small>[%s %s]</small>", STR_FANCTRL3, STR_DISABLED);
 	else if(max_temp)
 	{

@@ -1340,7 +1340,7 @@ static void mount_thread(u64 action)
 				if(file_exists(temp) == false && len > 12) strcat(temp + len - 12, ".CONFIG\0");
 				file_copy(temp, (char*)PS2_CLASSIC_ISO_CONFIG, COPY_WHOLE_FILE);
 
-				if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
+				if(webman_config->fanc) restore_fan(SET_PS2_MODE); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
 				// create "wm_noscan" to avoid re-scan of XML returning to XMB from PS2
 				save_file(WMNOSCAN, NULL, 0);
@@ -1725,7 +1725,7 @@ static void mount_thread(u64 action)
 						tracks[0].lba = 0;
 						tracks[0].is_audio = 0;
 						cobra_mount_ps2_disc_image(cobra_iso_list, 1, tracks, 1);
-						if(webman_config->fanc) restore_fan(1); //fan_control( ((webman_config->ps2temp*255)/100), 0);
+						if(webman_config->fanc) restore_fan(SET_PS2_MODE); //fan_control( ((webman_config->ps2temp*255)/100), 0);
 
 						// create "wm_noscan" to avoid re-scan of XML returning to XMB from PS2
 						save_file(WMNOSCAN, NULL, 0);

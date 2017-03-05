@@ -132,7 +132,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.47.01 MOD"
+#define WM_VERSION			"1.47.02 MOD"
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -635,7 +635,7 @@ static uint8_t wmconfig[sizeof(WebmanCfg)];
 static WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
 
 static int save_settings(void);
-static void restore_settings(bool syscon);
+static void restore_settings(void);
 ////////////////////////////////
 
 
@@ -923,17 +923,25 @@ static u8 check_password(char *param)
 }
 #endif
 
-static void restore_settings(bool syscon)
+static void restore_settings(void)
 {
 #ifdef COBRA_ONLY
 	get_vsh_plugin_slot_by_name((char *)"VSH_MENU", true); // unload vsh menu
 	get_vsh_plugin_slot_by_name((char *)"sLaunch",  true); // unload sLaunch
 #endif
 
-	if(syscon)
-		restore_fan(0); //restore syscon fan control mode
-	else
-		restore_fan(1); //set ps2 fan control mode
+	for(u8 n = 0; n < 4; n++)
+		if(active_socket[n]>NONE) sys_net_abort_socket(active_socket[n], SYS_NET_ABORT_STRICT_CHECK);
+
+	if(webman_config->fanc == DISABLED || webman_config->temp0 == FAN_AUTO)
+	{
+		bool set_ps2mode = (webman_config->fanc == ENABLED) && (webman_config->ps2temp >= 33);
+
+		if(set_ps2mode)
+			restore_fan(SET_PS2_MODE); //set ps2 fan control mode
+		else
+			restore_fan(SYSCON_MODE);  //restore syscon fan control mode
+	}
 
 #ifdef WM_PROXY_SPRX
 	{sys_map_path("/dev_flash/vsh/module/" WM_PROXY_SPRX ".sprx", NULL);}
@@ -944,7 +952,7 @@ static void restore_settings(bool syscon)
 	#endif
 
 	working = plugin_active = 0;
-	sys_ppu_thread_sleep(2);
+	sys_ppu_thread_usleep(500000);
 }
 
 static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_http, u8 is_cpursx, bool mount_ps3)
@@ -1674,6 +1682,7 @@ parse_request:
 				// /browser.ps3/<webman_cmd>               execute webMAN command on PS3 browser
 				// /browser.ps3$<explore_plugin_command>   execute explore_plugin command on XMB (http://www.psdevwiki.com/ps3/Explore_plugin#Example_XMB_Commands)
 				// /browser.ps3*<xmb_plugin_command>       execute xmb_plugin commands on XMB (http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23_Examples)
+				// /browser.ps3$slaunch                    start slauch
 
 				char *param2 = param + 12, *url = param + 13;
 
@@ -1815,6 +1824,13 @@ parse_request:
    #endif // #ifdef COBRA_ONLY
 				if(IS_ON_XMB)
 				{   // in-XMB
+					if(islike(param2, "$slaunch") || islike(param2, "$vsh_menu"))
+					{
+						poke_lv1(0x80, (param2[1] == 's') ? 0xDEADBABE : 0xDEADBEBE);
+						sys_ppu_thread_sleep(1);
+						poke_lv1(0x80, 0);
+					}
+					else
    #ifdef XMB_SCREENSHOT
 					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param + 27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
    #endif
@@ -2278,8 +2294,9 @@ parse_request:
 
 			if(islike(param, "/quit.ps3"))
 			{
-				// quit.ps3        Stops webMAN and sets fan to fixed speed specified in PS2 mode
+				// quit.ps3        Stops webMAN and sets fan based on settings
 				// quit.ps3?0      Stops webMAN and sets fan to syscon mode
+				// quit.ps3?1      Stops webMAN and sets fan to fixed speed specified in PS2 mode
 
  #ifdef LOAD_PRX
  quit:
@@ -2288,10 +2305,10 @@ parse_request:
 
 				if(sysmem) sys_memory_free(sysmem);
 
-				restore_settings(!webman_config->fanc || (webman_config->ps2temp < 33) || strstr(param, "?0"));
+				restore_settings();
 
-				for(u8 n = 0; n < 4; n++)
-					if(active_socket[n]>NONE) sys_net_abort_socket(active_socket[n], SYS_NET_ABORT_STRICT_CHECK);
+				if(strstr(param, "?0")) restore_fan(SYSCON_MODE);  //syscon
+				if(strstr(param, "?1")) restore_fan(SET_PS2_MODE); //ps2 mode
 
 				stop_prx_module();
 				sys_ppu_thread_exit(0);
@@ -3746,18 +3763,9 @@ static void wwwd_stop_thread(uint64_t arg)
 {
 	working = 0;
 
+	restore_settings();
+
 	while(refreshing_xml) sys_ppu_thread_usleep(500000); // Prevent unload too fast
-
-	for(u8 n = 0; n < 4; n++)
-		if(active_socket[n]>NONE) sys_net_abort_socket(active_socket[n], SYS_NET_ABORT_STRICT_CHECK);
-
-	restore_fan(1); // restore & set static fan speed for ps2
-
-	#ifdef AUTO_POWER_OFF
-	setAutoPowerOff(false);
-	#endif
-
-	sys_ppu_thread_usleep(500000);
 
 	uint64_t exit_code;
 

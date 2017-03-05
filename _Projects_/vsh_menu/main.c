@@ -413,6 +413,14 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
   return (int32_t)p1;
 }
 
+#define SC_PEEK_LV1 					(8)
+
+static inline uint64_t peek_lv1(uint64_t addr)
+{
+	system_call_1(SC_PEEK_LV1, (uint64_t) addr);
+	return (uint64_t) p1;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //                      GET CPU & RSX TEMPERATURES                  //
 ////////////////////////////////////////////////////////////////////////
@@ -2164,6 +2172,13 @@ static void vsh_menu_thread(uint64_t arg)
 			pdata.len = 0;
 			for(uint8_t p = 0; p < 8; p++)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
+
+			// remote start
+			if(peek_lv1(0x80) == 0xDEADBEBE)
+			{
+				start_VSH_Menu();
+				continue;
+			}
 
 			if(pdata.len)					// if pad data and we are on XMB
 			{

@@ -176,7 +176,7 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "pw=1" )){setAutoPowerOff(false); AutoPowerOffGame = AutoPowerOffVideo = -1; webman_config->auto_power_off = 1;}
 #endif
 	if( strstr(param, "ft=1" )) webman_config->ftpd = 1;
-	if( strstr(param, "np=1" )) webman_config->nopad = 1;
+//	if( strstr(param, "np=1" )) webman_config->nopad = 1;
 	if( strstr(param, "nc=1" )) webman_config->nocov = SHOW_ICON0;	else // (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons, 3 = Online Covers)
 	if( strstr(param, "ic=1" )) webman_config->nocov = SHOW_ICON0;	else
 	if( strstr(param, "ic=2" )) webman_config->nocov = SHOW_DISC;
@@ -202,7 +202,7 @@ static void setup_parse_settings(char *param)
 	if(strstr(param, "nsp=1")) webman_config->nospoof = 1; //don't spoof fw version
 	if(c_firmware==4.53f) webman_config->nospoof = 1;
 
-	if(strstr(param, "fc=1") && !strstr(param, "temp=2")) webman_config->fanc = 1;
+	if(strstr(param, "fc=1") && !strstr(param, "temp=2")) webman_config->fanc = ENABLED;
 
 	webman_config->temp1 = MY_TEMP;
 
@@ -240,7 +240,7 @@ static void setup_parse_settings(char *param)
 		fan_control(webman_config->temp0, 0);
 	}
 	else
-		restore_fan(0); //restore syscon fan control mode
+		restore_fan(SYSCON_MODE); //restore syscon fan control mode
 
 	webman_config->nowarn = 0;
 	if(strstr(param, "warn=1")) webman_config->nowarn = 1;
@@ -381,7 +381,7 @@ static void setup_parse_settings(char *param)
 static void setup_form(char *buffer, char *templn)
 {
  #ifndef ENGLISH_ONLY
-	char STR_SCAN1[48];//		= "Scan these devices";
+//	char STR_SCAN1[48];//		= "Scan these devices";
 	char STR_PSPL[40];//		= "Show PSP Launcher";
 	char STR_PS2L[48];//		= "Show PS2 Classic Launcher";
 	char STR_RXVID[64];//		= "Show Video sub-folder";
@@ -393,7 +393,7 @@ static void setup_form(char *buffer, char *templn)
 	char STR_USBPOLL[88];//		= "Disable USB polling";
 	char STR_FTPSVC[64];//		= "Disable FTP service";
 	char STR_FIXGAME[56];//		= "Disable auto-fix game";
-	char STR_COMBOS[88];//		= "Disable all PAD shortcuts";
+//	char STR_COMBOS[88];//		= "Disable all PAD shortcuts";
 	char STR_MMCOVERS[72];//	= "Disable multiMAN covers";
 	char STR_ACCESS[88];//		= "Disable remote access to FTP/WWW services";
 	char STR_NOSETUP[120];//	= "Disable webMAN Setup entry in \"webMAN Games\"";
@@ -416,7 +416,7 @@ static void setup_form(char *buffer, char *templn)
 	char STR_LANGAMES[96];//	= "Scan for LAN games/videos";
 	char STR_ANYUSB[88];//		= "Wait for any USB device to be ready";
 	char STR_ADDUSB[136];//		= "Wait additionally for each selected USB device to be ready";
-	char STR_SPOOFID[112];//	= "Change idps and psid in lv2 memory at system startup";
+//	char STR_SPOOFID[112];//	= "Change idps and psid in lv2 memory at system startup";
 	char STR_DELCFWSYS[144];//	= "Disable CFW syscalls and delete history files at system startup";
 	char STR_MEMUSAGE[80];//	= "Plugin memory usage";
 	char STR_PLANG[40];//		= "Plugin language";
@@ -438,7 +438,7 @@ static void setup_form(char *buffer, char *templn)
 	char STR_FANCTRL4[72];//	= "CTRL DYN FAN";
 	char STR_FANCTRL5[88];//	= "CTRL MIN FAN";
 
-	language("STR_SCAN1",     STR_SCAN1,     "Scan these devices");
+//	language("STR_SCAN1",     STR_SCAN1,     "Scan these devices");
 	language("STR_PSPL",      STR_PSPL,      "Show PSP Launcher");
 	language("STR_PS2L",      STR_PS2L,      "Show PS2 Classic Launcher");
 	language("STR_RXVID",     STR_RXVID,     "Show Video sub-folder");
@@ -450,7 +450,7 @@ static void setup_form(char *buffer, char *templn)
 	language("STR_USBPOLL",   STR_USBPOLL,   "Disable USB polling");
 	language("STR_FTPSVC",    STR_FTPSVC,    "Disable FTP service");
 	language("STR_FIXGAME",   STR_FIXGAME,   "Disable auto-fix game");
-	language("STR_COMBOS",    STR_COMBOS,    "Disable all PAD shortcuts");
+//	language("STR_COMBOS",    STR_COMBOS,    "Disable all PAD shortcuts");
 	language("STR_MMCOVERS",  STR_MMCOVERS,  "Disable multiMAN covers");
 	language("STR_ACCESS",    STR_ACCESS,    "Disable remote access to FTP/WWW services");
 	language("STR_NOSETUP",   STR_NOSETUP,   "Disable webMAN Setup entry in \"webMAN Games\"");
@@ -473,7 +473,7 @@ static void setup_form(char *buffer, char *templn)
 	language("STR_LANGAMES",  STR_LANGAMES,  "Scan for LAN games/videos");
 	language("STR_ANYUSB",    STR_ANYUSB,    "Wait for any USB device to be ready");
 	language("STR_ADDUSB",    STR_ADDUSB,    "Wait additionally for each selected USB device to be ready");
-	language("STR_SPOOFID",   STR_SPOOFID,   "Change idps and psid in lv2 memory at system startup");
+//	language("STR_SPOOFID",   STR_SPOOFID,   "Change idps and psid in lv2 memory at system startup");
 	language("STR_DELCFWSYS", STR_DELCFWSYS, "Disable CFW syscalls and delete history files at system startup");
 	language("STR_MEMUSAGE",  STR_MEMUSAGE,  "Plugin memory usage");
 	language("STR_PLANG",     STR_PLANG,     "Plugin language");
@@ -503,8 +503,9 @@ static void setup_form(char *buffer, char *templn)
 
 	sprintf(templn, "<style>td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
+					"<b><a href=\"javascript:tgl(cnt);\"> %s </a></b><br><div id=\"cnt\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
-					"<tr><td width=\"250\"><u>%s:</u><br>", STR_SCAN1); strcat(buffer, templn);
+					"<tr><td width=\"250\">", STR_SCAN2); strcat(buffer, templn);
 
 	//Scan these devices
 	add_check_box("u0", "1", drives[1], _BR_, (webman_config->usb0), buffer);
@@ -523,7 +524,7 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 	//Scan for content
-	sprintf(templn, "<td nowrap valign=top><u>%s:</u><br>", STR_SCAN2); strcat(buffer, templn);
+	strcat(buffer, "<td nowrap valign=top>");
 
 #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
 	b = isDir("/dev_hdd0/game/PKGLAUNCH");
@@ -552,8 +553,46 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("dvd", "1", "DVD "                       ,       STR_VIDLG, !(webman_config->cmask & DVD), buffer);
 #endif
 
-	//general settings
 	strcat(buffer, "</td></tr></table>" HTML_BLU_SEPARATOR);
+
+#ifdef COBRA_ONLY
+ #ifndef LITE_EDITION
+	//ps3netsvr settings
+	char _nd[4], _neth[6], _netp[6], PS3NETSRV[88];
+	sprintf(PS3NETSRV, " &nbsp; <a href=\"/net0\" style=\"%s\">PS3NETSRV#1 IP:</a>", HTML_URL_STYLE);
+
+	for(u8 id = 0; id < netsrvs; id++)
+	{
+		sprintf(_nd, "nd%i", id); sprintf(_neth, "neth%i", id); sprintf(_netp, "netp%i", id);
+
+		add_check_box(_nd, "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd[id]), buffer);
+		sprintf(templn, HTML_INPUT("%s", "%s", "15", "16") ":" HTML_NUMBER("%s", "%i", "1", "65535") "<br>",
+				_neth, webman_config->neth[id],
+				_netp, webman_config->netp[id]); strcat(buffer, templn);
+		++PS3NETSRV[21], ++PS3NETSRV[75];
+	}
+ #endif
+#endif
+
+	//fan control settings
+	strcat(buffer, "</div>" HTML_BLU_SEPARATOR "<table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td>");
+
+	add_check_box("fc\" onchange=\"temp[fc.checked?0:2].checked=1;" , "1", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
+	add_check_box("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->nowarn), buffer);
+
+	strcat(buffer, "<tr class=\"propfont\"><td>");
+	add_radio_button("temp", "0", "t_0", STR_AUTOAT , " : ", (webman_config->temp0 == 0), buffer);
+	sprintf(templn, HTML_NUMBER("step\"  accesskey=\"T", "%i", "40", "80") " °C</td><td><label><input type=\"checkbox\"%s/> %s</label> : " HTML_NUMBER("mfan", "%i", "20", "95") " %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?ITEM_CHECKED:"", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
+
+	strcat(buffer, "<tr class=\"propfont\"><td>");
+	add_radio_button("temp", "1", "t_1", STR_MANUAL , " : ", (webman_config->temp0 != 0), buffer);
+	sprintf(templn, HTML_NUMBER("manu", "%i", "20", "95") " %% %s </td><td> %s : " HTML_NUMBER("fsp0", "%i", "20", "99") " %% %s </td></tr>", (webman_config->manu), STR_FANSPEED, STR_PS2EMU, webman_config->ps2temp, STR_FANSPEED); strcat(buffer, templn);
+	strcat(buffer, "<tr class=\"propfont\"><td>");
+	add_radio_button("temp", "2", "t_2", "SYSCON", "</table>", !(webman_config->fanc), buffer);
+
+	//general settings
+	sprintf(templn,	HTML_BLU_SEPARATOR
+					"<b><a href=\"javascript:tgl(cfg);\"> webMAN MOD %s </a></b><br><div id=\"cfg\">", STR_SETUP); strcat(buffer, templn);
 
 #ifdef COBRA_ONLY
 	add_check_box("lp", "1", STR_LPG   , " • ",   (webman_config->lastp),  buffer);
@@ -614,10 +653,10 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("nss", "1", STR_NOSINGSTAR,  _BR_, (webman_config->noss), buffer);
 #endif
 
-	add_check_box("np", "1", STR_COMBOS,   _BR_, (webman_config->nopad), buffer);
+//	add_check_box("np", "1", STR_COMBOS,   _BR_, (webman_config->nopad), buffer);
 
 	//game listing
-	strcat(buffer, HTML_BLU_SEPARATOR);
+	strcat(buffer, "</div>" HTML_BLU_SEPARATOR);
 
 #ifdef LAUNCHPAD
 	add_check_box("ng" , "1", STR_NOGRP,       " & "   , (webman_config->nogrp  ),       buffer);
@@ -670,65 +709,18 @@ static void setup_form(char *buffer, char *templn)
 	}
 #endif
 
-	//fan control settings
-	strcat(buffer, HTML_BLU_SEPARATOR "<table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td>");
-
-	add_check_box("fc\" onchange=\"temp[fc.checked?0:2].checked=1;" , "1", STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
-	add_check_box("warn", "1" , STR_NOWARN, " </td></tr>", (webman_config->nowarn), buffer);
-
-	strcat(buffer, "<tr class=\"propfont\"><td>");
-	add_radio_button("temp", "0", "t_0", STR_AUTOAT , " : ", (webman_config->temp0 == 0), buffer);
-	sprintf(templn, HTML_NUMBER("step\"  accesskey=\"T", "%i", "40", "80") " °C</td><td><label><input type=\"checkbox\"%s/> %s</label> : " HTML_NUMBER("mfan", "%i", "20", "95") " %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?ITEM_CHECKED:"", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
-
-	strcat(buffer, "<tr class=\"propfont\"><td>");
-	add_radio_button("temp", "1", "t_1", STR_MANUAL , " : ", (webman_config->temp0 != 0), buffer);
-	sprintf(templn, HTML_NUMBER("manu", "%i", "20", "95") " %% %s </td><td> %s : " HTML_NUMBER("fsp0", "%i", "20", "99") " %% %s </td></tr>", (webman_config->manu), STR_FANSPEED, STR_PS2EMU, webman_config->ps2temp, STR_FANSPEED); strcat(buffer, templn);
-	strcat(buffer, "<tr class=\"propfont\"><td>");
-	add_radio_button("temp", "2", "t_2", "SYSCON", "</table>", !(webman_config->fanc), buffer);
-
-
-#ifdef COBRA_ONLY
- #ifndef LITE_EDITION
-	//ps3netsvr settings
-	strcat(buffer, HTML_BLU_SEPARATOR);
-	char _nd[4], _neth[6], _netp[6], PS3NETSRV[88];
-	sprintf(PS3NETSRV, " &nbsp; <a href=\"/net0\" style=\"%s\">PS3NETSRV#1 IP:</a>", HTML_URL_STYLE);
-
-	for(u8 id = 0; id < netsrvs; id++)
-	{
-		sprintf(_nd, "nd%i", id); sprintf(_neth, "neth%i", id); sprintf(_netp, "netp%i", id);
-
-		add_check_box(_nd, "1", STR_LANGAMES,  PS3NETSRV, (webman_config->netd[id]), buffer);
-		sprintf(templn, HTML_INPUT("%s", "%s", "15", "16") ":" HTML_NUMBER("%s", "%i", "1", "65535") "<br>",
-				_neth, webman_config->neth[id],
-				_netp, webman_config->netp[id]); strcat(buffer, templn);
-		++PS3NETSRV[21], ++PS3NETSRV[75];
-	}
- #endif
+	//general settings
+#ifdef SPOOF_CONSOLEID
+	sprintf(templn,	HTML_BLU_SEPARATOR
+					"<b><a href=\"javascript:tgl(adv);\"> IDPS & MEM %s </a></b><br><div id=\"adv\">", STR_SETUP); strcat(buffer, templn);
+#else
+	sprintf(templn,	HTML_BLU_SEPARATOR
+					"<b><a href=\"javascript:tgl(adv);\"> MEM %s </a></b><br><div id=\"adv\">", STR_SETUP); strcat(buffer, templn);
 #endif
-
-	//Wait for any USB device to be ready
-	sprintf(templn, HTML_BLU_SEPARATOR "<u> %s:</u><br>", STR_ANYUSB); strcat(buffer, templn);
-
-	value = webman_config->bootd;
-	add_radio_button("b", "0",  "b_0", "0 sec" , _BR_, (value == 0),  buffer);
-	add_radio_button("b", "5",  "b_1", "5 sec" , _BR_, (value == 5),  buffer);
-	add_radio_button("b", "9",  "b_2", "10 sec", _BR_, (value == 9),  buffer);
-	add_radio_button("b", "15", "b_3", "15 sec", _BR_, (value == 15), buffer);
-
-	//Wait additionally for each selected USB device to be ready
-	sprintf(templn, HTML_BLU_SEPARATOR "<u> %s:</u><br>", STR_ADDUSB); strcat(buffer, templn);
-
-	value = webman_config->boots;
-	add_radio_button("s", "0",  "s_0", "0 sec" , _BR_, (value == 0),  buffer);
-	add_radio_button("s", "3",  "s_1", "3 sec" , _BR_, (value == 3),  buffer);
-	add_radio_button("s", "5",  "s_2", "5 sec" , _BR_, (value == 5),  buffer);
-	add_radio_button("s", "10", "s_3", "10 sec", _BR_, (value == 10), buffer);
-	add_radio_button("s", "15", "s_4", "15 sec", _BR_, (value == 15), buffer);
 
 #ifdef SPOOF_CONSOLEID
 	//Change idps and psid in lv2 memory at system startup
-	sprintf(templn, HTML_BLU_SEPARATOR "<u> %s:</u><br>", STR_SPOOFID); strcat(buffer, templn);
+	//sprintf(templn, "<u> %s:</u><br>", STR_SPOOFID); strcat(buffer, templn);
 
 	if(!webman_config->vIDPS1[0] && !webman_config->vIDPS1[1]) {get_idps_psid(); sprintf(webman_config->vIDPS1, "%016llX", IDPS[0]); sprintf(webman_config->vIDPS2, "%016llX", IDPS[1]);}
 	if(!webman_config->vPSID1[0] && !webman_config->vPSID1[1]) {get_idps_psid(); sprintf(webman_config->vPSID1, "%016llX", PSID[0]); sprintf(webman_config->vPSID2, "%016llX", PSID[1]);}
@@ -742,8 +734,6 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(templn, HTML_INPUT("vPS1", "%s", "16", "22"), webman_config->vPSID1); strcat(buffer, templn);
 	sprintf(templn, HTML_INPUT("vPS2", "%s", "16", "22"), webman_config->vPSID2); strcat(buffer, templn);
 	sprintf(templn, HTML_BUTTON_FMT "<br><br>", HTML_BUTTON, " ", "onclick=\"vPS1.value=vPS2.value=", "0000000000000000"); strcat(buffer, templn);
-#else
-	strcat(buffer, HTML_BLU_SEPARATOR);
 #endif
 
 #ifndef LITE_EDITION
@@ -911,7 +901,7 @@ static void setup_form(char *buffer, char *templn)
 	buffer += strlen(buffer);
 
 	//combos
-	sprintf(templn, HTML_BLU_SEPARATOR "<b><u> %s :</u></b><br><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);
+	sprintf(templn, "</div>" HTML_BLU_SEPARATOR "<b><a href=\"javascript:tgl(cmb);\"> %s </a></b><br><div id=\"cmb\"><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);
 
 #ifdef SYS_ADMIN_MODE
 	add_check_box("adm", "1", "ADMIN/USER MODE", " : <b>L2+R2+&#8710;</b><br>" ,  (webman_config->combo & SYS_ADMIN),  buffer);
@@ -1027,13 +1017,37 @@ static void setup_form(char *buffer, char *templn)
 					"</datalist></div>");
 #endif // #ifdef WM_REQUEST
 
+	strcat(buffer, "</div>");
+
+	//Wait for any USB device to be ready
+	sprintf(templn, HTML_BLU_SEPARATOR "<b><a href=\"javascript:tgl(wait);\"> %s </a></b><br><div id=\"wait\">", STR_ANYUSB); strcat(buffer, templn);
+
+	value = webman_config->bootd;
+	add_radio_button("b", "0",  "b_0", "0 sec" , _BR_, (value == 0),  buffer);
+	add_radio_button("b", "5",  "b_1", "5 sec" , _BR_, (value == 5),  buffer);
+	add_radio_button("b", "9",  "b_2", "10 sec", _BR_, (value == 9),  buffer);
+	add_radio_button("b", "15", "b_3", "15 sec", _BR_, (value == 15), buffer);
+
+	//Wait additionally for each selected USB device to be ready
+	sprintf(templn, HTML_BLU_SEPARATOR "<u> %s:</u><br>", STR_ADDUSB); strcat(buffer, templn);
+
+	value = webman_config->boots;
+	add_radio_button("s", "0",  "s_0", "0 sec" , _BR_, (value == 0),  buffer);
+	add_radio_button("s", "3",  "s_1", "3 sec" , _BR_, (value == 3),  buffer);
+	add_radio_button("s", "5",  "s_2", "5 sec" , _BR_, (value == 5),  buffer);
+	add_radio_button("s", "10", "s_3", "10 sec", _BR_, (value == 10), buffer);
+	add_radio_button("s", "15", "s_4", "15 sec", _BR_, (value == 15), buffer);
+	strcat(buffer, "</div>");
+
+	strcat(buffer, "<script>function tgl(o){o.style.display=(o.style.display=='none')?'block':'none';}tgl(cnt);tgl(cfg);tgl(adv);tgl(cmb);tgl(wait);</script>");
+
 	sprintf(templn, HTML_RED_SEPARATOR "<input type=\"submit\" accesskey=\"S\" value=\" %s \"/>"
 					"</form>", STR_SAVE); strcat(buffer, templn);
 
 #ifndef LITE_EDITION
 	strcat(buffer,  HTML_RED_SEPARATOR
-					"<a href=\"http://github.com/aldostools/webMAN-MOD/releases\">webMAN-MOD - Latest version of webMAN-MOD on Github</a><br>"
-					"<a href=\"http://www.psx-place.com/threads/webman-mod-general-information-thread.27/\">webMAN-MOD - Main thread of webMAN-MOD on Psx-place</a><br>");
+					"<a href=\"http://github.com/aldostools/webMAN-MOD/releases\">webMAN MOD - Latest release</a><br>"
+					"<a href=\"http://www.psx-place.com/threads/webman-mod-general-information-thread.27\">webMAN MOD - Info @ PSX-Place</a><br>");
 #else
 	strcat(buffer,  HTML_BLU_SEPARATOR
 					"webMAN - Simple Web Server" EDITION "<p>");
@@ -1115,7 +1129,7 @@ static void read_settings(void)
 	//webman_config->nopad = 0;       //enable all PAD shortcuts
 	//webman_config->nocov = 0;       //enable multiMAN covers    (0 = Use MM covers, 1 = Use ICON0.PNG, 2 = No game icons, 3 = Online Covers)
 
-	webman_config->fanc    = 1;       //fan control enabled
+	webman_config->fanc    = ENABLED; //fan control enabled
 	//webman_config->temp0 = 0;       //0=dynamic fan control mode, >0 set manual fan speed
 	webman_config->temp1   = MY_TEMP; // target temperature for dynamic fan control
 	webman_config->manu    = 35;      //manual temp
