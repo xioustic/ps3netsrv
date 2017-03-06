@@ -45,7 +45,7 @@ SYS_MODULE_STOP(slaunch_stop);
 #define STR_UNLOAD		"Unload webMAN"
 #define STR_QUIT		"Quit"
 
-#define APP_VERSION		"1.07"
+#define APP_VERSION		"1.08"
 
 typedef struct {
 	uint8_t  gmode;
@@ -63,6 +63,8 @@ struct timeval {
 	int64_t tv_sec;			/* seconds */
 	int64_t tv_usec;		/* and microseconds */
 };
+
+#define IS_ON_XMB			(vshmain_EB757101() == 0)
 
 #define MAX_GAMES 2000
 #define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
@@ -298,13 +300,13 @@ static int connect_to_webman(void)
 	return s;
 }
 
-static void sclose(int *socket_e)
+static void sclose(int32_t *s)
 {
-	if(*socket_e != NONE)
+	if(*s != NONE)
 	{
-		shutdown(*socket_e, SHUT_RDWR);
-		socketclose(*socket_e);
-		*socket_e = NONE;
+		shutdown(*s, SHUT_RDWR);
+		socketclose(*s);
+		*s = NONE;
 	}
 }
 
@@ -411,7 +413,9 @@ static void draw_page(uint16_t game_idx, uint8_t key_repeat)
 	set_textbox(GRAY,       0, INFOBAR_Y + INFOBAR_H + 3, CANVAS_W, 1);
 	set_textbox(LIGHT_GRAY, 0, INFOBAR_Y + INFOBAR_H + 4, CANVAS_W, 1);
 
-	// draw game icons (5x2)
+	if(disp_h<720) gpp=10;
+
+	// draw game icons (5x2) or (10x4)
 	j=(game_idx/gpp)*gpp;
 	for(i=j;((slot<gpp)&&(i<games));i++)
 	{
@@ -426,7 +430,7 @@ static void draw_page(uint16_t game_idx, uint8_t key_repeat)
 			ctx.img[slot].y=py;
 			set_backdrop(slot, 0);
 			set_texture(slot, ctx.img[slot].x, ctx.img[slot].y);
-			px+=(320+48); if(px>1600) px=left_margin;
+			px+=(320+left_margin); if(px>1600) px=left_margin;
 		}
 		else
 		{
@@ -531,7 +535,7 @@ static void draw_side_menu_option(uint8_t option)
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=7)*32, SM_Y+20*24, web_page ? STR_FILEMNGR : STR_SETUP);
 
 	set_texture_direct(ctx.side, SM_X, 0, (CANVAS_W-SM_X), CANVAS_H);
-	set_textbox(GRAY, SM_X+SM_TO, SM_Y+28,    CANVAS_W-SM_X-SM_TO*2, 1);
+	set_textbox(GRAY, SM_X+SM_TO, SM_Y+30,    CANVAS_W-SM_X-SM_TO*2+24, 1);
 	set_textbox(GRAY, SM_X+SM_TO, SM_Y+18*24, CANVAS_W-SM_X-SM_TO*2, 1);
 }
 
@@ -642,11 +646,11 @@ static void load_config(void)
 
 		gmode=sconfig.gmode;
 		dmode=sconfig.dmode;
-		gpp=sconfig.gpp; if(gpp!=10 && gpp!=40) gpp=10;
 		fav_mode=sconfig.fav_mode;
 		fav_game=sconfig.fav_game;
 		cur_game=sconfig.cur_game;
 		cur_game_=sconfig.cur_game_;
+		gpp=sconfig.gpp;
 	}
 }
 
@@ -812,17 +816,17 @@ static void start_VSH_Menu(void)
 
 	uint64_t slist_size = file_exists(WMTMP "/" SLIST ".bin"); if(slist_size>(MAX_GAMES*sizeof(_slaunch))) slist_size=MAX_GAMES*sizeof(_slaunch);
 
-	mem_size = ((CANVAS_W * CANVAS_H * 4)   + (CANVAS_W * INFOBAR_H * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4) + (SM_M) + (slist_size+sizeof(_slaunch)) + MB(1)) / MB(1);
+	mem_size = ((CANVAS_W * CANVAS_H * 4)   + (CANVAS_W * INFOBAR_H * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4) + (SM_M) + (slist_size + sizeof(_slaunch)) + MB(1)) / MB(1);
 
 	// create VSH Menu heap memory from memory container 1("app")
 	ret = create_heap(mem_size);
 
 	if(ret) return;
 
-	rsx_fifo_pause(1);
-
-	disp_w = getDisplayWidth();	// display width
+	disp_w = getDisplayWidth();
 	disp_h = getDisplayHeight();
+
+	rsx_fifo_pause(1);
 
 	// initialize VSH Menu graphic
 	init_graphic();
@@ -957,7 +961,7 @@ static void remove_game(void)
 ////////////////////////////////////////////////////////////////////////
 static void slaunch_thread(uint64_t arg)
 {
-	sys_timer_sleep(12);												// wait 12s and not interfere with boot process
+	if(!arg) sys_timer_sleep(12);										// wait 12s and not interfere with boot process
 	send_wm_request("/popup.ps3?sLaunch%20MOD%20" APP_VERSION);
 	//play_rco_sound("snd_system_ng");
 
@@ -967,14 +971,16 @@ static void slaunch_thread(uint64_t arg)
 		if(file_exists(wm_icons[n]) == false)  sprintf(wm_icons[n], "/dev_flash/vsh/resource/explore/user/0%i.png", n + 20);}
 	}
 
-	uint8_t gpl; uint16_t pg_idx;
+	uint8_t gpl; uint16_t pg_idx; uint8_t p;
 
 	while(running)
 	{
 		if(!slaunch_running)											// VSH menu is not running, normal XMB execution
 		{
+			sys_timer_usleep(300000);
+
 			pdata.len = 0;
-			for(uint8_t p = 0; p < 2; p++)
+			for(p = 0; p < 2; p++)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
 			// remote start
@@ -995,21 +1001,22 @@ static void slaunch_thread(uint64_t arg)
 				{
 					if(xsetting_CC56EB2D()->GetCurrentUserNumber()>=0) // user logged in
 					{
-						if(vshmain_EB757101() == 0)
+						if(IS_ON_XMB)
 						{
 							start_VSH_Menu();
 							init_delay=0;
+
+							// prevent set favorite with start button
+							while(slaunch_running) {pad_read(); if(curpad == PAD_START) sys_timer_usleep(20000); else break;}
 						}
 					}
 					else
 					{
 						send_wm_request("/popup.ps3?Not%20logged%20in!");
+						sys_timer_sleep(2);
 					}
-					sys_timer_sleep(2);
 				}
 			}
-
-			sys_timer_usleep(500000);
 		}
 		else // menu is running
 		{
@@ -1083,16 +1090,18 @@ static void slaunch_thread(uint64_t arg)
 						}
 						break;
 					}
-					else if(curpad & PAD_SELECT)	// alternate menu
+					else if(curpad & PAD_SELECT)	// favorites menu
 					{
-						play_rco_sound("snd_cursor");
-						fav_mode^=1;
-						reload_data(curpad);
-						sys_timer_usleep(40000);
+						if(init_delay)
+						{
+							play_rco_sound("snd_cursor");
+							fav_mode^=1; init_delay = 0;
+							reload_data(curpad);
+						}
+						else if(curpad & PAD_R3)	{return_to_xmb(); send_wm_request("/popup.ps3"); break;}
 						continue;
 					}
-					//else if(curpad & PAD_R3)	{return_to_xmb(); send_wm_request("/popup.ps3"); break;}
-					else if(curpad & PAD_R3 && games)	{gpp^=34; draw_page(cur_game, 0);}
+					else if(curpad & PAD_R3 && games)	{gpp^=34; draw_page(cur_game, 0); init_delay=0;}
 
 					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh_ps3"); break;}
 					else if((curpad & PAD_SQUARE) && !fav_mode && !(curpad & PAD_L2)) {gmode++; if(gmode>=TYPE_MAX) gmode=TYPE_ALL; dmode=TYPE_ALL; reload_data(curpad); continue;}
@@ -1166,7 +1175,7 @@ static void slaunch_thread(uint64_t arg)
 ***********************************************************************/
 int32_t slaunch_start(uint64_t arg)
 {
-	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, 0, 3000, 0x3000, 1, THREAD_NAME);
+	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, 0, -0x1d8, 0x2000, 1, THREAD_NAME);
 
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_RESIDENT;

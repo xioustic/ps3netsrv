@@ -192,7 +192,7 @@ static void poll_thread(uint64_t poll)
 					language("STR_OVERHEAT", STR_OVERHEAT, "System overheat warning!");
 					language("STR_OVERHEAT2", STR_OVERHEAT2, "  OVERHEAT DANGER!\nFAN SPEED INCREASED!");
 
-					language("/CLOSEFILE", NULL, NULL);
+					close_language();
  #endif
 					sprintf(msg, "%s\n CPU: %i°C   RSX: %i°C", STR_OVERHEAT, t1, t2);
 					show_msg(msg);

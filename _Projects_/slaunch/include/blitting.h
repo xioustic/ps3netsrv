@@ -30,7 +30,7 @@
 #define SM_M			((CANVAS_W-SM_X) * CANVAS_H * 4)
 #define SM_TO			88				// side menu text offset
 
-#define IMG_MAX			 41             // bg + 10 image slots
+#define IMG_MAX			 41             // bg + 40 image slots
 #define MAX_W			336
 #define MAX_H			336
 #define MAX_WH4			(MAX_W * MAX_H * 4)

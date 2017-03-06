@@ -122,7 +122,7 @@ static void disable_cfw_syscalls(bool keep_ccapi)
 		language("STR_RMVCFWSYS", STR_RMVCFWSYS, "History files & CFW Syscalls deleted OK!");
 		language("STR_RMVCFWSYSF", STR_RMVCFWSYSF, "Failed to remove CFW Syscalls");
 
-		language("/CLOSEFILE", NULL, NULL);
+		close_language();
 #endif
 		show_msg((char*)STR_CFWSYSRIP);
 		remove_cfw_syscalls(keep_ccapi);

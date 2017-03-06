@@ -607,7 +607,7 @@ static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry,
 	{
 		int flen = strlen(data[v3_entry].name) - 4;
 		if(flen < 0) return FAILED;
-		if(!strcasestr(".iso.0|.img|.mdf|.bin", data[v3_entry].name + flen)) return FAILED;
+		if(!strcasestr(ISO_EXTENSIONS + 5, data[v3_entry].name + flen)) return FAILED;
 	}
 	else
 	{
@@ -918,6 +918,29 @@ static void set_sort_key(char *skey, char *templn, int key, u8 subfolder, u8 f1)
 	to_upper(skey + (is_html ? 0 : 1));
 }
 
+static bool is_iso_file(char *entry_name, int flen, u8 f1, u8 f0)
+{
+	char *ext = entry_name + flen - 4;
+#ifdef MOUNT_ROMS
+	if(IS_ROMS_FOLDER)
+		return (flen > 4) && (strcasestr(ROMS_EXTENSIONS, ext) != NULL);
+	else
+#endif
+#ifdef COBRA_ONLY
+	if(IS_NTFS)
+		return (flen > 13) && (strstr(entry_name + flen - 13, ".ntfs[") != NULL);
+	else
+		return (IS_ISO_FOLDER && (flen > 4) && (
+				(              _IS(ext, ".iso")) ||
+				((flen > 6) && _IS(entry_name + flen - 6, ".iso.0")) ||
+				((IS_PS2_FOLDER) && strcasestr(".bin|.img|.mdf|.enc", ext)) ||
+				((IS_PSX_FOLDER || IS_DVD_FOLDER || IS_BLU_FOLDER) && strcasestr(ISO_EXTENSIONS + 12, ext))
+				));
+#else
+	return (IS_PS2_FOLDER && flen > 8 && IS(entry_name + flen - 8, ".BIN.ENC"));
+#endif
+}
+
 static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, u8 mode, bool auto_mount)
 {
 	u64 c_len = 0;
@@ -1057,7 +1080,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if(strstr(param, "?") != NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html") == NULL && strstr(param, "mobile") == NULL) strcpy(filter_name, strrchr(param, '?') + 1);
 		}
 
-		int ns = -2; u8 uprofile = profile; enum icon_type default_icon;
+		int ns = NONE; u8 uprofile = profile; enum icon_type default_icon;
 
 #ifdef NET_SUPPORT
 		if(g_socket >= 0 && open_remote_dir(g_socket, "/", &abort_connection) < 0) do_umount(false);
@@ -1072,9 +1095,9 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if(!(is_net || IS_NTFS) && (isDir(drives[f0]) == false)) continue;
 //
 #ifdef NET_SUPPORT
-			if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+			if((ns >= 0) && (ns!=g_socket)) sclose(&ns);
 #endif
-			ns = -2; uprofile = profile;
+			ns = NONE; uprofile = profile;
 			for(u8 f1 = filter1; f1 < f1_len; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 			{
 #ifndef COBRA_ONLY
@@ -1233,26 +1256,8 @@ next_html_entry:
 
 						if(idx >= max_entries || tlen >= BUFFER_MAXSIZE) break;
 
-						flen = entry.d_namlen;
+						flen = entry.d_namlen; is_iso = is_iso_file(entry.d_name, flen, f1, f0);
 
-#ifdef COBRA_ONLY
-	#ifdef MOUNT_ROMS
-						if(IS_ROMS_FOLDER)
-							is_iso = (flen > 4) && (strcasestr(ROMS_EXTENSIONS, entry.d_name + flen - 4) != NULL);
-						else
-	#endif
-						if(IS_NTFS)
-							is_iso = (flen > 13) && (strstr(entry.d_name + flen - 13, ".ntfs[") != NULL);
-						else
-							is_iso = (IS_ISO_FOLDER && (flen > 4) && (
-									 (              !strncasecmp(entry.d_name + flen - 4, ".iso",   4)) ||
-									 ((flen > 6) && !strncasecmp(entry.d_name + flen - 6, ".iso.0", 6)) ||
-									 ((IS_PS2_FOLDER) && strcasestr(".bin|.img|.mdf|.enc", entry.d_name + flen - 4)) ||
-									 ((IS_PSX_FOLDER || IS_DVD_FOLDER || IS_BLU_FOLDER) && strcasestr(".bin|.img|.mdf", entry.d_name + flen - 4))
-									 ));
-#else
-						is_iso = (IS_PS2_FOLDER && flen > 8 && !strncmp(entry.d_name + flen - 8, ".BIN.ENC", 8));
-#endif
 						if(IS_JB_FOLDER && !is_iso)
 						{
 #ifdef PKG_LAUNCHER
@@ -1361,7 +1366,7 @@ next_html_entry:
 			}
 
 #ifdef NET_SUPPORT
-			if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns = -2;}
+			if(is_net && (ns >= 0) && (ns!=g_socket)) sclose(&ns);
 #endif
 		}
 

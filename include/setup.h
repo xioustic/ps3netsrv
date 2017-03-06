@@ -303,9 +303,8 @@ static void setup_parse_settings(char *param)
 	webman_config->lang = 0; //English
 
 #ifndef ENGLISH_ONLY
-	if(strstr(param, "&l=99")) webman_config->lang=99; // Unknown LANG_XX.TXT
-	else
-		webman_config->lang = get_valuen(param, "&l=", 0, 22);
+	webman_config->lang = get_valuen(param, "&l=", 0, 99);
+	if(webman_config->lang > 22) webman_config->lang = 99; // Unknown LANG_XX.TXT
 
 	update_language();
 #endif
@@ -496,12 +495,11 @@ static void setup_form(char *buffer, char *templn)
 	language("STR_FANCTRL4", STR_FANCTRL4, "CTRL DYN FAN");
 	language("STR_FANCTRL5", STR_FANCTRL5, "CTRL MIN FAN");
 
-	language("/CLOSEFILE", NULL, NULL);
+	close_language();
  #endif
 
 	uint8_t value, b;
-
-	sprintf(templn, "<style>td+td{text-align:left;white-space:nowrap}</style>"
+	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{display:none}td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 					"<b><a href=\"javascript:tgl(cnt);\"> %s </a></b><br><div id=\"cnt\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
@@ -618,6 +616,9 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 	add_check_box("pl", "1", STR_USBPOLL, _BR_, (webman_config->poll) , buffer);
+#ifdef COBRA_ONLY
+	add_check_box("bus", "1", STR_RESET_USB, _BR_, (webman_config->bus), buffer);
+#endif
 
 	add_check_box("ft", "1", STR_FTPSVC,   " : ", (webman_config->ftpd) , buffer);
 	sprintf(templn, HTML_NUMBER("ff", "%i", "1", "65535") " • Timeout ", webman_config->ftp_port); strcat(buffer, templn);
@@ -678,6 +679,41 @@ static void setup_form(char *buffer, char *templn)
 #ifndef ENGLISH_ONLY
 	add_option_item("3" , "ONLINE COVERS", (value == ONLINE_COVERS), buffer);
 #endif
+
+#ifndef ENGLISH_ONLY
+	strcat(buffer, "</select>");
+
+	//language
+	sprintf(templn, " • %s: <select name=\"l\" accesskey=\"L\">", STR_PLANG); strcat(buffer, templn);
+
+	value = webman_config->lang;
+	add_option_item("0" , "English"													, (value == 0) , buffer);
+	add_option_item("1" , "Fran&ccedil;ais"											, (value == 1) , buffer);
+	add_option_item("2" , "Italiano"												, (value == 2) , buffer);
+	add_option_item("3" , "Espa&ntilde;ol"											, (value == 3) , buffer);
+	add_option_item("4" , "Deutsch"													, (value == 4) , buffer);
+	add_option_item("5" , "Nederlands"												, (value == 5) , buffer);
+	add_option_item("6" , "Portugu&ecirc;s"											, (value == 6) , buffer);
+	add_option_item("7" , "&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081"		, (value == 7) , buffer);
+	add_option_item("8" , "Magyar"													, (value == 8) , buffer);
+	add_option_item("9" , "Polski"													, (value == 9) , buffer);
+	add_option_item("10", "&Epsilon;&lambda;&lambda;&eta;&nu;&iota;&kappa;&alpha;"	, (value == 10), buffer);
+	add_option_item("11", "Hrvatski"												, (value == 11), buffer);
+	add_option_item("12", "&#1041;&#1098;&#1083;&#1075;&#1072;&#1088;&#1089;&#1082;&#1080;", (value == 12), buffer);
+	add_option_item("20", "Dansk"													, (value == 20), buffer);
+	add_option_item("21", "&#268;e&scaron;tina"										, (value == 21), buffer);
+	add_option_item("22", "Sloven&#269;ina"											, (value == 22), buffer);
+
+	add_option_item("13", "Indonesian"												, (value == 13), buffer);
+	add_option_item("14", "T&uuml;rk&ccedil;e"										, (value == 14), buffer);
+	add_option_item("15", "&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;"		, (value == 15), buffer);
+	add_option_item("16", "&#20013;&#25991;"										, (value == 16), buffer);
+	add_option_item("19", "&#32321;&#39636;&#20013;&#25991;"						, (value == 19), buffer);
+	add_option_item("17", "&#54620;&#44397;&#50612;"								, (value == 17), buffer);
+	add_option_item("18", "&#26085;&#26412;&#35486;"								, (value == 18), buffer);
+	add_option_item("99", "Unknown"													, (value == 99), buffer);
+#endif
+
 	strcat(buffer, "</select><br>");
 
 	add_check_box("tid", "1", STR_TITLEID, " • ", (webman_config->tid),  buffer);
@@ -692,9 +728,6 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "</select><br>");
 
 	//game mounting
-#ifdef COBRA_ONLY
-	add_check_box("bus", "1", STR_RESET_USB, _BR_, (webman_config->bus), buffer);
-#endif
 	add_check_box("apd", "1", STR_AUTO_PLAY, _BR_, (webman_config->autoplay), buffer);
 
 #ifdef FIX_GAME
@@ -734,12 +767,6 @@ static void setup_form(char *buffer, char *templn)
 	sprintf(templn, HTML_INPUT("vPS1", "%s", "16", "22"), webman_config->vPSID1); strcat(buffer, templn);
 	sprintf(templn, HTML_INPUT("vPS2", "%s", "16", "22"), webman_config->vPSID2); strcat(buffer, templn);
 	sprintf(templn, HTML_BUTTON_FMT "<br><br>", HTML_BUTTON, " ", "onclick=\"vPS1.value=vPS2.value=", "0000000000000000"); strcat(buffer, templn);
-#endif
-
-#ifndef LITE_EDITION
-	//Home
-	sprintf(templn, " : " HTML_INPUT("hurl", "%s", "255", "50") "<br>", webman_config->home_url);
-	add_check_box("hm", "hom", STR_HOME, templn, webman_config->homeb, buffer);
 #endif
 
 	//Disable lv1&lv2 peek&poke syscalls (6,7,9,10,36) and delete history files at system startup
@@ -814,38 +841,10 @@ static void setup_form(char *buffer, char *templn)
 
 	add_check_box("mc", "1", "3072KB [MC]", "<p>", !(webman_config->mc_app), buffer);
 
-#ifndef ENGLISH_ONLY
-	//language
-	sprintf(templn, " %s: <select name=\"l\" accesskey=\"L\">", STR_PLANG); strcat(buffer, templn);
-
-	value = webman_config->lang;
-	add_option_item("0" , "English"													, (value == 0) , buffer);
-	add_option_item("1" , "Fran&ccedil;ais"											, (value == 1) , buffer);
-	add_option_item("2" , "Italiano"												, (value == 2) , buffer);
-	add_option_item("3" , "Espa&ntilde;ol"											, (value == 3) , buffer);
-	add_option_item("4" , "Deutsch"													, (value == 4) , buffer);
-	add_option_item("5" , "Nederlands"												, (value == 5) , buffer);
-	add_option_item("6" , "Portugu&ecirc;s"											, (value == 6) , buffer);
-	add_option_item("7" , "&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081"		, (value == 7) , buffer);
-	add_option_item("8" , "Magyar"													, (value == 8) , buffer);
-	add_option_item("9" , "Polski"													, (value == 9) , buffer);
-	add_option_item("10", "&Epsilon;&lambda;&lambda;&eta;&nu;&iota;&kappa;&alpha;"	, (value == 10), buffer);
-	add_option_item("11", "Hrvatski"												, (value == 11), buffer);
-	add_option_item("12", "&#1041;&#1098;&#1083;&#1075;&#1072;&#1088;&#1089;&#1082;&#1080;", (value == 12), buffer);
-	add_option_item("20", "Dansk"													, (value == 20), buffer);
-	add_option_item("21", "&#268;e&scaron;tina"										, (value == 21), buffer);
-	add_option_item("22", "Sloven&#269;ina"											, (value == 22), buffer);
-
-	add_option_item("13", "Indonesian"												, (value == 13), buffer);
-	add_option_item("14", "T&uuml;rk&ccedil;e"										, (value == 14), buffer);
-	add_option_item("15", "&#1575;&#1604;&#1593;&#1585;&#1576;&#1610;&#1577;"		, (value == 15), buffer);
-	add_option_item("16", "&#20013;&#25991;"										, (value == 16), buffer);
-	add_option_item("19", "&#32321;&#39636;&#20013;&#25991;"						, (value == 19), buffer);
-	add_option_item("17", "&#54620;&#44397;&#50612;"								, (value == 17), buffer);
-	add_option_item("18", "&#26085;&#26412;&#35486;"								, (value == 18), buffer);
-	add_option_item("99", "Unknown"													, (value == 99), buffer);
-
-	strcat(buffer, "</select> ");
+#ifndef LITE_EDITION
+	//Home
+	sprintf(templn, " : " HTML_INPUT("hurl", "%s", "255", "50") "<p>", webman_config->home_url);
+	add_check_box("hm", "hom", STR_HOME, templn, webman_config->homeb, buffer);
 #endif
 
 #ifdef COBRA_ONLY
@@ -856,7 +855,7 @@ static void setup_form(char *buffer, char *templn)
 	cobra_read_config(cobra_config);
 
 	//BD Region
-	strcat(buffer, " • BD Region: <select name=\"bdr\">");
+	strcat(buffer, "BD Region: <select name=\"bdr\">");
 	value = cobra_config->bd_video_region;
 	add_option_item("0" , STR_DEFAULT , (value == 0) , buffer);
 	add_option_item("1" , "A- America", (value == 1) , buffer);
@@ -1020,7 +1019,7 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "</div>");
 
 	//Wait for any USB device to be ready
-	sprintf(templn, HTML_BLU_SEPARATOR "<b><a href=\"javascript:tgl(wait);\"> %s </a></b><br><div id=\"wait\">", STR_ANYUSB); strcat(buffer, templn);
+	sprintf(templn, HTML_BLU_SEPARATOR "<b><a href=\"javascript:tgl(wt);\"> %s </a></b><br><div id=\"wt\">", STR_ANYUSB); strcat(buffer, templn);
 
 	value = webman_config->bootd;
 	add_radio_button("b", "0",  "b_0", "0 sec" , _BR_, (value == 0),  buffer);
@@ -1039,9 +1038,8 @@ static void setup_form(char *buffer, char *templn)
 	add_radio_button("s", "15", "s_4", "15 sec", _BR_, (value == 15), buffer);
 	strcat(buffer, "</div>");
 
-	strcat(buffer, "<script>function tgl(o){o.style.display=(o.style.display=='none')?'block':'none';}tgl(cnt);tgl(cfg);tgl(adv);tgl(cmb);tgl(wait);</script>");
-
 	sprintf(templn, HTML_RED_SEPARATOR "<input type=\"submit\" accesskey=\"S\" value=\" %s \"/>"
+					"<script>function tgl(o){o.style.display=(o.style.display=='none')?'block':'none';}</script>"
 					"</form>", STR_SAVE); strcat(buffer, templn);
 
 #ifndef LITE_EDITION

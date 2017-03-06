@@ -32,7 +32,7 @@ static bool is_ntfs_path(const char *path)
 
 static void unmount_all_ntfs_volumes(void)
 {
-	if(mounts && mountCount)
+	if(mounts && (mountCount > 0))
 		for (uint8_t u = 0; u < mountCount; u++) ntfsUnmount(mounts[u].name, 1);
 
 	if(mounts) free(mounts);
@@ -42,7 +42,7 @@ static void mount_all_ntfs_volumes(void)
 {
 	unmount_all_ntfs_volumes();
 	mountCount = ntfsMountAll(&mounts, NTFS_SU | NTFS_FORCE );
-	if (mountCount <= 0) {mountCount = -2;}
+	if (mountCount <= 0) {mountCount = NTFS_UNMOUNTED;}
 }
 
 static DIR_ITER *ps3ntfs_opendir(char *path)
@@ -193,7 +193,7 @@ static void filepath_check(char *file)
 		}
 	}
 #ifdef USE_NTFS
-	if(is_ntfs_path(file)) {file[10] = ':'; if(mountCount == -2) mount_all_ntfs_volumes();}
+	if(is_ntfs_path(file)) {file[10] = ':'; if(mountCount == NTFS_UNMOUNTED) mount_all_ntfs_volumes();}
 #endif
 }
 
@@ -295,7 +295,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 		{
 			int ns = connect_to_remote_server((file1[4] & 0x0F));
 			copy_net_file(file2, (char*)file1 + 5, ns, maxbytes);
-			if(ns>=0) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+			if(ns>=0) sclose(&ns);
 
 			if(file_exists(file2)) return 0;
 		}

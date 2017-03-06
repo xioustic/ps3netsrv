@@ -72,14 +72,31 @@ static u32 detect_cd_sector_size(int fd)
 {
 	char buffer[0x10]; buffer[0xD] = NULL; u64 pos;
 
-	cellFsLseek(fd, 0x8020, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2048; else {
-	cellFsLseek(fd, 0x9220, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2336; else {
-	cellFsLseek(fd, 0x9320, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2352; else {
-	cellFsLseek(fd, 0x9920, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2448; }}}
+	// detect: 2048, 2336, 2352, 2368, 2384*, 2400*, 2416*, 2432*, 2448
+	for(u32 sec_size = 0x800; sec_size <= 0x990; sec_size += 0x10)
+	{
+		cellFsLseek(fd, ((sec_size<<4) + 0x20), CELL_FS_SEEK_SET, &pos);
+		cellFsRead(fd, (void *)buffer, 0xC, NULL);
+		if(islike(buffer, PLAYSTATION)) return sec_size;
+		if(sec_size == 0x800) sec_size = 0x910; // test 2336
+	}
 
 	return 2352;
 }
+/*
+static u32 detect_cd_sector_size(int fd)
+{
+	char buffer[0x10]; buffer[0xD] = NULL; u64 pos;
 
+	cellFsLseek(fd, 0x8020, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2048; else {
+	cellFsLseek(fd, 0x9220, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2336; else {
+	cellFsLseek(fd, 0x9320, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2352; else {
+	cellFsLseek(fd, 0x9420, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2368; else {
+	cellFsLseek(fd, 0x9920, CELL_FS_SEEK_SET, &pos); cellFsRead(fd, (void *)buffer, 0xC, NULL); if(islike(buffer, PLAYSTATION)) return 2448; }}}}
+
+	return 2352;
+}
+*/
 static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 {
 	netiso_open_cmd cmd;
@@ -524,9 +541,7 @@ exit_netiso:
 
 	if(g_socket >= 0)
 	{
-		shutdown(g_socket, SHUT_RDWR);
-		socketclose(g_socket);
-		g_socket = NONE;
+		sclose(&g_socket);
 	}
 
 	sys_event_port_disconnect(result_port);
@@ -550,9 +565,7 @@ static void netiso_stop_thread(uint64_t arg)
 
 	if(g_socket >= 0)
 	{
-		shutdown(g_socket, SHUT_RDWR);
-		socketclose(g_socket);
-		g_socket = NONE;
+		sclose(&g_socket);
 	}
 
 	if(command_queue_net != SYS_EVENT_QUEUE_NONE)

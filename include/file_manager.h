@@ -467,7 +467,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	DIR_ITER *pdir = NULL;
 
 	is_ntfs = is_ntfs_path(param);
-	if((is_root | is_ntfs) && (mountCount == -2)) mount_all_ntfs_volumes();
+	if((is_root | is_ntfs) && (mountCount == NTFS_UNMOUNTED)) mount_all_ntfs_volumes();
 
 	if(is_ntfs)
 	{
@@ -637,7 +637,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 									if((uint32_t)bytes_read < _64KB_ || boff >= file_size) break;
 								}
 								open_remote_file(ns, "/CLOSEFILE", &abort_connection);
-								shutdown(ns, SHUT_RDWR); socketclose(ns);
+								sclose(&ns);
 								sclose(&conn_s);
 
 								return false; // net file
@@ -645,7 +645,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 						}
 					}
 				}
-				shutdown(ns, SHUT_RDWR); socketclose(ns);
+				sclose(&ns);
 			}
 		}
 		else

@@ -70,6 +70,7 @@
 #include "vsh/xregistry.h"
 #include "vsh/vsh.h"
 #include "vsh/vshnet.h"
+#include "vsh/vshmain.h"
 #include "vsh/explore_plugin.h"
 
 static char _game_TitleID[16]; //#define _game_TitleID  _game_info+0x04
@@ -216,10 +217,10 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define STOP_THREAD_NAME 		"wwwds"
 
 #define THREAD_PRIO				-0x1d8
-#define THREAD_PRIO_FTP			950
+#define THREAD_PRIO_FTP			-0x1d8
 #define THREAD_PRIO_NET			-0x1d8
 #define THREAD_PRIO_STOP		 0x000
-#define THREAD_PRIO_HIGH		 2900
+#define THREAD_PRIO_HIGH		 2000
 
 #define THREAD_STACK_SIZE_8KB		0x02000UL
 #define THREAD_STACK_SIZE_16KB		0x04000UL
@@ -378,8 +379,8 @@ static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
 #define CODE_GOBACK         1222
 #define CODE_CLOSE_BROWSER  1223
 
-#define IS_ON_XMB		(View_Find("game_plugin") == 0)
-#define IS_INGAME		(View_Find("game_plugin") != 0)
+#define IS_ON_XMB		(GetCurrentRunningMode() == 0)
+#define IS_INGAME		(GetCurrentRunningMode() != 0)
 
 ////////////
 
@@ -648,7 +649,7 @@ static void restore_settings(void);
 #endif
 
 #define MAX_ISO_PARTS				(16)
-#define ISO_EXTENSIONS				".iso.0|.cue|.img|.mdf|.bin"
+#define ISO_EXTENSIONS				".cue|.iso.0|.bin|.img|.mdf"
 
 static CellRtcTick rTick, gTick;
 
@@ -739,7 +740,7 @@ int val(const char *c);
 #ifdef USE_NTFS
 
 static ntfs_md *mounts = NULL;
-static int mountCount = -2;
+static int mountCount = NTFS_UNMOUNTED;
 
 static int prepNTFS(u8 towait);
 #endif
@@ -2557,7 +2558,7 @@ parse_request:
 				{
 					struct stat bufn;
 
-					if(mountCount == -2) mount_all_ntfs_volumes();
+					if(mountCount == NTFS_UNMOUNTED) mount_all_ntfs_volumes();
 
 					param[10] = ':';
 					if(param[11] != '/') {param[11] = '/', param[12] = 0;}
@@ -2695,7 +2696,6 @@ parse_request:
 
 					while(working)
 					{
-						//sys_ppu_thread_usleep(500);
 #ifdef USE_NTFS
 						if(is_ntfs) read_e = ps3ntfs_read(fd, (void *)buffer, BUFFER_SIZE_FTP);
 #endif
@@ -2710,6 +2710,8 @@ parse_request:
 						}
 						else
 							break;
+
+						//sys_ppu_thread_usleep(1668);
 					}
 #ifdef USE_NTFS
 					if(is_ntfs) ps3ntfs_close(fd);
@@ -3052,7 +3054,8 @@ parse_request:
 						sprintf(STR_XMLRF, "Game list refreshed (<a href=\"%s\">mygames.xml</a>).%s", MY_GAMES_XML, "<br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.");
 
 						language("STR_XMLRF", STR_XMLRF, STR_XMLRF);
-						language("/CLOSEFILE", NULL, NULL);
+						close_language();
+
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
  #else
 						sprintf(templn,  "<br>%s", STR_XMLRF); strcat(pbuffer, templn);
@@ -3123,37 +3126,43 @@ parse_request:
 						}
 
 						prx_found = file_exists(templn);
-  #ifdef COBRA_ONLY
-						if(*templn)
+
+						if(prx_found || (*templn != '/'))
 						{
-							slot = get_vsh_plugin_slot_by_name(templn, false);
-							if(islike(param, "/unloadprx.ps3")) prx_found = false;
-						}
+  #ifdef COBRA_ONLY
+							if(*templn)
+							{
+								slot = get_vsh_plugin_slot_by_name(templn, false);
+								if(islike(param, "/unloadprx.ps3")) prx_found = false;
+							}
   #endif
-						if((slot < 1) || (slot > 6))
-						{
+							if((slot < 1) || (slot > 6))
+							{
   #ifdef COBRA_ONLY
-							slot = get_valuen(param, "slot=", 0, 6);
-							if(!slot) slot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); // find first free slot if slot == 0
+								slot = get_valuen(param, "slot=", 0, 6);
+								if(!slot) slot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); // find first free slot if slot == 0
   #else
-							slot = get_valuen(param, "slot=", 1, 6);
+								slot = get_valuen(param, "slot=", 1, 6);
   #endif
-						}
-
-						if(prx_found)
-							sprintf(param, "slot: %i<br>load prx: %s%s", slot, templn, HTML_BODY_END);
-						else
-							sprintf(param, "unload slot: %i%s", slot, HTML_BODY_END);
-
-						strcat(pbuffer, param);
-
-						if(slot < 7)
-						{
-							cobra_unload_vsh_plugin(slot);
+							}
 
 							if(prx_found)
-								{cobra_load_vsh_plugin(slot, templn, NULL, 0); if(strstr(templn, "/webftp_server")) goto quit;}
+								sprintf(param, "slot: %i<br>load prx: %s%s", slot, templn, HTML_BODY_END);
+							else
+								sprintf(param, "unload slot: %i%s", slot, HTML_BODY_END);
+
+							strcat(pbuffer, param);
+
+							if(slot < 7)
+							{
+								cobra_unload_vsh_plugin(slot);
+
+								if(prx_found)
+									{cobra_load_vsh_plugin(slot, templn, NULL, 0); if(strstr(templn, "/webftp_server")) goto quit;}
+							}
 						}
+						else
+							strcat(pbuffer, STR_NOTFOUND);
 					}
  #endif
 
@@ -3402,6 +3411,10 @@ parse_request:
 					if(mount_ps3)
 					{
 						// /mount_ps3/<path>[?random=<x>[&emu={ps1_netemu.self/ps1_netemu.self}][offline={0/1}]
+
+						struct timeval tv;
+						tv.tv_sec = 3;
+						setsockopt(conn_s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
 						if(!mc) http_response(conn_s, header, param, CODE_CLOSE_BROWSER, HTML_CLOSE_BROWSER); //auto-close browser (don't wait for mount)
 

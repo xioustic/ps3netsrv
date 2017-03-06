@@ -799,9 +799,8 @@ static int ejected_disc(void)
 
 			if(!ejected)
 			{
-				counter = 0;
-
 				ejected = 1;
+				counter = 0;
 				return CELL_OK;
 			}
 			else
@@ -1003,7 +1002,7 @@ static void rawseciso_thread(uint64_t arg)
 			CD_SECTOR_SIZE_2352 = (num_tracks & 0xFF00)>>4;
 		}
 
-		if(CD_SECTOR_SIZE_2352 != 2352 && CD_SECTOR_SIZE_2352 != 2048 && CD_SECTOR_SIZE_2352 != 2336 && CD_SECTOR_SIZE_2352 != 2448) CD_SECTOR_SIZE_2352 = 2352;
+		//if(CD_SECTOR_SIZE_2352 != 2352 && CD_SECTOR_SIZE_2352 != 2048 && CD_SECTOR_SIZE_2352 != 2336 && CD_SECTOR_SIZE_2352 != 2448) CD_SECTOR_SIZE_2352 = 2352;
 		if(CD_SECTOR_SIZE_2352 != 2352) cd_sector_size_param = CD_SECTOR_SIZE_2352<<4;
 
 		num_tracks &= 0xFF;

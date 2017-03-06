@@ -393,8 +393,6 @@ static uint32_t get_system_language(uint8_t *lang)
 
 static bool language(const char *key_name, char *label, const char *default_str)
 {
-	if(*key_name == '/') {if(fh) cellFsClose(fh); fh = 0; return false;} // /CLOSEFILE
-
 	uint8_t c, i, key_len = strlen(key_name);
 	uint64_t bytes_read = 0;
 	static size_t p = 0, lang_pos = 0, size = 0;
@@ -403,6 +401,8 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 	u8 do_retry = 1;
 	char buffer[MAX_LINE_LEN];
+
+ retry:
 
 	if(fh == 0)
 	{
@@ -424,7 +424,6 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 		lang_pos = 0;
 
- retry:
 		cellFsLseek(fh, lang_pos, CELL_FS_SEEK_SET, NULL); p = CHUNK_SIZE;
 	}
 
@@ -461,10 +460,18 @@ static bool language(const char *key_name, char *label, const char *default_str)
 
 	} while(lang_pos < size);
 
-	if(do_retry) {do_retry--, lang_pos = 0; goto retry;}
+	if(do_retry) {cellFsClose(fh); do_retry--, fh = lang_pos = 0; goto retry;}
 
 	return true;
 }
+
+#ifndef ENGLISH_ONLY
+static void close_language(void)
+{
+	if(fh) cellFsClose(fh); fh = 0;
+}
+#endif
+
 
 #undef CHUNK_SIZE
 #undef GET_NEXT_BYTE
@@ -563,7 +570,7 @@ static void update_language(void)
 */
 	}
 
-	language("/CLOSEFILE", NULL, NULL);
+	close_language();
 
 	*html_base_path = NULL;
 

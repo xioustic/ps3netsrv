@@ -601,7 +601,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				char *STR_MOVIETOM = buf; //[48];//	= "Movie to mount";
 				if(is_movie)	language("STR_MOVIETOM", STR_MOVIETOM, "Movie to mount");
 				else			language("STR_GAMETOM",  STR_GAMETOM,  "Game to mount");
-				language("/CLOSEFILE", NULL, NULL);
+				close_language();
 #endif
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
 
@@ -661,7 +661,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[default_icon], mounted ? STR_GAMELOADED : STR_ERROR);
 				}
 #ifndef ENGLISH_ONLY
-				language("/CLOSEFILE", NULL, NULL);
+				close_language();
 #endif
 			}
 
@@ -992,8 +992,8 @@ static void mount_autoboot(void)
 
 	if(do_mount)
 	{   // add some delay
-		if(webman_config->delay)      {sys_ppu_thread_sleep(10); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
-		else if(islike(path, "/net"))  sys_ppu_thread_sleep(10);
+		if(webman_config->delay)      {sys_ppu_thread_sleep(5); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
+		else if(islike(path, "/net"))  sys_ppu_thread_sleep(5);
 #ifndef COBRA_ONLY
 		if(strstr(path, ".ntfs[") == NULL)
 #endif
@@ -1567,7 +1567,7 @@ static void mount_thread(u64 action)
 								strcpy(_netiso_args->path + len - 3, "cue");
 								copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_);
 							}
-							shutdown(ns, SHUT_RDWR); socketclose(ns);
+							sclose(&ns);
 
 							if(file_exists(TEMP_NET_PSXISO))
 							{

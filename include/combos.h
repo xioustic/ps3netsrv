@@ -152,7 +152,7 @@
 							language("STR_RMVWMCFG", STR_RMVWMCFG, "webMAN config reset in progress...");
 							language("STR_RMVWMCFGOK", STR_RMVWMCFGOK, "Done! Restart within 3 seconds");
 
-							language("/CLOSEFILE", NULL, NULL);
+							close_language();
 #endif
 							cellFsUnlink(WMCONFIG);
 							{ BEEP1 }

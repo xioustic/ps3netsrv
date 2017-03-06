@@ -13,7 +13,9 @@
 #include "include/vsh_exports.h"
 #include "include/network.h"
 
-static int db_s = -1;											 // debug socket
+#define NONE   -1
+
+static int db_s = NONE;											 // debug socket
 
 /***********************************************************************
 * create a udp/tcp connection
@@ -30,7 +32,7 @@ int32_t create_conn(const char *ip, uint16_t port, uint8_t pro)
 
 	memset((char *) &sin, 0, sizeof(struct sockaddr_in));
 
-	if((_ip = inet_addr(ip)) != (uint32_t) -1)
+	if((_ip = inet_addr(ip)) != (uint32_t) NONE)
 	{
 		sin.sin_family = AF_INET;
 		sin.sin_addr.s_addr = _ip;
@@ -40,7 +42,7 @@ int32_t create_conn(const char *ip, uint16_t port, uint8_t pro)
 		struct hostent *hp;
 
 		if((hp = gethostbyname(ip)) == NULL)
-			return -1;
+			return NONE;
 
 		sin.sin_family = hp->h_addrtype;
 		memcpy(&sin.sin_addr, hp->h_addr, hp->h_length);
@@ -55,7 +57,7 @@ int32_t create_conn(const char *ip, uint16_t port, uint8_t pro)
 	}
 
 	if(connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
-		return -1;
+		return NONE;
 
 	return s;
 }
@@ -89,11 +91,11 @@ int32_t listen_conn(int32_t port, int32_t backlog)
 ***********************************************************************/
 void close_conn(int32_t *s)
 {
-	if(*s != -1)
+	if(*s != NONE)
 	{
 		shutdown(*s, SHUT_RDWR);
 		socketclose(*s);
-		*s = -1;
+		*s = NONE;
 	}
 }
 

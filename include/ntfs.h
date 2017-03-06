@@ -117,6 +117,8 @@ typedef struct DISC_INTERFACE_STRUCT DISC_INTERFACE;
 #define NTFS_SU                         NTFS_SHOW_HIDDEN_FILES | NTFS_SHOW_SYSTEM_FILES
 #define NTFS_FORCE                      NTFS_RECOVER | NTFS_IGNORE_HIBERFILE
 
+#define NTFS_UNMOUNTED                  (-2)
+
 /**
  * ntfs_md - NTFS mount descriptor
  */

@@ -100,7 +100,7 @@ static void make_fb_xml(char *myxml)
 	char STR_LOADGAMES[72];//	= "Load games with webMAN";
 
 	language("STR_LOADGAMES", STR_LOADGAMES, "Load games with webMAN");
-	language("/CLOSEFILE", NULL, NULL);
+	close_language();
  #endif
 
 	u16 size = sprintf(myxml, "%s"
@@ -440,7 +440,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	f1_len = webman_config->roms ? 13 : webman_config->ps3l ? 12 : 11;
 #endif
 
-	int ns = -2; u8 uprofile = profile;
+	int ns = NONE; u8 uprofile = profile;
 
 #ifdef NET_SUPPORT
 	if(g_socket >= 0 && open_remote_dir(g_socket, "/", &abort_connection) < 0) do_umount(false);
@@ -466,9 +466,9 @@ static bool update_mygames_xml(u64 conn_s_p)
 		if(!(is_net || IS_NTFS) && (isDir(drives[f0]) == false)) continue;
 //
 #ifdef NET_SUPPORT
-		if((ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns);}
+		if((ns >= 0) && (ns!=g_socket)) sclose(&ns);
 #endif
-		ns = -2; uprofile = profile;
+		ns = NONE; uprofile = profile;
 		for(u8 f1 = 0; f1 < f1_len; f1++) // paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 		{
 #ifndef COBRA_ONLY
@@ -622,26 +622,8 @@ next_xml_entry:
 
 						if(key >= max_xmb_items) break;
 
-						flen = entry.d_namlen;
+						flen = entry.d_namlen; is_iso = is_iso_file(entry.d_name, flen, f1, f0);
 
-#ifdef COBRA_ONLY
-	#ifdef MOUNT_ROMS
-						if(IS_ROMS_FOLDER)
-							is_iso = (flen > 4) && (strcasestr(ROMS_EXTENSIONS, entry.d_name + flen - 4) != NULL);
-						else
-	#endif
-						if(IS_NTFS)
-							is_iso = (flen > 13) && (strstr(entry.d_name + flen - 13, ".ntfs[") != NULL);
-						else
-							is_iso = (IS_ISO_FOLDER && (flen > 4) && (
-									 (              !strncasecmp(entry.d_name + flen - 4, ".iso",   4)) ||
-									 ((flen > 6) && !strncasecmp(entry.d_name + flen - 6, ".iso.0", 6)) ||
-									 ((IS_PS2_FOLDER) && strcasestr(".bin|.img|.mdf|.enc", entry.d_name + flen - 4)) ||
-									 ((IS_PSX_FOLDER || IS_DVD_FOLDER || IS_BLU_FOLDER) && strcasestr(".bin|.img|.mdf", entry.d_name + flen - 4))
-									 ));
-#else
-						is_iso = (IS_PS2_FOLDER && flen > 8 && !strncmp(entry.d_name + flen - 8, ".BIN.ENC", 8));
-#endif
 						if(IS_JB_FOLDER && !is_iso)
 						{
 #ifdef PKG_LAUNCHER
@@ -757,7 +739,7 @@ continue_reading_folder_xml:
 //
 		}
 #ifdef NET_SUPPORT
-		if(is_net && (ns >= 0) && (ns!=g_socket)) {shutdown(ns, SHUT_RDWR); socketclose(ns); ns = -2;}
+		if(is_net && (ns >= 0) && (ns!=g_socket)) sclose(&ns);
 #endif
 	}
 
@@ -1044,7 +1026,7 @@ continue_reading_folder_xml:
 	}
 
 #ifndef ENGLISH_ONLY
-	language("/CLOSEFILE", NULL, NULL);
+	close_language();
 #endif
 
 	if(!(webman_config->nogrp))

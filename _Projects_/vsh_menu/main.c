@@ -2340,7 +2340,7 @@ static void vsh_menu_thread(uint64_t arg)
 ***********************************************************************/
 int32_t vsh_menu_start(uint64_t arg)
 {
-	sys_ppu_thread_create(&vsh_menu_tid, vsh_menu_thread, 0, 3000, 0x4000, 1, THREAD_NAME);
+	sys_ppu_thread_create(&vsh_menu_tid, vsh_menu_thread, 0, -0x1d8, 0x2000, 1, THREAD_NAME);
 
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_RESIDENT;

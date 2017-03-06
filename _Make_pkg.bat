@@ -15,7 +15,9 @@ move /Y webftp_server_rebug_cobra_multi23.sprx _Projects_\updater\pkgfiles\USRDI
 cls
 cd _Projects_\updater
 call Make_PKG.bat
+title Building webMAN_MOD_1.47.xx_Updater_rebugfication_theme.pkg ...
 call Make_PKG_rebugification_theme.bat
+title Building webMAN_MOD_1.47.xx_Updater_metalification_theme.pkg ...
 call Make_PKG_metalification_theme.bat
 
 set ver=1.47

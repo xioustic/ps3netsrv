@@ -47,9 +47,8 @@ static int prepNTFS(u8 towait)
 	int fd = NONE;
 	u64 read = 0;
 	char path[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], filename[STD_PATH_LEN];
-	char *ext;
 
-	if(mountCount == -2)
+	if(mountCount == NTFS_UNMOUNTED)
 		for(i = 0; i < 2; i++)
 		{
 			if(towait) sys_ppu_thread_sleep(2 * towait);
@@ -61,6 +60,7 @@ static int prepNTFS(u8 towait)
 	{
 		if(cellFsOpendir(WMTMP, &fd) == CELL_FS_SUCCEEDED)
 		{
+			char *ext;
 			while(!cellFsReaddir(fd, &dir, &read) && read)
 			{
 				ext = strstr(dir.d_name, ".ntfs[");
@@ -73,7 +73,7 @@ static int prepNTFS(u8 towait)
 	sys_addr_t addr = NULL;
 	sys_addr_t sysmem = NULL;
 
-	if(mountCount <= 0) {mountCount=-2; goto exit_prepntfs;}
+	if(mountCount <= 0) {mountCount = NTFS_UNMOUNTED; goto exit_prepntfs;}
 	{
 		sys_memory_container_t mc_app = get_app_memory_container();
 		if(mc_app) sys_memory_allocate_from_container(_64KB_, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &addr);
@@ -118,11 +118,9 @@ next_ntfs_entry:
 								if(ps3ntfs_dirnext(psubdir, dir.d_name, &st) < 0) {has_dirs = false; continue;}
 								if(dir.d_name[0]=='.') goto next_ntfs_entry;
 
-								dlen = sprintf(path, "%s", dir.d_name); ext = path + dlen -4;
+								dlen = sprintf(path, "%s", dir.d_name);
 
-								is_iso = (  _IS(ext, ".iso") ||
-											_IS(path + dlen - 6, ".iso.0") ||
-											(m > mPS3 && (_IS(ext, ".bin") || _IS(ext, ".img") || _IS(ext, ".mdf")) ));
+								is_iso = is_iso_file(dir.d_name, dlen, m, NTFS);
 
 								if(is_iso)
 								{
@@ -138,11 +136,9 @@ next_ntfs_entry:
 							}
 							else
 							{
-								dlen = sprintf(filename, "%s", dir.d_name); ext = filename + dlen -4;
+								dlen = sprintf(filename, "%s", dir.d_name);
 
-								is_iso = (  _IS(ext, ".iso") ||
-											_IS(path + dlen - 6, ".iso.0") ||
-											(m > mPS3 && (_IS(ext, ".bin") || _IS(ext, ".img") || _IS(ext, ".mdf")) ));
+								is_iso = is_iso_file(dir.d_name, dlen, m, NTFS);
 							}
 ////////////////////////////////////////////////////////////
 

@@ -415,6 +415,8 @@ retry:
 		memset(buf, 0x80808080, 260 * 300 * 4);
 	}
 
+	if(disp_h<720) return 0;
+
 	if(gpp==10 && ctx.img[idx].w<=(MAX_W/2) && ctx.img[idx].h<=(MAX_H/2))
 	{
 		//upscale x2
