@@ -1,120 +1,5 @@
 #include "include/misc.h"
 #include "include/vsh_exports.h"
-//#include "include/network.h"	// debug
-
-/***********************************************************************
-* search and return vsh_process toc
-* Not the best way, but it work, it's generic and it is fast enough...
-***********************************************************************/
-static int32_t get_vsh_toc(void)
-{
-	uint32_t pm_start  = 0x10000UL;
-	uint32_t v0 = 0, v1 = 0, v2 = 0;
-
-	while(pm_start < 0x700000UL)
-	{
-		v0 = *(uint32_t*)(pm_start+0x00);
-		v1 = *(uint32_t*)(pm_start+0x04);
-		v2 = *(uint32_t*)(pm_start+0x0C);
-
-		if((v0 == 0x10200UL/* .init_proc() */) && (v1 == v2))
-			break;
-
-		pm_start+=4;
-	}
-
-	return (int32_t)v1;
-}
-
-/***********************************************************************
-* get vsh io_pad_object
-***********************************************************************/
-static int32_t get_vsh_pad_obj(void)
-{
-	uint32_t (*base)(uint32_t) = sys_io_3733EA3C;               // get pointer to cellPadGetData()
-	int16_t idx = *(uint32_t*)(*(uint32_t*)base) & 0x0000FFFF;  // get got_entry idx from first instruction,
-	int32_t got_entry = (idx + get_vsh_toc());                  // get got_entry of io_pad_object
-	return (int32_t)(*(int32_t*)got_entry);                     // return io_pad_object address
-}
-
-/***********************************************************************
-* get pad data struct of vsh process
-*
-* CellPadData *data = data struct for holding pad_data
-***********************************************************************/
-/*
-static void *vsh_pdata_addr = NULL;
-
-void VSHPadGetData(CellPadData *data)
-{
-	if(!vsh_pdata_addr)        // first time, get address
-	{
-		uint32_t pm_start = 0x10000UL;
-		uint64_t pat[2]   = {0x380000077D3F4B78ULL, 0x7D6C5B787C0903A6ULL};
-
-		while(pm_start < 0x700000UL)
-		{
-			if((*(uint64_t*)pm_start == pat[0]) && (*(uint64_t*)(pm_start+8) == pat[1]))
-			{
-				vsh_pdata_addr = (void*)(uint32_t)((int32_t)((*(uint32_t*)(pm_start + 0x234) & 0x0000FFFF) <<16) +
-				                                   (int16_t)( *(uint32_t*)(pm_start + 0x244) & 0x0000FFFF));
-				break;
-			}
-
-			pm_start+=4;
-		}
-	}
-
-	if(vsh_pdata_addr) memcpy(data, vsh_pdata_addr, 0x80);
-}
-*/
-/***********************************************************************
-* set/unset io_pad_library init flag
-*
-* uint8_t flag = 0(unset) or 1(set)
-*
-* To prevent vsh pad events during vsh-menu, we set this flag to 0
-* (pad_library not init). Each try of vsh to get pad_data leads intern
-* to error 0x80121104(CELL_PAD_ERROR_UNINITIALIZED) and nothing will
-* happen. The lib is of course not deinit, there are pad(s) mapped and we
-* can get pad_data direct over syscall sys_hid_manager_read() in our
-* own function MyPadGetData().
-***********************************************************************/
-void start_stop_vsh_pad(uint8_t flag)
-{
-  uint32_t lib_init_flag = get_vsh_pad_obj();
-  *(uint8_t*)lib_init_flag = flag;
-}
-
-/***********************************************************************
-* get pad data direct over syscall
-* (very simple, no error-handling, no synchronization...)
-*
-* int32_t port_no   = pad port number (0 - 7)
-* CellPadData *data = data struct for holding pad_data
-***********************************************************************/
-void MyPadGetData(int32_t port_no, CellPadData *data)
-{
-  uint32_t port = *(uint32_t*)(*(uint32_t*)(get_vsh_pad_obj() + 4) + 0x104 + port_no * 0xE8);
-
-  // sys_hid_manager_read()
-	system_call_4(0x1F6, (uint64_t)port, /*0x02*//*0x82*/0xFF, (uint64_t)(uint32_t)data+4, 0x80);
-
-	data->len = (int32_t)p1;
-}
-
-/***********************************************************************
-* pause/continue rsx fifo
-*
-* uint8_t pause    = pause fifo (1), continue fifo (0)
-***********************************************************************/
-int32_t rsx_fifo_pause(uint8_t pause)
-{
-	// lv2 sys_rsx_context_attribute()
-	system_call_6(0x2A2, 0x55555555ULL, (uint64_t)(pause ? 2 : 3), 0, 0, 0, 0);
-
-	return (int32_t)p1;
-}
 
 /*
 uint32_t load_rco_texture(uint32_t* texture, const char *plugin, const char *texture_name)
@@ -156,28 +41,116 @@ void buzzer(uint8_t mode)
 /***********************************************************************
 * peek & poke
 ***********************************************************************/
+
+uint64_t peekq(uint64_t addr)
+{
+	system_call_1(6, addr);
+	return_to_user_prog(uint64_t);
+}
 /*
-uint64_t lv2peek(uint64_t addr)
+uint64_t pokeq(uint64_t addr, uint64_t value)
 {
-  system_call_1(6, addr);
-  return_to_user_prog(uint64_t);
+	system_call_2(7, addr, value);
+	return_to_user_prog(uint64_t);
 }
 
-uint64_t lv2poke(uint64_t addr, uint64_t value)
+uint64_t poke_lv1(uint64_t addr, uint64_t value)
 {
-  system_call_2(7, addr, value);
-  return_to_user_prog(uint64_t);
+	system_call_2(9, addr, value);
+	return_to_user_prog(uint64_t);
 }
 
-uint64_t lv1peek(uint64_t addr)
+uint64_t peek_lv1(uint64_t addr)
 {
-  system_call_1(8, addr);
-  return_to_user_prog(uint64_t);
+	system_call_1(8, addr);
+	return_to_user_prog(uint64_t);
+}
+*/
+
+
+/***********************************************************************
+* file exists
+***********************************************************************/
+uint64_t file_len(const char* path)
+{
+	struct CellFsStat s;
+	s.st_size=0;
+	cellFsStat(path, &s);
+	return(s.st_size);
 }
 
-uint64_t lv1poke(uint64_t addr, uint64_t value)
+////////////////////////////////////////////////////////////////////////
+//			SYS_PPU_THREAD_EXIT, DIRECT OVER SYSCALL				//
+////////////////////////////////////////////////////////////////////////
+void _sys_ppu_thread_exit(uint64_t val)
 {
-  system_call_2(9, addr, value);
-  return_to_user_prog(uint64_t);
+	system_call_1(41, val);
+}
+
+////////////////////////////////////////////////////////////////////////
+//						 GET MODULE BY ADDRESS						//
+////////////////////////////////////////////////////////////////////////
+sys_prx_id_t prx_get_module_id_by_address(void *addr)
+{
+	system_call_1(461, (uint64_t)(uint32_t)addr);
+	return (int32_t)p1;
+}
+
+////////////////////////////////////////////////////////////////////////
+//                      GET CPU & RSX TEMPERATURES                  //
+////////////////////////////////////////////////////////////////////////
+void get_temperature(uint32_t _dev, uint32_t *_temp)
+{
+	system_call_2(383, (uint64_t)(uint32_t) _dev, (uint64_t)(uint32_t) _temp); *_temp >>= 24;
+}
+
+
+#define SC_COBRA_SYSCALL8			 				(8)
+#define SYSCALL8_OPCODE_PS3MAPI			 			0x7777
+#define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
+
+unsigned int get_vsh_plugin_slot_by_name(const char *name)
+{
+	char tmp_name[30];
+	char tmp_filename[256];
+	unsigned int slot;
+
+	for(slot = 1; slot < 7; slot++)
+	{
+		memset(tmp_name, 0, sizeof(tmp_name));
+		memset(tmp_filename, 0, sizeof(tmp_filename));
+
+		{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO, (uint64_t)slot, (uint64_t)(uint32_t)tmp_name, (uint64_t)(uint32_t)tmp_filename); }
+
+		if(strstr(tmp_name, name)) break;
+	}
+	return slot;
+}
+
+int load_plugin_by_id(int id, void *handler)
+{
+	xmm0_interface = (xmb_plugin_xmm0 *)paf_23AFB290((uint32_t)paf_F21655F3("xmb_plugin"), 0x584D4D30);
+	return xmm0_interface->LoadPlugin3(id, handler,0);
+}
+
+extern uint8_t web_page;
+
+void web_browser(void)
+{
+	webbrowser_interface = (webbrowser_plugin_interface *)paf_23AFB290((uint32_t)paf_F21655F3("webbrowser_plugin"), 1);
+	if(webbrowser_interface) webbrowser_interface->PluginWakeupWithUrl(web_page ? "http://127.0.0.1/" : "http://127.0.0.1/setup.ps3");
+}
+
+/*
+int unload_plugin_by_id(int id, void *handler)
+{
+	xmm0_interface = (xmb_plugin_xmm0 *)paf_23AFB290((uint32_t)paf_F21655F3("xmb_plugin"), 0x584D4D30);//'XMM0'
+	if(xmm0_interface) return xmm0_interface->Shutdown(id, handler, 1); else return 0;
+}
+
+void web_browser_stop(void)
+{
+	webbrowser_interface = (webbrowser_plugin_interface *)paf_23AFB290((uint32_t)paf_F21655F3("webbrowser_plugin"), 1);
+	if(webbrowser_interface) webbrowser_interface->Shutdown();
 }
 */

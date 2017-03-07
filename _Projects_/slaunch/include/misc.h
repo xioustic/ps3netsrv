@@ -1,56 +1,32 @@
 #ifndef __MISC_H__
 #define __MISC_H__
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <cell/pad.h>
-
-#include <sys/types.h>
-#include <sys/memory.h>
 #include <sys/syscall.h>
-
-
-
-
-// redefinition of pad bit flags
-#define PAD_SELECT   (1<<0)
-#define PAD_L3       (1<<1)
-#define PAD_R3       (1<<2)
-#define PAD_START    (1<<3)
-#define PAD_UP       (1<<4)
-#define PAD_RIGHT    (1<<5)
-#define PAD_DOWN     (1<<6)
-#define PAD_LEFT     (1<<7)
-#define PAD_L2       (1<<8)
-#define PAD_R2       (1<<9)
-#define PAD_L1       (1<<10)
-#define PAD_R1       (1<<11)
-#define PAD_TRIANGLE (1<<12)
-#define PAD_CIRCLE   (1<<13)
-#define PAD_CROSS    (1<<14)
-#define PAD_SQUARE   (1<<15)
-
-
-#define _ES32(v)((uint32_t)(((((uint32_t)v) & 0xFF000000) >> 24) | \
-							((((uint32_t)v) & 0x00FF0000) >> 8 ) | \
-							((((uint32_t)v) & 0x0000FF00) << 8 ) | \
-							((((uint32_t)v) & 0x000000FF) << 24)))
-
-
-void VSHPadGetData(CellPadData *data);
-void start_stop_vsh_pad(uint8_t flag);
-void MyPadGetData(int32_t port_no, CellPadData *data);
-int32_t rsx_fifo_pause(uint8_t pause);
+#include <cell/cell_fs.h>
+#include <sys/prx.h>
 
 //uint32_t load_rco_texture(uint32_t* texture, const char *plugin, const char *texture_name);
 void play_rco_sound(const char *sound);
 //void buzzer(uint8_t mode);
 
-//uint64_t lv2peek(uint64_t addr);
-//uint64_t lv2poke(uint64_t addr, uint64_t value);
-//uint64_t lv1peek(uint64_t addr);
-//uint64_t lv1poke(uint64_t addr, uint64_t value);
+uint64_t peekq(uint64_t addr);
+//uint64_t pokeq(uint64_t addr, uint64_t value);
+//uint64_t poke_lv1(uint64_t addr, uint64_t value);
+//uint64_t peek_lv1(uint64_t addr);
+
+void _sys_ppu_thread_exit(uint64_t val);
+sys_prx_id_t prx_get_module_id_by_address(void *addr);
+
+void get_temperature(uint32_t _dev, uint32_t *_temp);
+unsigned int get_vsh_plugin_slot_by_name(const char *name);
+
+int load_plugin_by_id(int id, void *handler);
+void web_browser(void);
+//int unload_plugin_by_id(int id, void *handler);
+//void web_browser_stop(void);
+
+uint64_t file_len(const char* path);
 
 #endif // __MISC_H__
+
+#define file_exists  file_len

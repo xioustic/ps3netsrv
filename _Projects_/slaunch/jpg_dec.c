@@ -76,8 +76,8 @@ static int32_t set_dec_param(jpg_dec_info	*dec_ctx)
 	if(!jpg_w || !jpg_h || (!ISHD(jpg_w) && (jpg_w*jpg_h)>MAX_WH4)) return -1;
 
 	// set decoder parameter
-	in.commandPtr		    = NULL;
-	in.outputMode		    = CELL_JPGDEC_TOP_TO_BOTTOM;
+	in.commandPtr			= NULL;
+	in.outputMode			= CELL_JPGDEC_TOP_TO_BOTTOM;
 	in.outputColorSpace		= CELL_JPG_ARGB;
 	in.method				= CELL_JPGDEC_FAST;//CELL_JPGDEC_QUALITY
 	in.outputColorAlpha		= 0xFF;

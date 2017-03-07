@@ -11,6 +11,8 @@
 #define TYPE_ROM 6
 #define TYPE_MAX 7
 
+#define SLAUNCH_PEEK_ADDR  0x8000000000000180
+
 #ifdef SLAUNCH_FILE
 typedef struct // 1MB for 2000+1 titles
 {

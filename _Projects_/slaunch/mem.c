@@ -2,14 +2,12 @@
 
 #include "include/mem.h"
 #include "include/vsh_exports.h"
-//#include "include/network.h"	// debug
 
 
 static sys_memory_container_t mc_app = (sys_memory_container_t)-1;
 static sys_addr_t heap_mem = 0;
 static uint32_t heap_size = 0;
 static uint32_t prx_heap = 0;
-
 
 /***********************************************************************
 *

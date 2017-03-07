@@ -82,41 +82,6 @@ static char search_url[50];
 #ifdef COBRA_ONLY
  #include "cobra/netiso.h"
 
- #ifdef LITE_EDITION
-	#define EDITION_ " [Lite]"
- #elif defined(PS3NET_SERVER) && defined(NET3NET4) && defined(XMB_SCREENSHOT)
-	#define EDITION_ " [Full]"
- #else
-  #ifdef PS3MAPI
-	#ifdef REX_ONLY
-		#define EDITION_ " [Rebug-PS3MAPI]"
-	#else
-		#define EDITION_ " [PS3MAPI]"
-	#endif
-  #else
-   #ifdef REX_ONLY
-	#define EDITION_ " [Rebug]"
-   #else
-	#define EDITION_ ""
-   #endif
-  #endif
- #endif
-#else
- #ifdef CCAPI
-	#define EDITION_ " [CCAPI]"
- #else
-	#define EDITION_ " [nonCobra]"
- #endif
- #undef PS3MAPI
- #undef WM_PROXY_SPRX
-#endif
-
-#ifdef USE_NTFS
-#define EDITION			" (NTFS)" EDITION_			// webMAN version (NTFS)
-#else
-#define EDITION			EDITION_					// webMAN version
-#endif
-
 SYS_MODULE_INFO(WWWD, 0, 1, 1);
 SYS_MODULE_START(wwwd_start);
 SYS_MODULE_STOP(wwwd_stop);
@@ -176,30 +141,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define SYS_DEVICE_HANDLE_NONE     (sys_device_handle_t)NONE
 #define SYS_MEMORY_CONTAINER_NONE  (sys_memory_container_t)NONE
 
-///////////// PS3MAPI BEGIN //////////////
-#ifdef COBRA_ONLY
- #define SYSCALL8_OPCODE_PS3MAPI					0x7777
-
- #define PS3MAPI_OPCODE_SET_ACCESS_KEY				0x2000
- #define PS3MAPI_OPCODE_REQUEST_ACCESS				0x2001
- #define PS3MAPI_OPCODE_PCHECK_SYSCALL8 			0x0094
- #define PS3MAPI_OPCODE_PDISABLE_SYSCALL8 			0x0093
-
-// static uint64_t ps3mapi_key = 0;
- static int pdisable_sc8 = NONE;
- #define PS3MAPI_ENABLE_ACCESS_SYSCALL8		//if(syscalls_removed) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_REQUEST_ACCESS, ps3mapi_key); }
- #define PS3MAPI_DISABLE_ACCESS_SYSCALL8	//if(syscalls_removed && !is_mounting) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_ACCESS_KEY, ps3mapi_key); }
-
- #define PS3MAPI_REENABLE_SYSCALL8			{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); pdisable_sc8 = (int)p1;} \
-											if(pdisable_sc8 > 0) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 0); }
- #define PS3MAPI_RESTORE_SC8_DISABLE_STATUS	if(pdisable_sc8 > 0) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, pdisable_sc8); }
-#else
- #define PS3MAPI_ENABLE_ACCESS_SYSCALL8
- #define PS3MAPI_DISABLE_ACCESS_SYSCALL8
- #define PS3MAPI_REENABLE_SYSCALL8
- #define PS3MAPI_RESTORE_SC8_DISABLE_STATUS
-#endif
-///////////// PS3MAPI END //////////////
+//////////////////////////////////////
 
 #define THREAD_NAME_SVR			"wwwdt"
 #define THREAD_NAME_WEB			"wwwd"
@@ -254,7 +196,30 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 #define SYS_PPU_THREAD_CREATE_NORMAL	0x000
 
-////////////
+///////////// PS3MAPI BEGIN //////////////
+#ifdef COBRA_ONLY
+ #define SYSCALL8_OPCODE_PS3MAPI					0x7777
+
+ #define PS3MAPI_OPCODE_SET_ACCESS_KEY				0x2000
+ #define PS3MAPI_OPCODE_REQUEST_ACCESS				0x2001
+ #define PS3MAPI_OPCODE_PCHECK_SYSCALL8 			0x0094
+ #define PS3MAPI_OPCODE_PDISABLE_SYSCALL8 			0x0093
+
+// static uint64_t ps3mapi_key = 0;
+ static int pdisable_sc8 = NONE;
+ #define PS3MAPI_ENABLE_ACCESS_SYSCALL8		//if(syscalls_removed) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_REQUEST_ACCESS, ps3mapi_key); }
+ #define PS3MAPI_DISABLE_ACCESS_SYSCALL8	//if(syscalls_removed && !is_mounting) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_ACCESS_KEY, ps3mapi_key); }
+
+ #define PS3MAPI_REENABLE_SYSCALL8			{ system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PCHECK_SYSCALL8); pdisable_sc8 = (int)p1;} \
+											if(pdisable_sc8 > 0) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, 0); }
+ #define PS3MAPI_RESTORE_SC8_DISABLE_STATUS	if(pdisable_sc8 > 0) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PDISABLE_SYSCALL8, pdisable_sc8); }
+#else
+ #define PS3MAPI_ENABLE_ACCESS_SYSCALL8
+ #define PS3MAPI_DISABLE_ACCESS_SYSCALL8
+ #define PS3MAPI_REENABLE_SYSCALL8
+ #define PS3MAPI_RESTORE_SC8_DISABLE_STATUS
+#endif
+///////////// PS3MAPI END ////////////////
 
 #define HTML_BASE_PATH			"/dev_hdd0/xmlhost/game_plugin"
 
@@ -784,6 +749,43 @@ static u8 mount_unk = EMU_OFF;
 #ifdef COPY_PS3
 static char current_file[STD_PATH_LEN+1];
 #endif
+
+/////////////////////////////////////
+ #ifdef LITE_EDITION
+	#define EDITION_ " [Lite]"
+ #elif defined(PS3NET_SERVER) && defined(NET3NET4) && defined(XMB_SCREENSHOT)
+	#define EDITION_ " [Full]"
+ #else
+  #ifdef PS3MAPI
+	#ifdef REX_ONLY
+		#define EDITION_ " [Rebug-PS3MAPI]"
+	#else
+		#define EDITION_ " [PS3MAPI]"
+	#endif
+  #else
+   #ifdef REX_ONLY
+	#define EDITION_ " [Rebug]"
+   #else
+	#define EDITION_ ""
+   #endif
+  #endif
+ #endif
+#else
+ #ifdef CCAPI
+	#define EDITION_ " [CCAPI]"
+ #else
+	#define EDITION_ " [nonCobra]"
+ #endif
+ #undef PS3MAPI
+ #undef WM_PROXY_SPRX
+#endif
+
+#ifdef USE_NTFS
+#define EDITION			" (NTFS)" EDITION_			// webMAN version (NTFS)
+#else
+#define EDITION			EDITION_					// webMAN version
+#endif
+/////////////////////////////////////
 
 #include "include/eject_insert.h"
 
@@ -1827,9 +1829,9 @@ parse_request:
 				{   // in-XMB
 					if(islike(param2, "$slaunch") || islike(param2, "$vsh_menu"))
 					{
-						poke_lv1(0x80, (param2[1] == 's') ? 0xDEADBABE : 0xDEADBEBE);
+						pokeq(SLAUNCH_PEEK_ADDR, (param2[1] == 's') ? 0xDEADBABE : 0xDEADBEBE);
 						sys_ppu_thread_sleep(1);
-						poke_lv1(0x80, 0);
+						pokeq(SLAUNCH_PEEK_ADDR, 0);
 					}
 					else
    #ifdef XMB_SCREENSHOT

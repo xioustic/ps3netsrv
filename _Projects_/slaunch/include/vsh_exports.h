@@ -9,8 +9,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <netinet/in.h>
-
 #include <math.h>
 #include <dirent.h>
 #include <wchar.h>
@@ -18,7 +16,6 @@
 #include <cell/gcm.h>
 #include <cell/font.h>
 #include <cell/l10n.h>
-#include <sys/prx.h>
 #include <cell/pad.h>
 
 //#include <sys/poll.h>

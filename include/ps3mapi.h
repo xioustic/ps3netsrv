@@ -193,9 +193,9 @@ static void ps3mapi_buzzer(char *buffer, char *templn, char *param)
 	sprintf(templn, "<form id=\"buzzer\" action=\"/buzzer%s<br>"
 					"<b>%s:</b>  <select name=\"mode\">", HTML_FORM_METHOD, "Mode");
 	strcat(buffer, templn);
-	add_option_item("1" , "Simple", strstr(param, "mode=1"), buffer);
-	add_option_item("2" , "Double", strstr(param, "mode=2"), buffer);
-	add_option_item("3" , "Triple", strstr(param, "mode=3"), buffer);
+	add_option_item(1, "Simple", strstr(param, "mode=1"), buffer);
+	add_option_item(2, "Double", strstr(param, "mode=2"), buffer);
+	add_option_item(3, "Triple", strstr(param, "mode=3"), buffer);
 	sprintf(templn, "</select>   <input type=\"submit\" value=\" %s \"/></td></form><br>", "Ring");
 
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR); else strcat(templn, "</td>");
@@ -238,15 +238,15 @@ static void ps3mapi_led(char *buffer, char *templn, char *param)
 	sprintf(templn, "<form id=\"led\" action=\"/led%s<br>"
 					"<b>%s:</b>  <select name=\"color\">", HTML_FORM_METHOD,  "Color"); strcat(buffer, templn);
 
-	add_option_item("0" , "Red", strstr(param, "color=0"), buffer);
-	add_option_item("1" , "Green", strstr(param, "color=1"), buffer);
-	add_option_item("2" , "Yellow (Red+Green)", strstr(param, "color=2"), buffer);
+	add_option_item(0, "Red", strstr(param, "color=0"), buffer);
+	add_option_item(1, "Green", strstr(param, "color=1"), buffer);
+	add_option_item(2, "Yellow (Red+Green)", strstr(param, "color=2"), buffer);
 	sprintf(templn, "</select>   <b>%s:</b>  <select name=\"mode\">", "Mode");
 	strcat(buffer, templn);
-	add_option_item("0" , "Off", strstr(param, "mode=0"), buffer);
-	add_option_item("1" , "On", strstr(param, "mode=1"), buffer);
-	add_option_item("2" , "Blink fast", strstr(param, "mode=2"), buffer);
-	add_option_item("3" , "Blink slow", strstr(param, "mode=3"), buffer);
+	add_option_item(0, "Off", strstr(param, "mode=0"), buffer);
+	add_option_item(1, "On", strstr(param, "mode=1"), buffer);
+	add_option_item(2, "Blink fast", strstr(param, "mode=2"), buffer);
+	add_option_item(3, "Blink slow", strstr(param, "mode=3"), buffer);
 	sprintf(templn, "</select>   <input type=\"submit\" value=\" %s \"/></form><br>", "Set");
 
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR); else strcat(templn, "</table></td>");
@@ -317,76 +317,65 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 					"<br><tr><td width=\"260\" class=\"la\">",
 					HTML_FORM_METHOD); strcat(buffer, templn);
 
-	int ret_val = NONE; u8 sc_count; sc_count = 0;
+	bool disabled; u8 sc_count = 0;
 
-	ret_val = is_syscall_disabled(6);
-	if( ret_val != 0 )  {add_check_box("sc6", HTML_DISABLED_CHECKBOX, "[6]LV2 Peek", _BR_, true, buffer); sc_count++;}
-	else {/*ret_val = NONE;*/ add_check_box("sc6", "1", "[6]LV2 Peek", _BR_, false, buffer);}
+	#define checked disabled
 
-	ret_val = is_syscall_disabled(7);
-	if( ret_val != 0 )  {add_check_box("sc7", HTML_DISABLED_CHECKBOX, "[7]LV2 Poke", _BR_, true, buffer); sc_count++;}
-	else {/*ret_val = NONE;*/ add_check_box("sc7", "1", "[7]LV2 Poke", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(6);
+	add_check_box("sc6", disabled, "[6]LV2 Peek", _BR_, checked, buffer); if(disabled) sc_count++;
 
-	ret_val = is_syscall_disabled(9);
-	if( ret_val != 0 )  {add_check_box("sc9", HTML_DISABLED_CHECKBOX, "[9]LV1 Poke", _BR_, true, buffer); sc_count++;}
-	else {/*ret_val = NONE;*/ add_check_box("sc9", "1", "[9]LV1 Poke", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(7);
+	add_check_box("sc7", disabled, "[7]LV2 Poke", _BR_, checked, buffer); if(disabled) sc_count++;
 
-	ret_val = is_syscall_disabled(10);
-	if( ret_val != 0 )  {add_check_box("sc10", HTML_DISABLED_CHECKBOX, "[10]LV1 Call", _BR_, true, buffer);}
-	else {/*ret_val = NONE;*/ add_check_box("sc10", "1", "[10]LV1 Call", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(9);
+	add_check_box("sc9", disabled, "[9]LV1 Poke", _BR_, checked, buffer); if(disabled) sc_count++;
 
-	ret_val = is_syscall_disabled(15);
-	if( ret_val != 0 )  {add_check_box("sc15", HTML_DISABLED_CHECKBOX, "[15]LV2 Call", _BR_, true, buffer);}
-	else {/*ret_val = NONE;*/ add_check_box("sc15", "1", "[15]LV2 Call", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(10);
+	add_check_box("sc10", disabled, "[10]LV1 Call", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(11);
-	if( ret_val != 0 )  {add_check_box("sc11", HTML_DISABLED_CHECKBOX, "[11]LV1 Peek", _BR_, true, buffer);}
-	else {/*ret_val = NONE;*/ add_check_box("sc11", "1", "[11]LV1 Peek", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(15);
+	add_check_box("sc15", disabled, "[15]LV2 Call", _BR_, checked, buffer);
+
+	disabled = is_syscall_disabled(11);
+	add_check_box("sc11", disabled, "[11]LV1 Peek", _BR_, checked, buffer);
 
 	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" class=\"la\">");
 
-	ret_val = is_syscall_disabled(35);
-	if( ret_val != 0 )  add_check_box("sc35", HTML_DISABLED_CHECKBOX, "[35]Map Path", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc35", "1", "[35]Map Path", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(35);
+	add_check_box("sc35", disabled, "[35]Map Path", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(36);
-	if( ret_val != 0 )  add_check_box("sc36", HTML_DISABLED_CHECKBOX, "[36]Map Game", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc36", "1", "[36]Map Game", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(36);
+	add_check_box("sc36", disabled, "[36]Map Game", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(38);
-	if( ret_val != 0 )  add_check_box("sc38", HTML_DISABLED_CHECKBOX, "[38]New sk1e", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc38", "1", "[38]New sk1e", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(38);
+	add_check_box("sc38", disabled, "[38]New sk1e", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(1022);
-	if( ret_val != 0 )  {add_check_box("sc1022", HTML_DISABLED_CHECKBOX, "[1022]PRX Loader", _BR_, true, buffer);}
-	else {/*ret_val = NONE;*/ add_check_box("sc1022", "1", "[1022]PRX Loader", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(1022);
+	add_check_box("sc1022", disabled, "[1022]PRX Loader", _BR_, checked, buffer);
 
 	strcat(buffer, "</td><td  width=\"260\"  valign=\"top\" class=\"la\">");
 
-	ret_val = is_syscall_disabled(200);
-	if( ret_val != 0 )  add_check_box("sc200", HTML_DISABLED_CHECKBOX, "[200]sys_dbg_read_process_memory", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc200", "1", "[200]sys_dbg_read_process_memory", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(200);
+	add_check_box("sc200", disabled, "[200]sys_dbg_read_process_memory", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(201);
-	if( ret_val != 0 )  add_check_box("sc201", HTML_DISABLED_CHECKBOX, "[201]sys_dbg_write_process_memory", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc201", "1", "[201]sys_dbg_write_process_memory", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(201);
+	add_check_box("sc201", disabled, "[201]sys_dbg_write_process_memory", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(202);
-	if( ret_val != 0 )  add_check_box("sc202", HTML_DISABLED_CHECKBOX, "[202]Free - Payloader3", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc202", "1", "[202]Free - Payloader3", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(202);
+	add_check_box("sc202", disabled, "[202]Free - Payloader3", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(203);
-	if( ret_val != 0 )  add_check_box("sc203", HTML_DISABLED_CHECKBOX, "[203]LV2 Peek CCAPI", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc203", "1", "[203]LV2 Peek CCAPI", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(203);
+	add_check_box("sc203", disabled, "[203]LV2 Peek CCAPI", _BR_, checked, buffer);
 
-	ret_val = is_syscall_disabled(204);
-	if( ret_val != 0 )  add_check_box("sc204", HTML_DISABLED_CHECKBOX, "[204]LV2 Poke CCAPI", _BR_, true, buffer);
-	else {/*ret_val = NONE;*/ add_check_box("sc204", "1", "[204]LV2 Poke  CCAPI", _BR_, false, buffer);}
+	disabled = is_syscall_disabled(204);
+	add_check_box("sc204", disabled, "[204]LV2 Poke CCAPI", _BR_, checked, buffer);
+
+	#undef checked
 
 #ifdef REMOVE_SYSCALLS
 	strcat(buffer, "<br>");
-	if(sc_count) add_check_box("sce", "1\" onclick=\"b.value=(this.checked)?' Enable ':'Disable';", "Re-Enable Syscalls & Unlock syscall 8", _BR_, false, buffer); else
-				 add_check_box("scd", "1", "Disable Syscalls & Lock syscall 8"  , _BR_, false, buffer);
+	if(sc_count) add_check_box("sce", false, "Re-Enable Syscalls & Unlock syscall 8\" onclick=\"b.value=(this.checked)?' Enable ':'Disable';", _BR_, false, buffer);
+	else		 add_check_box("scd", false, "Disable Syscalls & Lock syscall 8"  , _BR_, false, buffer);
 #endif
 
 	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input id=\"b\" type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Disable");
@@ -436,29 +425,29 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 
 	if(ret_val < 0)
 	{
-		add_radio_button("mode\" disabled=\"disabled", "0", "sc8_0", "Fully enabled", _BR_, false, buffer);
-		add_radio_button("mode\" disabled=\"disabled", "1", "sc8_1", "Partially disabled : Keep only COBRA/MAMBA/PS3MAPI features", _BR_, false, buffer);
-		add_radio_button("mode\" disabled=\"disabled", "2", "sc8_2", "Partially disabled : Keep only PS3MAPI features", _BR_, false, buffer);
-		add_radio_button("mode\" disabled=\"disabled", "3", "sc8_3", "Fake disabled (can be re-enabled)", _BR_, false, buffer);
+		add_radio_button("mode\" disabled=\"disabled", 0, "sc8_0", "Fully enabled", _BR_, false, buffer);
+		add_radio_button("mode\" disabled=\"disabled", 1, "sc8_1", "Partially disabled : Keep only COBRA/MAMBA/PS3MAPI features", _BR_, false, buffer);
+		add_radio_button("mode\" disabled=\"disabled", 2, "sc8_2", "Partially disabled : Keep only PS3MAPI features", _BR_, false, buffer);
+		add_radio_button("mode\" disabled=\"disabled", 3, "sc8_3", "Fake disabled (can be re-enabled)", _BR_, false, buffer);
 	}
 	else
 	{
 		if(syscalls_removed && (ret_val == 0)) ret_val = 1; if(!c_firmware) ret_val = 4;
 
-		add_radio_button("mode", "0", "sc8_0", "Fully enabled", _BR_, (ret_val == 0), buffer);
-		add_radio_button("mode", "1", "sc8_1", "Partially disabled : Keep only COBRA/MAMBA/PS3MAPI features", _BR_, (ret_val == 1), buffer);
-		add_radio_button("mode", "2", "sc8_2", "Partially disabled : Keep only PS3MAPI features", _BR_, (ret_val == 2), buffer);
+		add_radio_button("mode", 0, "sc8_0", "Fully enabled", _BR_, (ret_val == 0), buffer);
+		add_radio_button("mode", 1, "sc8_1", "Partially disabled : Keep only COBRA/MAMBA/PS3MAPI features", _BR_, (ret_val == 1), buffer);
+		add_radio_button("mode", 2, "sc8_2", "Partially disabled : Keep only PS3MAPI features", _BR_, (ret_val == 2), buffer);
 
 		if(disable_cobra == SYSCALL8_DISABLE_COBRA_OK)
-			add_radio_button("mode", "5", "sc8_5", "Disable COBRA/MAMBA/PS3MAPI features / keep lv1_peek (can be re-enabled)", _BR_, disabled_cobra, buffer);
+			add_radio_button("mode", 5, "sc8_5", "Disable COBRA/MAMBA/PS3MAPI features / keep lv1_peek (can be re-enabled)", _BR_, disabled_cobra, buffer);
 
-		add_radio_button("mode", "3", "sc8_3", "Fake disabled (can be re-enabled)", _BR_, (ret_val == 3 && !disabled_cobra), buffer);
+		add_radio_button("mode", 3, "sc8_3", "Fake disabled (can be re-enabled)", _BR_, (ret_val == 3 && !disabled_cobra), buffer);
 	}
 
 	if(ret_val < 0 || ret_val == 3)
-		add_radio_button("mode\" disabled=\"disabled", "4", "sc8_4", "Fully disabled (can't be re-enabled)", _BR_, (ret_val < 0), buffer);
+		add_radio_button("mode\" disabled=\"disabled", 4, "sc8_4", "Fully disabled (can't be re-enabled)", _BR_, (ret_val < 0), buffer);
 	else
-		add_radio_button("mode", "4", "sc8_4", "Fully disabled (can't be re-enabled)", _BR_, false, buffer);
+		add_radio_button("mode", 4, "sc8_4", "Fully disabled (can't be re-enabled)", _BR_, false, buffer);
 
 	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Set");
 
@@ -473,7 +462,6 @@ static void add_proc_list(char *buffer, char *templn, u32 *proc_id)
 	if(pid == 0)
 	{
 		strcat(buffer, "<select name=\"proc\">");
-		char pid_str[32];
 		u32 pid_list[16];
 		{system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_ALL_PROC_PID, (u64)(u32)pid_list); }
 		for(int i = 0; i < 16; i++)
@@ -481,10 +469,8 @@ static void add_proc_list(char *buffer, char *templn, u32 *proc_id)
 			if(1 < pid_list[i])
 			{
 				memset(templn, 0, MAX_LINE_LEN);
-				memset(pid_str, 0, sizeof(pid_str));
 				{system_call_4(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_PROC_NAME_BY_PID, (u64)pid_list[i], (u64)(u32)templn); }
-				sprintf(pid_str, "%i", pid_list[i]);
-				if(*templn) add_option_item(pid_str, templn, (i == 0), buffer);
+				if(*templn) add_option_item(pid_list[i], templn, (i == 0), buffer);
 			}
 		}
 		strcat(buffer, "</select> ");

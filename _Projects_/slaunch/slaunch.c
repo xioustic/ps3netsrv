@@ -1,35 +1,17 @@
-#include <arpa/inet.h>
-
-#include <sys/prx.h>
-#include <sys/ppu_thread.h>
-#include <sys/process.h>
-#include <sys/event.h>
-#include <sys/syscall.h>
-#include <sys/memory.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/sys_time.h>
-#include <sys/timer.h>
-#include <cell/pad.h>
-#include <cell/cell_fs.h>
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <math.h>
-#include <time.h>
-
-#include "include/vsh_exports.h"
+#include "include/pad.h"
+#include "include/network.h"
 
 #include "include/misc.h"
 #include "include/mem.h"
 #include "include/blitting.h"
 
+#ifndef SLAUNCH_COMBO
+
 SYS_MODULE_INFO(sLaunch, 0, 1, 1);
 SYS_MODULE_START(slaunch_start);
 SYS_MODULE_STOP(slaunch_stop);
+
+#endif
 
 #define THREAD_NAME         "slaunch_thread"
 #define STOP_THREAD_NAME    "slaunch_stop_thread"
@@ -59,11 +41,6 @@ typedef struct {
 	uint64_t padd1;
 } _sconfig;
 
-struct timeval {
-	int64_t tv_sec;			/* seconds */
-	int64_t tv_usec;		/* and microseconds */
-};
-
 #define IS_ON_XMB			(vshmain_EB757101() == 0)
 
 #define MAX_GAMES 2000
@@ -74,14 +51,36 @@ struct timeval {
 #define XMLMANPLS_DIR		"/dev_hdd0/game/XMBMANPLS"
 #define XMLMANPLS_IMAGES_DIR XMLMANPLS_DIR "/USRDIR/IMAGES"
 
+#define SLAUNCH_PEEK_ADDR  0x8000000000000180
+
+#define TYPE_ALL 0
+#define TYPE_PSX 1
+#define TYPE_PS2 2
+#define TYPE_PS3 3
+#define TYPE_PSP 4
+#define TYPE_VID 5
+#define TYPE_ROM 6
+#define TYPE_MAX 7
+
+static char game_type[TYPE_MAX][8]=
+{
+	"\0",
+	"PSX",
+	"PS2",
+	"PS3",
+	"PSP",
+	"video",
+	"ROMS"
+};
+
 static char wm_icons[7][56] =	{
 									RB_ICONS_PATH "/icon_wm_ps3.png",       //020.png  [0]
 									RB_ICONS_PATH "/icon_wm_psx.png",       //021.png  [1]
 									RB_ICONS_PATH "/icon_wm_ps2.png",       //022.png  [2]
 									RB_ICONS_PATH "/icon_wm_ps3.png",       //023.png  [3]
 									RB_ICONS_PATH "/icon_wm_psp.png",       //024.png  [4]
-									RB_ICONS_PATH "/icon_wm_dvd.png",       //025.png  [5]
-									RB_ICONS_PATH "/icon_wm_dvd.png",       //026.png  [6]
+									RB_ICONS_PATH "/icon_wm_dvd.png",       //025.png  [5] (vid)
+									RB_ICONS_PATH "/icon_wm_dvd.png",       //026.png  [6] (roms)
 								};
 
 #define SLIST	"slist"
@@ -107,28 +106,6 @@ typedef struct // 1MB for 2000+1 titles
 	char     name[508]; // name + path + icon
 } __attribute__((packed)) _slaunch;
 
-#define TYPE_ALL 0
-#define TYPE_PSX 1
-#define TYPE_PS2 2
-#define TYPE_PS3 3
-#define TYPE_PSP 4
-#define TYPE_VID 5
-#define TYPE_DVD 0
-#define TYPE_ROM 6
-#define TYPE_MAX 7
-#define DEVS_MAX 5
-
-static char game_type[TYPE_MAX][8]=
-{
-	"\0",
-	"PSX",
-	"PS2",
-	"PS3",
-	"PSP",
-	"video",
-	"ROMS"
-};
-
 static _slaunch *slaunch = NULL;
 
 #define GRAY_TEXT   0xff808080
@@ -145,7 +122,6 @@ static _slaunch *slaunch = NULL;
 #define LIGHT_GRAY  0xffa0a0a0ffa0a0a0
 
 // globals
-static uint32_t oldpad=0, curpad=0;
 static uint16_t init_delay=0;
 static uint16_t games = 0;
 static uint16_t cur_game=0, cur_game_=0, fav_game=0;
@@ -155,23 +131,21 @@ uint32_t disp_w=0;
 uint32_t disp_h=0;
 uint32_t gpp=10;
 
+uint8_t web_page=0;
+
 static uint8_t key_repeat=0, can_skip=0;
 
 static uint8_t opt_mode=0;
-static uint8_t web_page=0;
 static uint8_t unload_mode=0;
 
 static uint64_t tick=0x80;
 static int8_t   delta=5;
 
-static CellPadData pdata;
-
-#define NONE   -1
 #define SYS_PPU_THREAD_NONE        (sys_ppu_thread_t)NONE
 
 static sys_ppu_thread_t slaunch_tid = SYS_PPU_THREAD_NONE;
 static int32_t running = 1;
-static uint8_t slaunch_running = 0;	// vsh menu off(0) or on(1)
+static uint8_t slaunch_running = 0;	// vsh menu off[0] or on[1]
 static uint8_t fav_mode = 0;
 
 static void return_to_xmb(void);
@@ -182,190 +156,20 @@ static void finalize_module(void);
 static void slaunch_stop_thread(uint64_t arg);
 static void slaunch_thread(uint64_t arg);
 
-uint64_t file_exists(const char* path);
 static void draw_selection(uint16_t game_idx);
 
 #define HDD0  1
 #define NTFS  2
 
-static char drives[4][12] = {"dev_hdd0", "ntfs", "dev_usb", "net"};
+#define DEVS_MAX 4
+
+static char drives[DEVS_MAX][12] = {"dev_hdd0", "ntfs", "dev_usb", "net"};
 
 static uint8_t gmode = TYPE_ALL;
 static uint8_t dmode = TYPE_ALL;
 static uint8_t cpu_rsx = 0;
 
 static uint32_t frame = 0;
-
-#define SC_COBRA_SYSCALL8			 				(8)
-#define SYSCALL8_OPCODE_PS3MAPI			 			0x7777
-#define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
-#define SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN			0x364F
-
-static int load_plugin_by_id(int id, void *handler)
-{
-	xmm0_interface = (xmb_plugin_xmm0 *)paf_23AFB290((uint32_t)paf_F21655F3("xmb_plugin"), 0x584D4D30);
-	return xmm0_interface->LoadPlugin3(id, handler,0);
-}
-
-static void web_browser(void)
-{
-	webbrowser_interface = (webbrowser_plugin_interface *)paf_23AFB290((uint32_t)paf_F21655F3("webbrowser_plugin"), 1);
-	if(webbrowser_interface) webbrowser_interface->PluginWakeupWithUrl(web_page ? "http://127.0.0.1/" : "http://127.0.0.1/setup.ps3");
-}
-
-/*
-static int unload_plugin_by_id(int id, void *handler)
-{
-	xmm0_interface = (xmb_plugin_xmm0 *)paf_23AFB290((uint32_t)paf_F21655F3("xmb_plugin"), 0x584D4D30);//'XMM0'
-	if(xmm0_interface) return xmm0_interface->Shutdown(id, handler, 1); else return 0;
-}
-
-static void web_browser_stop(void)
-{
-	webbrowser_interface = (webbrowser_plugin_interface *)paf_23AFB290((uint32_t)paf_F21655F3("webbrowser_plugin"), 1);
-	if(webbrowser_interface) webbrowser_interface->Shutdown();
-}
-*/
-
-static unsigned int get_vsh_plugin_slot_by_name(const char *name)
-{
-	char tmp_name[30];
-	char tmp_filename[256];
-	unsigned int slot;
-
-	for(slot = 1; slot < 7; slot++)
-	{
-		memset(tmp_name, 0, sizeof(tmp_name));
-		memset(tmp_filename, 0, sizeof(tmp_filename));
-
-		{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO, (uint64_t)slot, (uint64_t)(uint32_t)tmp_name, (uint64_t)(uint32_t)tmp_filename); }
-
-		if(strstr(tmp_name, name)) break;
-	}
-	return slot;
-}
-
-////////////////////////////////////////////////////////////////////////
-//			SYS_PPU_THREAD_EXIT, DIRECT OVER SYSCALL				//
-////////////////////////////////////////////////////////////////////////
-static inline void _sys_ppu_thread_exit(uint64_t val)
-{
-	system_call_1(41, val);
-}
-
-////////////////////////////////////////////////////////////////////////
-//						 GET MODULE BY ADDRESS						//
-////////////////////////////////////////////////////////////////////////
-static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
-{
-	system_call_1(461, (uint64_t)(uint32_t)addr);
-	return (int32_t)p1;
-}
-
-////////////////////////////////////////////////////////////////////////
-//                      GET CPU & RSX TEMPERATURES                  //
-////////////////////////////////////////////////////////////////////////
-static void get_temperature(uint32_t _dev, uint32_t *_temp)
-{
-	system_call_2(383, (uint64_t)(uint32_t) _dev, (uint64_t)(uint32_t) _temp); *_temp >>= 24;
-}
-
-#define SC_PEEK_LV1 					(8)
-
-static inline uint64_t peek_lv1(uint64_t addr)
-{
-	system_call_1(SC_PEEK_LV1, (uint64_t) addr);
-	return (uint64_t) p1;
-}
-
-static int connect_to_webman(void)
-{
-	struct sockaddr_in sin;
-	int s;
-
-	sin.sin_family = AF_INET;
-	sin.sin_addr.s_addr = 0x7F000001; //127.0.0.1 (localhost)
-	sin.sin_port = htons(80);         //http port (80)
-	s = socket(AF_INET, SOCK_STREAM, 0);
-	if (s < 0)
-	{
-		return NONE;
-	}
-
-	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
-	{
-		return NONE;
-	}
-
-	return s;
-}
-
-static void sclose(int32_t *s)
-{
-	if(*s != NONE)
-	{
-		shutdown(*s, SHUT_RDWR);
-		socketclose(*s);
-		*s = NONE;
-	}
-}
-
-static int send_wm_request(const char *cmd)
-{
-	// send command
-	int conn_s = NONE;
-	conn_s = connect_to_webman();
-
-	struct timeval tv;
-	tv.tv_usec = 0;
-	tv.tv_sec = 10;
-	setsockopt(conn_s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-//	setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-	if(conn_s >= 0)
-	{
-		int pa=0;
-		char proxy_action[512];
-		proxy_action[pa++] = 'G';
-		proxy_action[pa++] = 'E';
-		proxy_action[pa++] = 'T';
-		proxy_action[pa++] = ' ';
-
-		for(uint16_t i=0;(i < strlen(cmd)) && (pa < 500); i++)
-		{
-			if(cmd[i] != 0x20)
-				proxy_action[pa++] = cmd[i];
-			else
-			{
-				proxy_action[pa++] = '%';
-				proxy_action[pa++] = '2';
-				proxy_action[pa++] = '0';
-			}
-		}
-
-		proxy_action[pa++] = '\r';
-		proxy_action[pa++] = '\n';
-		proxy_action[pa] = 0;
-		send(conn_s, proxy_action, pa, 0);
-		sclose(&conn_s);
-	}
-	return conn_s;
-}
-
-static void pad_read(void)
-{
-	// check only pad ports 0 and 1
-	for(int32_t port=0; port<2; port++)
-		{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
-}
-
-uint64_t file_exists(const char* path)
-{
-	struct CellFsStat s;
-	s.st_size=0;
-	cellFsStat(path, &s);
-	return(s.st_size);
-}
 
 static void load_background(void)
 {
@@ -376,17 +180,21 @@ static void load_background(void)
 	else if(gmode)
 	{
 		sprintf(path, "%s_%s.jpg", "/dev_hdd0/plugins/images/slaunch", game_type[gmode]);
+
 		if(!gmode || !file_exists(path)) sprintf(path, "%s.jpg", "/dev_hdd0/plugins/images/slaunch");
 	}
 
-	if(file_exists(path))
-		load_img_bitmap(0, path, "");
-	else if(fav_mode)
-		load_img_bitmap(0, (char*)"/dev_flash/vsh/resource/explore/icon/cinfo-bg-whatsnew.jpg", "");
-	else if(!gmode)
-		load_img_bitmap(0, (char*)"/dev_flash/vsh/resource/explore/icon/cinfo-bg-storemain.jpg", "");
-	else
-		load_img_bitmap(0, (char*)"/dev_flash/vsh/resource/explore/icon/cinfo-bg-storegame.jpg", "");
+	if(file_exists(path) == false)
+	{
+		if(fav_mode)
+			sprintf(path, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-%s","whatsnew.jpg");
+		else if(!gmode)
+			sprintf(path, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-%s","storemain.jpg");
+		else
+			sprintf(path, "/dev_flash/vsh/resource/explore/icon/cinfo-bg-%s","storegame.jpg");
+	}
+
+	load_img_bitmap(0, path, "\0");
 }
 
 static void draw_page(uint16_t game_idx, uint8_t key_repeat)
@@ -449,7 +257,6 @@ static void draw_page(uint16_t game_idx, uint8_t key_repeat)
 
 static void draw_selection(uint16_t game_idx)
 {
-	uint8_t slot = 1 + (game_idx % gpp);
 	char one_of[32], mode[8];
 
 	if(games)
@@ -510,7 +317,6 @@ static void draw_selection(uint16_t game_idx)
 	// set frame buffer for menu strip
 	set_texture_direct(ctx.menu, 0, INFOBAR_Y, CANVAS_W, INFOBAR_H);
 	memcpy((uint8_t *)ctx.menu, (uint8_t *)(ctx.canvas)+INFOBAR_Y*CANVAS_W*4, CANVAS_W*INFOBAR_H*4);
-	if(games) set_frame(slot, RED);
 }
 
 static void draw_side_menu_option(uint8_t option)
@@ -665,8 +471,7 @@ static void save_config(void)
 	sconfig.fav_game=fav_game;
 	sconfig.cur_game=cur_game;
 	sconfig.cur_game_=cur_game_;
-	sconfig.padd0=0;
-	sconfig.padd1=0;
+	sconfig.padd1=sconfig.padd0=0;
 	int fd;
 
 	if(cellFsOpen(WMTMP "/slaunch.cfg", CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
@@ -685,8 +490,8 @@ static void load_data(void)
 	char filename[64];
 	if(fav_mode) sprintf(filename, WMTMP "/" SLIST "1.bin"); else sprintf(filename, WMTMP "/" SLIST ".bin");
 
-	uint64_t size = file_exists(filename);
-	if(fav_mode && (size == 0)) {sprintf(filename, WMTMP "/" SLIST ".bin"); size = file_exists(filename); fav_mode = TYPE_ALL;} else
+	uint64_t size = file_len(filename);
+	if(fav_mode && (size == 0)) {sprintf(filename, WMTMP "/" SLIST ".bin"); size = file_len(filename); fav_mode = TYPE_ALL;} else
 	if(fav_mode) cur_game = fav_game; else cur_game = cur_game_;
 
 	games=size/sizeof(_slaunch);
@@ -738,7 +543,7 @@ reload:
 						slaunch[ngames++] = slaunch[n];
 				}
 
-				if(ngames == 0) {dmode++; if(dmode >= DEVS_MAX) dmode = TYPE_ALL; goto reload;}
+				if(ngames == 0) {dmode++; if(dmode > DEVS_MAX) dmode = TYPE_ALL; goto reload;}
 			}
 
 			games = ngames; ngames = 0;
@@ -814,7 +619,7 @@ static void start_VSH_Menu(void)
 {
 	int32_t ret, mem_size;
 
-	uint64_t slist_size = file_exists(WMTMP "/" SLIST ".bin"); if(slist_size>(MAX_GAMES*sizeof(_slaunch))) slist_size=MAX_GAMES*sizeof(_slaunch);
+	uint64_t slist_size = file_len(WMTMP "/" SLIST ".bin"); if(slist_size>(MAX_GAMES*sizeof(_slaunch))) slist_size=MAX_GAMES*sizeof(_slaunch);
 
 	mem_size = ((CANVAS_W * CANVAS_H * 4)   + (CANVAS_W * INFOBAR_H * 4) + (FONT_CACHE_MAX * 32 * 32) + (MAX_WH4) + (SM_M) + (slist_size + sizeof(_slaunch)) + MB(1)) / MB(1);
 
@@ -891,6 +696,7 @@ static void blink_option(uint64_t color, uint64_t color2, uint32_t msecs)
 		sys_timer_usleep(msecs);
 	}
 }
+
 static void add_game(void)
 {
 	int fd;
@@ -961,30 +767,33 @@ static void remove_game(void)
 ////////////////////////////////////////////////////////////////////////
 static void slaunch_thread(uint64_t arg)
 {
+
+#ifndef SLAUNCH_COMBO
 	if(!arg) sys_timer_sleep(12);										// wait 12s and not interfere with boot process
 	send_wm_request("/popup.ps3?sLaunch%20MOD%20" APP_VERSION);
 	//play_rco_sound("snd_system_ng");
+#endif
 
 	for(uint8_t n = 0; n < 7; n++)
 	{
-		if(file_exists(wm_icons[n]) == false) {sprintf(wm_icons[n], WM_ICONS_PATH "%s", wm_icons[n] + 36);
-		if(file_exists(wm_icons[n]) == false)  sprintf(wm_icons[n], "/dev_flash/vsh/resource/explore/user/0%i.png", n + 20);}
+		if(file_exists(wm_icons[n]) == false) {sprintf(wm_icons[n], WM_ICONS_PATH "%s", wm_icons[n] + 36); // /dev_hdd0/tmp/wm_icons/
+		if(file_exists(wm_icons[n]) == false)  sprintf(wm_icons[n], "/dev_flash/vsh/resource/explore/user/0%i.png", n + 20);} // 020.png - 026.png
 	}
 
 	uint8_t gpl; uint16_t pg_idx; uint8_t p;
 
 	while(running)
 	{
-		if(!slaunch_running)											// VSH menu is not running, normal XMB execution
+		if(!slaunch_running)
 		{
-			sys_timer_usleep(300000);
+			if(!IS_ON_XMB) {sys_timer_sleep(5); continue;} sys_timer_usleep(300000);
 
 			pdata.len = 0;
 			for(p = 0; p < 2; p++)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
 			// remote start
-			if(peek_lv1(0x80) == 0xDEADBABE)
+			if(peekq(SLAUNCH_PEEK_ADDR) == 0xDEADBABE)
 			{
 				start_VSH_Menu();
 				init_delay=0;
@@ -1001,14 +810,11 @@ static void slaunch_thread(uint64_t arg)
 				{
 					if(xsetting_CC56EB2D()->GetCurrentUserNumber()>=0) // user logged in
 					{
-						if(IS_ON_XMB)
-						{
-							start_VSH_Menu();
-							init_delay=0;
+						start_VSH_Menu();
+						init_delay=0;
 
-							// prevent set favorite with start button
-							while(slaunch_running) {pad_read(); if(curpad == PAD_START) sys_timer_usleep(20000); else break;}
-						}
+						// prevent set favorite with start button
+						while(slaunch_running) {pad_read(); if(curpad == PAD_START) sys_timer_usleep(20000); else break;}
 					}
 					else
 					{
@@ -1105,7 +911,7 @@ static void slaunch_thread(uint64_t arg)
 
 					else if(curpad & PAD_L3)	{return_to_xmb(); send_wm_request("/refresh_ps3"); break;}
 					else if((curpad & PAD_SQUARE) && !fav_mode && !(curpad & PAD_L2)) {gmode++; if(gmode>=TYPE_MAX) gmode=TYPE_ALL; dmode=TYPE_ALL; reload_data(curpad); continue;}
-					else if((curpad & PAD_SQUARE) && !fav_mode &&  (curpad & PAD_L2)) {dmode++; if(dmode>=DEVS_MAX) dmode=TYPE_ALL; reload_data(curpad); continue;}
+					else if((curpad & PAD_SQUARE) && !fav_mode &&  (curpad & PAD_L2)) {dmode++; if(dmode> DEVS_MAX) dmode=TYPE_ALL; reload_data(curpad); continue;}
 					else if((curpad == PAD_START) && games)	// favorite game XMB
 					{
 						if(fav_mode) remove_game(); else add_game();
@@ -1170,6 +976,8 @@ static void slaunch_thread(uint64_t arg)
 	sys_ppu_thread_exit(0);
 }
 
+#ifndef SLAUNCH_COMBO
+
 /***********************************************************************
 * start thread
 ***********************************************************************/
@@ -1230,3 +1038,5 @@ int slaunch_stop(void)
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_STOP_OK;
 }
+
+#endif

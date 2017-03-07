@@ -43,6 +43,10 @@ SYS_MODULE_STOP(vsh_menu_stop);
 #define VSH_MODULE_PATH     "/dev_blind/vsh/module/"
 #define VSH_ETC_PATH        "/dev_blind/vsh/etc/"
 
+#define VSH_MENU_PEEK_ADDR  0x8000000000000180
+
+#define IS_ON_XMB			(vshmain_EB757101() == 0)
+
 #define FAILED              -1
 
 #define WHITE               0xFFFFFFFF
@@ -413,11 +417,11 @@ static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
   return (int32_t)p1;
 }
 
-#define SC_PEEK_LV1 					(8)
+#define SC_PEEK_LV2 					(6)
 
-static inline uint64_t peek_lv1(uint64_t addr)
+static inline uint64_t peekq(uint64_t addr)
 {
-	system_call_1(SC_PEEK_LV1, (uint64_t) addr);
+	system_call_1(SC_PEEK_LV2, addr);
 	return (uint64_t) p1;
 }
 
@@ -2169,12 +2173,14 @@ static void vsh_menu_thread(uint64_t arg)
 	{
 		if(!menu_running)													 // VSH menu is not running, normal XMB execution
 		{
+			if(!IS_ON_XMB) {sys_timer_sleep(5); continue;} sys_timer_usleep(300000);
+
 			pdata.len = 0;
 			for(uint8_t p = 0; p < 8; p++)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
 			// remote start
-			if(peek_lv1(0x80) == 0xDEADBEBE)
+			if(peekq(VSH_MENU_PEEK_ADDR) == 0xDEADBEBE)
 			{
 				start_VSH_Menu();
 				continue;
@@ -2192,8 +2198,6 @@ static void vsh_menu_thread(uint64_t arg)
 					if(vshmain_EB757101() == 0) start_VSH_Menu();
 				}
 			}
-
-			sys_timer_usleep(300000);											// vsh sync
 		}
 		else // menu is running, draw frame, flip frame, check for pad events, sleep, ...
 		{

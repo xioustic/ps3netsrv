@@ -14,7 +14,7 @@
 #define HTML_PASSW(n, v, m, s)	"<input name=\"" n "\" type=\"password\" value=\"" v "\" maxlength=\"" m "\" size=\"" s "\">"
 #define HTML_NUMBER(n, v, min, max)	"<input name=\"" n "\" type=\"number\" value=\"" v "\" min=\"" min "\" max=\"" max "\">"
 
-#define HTML_DISABLED_CHECKBOX	"1\" disabled=\"disabled"
+#define HTML_DISABLED_CHECKBOX	"disabled=\"disabled"
 
 #define HTML_FORM_METHOD_FMT	"%s"
 #define HTML_FORM_METHOD		".ps3mapi\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
@@ -267,14 +267,14 @@ static size_t utf8dec(char *dst, char *src, u8 cpy2src)
 	return j;
 }
 */
-static size_t add_radio_button(const char *name, const char *value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
+static size_t add_radio_button(const char *name, int value, const char *id, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
-	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%s\" id=\"%s\"%s/> %s%s</label>", name, value, id, checked ? ITEM_CHECKED : "", label, (!sufix) ? "<br>" : sufix);
+	sprintf(templn, "<label><input type=\"radio\" name=\"%s\" value=\"%i\" id=\"%s\"%s/> %s%s</label>", name, value, id, checked ? ITEM_CHECKED : "", label, (!sufix) ? "<br>" : sufix);
 	return concat(buffer, templn);
 }
 
-static size_t add_check_box(const char *name, const char *value, const char *label, const char *sufix, bool checked, char *buffer)
+static size_t add_check_box(const char *name, bool disabled, const char *label, const char *sufix, bool checked, char *buffer)
 {
 	char templn[MAX_LINE_LEN], clabel[MAX_LINE_LEN];
 	strcpy(clabel, label);
@@ -285,14 +285,21 @@ static size_t add_check_box(const char *name, const char *value, const char *lab
 		sprintf(p, HTML_INPUT("autop", "%s", "255", "40"), webman_config->autoboot_path);
 		strcat(p, label + pos + strlen(AUTOBOOT_PATH));
 	}
-	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"%s\"%s/> %s</label>%s", name, value, checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
+	sprintf(templn, "<label><input type=\"checkbox\" name=\"%s\" value=\"1\" %s%s/> %s</label>%s", name, disabled ? HTML_DISABLED_CHECKBOX : "", checked ? ITEM_CHECKED : "", clabel, (!sufix) ? "<br>" : sufix);
 	return concat(buffer, templn);
 }
 
-static size_t add_option_item(const char *value, const char *label, bool selected, char *buffer)
+static size_t add_option_item(int value, const char *label, bool selected, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
-	sprintf(templn, "<option value=\"%s\"%s/>%s</option>", value, selected?ITEM_SELECTED:"", label);
+	sprintf(templn, "<option value=\"%i\"%s/>%s</option>", value, selected?ITEM_SELECTED : "", label);
+	return concat(buffer, templn);
+}
+
+static size_t add_string_item(const char *value, const char *label, bool selected, char *buffer)
+{
+	char templn[MAX_LINE_LEN];
+	sprintf(templn, "<option value=\"%s\"%s/>%s</option>", value, selected?ITEM_SELECTED : "", label);
 	return concat(buffer, templn);
 }
 

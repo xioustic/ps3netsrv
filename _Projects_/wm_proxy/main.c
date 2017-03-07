@@ -4,7 +4,7 @@
 
 #include <sys/prx.h>
 #include <sys/socket.h>
-#include <sys/types.h>
+#include <sys/ppu_thread.h>
 
 #include <netinet/in.h>
 
