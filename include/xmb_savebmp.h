@@ -136,7 +136,7 @@ static void saveBMP(char *path, bool notify_bmp)
 	memcpy(bmp_header + 34, &tmp, 4);     // bmp data size
 
 	// write bmp header
-	cellFsWrite(fd, (void *)bmp_header, sizeof(bmp_header), 0);
+	cellFsWrite(fd, (void *)bmp_header, sizeof(bmp_header), NULL);
 
 	uint32_t i, k, idx, ww = w/2;
 
@@ -161,7 +161,7 @@ static void saveBMP(char *path, bool notify_bmp)
 		}
 
 		// write bmp data
-		cellFsWrite(fd, (void *)bmp_buf, idx, 0);
+		cellFsWrite(fd, (void *)bmp_buf, idx, NULL);
 	}
 
 	// padding

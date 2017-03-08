@@ -476,7 +476,7 @@ static void save_config(void)
 
 	if(cellFsOpen(WMTMP "/slaunch.cfg", CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		cellFsWrite(fd, (void *)&sconfig, sizeof(_sconfig), 0);
+		cellFsWrite(fd, (void *)&sconfig, sizeof(_sconfig), NULL);
 		cellFsClose(fd);
 	}
 }

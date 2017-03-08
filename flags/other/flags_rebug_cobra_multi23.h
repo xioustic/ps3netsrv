@@ -1,4 +1,4 @@
-#define ENGLISH_ONLY	1	// uncomment for english only version
+//#define ENGLISH_ONLY	1	// uncomment for english only version
 #define WM_PROXY_SPRX	"eula_cddb_plugin"		// plugin used as xmb proxy to mount games
 
 //// EDITIONS ////
@@ -7,7 +7,6 @@
 #define REX_ONLY		1	// shortcuts for REBUG REX CFWs / comment out for usual CFW
 
 //#define PS3MAPI		1	// ps3 manager API & webGUI by _NzV_
-//#define CCAPI			1	// uncomment for ccapi release
 //#define LITE_EDITION	1	// no ps3netsrv support, smaller memory footprint
 
 #define DEX_SUPPORT		1	// add support for DEX

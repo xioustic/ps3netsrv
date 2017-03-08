@@ -296,12 +296,14 @@ static size_t add_option_item(int value, const char *label, bool selected, char 
 	return concat(buffer, templn);
 }
 
+#if defined(VIDEO_REC) || defined(USE_UACCOUNT)
 static size_t add_string_item(const char *value, const char *label, bool selected, char *buffer)
 {
 	char templn[MAX_LINE_LEN];
 	sprintf(templn, "<option value=\"%s\"%s/>%s</option>", value, selected?ITEM_SELECTED : "", label);
 	return concat(buffer, templn);
 }
+#endif
 
 static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 {

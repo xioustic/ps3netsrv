@@ -569,6 +569,13 @@ int main()
 	sysLv2FsUnlink(TMP_DIR "/idle_plugin.sprx");
 	CopyFile(APP_USRDIR "/wm_proxy.sprx", TMP_DIR "/eula_cddb_plugin.sprx");
 
+	sysLv2FsUnlink(APP_USRDIR "webftp_server.sprx");
+	sysLv2FsUnlink(APP_USRDIR "webftp_server_ps3mapi.sprx");
+	sysLv2FsUnlink(APP_USRDIR "webftp_server_english.sprx");
+	sysLv2FsUnlink(APP_USRDIR "webftp_server_ccapi.sprx");
+	sysLv2FsUnlink(APP_USRDIR "webftp_server_rebug_cobra_multi23.sprx");
+	sysLv2FsUnlink(APP_USRDIR "webftp_server_rebug_cobra_english.sprx");
+
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 
 	// install vsh menu
@@ -704,33 +711,20 @@ int main()
 		CopyFile(APP_USRDIR "/video_rec.sprx", PLUGINS_DIR "/video_rec.sprx");
 
 	// update PRX+Mamba Loader
-	if((sysLv2FsStat(IRISMAN_USRDIR "/webftp_server.sprx", &stat) == SUCCESS))
+	if((sysLv2FsStat(IRISMAN_USRDIR "/webftp_server.sprx", &stat) == SUCCESS) || (sysLv2FsStat(IRISMAN_USRDIR "/webftp_server_ps3mapi.sprx", &stat) == SUCCESS))
 	{
 		sysLv2FsChmod(IRISMAN_USRDIR "/webftp_server.sprx", 0777);
 		sysLv2FsUnlink(IRISMAN_USRDIR "/webftp_server.sprx");
 
-		if(full)
-			CopyFile(APP_USRDIR "/webftp_server_full.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
-		else if((sysLv2FsStat(REBUG_DIR, &stat) == SUCCESS) && is_ps3mapi())
-			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
-		else if((sysLv2FsStat(REBUG_DIR, &stat) == SUCCESS))
-			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_multi23.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
-		else if(lite)
-			CopyFile(APP_USRDIR "/webftp_server_lite.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
-		else if(is_ps3mapi())
-			CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
-		else
-			CopyFile(APP_USRDIR "/webftp_server.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
-	}
-	else if((sysLv2FsStat(IRISMAN_USRDIR "/webftp_server_ps3mapi.sprx", &stat) == SUCCESS))
-	{
 		sysLv2FsChmod(IRISMAN_USRDIR "/webftp_server_ps3mapi.sprx", 0777);
 		sysLv2FsUnlink(IRISMAN_USRDIR "/webftp_server_ps3mapi.sprx");
 
-		if((sysLv2FsStat(REBUG_DIR, &stat) == SUCCESS))
-			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", IRISMAN_USRDIR "/webftp_server_ps3mapi.sprx");
+		if(full)
+			CopyFile(APP_USRDIR "/webftp_server_full.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
+		else if(lite)
+			CopyFile(APP_USRDIR "/webftp_server_lite.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
 		else
-			CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", IRISMAN_USRDIR "/webftp_server_ps3mapi.sprx");
+			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", IRISMAN_USRDIR "/webftp_server.sprx");
 	}
 
 	char line[255];
@@ -781,10 +775,8 @@ cont:
 			CopyFile(APP_USRDIR "/webftp_server_full.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx");
 		else if(lite)
 			CopyFile(APP_USRDIR "/webftp_server_lite.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx");
-		else if(is_ps3mapi())
-			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx");
 		else
-			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_multi23.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx");
+			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx");
 
 
 		// delete webMAN from hdd0
@@ -834,10 +826,8 @@ cont:
 			CopyFile(APP_USRDIR "/webftp_server_full.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
 		else if(lite)
 			CopyFile(APP_USRDIR "/webftp_server_lite.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
-		else if(is_ps3mapi())
-			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
 		else
-			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_multi23.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
+			CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", REBUG_VSH_MODULE_DIR "/webftp_server.sprx.bak");
 	}
 
 	// update boot_plugins.txt
@@ -860,12 +850,7 @@ cont:
 					else if(lite)
 						CopyFile(APP_USRDIR "/webftp_server_lite.sprx", line);
 					else
-					{
-						if(is_ps3mapi())
-							CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", line);
-						else
-							CopyFile(APP_USRDIR "/webftp_server.sprx", line);
-					}
+						CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", line);
 					goto exit;
 				}
 			}
@@ -879,17 +864,11 @@ cont:
 			f = fopen(HDDROOT_DIR "/boot_plugins.txt", "w");
 		if((sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS))
 		{
-			if(is_ps3mapi() && !lite && !full)
-				fputs("\r\n" PLUGINS_DIR "/webftp_server_ps3mapi.sprx", f);
-			else
-				fputs("\r\n" PLUGINS_DIR "/webftp_server.sprx", f);
+			fputs("\r\n" PLUGINS_DIR "/webftp_server.sprx", f);
 		}
 		else
 		{
-			if(is_ps3mapi() && !lite && !full)
-				fputs("\r\n" HDDROOT_DIR "/webftp_server_ps3mapi.sprx", f);
-			else
-				fputs("\r\n" HDDROOT_DIR "/webftp_server.sprx", f);
+			fputs("\r\n" HDDROOT_DIR "/webftp_server.sprx", f);
 		}
 		fclose(f);
 
@@ -914,17 +893,7 @@ cont:
 			else if(lite)
 				CopyFile(APP_USRDIR "/webftp_server_lite.sprx", PLUGINS_DIR "/webftp_server.sprx");
 			else
-			{
-				if(is_ps3mapi())
-				{
-					if((sysLv2FsStat(REBUG_DIR, &stat) == SUCCESS))
-						CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", PLUGINS_DIR "/webftp_server_ps3mapi.sprx");
-					else
-						CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", PLUGINS_DIR "/webftp_server_ps3mapi.sprx");
-				}
-				else
-					CopyFile(APP_USRDIR "/webftp_server.sprx", PLUGINS_DIR "/webftp_server.sprx");
-			}
+				CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", PLUGINS_DIR "/webftp_server.sprx");
 		}
 		else
 		{
@@ -933,17 +902,7 @@ cont:
 			else if(lite)
 				CopyFile(APP_USRDIR "/webftp_server_lite.sprx", HDDROOT_DIR "/webftp_server.sprx");
 			else
-			{
-				if(is_ps3mapi())
-				{
-					if((sysLv2FsStat(REBUG_DIR, &stat) == SUCCESS))
-						CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", HDDROOT_DIR "/webftp_server_ps3mapi.sprx");
-					else
-						CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", HDDROOT_DIR "/webftp_server_ps3mapi.sprx");
-				}
-				else
-					CopyFile(APP_USRDIR "/webftp_server.sprx", HDDROOT_DIR "/webftp_server.sprx");
-			}
+				CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", HDDROOT_DIR "/webftp_server.sprx");
 		}
 	}
 
@@ -968,7 +927,7 @@ cont:
 					else if(lite)
 						CopyFile(APP_USRDIR "/webftp_server_lite.sprx", line);
 					else
-						CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", line);
+						CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", line);
 					goto exit;
 				}
 			}
@@ -982,15 +941,10 @@ cont:
 			f = fopen(HDDROOT_DIR "/mamba_plugins.txt", "w");
 		if((sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS))
 		{
-			if(full || lite)
-				fputs("\r\n" PLUGINS_DIR "/webftp_server.sprx", f);
-			else
-				fputs("\r\n" PLUGINS_DIR "/webftp_server_ps3mapi.sprx", f);
+			fputs("\r\n" PLUGINS_DIR "/webftp_server.sprx", f);
 		}
-		else if(full || lite)
-			fputs("\r\n" HDDROOT_DIR "/webftp_server.sprx", f);
 		else
-			fputs("\r\n" HDDROOT_DIR "/webftp_server_ps3mapi.sprx", f);
+			fputs("\r\n" HDDROOT_DIR "/webftp_server.sprx", f);
 		fclose(f);
 
 		// delete old sprx
@@ -1007,10 +961,8 @@ cont:
 				CopyFile(APP_USRDIR "/webftp_server_full.sprx", PLUGINS_DIR "/webftp_server.sprx");
 			else if(lite)
 				CopyFile(APP_USRDIR "/webftp_server_lite.sprx", PLUGINS_DIR "/webftp_server.sprx");
-			else if((sysLv2FsStat(REBUG_DIR, &stat) == SUCCESS))
-				CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", PLUGINS_DIR "/webftp_server_ps3mapi.sprx");
 			else
-				CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", PLUGINS_DIR "/webftp_server_ps3mapi.sprx");
+				CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", PLUGINS_DIR "/webftp_server.sprx");
 		}
 		else
 		{
@@ -1018,10 +970,8 @@ cont:
 				CopyFile(APP_USRDIR "/webftp_server_full.sprx", HDDROOT_DIR "/webftp_server.sprx");
 			else if(lite)
 				CopyFile(APP_USRDIR "/webftp_server_lite.sprx", HDDROOT_DIR "/webftp_server.sprx");
-			else if((sysLv2FsStat(REBUG_DIR, &stat) == SUCCESS))
-				CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", HDDROOT_DIR "/webftp_server_ps3mapi.sprx");
 			else
-				CopyFile(APP_USRDIR "/webftp_server_ps3mapi.sprx", HDDROOT_DIR "/webftp_server_ps3mapi.sprx");
+				CopyFile(APP_USRDIR "/webftp_server_rebug_cobra_ps3mapi.sprx", HDDROOT_DIR "/webftp_server.sprx");
 		}
 	}
 

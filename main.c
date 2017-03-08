@@ -61,6 +61,9 @@
  #undef WM_CUSTOM_COMBO
 #endif
 
+#define IS_ON_XMB		(GetCurrentRunningMode() == 0)
+#define IS_INGAME		(GetCurrentRunningMode() != 0)
+
 #include "types.h"
 #include "common.h"
 #include "cobra/cobra.h"
@@ -81,6 +84,38 @@ static char search_url[50];
 
 #ifdef COBRA_ONLY
  #include "cobra/netiso.h"
+/////////////////////////////////////
+ #ifdef LITE_EDITION
+	#define EDITION_ " [Lite]"
+ #elif defined(PS3NET_SERVER) && defined(NET3NET4) && defined(XMB_SCREENSHOT)
+	#define EDITION_ " [Full]"
+ #else
+  #ifdef PS3MAPI
+	#ifdef REX_ONLY
+		#define EDITION_ " [Rebug-PS3MAPI]"
+	#else
+		#define EDITION_ " [PS3MAPI]"
+	#endif
+  #else
+   #ifdef REX_ONLY
+	#define EDITION_ " [Rebug]"
+   #else
+	#define EDITION_ ""
+   #endif
+  #endif
+ #endif
+#else
+ #define EDITION_ " [nonCobra]"
+ #undef PS3MAPI
+ #undef WM_PROXY_SPRX
+#endif
+
+#ifdef USE_NTFS
+#define EDITION			" (NTFS)" EDITION_			// webMAN version (NTFS)
+#else
+#define EDITION			EDITION_					// webMAN version
+#endif
+/////////////////////////////////////
 
 SYS_MODULE_INFO(WWWD, 0, 1, 1);
 SYS_MODULE_START(wwwd_start);
@@ -343,9 +378,6 @@ static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
 #define CODE_RETURN_TO_ROOT 1203
 #define CODE_GOBACK         1222
 #define CODE_CLOSE_BROWSER  1223
-
-#define IS_ON_XMB		(GetCurrentRunningMode() == 0)
-#define IS_INGAME		(GetCurrentRunningMode() != 0)
 
 ////////////
 
@@ -749,43 +781,6 @@ static u8 mount_unk = EMU_OFF;
 #ifdef COPY_PS3
 static char current_file[STD_PATH_LEN+1];
 #endif
-
-/////////////////////////////////////
- #ifdef LITE_EDITION
-	#define EDITION_ " [Lite]"
- #elif defined(PS3NET_SERVER) && defined(NET3NET4) && defined(XMB_SCREENSHOT)
-	#define EDITION_ " [Full]"
- #else
-  #ifdef PS3MAPI
-	#ifdef REX_ONLY
-		#define EDITION_ " [Rebug-PS3MAPI]"
-	#else
-		#define EDITION_ " [PS3MAPI]"
-	#endif
-  #else
-   #ifdef REX_ONLY
-	#define EDITION_ " [Rebug]"
-   #else
-	#define EDITION_ ""
-   #endif
-  #endif
- #endif
-#else
- #ifdef CCAPI
-	#define EDITION_ " [CCAPI]"
- #else
-	#define EDITION_ " [nonCobra]"
- #endif
- #undef PS3MAPI
- #undef WM_PROXY_SPRX
-#endif
-
-#ifdef USE_NTFS
-#define EDITION			" (NTFS)" EDITION_			// webMAN version (NTFS)
-#else
-#define EDITION			EDITION_					// webMAN version
-#endif
-/////////////////////////////////////
 
 #include "include/eject_insert.h"
 
@@ -2317,7 +2312,6 @@ parse_request:
 
 				stop_prx_module();
 				sys_ppu_thread_exit(0);
-				break;
 			}
 			if(islike(param, "/shutdown.ps3"))
 			{

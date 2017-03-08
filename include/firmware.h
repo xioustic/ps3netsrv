@@ -114,23 +114,23 @@ static void detect_firmware(void)
 		if(SYSCALL_TABLE) break;
 	}
 
-	// alternative detection method
+	// alternative fw detection method if LV2 peek (SC6) is disabled
 	if(!SYSCALL_TABLE)
 	{
 		c_firmware = get_firmware_version(); dex_mode = get_kernel_type();
 
 		if(IS_CEX)
 		{
-			if(c_firmware >= 4.75f) SYSCALL_TABLE = SYSCALL_TABLE_480;
+			if(c_firmware >= 4.75f) SYSCALL_TABLE = SYSCALL_TABLE_480; // same for 4.75, 4.76, 4.78, 4.80, 4.81
 #ifndef LAST_FIRMWARE_ONLY
 			if(c_firmware == 4.70f) SYSCALL_TABLE = SYSCALL_TABLE_470;
-			if(c_firmware >= 4.60f && c_firmware <= 4.66f) SYSCALL_TABLE = SYSCALL_TABLE_460;
+			if(c_firmware >= 4.60f && c_firmware <= 4.66f) SYSCALL_TABLE = SYSCALL_TABLE_460; // same for 4.60, 4.65, 4.66
 			if(c_firmware == 4.55f) SYSCALL_TABLE = SYSCALL_TABLE_455;
 			if(c_firmware == 4.53f) SYSCALL_TABLE = SYSCALL_TABLE_453;
 			if(c_firmware == 4.50f) SYSCALL_TABLE = SYSCALL_TABLE_450;
 			if(c_firmware == 4.46f) SYSCALL_TABLE = SYSCALL_TABLE_446;
-			if(c_firmware >= 4.40f && c_firmware <= 4.41f) SYSCALL_TABLE = SYSCALL_TABLE_440;
-			if(c_firmware >= 4.30f && c_firmware <= 4.31f) SYSCALL_TABLE = SYSCALL_TABLE_430;
+			if(c_firmware >= 4.40f && c_firmware <= 4.41f) SYSCALL_TABLE = SYSCALL_TABLE_440; // same for 4.40, 4.41
+			if(c_firmware >= 4.30f && c_firmware <= 4.31f) SYSCALL_TABLE = SYSCALL_TABLE_430; // same for 4.30, 4.31
 			if(c_firmware == 4.21f) SYSCALL_TABLE = SYSCALL_TABLE_421;
 			if(c_firmware == 3.55f) SYSCALL_TABLE = SYSCALL_TABLE_355;
 #endif
@@ -138,17 +138,17 @@ static void detect_firmware(void)
 		}
 		if(IS_DEX)
 		{
-			if(c_firmware >= 4.80f) SYSCALL_TABLE = SYSCALL_TABLE_480D;
+			if(c_firmware >= 4.80f) SYSCALL_TABLE = SYSCALL_TABLE_480D; // same for 4.80-4.81
 #ifndef LAST_FIRMWARE_ONLY
-			if(c_firmware == 4.75f) SYSCALL_TABLE = SYSCALL_TABLE_475D;
+			if(c_firmware >= 4.75f && c_firmware <= 4.78f) SYSCALL_TABLE = SYSCALL_TABLE_475D; // same for 4.75, 4.76, 4.78
 			if(c_firmware == 4.70f) SYSCALL_TABLE = SYSCALL_TABLE_470D;
-			if(c_firmware >= 4.60f && c_firmware <= 4.66f) SYSCALL_TABLE = SYSCALL_TABLE_460D;
+			if(c_firmware >= 4.60f && c_firmware <= 4.66f) SYSCALL_TABLE = SYSCALL_TABLE_460D; // same for 4.60, 4.65, 4.66
 			if(c_firmware == 4.55f) SYSCALL_TABLE = SYSCALL_TABLE_455D;
 			if(c_firmware == 4.53f) SYSCALL_TABLE = SYSCALL_TABLE_453D;
 			if(c_firmware == 4.50f) SYSCALL_TABLE = SYSCALL_TABLE_450D;
 			if(c_firmware == 4.46f) SYSCALL_TABLE = SYSCALL_TABLE_446D;
-			if(c_firmware >= 4.40f && c_firmware <= 4.41f) SYSCALL_TABLE = SYSCALL_TABLE_440D;
-			if(c_firmware >= 4.30f && c_firmware <= 4.31f) SYSCALL_TABLE = SYSCALL_TABLE_430D;
+			if(c_firmware >= 4.40f && c_firmware <= 4.41f) SYSCALL_TABLE = SYSCALL_TABLE_440D; // same for 4.40, 4.41
+			if(c_firmware >= 4.30f && c_firmware <= 4.31f) SYSCALL_TABLE = SYSCALL_TABLE_430D; // same for 4.30, 4.31
 			if(c_firmware == 4.21f) SYSCALL_TABLE = SYSCALL_TABLE_421D;
 			if(c_firmware == 3.55f) SYSCALL_TABLE = SYSCALL_TABLE_355D;
 #endif

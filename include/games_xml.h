@@ -594,6 +594,8 @@ static bool update_mygames_xml(u64 conn_s_p)
 								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s | %s"), tempID, drives[f0] + 1);
 							else
 								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s"), drives[f0] + 1);
+
+							if(f1 < 2) read_e += sprintf(tempstr + read_e, " | JB");
 						}
 
 						sprintf(tempstr + read_e, "</Table>");
@@ -713,6 +715,8 @@ next_xml_entry:
 									read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s | %s"), tempID, drives[f0] + 5);
 								else
 									read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s"), drives[f0] + 5);
+
+								if(f1 < 2) read_e += sprintf(tempstr + read_e, " | JB");
 							}
 
 							sprintf(tempstr + read_e, "</Table>");

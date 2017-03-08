@@ -993,8 +993,8 @@ static void mount_autoboot(void)
 	if(do_mount)
 	{   // add some delay
 		if(webman_config->delay)      {sys_ppu_thread_sleep(5); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
-		else if(islike(path, "/net"))  sys_ppu_thread_sleep(5);
 #ifndef COBRA_ONLY
+		else if(islike(path, "/net"))  sys_ppu_thread_sleep(5);
 		if(strstr(path, ".ntfs[") == NULL)
 #endif
 		mount_with_mm(path, MOUNT_NORMAL); // mount path & do eject
