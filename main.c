@@ -98,7 +98,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/libfs.sprx"
 
-#define WM_VERSION			"1.47.02 MOD"
+#define WM_VERSION			"1.47.03 MOD"
 
 #define MM_ROOT_STD			"/dev_hdd0/game/BLES80608/USRDIR"	// multiMAN root folder
 #define MM_ROOT_SSTL		"/dev_hdd0/game/NPEA00374/USRDIR"	// multiman SingStar® Stealth root folder
@@ -852,7 +852,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 	if(code == CODE_VIRTUALPAD || code == CODE_GOBACK || code == CODE_CLOSE_BROWSER)
 	{
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
-								CODE_HTTP_OK, url, HTTP_RESPONSE_TITLE_LEN + strlen(msg), HTML_BODY, HTML_RESPONSE_TITLE, msg);
+								CODE_HTTP_OK, url, HTML_BODY, HTML_RESPONSE_TITLE, msg);
 	}
 	else
 	{
@@ -899,7 +899,7 @@ static void http_response(int conn_s, char *header, const char *url, int code, c
 						HTML_BUTTON, " &#9664;  ", HTML_ONCLICK, ((code == CODE_RETURN_TO_ROOT) ? "/" : "javascript:window.history.back();"), HTML_BODY_END); strcat(body, header);
 
 		slen = sprintf(header,  HTML_RESPONSE_FMT,
-								(code == CODE_RETURN_TO_ROOT) ? CODE_HTTP_OK : code, url, HTTP_RESPONSE_TITLE_LEN + strlen(body), HTML_BODY, HTML_RESPONSE_TITLE, body);
+								(code == CODE_RETURN_TO_ROOT) ? CODE_HTTP_OK : code, url, HTML_BODY, HTML_RESPONSE_TITLE, body);
 	}
 
 	send(conn_s, header, slen, 0);
@@ -968,11 +968,11 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 	if(mount_ps3) {strcat(buffer, HTML_BODY); return  buffer;}
 
 	buffer += concat(buffer,
-								"<head><title>webMAN MOD</title>"
-								"<style>"
-								"a{" HTML_URL_STYLE "}"
-								"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
-								"</style>"); // fallback style if external css fails
+							"<head><title>webMAN MOD</title>"
+							"<style>"
+							"a{" HTML_URL_STYLE "}"
+							"#rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);display:none;}"
+							"</style>"); // fallback style if external css fails
 
 #ifndef EMBED_JS
 	if(param[1] == 0)
@@ -1013,8 +1013,8 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 						".propfont{font-family:\"Courier New\",Courier,monospace;text-shadow:1px 1px #101010;}"
 						"body{background-color:#101010}body,a.s,td,th{color:#F0F0F0;white-space:nowrap");
 
-		//if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
-		//	buffer += concat(buffer, "background-image: url(\"/dev_hdd0/xmlhost/game_plugin/background.jpg\");");
+		if(file_exists("/dev_hdd0/xmlhost/game_plugin/background.jpg"))
+			buffer += concat(buffer, "background-image: url(\"/dev_hdd0/xmlhost/game_plugin/background.jpg\");");
 
 		if(is_ps3_http == 2)
 			buffer += concat(buffer, "width:800px;}");
@@ -1052,27 +1052,29 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 	char slider[40]; if(file_exists(MOBILE_HTML)) sprintf(slider, " [<a href=\"/games.ps3\">Slider</a>]"); else *slider = NULL;
 
 
+	size_t tlen = sprintf(templn, "<b>webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s", STR_TRADBY, STR_FILES, STR_GAMES, slider);
+
 #ifdef SYS_ADMIN_MODE
 	if(sys_admin)
 	{
 #endif
 #ifdef PS3MAPI
 	#ifdef WEB_CHAT
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP);
+		sprintf(templn + tlen, " [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_SETUP);
 	#else
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP );
+		sprintf(templn + tlen, " [<a href=\"/home.ps3mapi\">PS3MAPI</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_SETUP);
 	#endif
 #else
 	#ifdef WEB_CHAT
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP);
+		sprintf(templn + tlen, " [<a href=\"/chat.ps3\">Chat</a>] [<a href=\"/setup.ps3\">%s</a>]</b>", STR_SETUP);
 	#else
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s [<a href=\"/setup.ps3\">%s</a>]</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider, STR_SETUP );
+		sprintf(templn + tlen, " [<a href=\"/setup.ps3\">%s</a>]</b>", STR_SETUP );
 	#endif
 #endif
 #ifdef SYS_ADMIN_MODE
 	}
 	else
-		sprintf(templn, "webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s</b>", STR_TRADBY, STR_FILES, STR_GAMES, slider);
+		strcat(templn, "</b>");
 #endif
 
 	buffer += concat(buffer, templn);
@@ -1546,7 +1548,7 @@ parse_request:
 				}
  #endif
 				buf_len = sprintf(header, HTML_RESPONSE_FMT,
-										  CODE_HTTP_OK, "/cpursx_ps3", HTML_HEADER_SIZE + HTML_BODY_END_SIZE + buf_len, HTML_HEADER, buffer, HTML_BODY_END);
+										  CODE_HTTP_OK, "/cpursx_ps3", HTML_HEADER, buffer, HTML_BODY_END);
 
 				send(conn_s, header, buf_len, 0);
 

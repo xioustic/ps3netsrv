@@ -20,3 +20,6 @@ td+td{text-align:right;white-space:nowrap}
 position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}
 .gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}
 .bu{background:#444;}.bf{background:#121;}
+/*.tg{display:inline-block;background:none #025;cursor:pointer;padding:4px 15px;border-radius:5px;margin:3px;}*/
+input[type=button]{border:1px;padding:6px 10px;border-radius:4px;cursor:pointer;}
+input[type=button]:hover{background:none #048;color:#FFF;}

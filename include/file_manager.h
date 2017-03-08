@@ -537,7 +537,15 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #endif
 		tlen = strlen(buffer);
 
-		tlen += concat(buffer, "<style>.sfo{position:absolute;top:300px;right:10px;font-size:14px}</style><table class=\"propfont\"><tr><td colspan=3><col width=\"220\"><col width=\"98\">");
+		tlen += concat(buffer,  "<style>.sfo{position:absolute;top:300px;right:10px;font-size:14px}</style>"
+								"<table id=\"files\" class=\"propfont\">");
+/*
+		if(file_exists("/dev_hdd0/xmlhost/game_plugin/sort.js"))
+			buffer += concat(buffer, "<script src=\"/dev_hdd0/xmlhost/game_plugin/sort.js\"></script>"
+									 "<thead><tr><th align=left>Name</th><th>Size</th><th>Date</th></tr></thead>");
+		else
+*/
+			tlen += concat(buffer,  "<tr><td colspan=3><col width=\"220\"><col width=\"98\">");
 
 		buf_len = tlen;
 
@@ -557,10 +565,10 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					char *p = strrchr(templn, '/'); if(p) *p = NULL; if(strlen(templn) < 6 && strlen(param) < 8) {templn[0] = '/', templn[1] = NULL;}
 
 					urlenc(swap, templn);
-					flen = sprintf(line_entry[idx].path, "!00000"
-												  "f\" href=\"%s\">..</a></td>"
-												  "<td> " HTML_URL HTML_ENTRY_DATE
-												, swap, swap, HTML_DIR);
+					flen = sprintf(line_entry[idx].path,  "!     "
+														  "f\" href=\"%s\">..</a></td>"
+														  "<td> " HTML_URL HTML_ENTRY_DATE
+														, swap, swap, HTML_DIR);
 
 					if(flen >= _MAX_LINE_LEN) return false; //path is too long
 
@@ -625,7 +633,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 								send(conn_s, header, header_len, 0);
 
-								int bytes_read, boff = 0;
+								uint32_t bytes_read; int64_t boff = 0;
 								while(boff < file_size)
 								{
 									bytes_read = read_remote_file(ns, (char*)buffer, boff, _64KB_, &abort_connection);
@@ -634,7 +642,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 										if(send(conn_s, buffer, bytes_read, 0) < 0) break;
 									}
 									boff+=bytes_read;
-									if((uint32_t)bytes_read < _64KB_ || boff >= file_size) break;
+									if(bytes_read < _64KB_ || boff >= file_size) break;
 								}
 								open_remote_file(ns, "/CLOSEFILE", &abort_connection);
 								sclose(&ns);
@@ -655,7 +663,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 			if(is_ntfs && !param[11])
 			{
-				flen = sprintf(line_entry[idx].path, "!00000"
+				flen = sprintf(line_entry[idx].path,  "!     "
 													  "f\" href=\"%s\">..</a></td>"
 													  "<td> " HTML_URL HTML_ENTRY_DATE
 													, "/", "/", HTML_DIR);

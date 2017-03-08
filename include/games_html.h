@@ -68,7 +68,7 @@ enum icon_type
 #define LAUNCHPAD_COVER_SVR		"http://xmbmods.co/wmlp/covers"
 //#define LAUNCHPAD_COVER_SVR	"http://ps3extra.free.fr/covers"
 
-#define HAS_TITLE_ID  (*tempID > '@')
+#define HAS_TITLE_ID  ((*tempID >= 'A') && (*tempID <= 'Z') && !tempID[9])
 
 #define NO_ICON       (!*icon)
 
@@ -943,7 +943,7 @@ static bool is_iso_file(char *entry_name, int flen, u8 f1, u8 f0)
 
 static bool game_listing(char *buffer, char *templn, char *param, char *tempstr, u8 mode, bool auto_mount)
 {
-	u64 c_len = 0;
+	u16 retry = 0;
 	u32 buf_len = strlen(buffer);
 
 	struct CellFsStat buf;
@@ -997,15 +997,15 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 
 	// --- wait until 120 seconds if server is busy loading games ---
-	c_len = 0; while(loading_games && working && (c_len < 600)) {sys_ppu_thread_usleep(200000); c_len++;}
+	retry = 0; while(loading_games && working && (++retry < 600)) sys_ppu_thread_usleep(200000);
 
-	if(c_len >= 600 || !working) return false;
+	if(retry >= 600 || !working) return false;
 	// ---
 
 	const u32 BUFFER_MAXSIZE = (BUFFER_SIZE_ALL - _12KB_);
 
 	// use cached page
-	loading_games = 1;
+	retry = loading_games = 1;
 
 	if(launchpad_mode) buf_len = 0; else
 	if(mobile_mode) {cellFsUnlink(GAMELIST_JS); buf_len = 0;}
@@ -1085,6 +1085,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #ifdef NET_SUPPORT
 		if(g_socket >= 0 && open_remote_dir(g_socket, "/", &abort_connection) < 0) do_umount(false);
 #endif
+
+list_games:
 
 		for(u8 f0 = filter0; f0 < 16; f0++)  // drives: 0="/dev_hdd0", 1="/dev_usb000", 2="/dev_usb001", 3="/dev_usb002", 4="/dev_usb003", 5="/dev_usb006", 6="/dev_usb007", 7="/net0", 8="/net1", 9="/net2", 10="/net3", 11="/net4", 12="/ext", 13="/dev_sd", 14="/dev_ms", 15="/dev_cf"
 		{
@@ -1370,6 +1372,7 @@ next_html_entry:
 #endif
 		}
 
+
 		if(idx)
 		{   // sort html game items
 			u16 n, m;
@@ -1383,6 +1386,9 @@ next_html_entry:
 						line_entry[m] = swap;
 					}
 		}
+#ifdef USE_NTFS
+		else if(retry && (filter0 == NTFS)) {prepNTFS(0); --retry; goto list_games;}
+#endif
 
 #ifndef LITE_EDITION
 		bool sortable = false;

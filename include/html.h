@@ -28,7 +28,7 @@
 								"X-PS3-Info: [%s]\r\n" \
 								"Content-Type: text/html;charset=UTF-8\r\n" \
 								"Cache-Control: no-cache\r\n" \
-								"Content-Length: %i\r\n\r\n" \
+								"\r\n" \
 								"%s%s%s"
 
 #define HTML_HEADER				" <!DOCTYPE html>" \

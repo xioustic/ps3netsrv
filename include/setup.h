@@ -499,9 +499,10 @@ static void setup_form(char *buffer, char *templn)
  #endif
 
 	uint8_t value, b;
-	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{display:none}td+td{text-align:left;white-space:nowrap}</style>"
+	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{display:none}td+td{text-align:left;white-space:nowrap}"
+					"</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
-					"<b><a href=\"javascript:tgl(cnt);\"> %s </a></b><br><div id=\"cnt\">"
+					"<b><a class=\"tg\" href=\"javascript:tgl(cnt);\"> %s </a></b><br><div id=\"cnt\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
 					"<tr><td width=\"250\">", STR_SCAN2); strcat(buffer, templn);
 
@@ -573,24 +574,24 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 	//fan control settings
-	strcat(buffer, "</div>" HTML_BLU_SEPARATOR "<table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr class=\"propfont\"><td>");
+	strcat(buffer, "</div>" HTML_BLU_SEPARATOR "<table width=\"900\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td>");
 
 	add_check_box("fc\" onchange=\"temp[fc.checked?0:2].checked=1;" , false, STR_FANCTRL, " </td><td>", (webman_config->fanc), buffer);
 	add_check_box("warn", false , STR_NOWARN, " </td></tr>", (webman_config->nowarn), buffer);
 
-	strcat(buffer, "<tr class=\"propfont\"><td>");
+	strcat(buffer, "<tr><td>");
 	add_radio_button("temp", 0, "t_0", STR_AUTOAT , " : ", (webman_config->temp0 == 0), buffer);
 	sprintf(templn, HTML_NUMBER("step\"  accesskey=\"T", "%i", "40", "80") " °C</td><td><label><input type=\"checkbox\"%s/> %s</label> : " HTML_NUMBER("mfan", "%i", "20", "95") " %% %s </td></tr>", webman_config->temp1, (webman_config->fanc && webman_config->temp0==0)?ITEM_CHECKED:"", STR_LOWEST, webman_config->minfan, STR_FANSPEED); strcat(buffer, templn);
 
-	strcat(buffer, "<tr class=\"propfont\"><td>");
+	strcat(buffer, "<tr><td>");
 	add_radio_button("temp", 1, "t_1", STR_MANUAL , " : ", (webman_config->temp0 != 0), buffer);
 	sprintf(templn, HTML_NUMBER("manu", "%i", "20", "95") " %% %s </td><td> %s : " HTML_NUMBER("fsp0", "%i", "20", "99") " %% %s </td></tr>", (webman_config->manu), STR_FANSPEED, STR_PS2EMU, webman_config->ps2temp, STR_FANSPEED); strcat(buffer, templn);
-	strcat(buffer, "<tr class=\"propfont\"><td>");
+	strcat(buffer, "<tr><td>");
 	add_radio_button("temp", 2, "t_2", "SYSCON", "</table>", !(webman_config->fanc), buffer);
 
 	//general settings
 	sprintf(templn,	HTML_BLU_SEPARATOR
-					"<b><a href=\"javascript:tgl(cfg);\"> webMAN MOD %s </a></b><br><div id=\"cfg\">", STR_SETUP); strcat(buffer, templn);
+					"<b><a class=\"tg\" href=\"javascript:tgl(cfg);\"> webMAN MOD %s </a></b><br><div id=\"cfg\">", STR_SETUP); strcat(buffer, templn);
 
 #ifdef COBRA_ONLY
 	add_check_box("lp", false, STR_LPG   , " • ",   (webman_config->lastp),  buffer);
@@ -755,10 +756,10 @@ static void setup_form(char *buffer, char *templn)
 	//general settings
 #ifdef SPOOF_CONSOLEID
 	sprintf(templn,	HTML_BLU_SEPARATOR
-					"<b><a href=\"javascript:tgl(adv);\"> IDPS & MEM %s </a></b><br><div id=\"adv\">", STR_SETUP); strcat(buffer, templn);
+					"<b><a class=\"tg\" href=\"javascript:tgl(adv);\"> IDPS & MEM %s </a></b><br><div id=\"adv\">", STR_SETUP); strcat(buffer, templn);
 #else
 	sprintf(templn,	HTML_BLU_SEPARATOR
-					"<b><a href=\"javascript:tgl(adv);\"> MEM %s </a></b><br><div id=\"adv\">", STR_SETUP); strcat(buffer, templn);
+					"<b><a class=\"tg\" href=\"javascript:tgl(adv);\"> MEM %s </a></b><br><div id=\"adv\">", STR_SETUP); strcat(buffer, templn);
 #endif
 
 #ifdef SPOOF_CONSOLEID
@@ -910,7 +911,7 @@ static void setup_form(char *buffer, char *templn)
 	buffer += strlen(buffer);
 
 	//combos
-	sprintf(templn, "</div>" HTML_BLU_SEPARATOR "<b><a href=\"javascript:tgl(cmb);\"> %s </a></b><br><div id=\"cmb\"><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);
+	sprintf(templn, "</div>" HTML_BLU_SEPARATOR "<b><a class=\"tg\" href=\"javascript:tgl(cmb);\"> %s </a></b><br><div id=\"cmb\"><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);
 
 #ifdef SYS_ADMIN_MODE
 	add_check_box("adm", false, "ADMIN/USER MODE", " : <b>L2+R2+&#8710;</b><br>" ,  (webman_config->combo & SYS_ADMIN),  buffer);
@@ -1029,7 +1030,7 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "</div>");
 
 	//Wait for any USB device to be ready
-	sprintf(templn, HTML_BLU_SEPARATOR "<b><a href=\"javascript:tgl(wt);\"> %s </a></b><br><div id=\"wt\">", STR_ANYUSB); strcat(buffer, templn);
+	sprintf(templn, HTML_BLU_SEPARATOR "<b><a class=\"tg\" href=\"javascript:tgl(wt);\"> %s </a></b><br><div id=\"wt\">", STR_ANYUSB); strcat(buffer, templn);
 
 	value = webman_config->bootd;
 	add_radio_button("b", 0,  "b_0", "0 sec" , _BR_, (value == 0),  buffer);
@@ -1111,6 +1112,11 @@ static void read_settings(void)
 
 #ifdef USE_NTFS
 	webman_config->ntfs = 1;
+#endif
+
+#if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
+	bool is_pkg_launcher_installed = isDir("/dev_hdd0/game/PKGLAUNCH");
+	if(is_pkg_launcher_installed) {webman_config->ps3l = webman_config->roms = 1; f1_len = 13;}
 #endif
 
 	//webman_config->lastp = 0;       //disable last play
@@ -1224,7 +1230,7 @@ static void read_settings(void)
 #endif
 
 #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
-	if(!isDir("/dev_hdd0/game/PKGLAUNCH")) {webman_config->ps3l = webman_config->roms = 0; f1_len = 11;}
+	if(!is_pkg_launcher_installed) {webman_config->ps3l = webman_config->roms = 0; f1_len = 11;}
 #endif
 
 	// settings

@@ -49,11 +49,11 @@ static int prepNTFS(u8 towait)
 	char path[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], filename[STD_PATH_LEN];
 
 	if(mountCount == NTFS_UNMOUNTED)
-		for(i = 0; i < 2; i++)
+		for(u8 retry = 0; retry < 2; retry++)
 		{
-			if(towait) sys_ppu_thread_sleep(2 * towait);
 			mount_all_ntfs_volumes();
 			if(mountCount) break;
+			if(towait) sys_ppu_thread_sleep(2 * towait);
 		}
 
 	if(!towait || mountCount <= 0)
@@ -120,7 +120,7 @@ next_ntfs_entry:
 
 								dlen = sprintf(path, "%s", dir.d_name);
 
-								is_iso = is_iso_file(dir.d_name, dlen, m, NTFS);
+								is_iso = is_iso_file(dir.d_name, dlen, m, 0);
 
 								if(is_iso)
 								{
@@ -138,7 +138,7 @@ next_ntfs_entry:
 							{
 								dlen = sprintf(filename, "%s", dir.d_name);
 
-								is_iso = is_iso_file(dir.d_name, dlen, m, NTFS);
+								is_iso = is_iso_file(dir.d_name, dlen, m, 0);
 							}
 ////////////////////////////////////////////////////////////
 

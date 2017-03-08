@@ -582,14 +582,15 @@ static bool update_mygames_xml(u64 conn_s_p)
 											 key, icon,
 											 templn, WEB_LINK_PAIR, local_ip, neth, param, enc_dir_name);
 
+						// info level: 0=Path, 1=Path | titleid, 2=titleid | drive, 3=none
 						if(webman_config->info <= 1)
 						{
-							if((webman_config->info == 1) & IS_PS3_TYPE && HAS_TITLE_ID) {sprintf(folder_name, " | %s" , tempID);} else *folder_name = NULL;
+							if((webman_config->info == 1) & HAS_TITLE_ID) {sprintf(folder_name, " | %s" , tempID);} else *folder_name = NULL;
 							read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s%s%s"), neth, param, folder_name);
 						}
 						else if(webman_config->info == 2)
 						{
-							if(IS_PS3_TYPE && HAS_TITLE_ID)
+							if(HAS_TITLE_ID)
 								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s | %s"), tempID, drives[f0] + 1);
 							else
 								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s"), drives[f0] + 1);
@@ -699,14 +700,16 @@ next_xml_entry:
 												 key, icon,
 												 templn, WEB_LINK_PAIR, local_ip, "", param, enc_dir_name);
 
+
+							// info level: 0=Path, 1=Path | titleid, 2=titleid | drive, 3=none
 							if(webman_config->info <= 1)
 							{
-								if((webman_config->info == 1) & IS_PS3_TYPE && HAS_TITLE_ID) {strcat(folder_name, " | "); strcat(folder_name, tempID);}
+								if((webman_config->info == 1) & HAS_TITLE_ID) {strcat(folder_name, " | "); strcat(folder_name, tempID);}
 								read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s/%s%s"), drives[f0], paths[f1], folder_name);
 							}
 							else if(webman_config->info == 2)
 							{
-								if(IS_PS3_TYPE && HAS_TITLE_ID)
+								if(HAS_TITLE_ID)
 									read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s | %s"), tempID, drives[f0] + 5);
 								else
 									read_e += sprintf(tempstr + read_e, XML_PAIR("info","%s"), drives[f0] + 5);
