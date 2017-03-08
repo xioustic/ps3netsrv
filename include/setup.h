@@ -1050,7 +1050,7 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "</div>");
 
 	sprintf(templn, HTML_RED_SEPARATOR "<input type=\"submit\" accesskey=\"S\" value=\" %s \"/>"
-					"<script>function tgl(o){o.style.display=(o.style.display=='none')?'block':'none';}</script>"
+					"<script>function tgl(o){o.style.display=(o.style.display!='block')?'block':'none';}</script>"
 					"</form>", STR_SAVE); strcat(buffer, templn);
 
 #ifndef LITE_EDITION
