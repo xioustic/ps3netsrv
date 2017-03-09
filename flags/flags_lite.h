@@ -55,5 +55,3 @@
 //#define RAWISO_PSX_MULTI		// support for multi PSX from Iris Manager (it's incomplete - only rawseciso.h code is complete) (thanks to Estwald)
 //#define DO_WM_REQUEST_POLLING	// poll file /dev_hdd0/tmp/wm_request (can be used by external apps)
 //#define SECURE_FILE_ID	// hook savedata plugin to capture secure file id (this feature is currently broken)
-
-

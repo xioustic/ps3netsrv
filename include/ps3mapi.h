@@ -72,7 +72,7 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param);
 static void ps3mapi_setmem(char *buffer, char *templn, char *param);
 static void ps3mapi_vshplugin(char *buffer, char *templn, char *param);
 static void ps3mapi_gameplugin(char *buffer, char *templn, char *param);
-static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload);
+static unsigned int get_vsh_plugin_slot_by_name(const char *name, bool unload);
 
 static u8 ps3mapi_working = 0;
 
@@ -1699,7 +1699,7 @@ end:
 	#define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO			0x0047
  #endif
 
-static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload)
+static unsigned int get_vsh_plugin_slot_by_name(const char *name, bool unload)
 {
 	char tmp_name[30];
 	char tmp_filename[STD_PATH_LEN];
@@ -1715,7 +1715,7 @@ static unsigned int get_vsh_plugin_slot_by_name(char *name, bool unload)
 		{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO, (u64)slot, (u64)(u32)tmp_name, (u64)(u32)tmp_filename); }
 
 		if(find_free_slot) {if(*tmp_name) continue; break;}
-
+		else
 		if(IS(tmp_name, name) || strstr(tmp_filename, name)) {if(unload) cobra_unload_vsh_plugin(slot); break;}
 	}
 	return slot;

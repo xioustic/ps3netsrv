@@ -1368,7 +1368,7 @@ parse_request:
 
 			if(!is_setup) { mc = strstr(param, ";/"); if(mc) {*mc = NULL; strcpy(header, param);} }
 
-			bool allow_retry_response = true, small_alloc = true; u8 mobile_mode = false;
+			bool allow_retry_response = true; u8 mobile_mode = false;
 
  #ifdef USE_DEBUG
 	ssend(debug_s, param);
@@ -1559,7 +1559,7 @@ parse_request:
 				// /dev_blind?1        unmounts /dev_blind
 				// /dev_blind?disable  unmounts /dev_blind
 
-				is_binary = FOLDER_LISTING, small_alloc = false;
+				is_binary = FOLDER_LISTING;
 				goto html_response;
 			}
 
@@ -1620,7 +1620,7 @@ parse_request:
 					if(isDir(install_path))
 					{
 						strcpy(param, install_path);
-						is_binary = FOLDER_LISTING, small_alloc = false;
+						is_binary = FOLDER_LISTING;
 						goto html_response;
 					}
 				}
@@ -2138,7 +2138,7 @@ parse_request:
 				else
 					{delete_history(true); sprintf(param, "/dev_hdd0");}
 
-				is_binary = FOLDER_LISTING, small_alloc = false;
+				is_binary = FOLDER_LISTING;
 				goto html_response;
 			}
 			if(islike(param, "/mkdir.ps3"))
@@ -2175,7 +2175,7 @@ parse_request:
 					//cellFsMkdir("/dev_hdd0/PS2ISO" AUTOPLAY_TAG, DMODE);
 				}
 
-				is_binary = FOLDER_LISTING, small_alloc = false;
+				is_binary = FOLDER_LISTING;
 				goto html_response;
 			}
 			else
@@ -2240,7 +2240,7 @@ parse_request:
 				char *p = strrchr(param, '/'); *p = NULL;
 				if(file_exists(cp_path) == false) cp_mode = CP_MODE_NONE;
 
-				is_binary = FOLDER_LISTING, small_alloc = false;
+				is_binary = FOLDER_LISTING;
 				goto html_response;
 			}
 			else
@@ -2254,7 +2254,7 @@ parse_request:
 					sprintf(source, "/copy.ps3%s", cp_path);
 					sprintf(target, "%s", param + 10);
 					sprintf(param, "%s", source); strcat(target, strrchr(param, '/'));
-					is_binary = WEB_COMMAND, small_alloc = false;
+					is_binary = FOLDER_LISTING;
 					goto html_response;
 				}
 				else
@@ -2539,7 +2539,7 @@ parse_request:
 				||  islike(param, "/unloadprx.ps3")
  #endif
 				||  islike(param, "/eject.ps3")
-				||  islike(param, "/insert.ps3")) small_alloc = true;
+				||  islike(param, "/insert.ps3")) ;
 
 			else
 			{
@@ -2549,7 +2549,7 @@ parse_request:
 #endif
 				if(islike(param, "/net") && (param[4] >= '0' && param[4] <= '4')) //net0/net1/net2/net3/net4
 				{
-					is_binary = FOLDER_LISTING, small_alloc = false, is_net = true;
+					is_binary = FOLDER_LISTING, is_net = true;
 				}
 #ifdef USE_NTFS
 				else if(is_ntfs)
@@ -2608,7 +2608,7 @@ parse_request:
 				if(is_binary)
 				{
 					c_len = buf.st_size;
-					if(buf.st_mode & S_IFDIR) {is_binary = FOLDER_LISTING, small_alloc = false;} // folder listing
+					if(buf.st_mode & S_IFDIR) {is_binary = FOLDER_LISTING;} // folder listing
 				}
 				else
 				{
@@ -2725,7 +2725,7 @@ parse_request:
 
 			if(show_info_popup || islike(param, "/cpursx.ps3")) is_cpursx = 1;
 			else
-			if(!small_alloc || islike(param, "/index.ps3"))
+			if((is_binary == FOLDER_LISTING) || islike(param, "/index.ps3"))
 			{
 				sys_memory_container_t mc_app = get_app_memory_container();
 				if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _3MB_;

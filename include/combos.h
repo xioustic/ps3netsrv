@@ -57,9 +57,9 @@
 */
 		bool reboot = false;
 
-		u8 n;
+		u8 n, init_delay;
 
-		CellPadData data;
+		CellPadData data; init_delay = 0;
 
 		#define PERSIST  100
 
@@ -85,6 +85,25 @@
 
 				if(data.len > 0)
 				{
+#ifdef COBRA_ONLY
+					if( ((!(webman_config->combo2 & C_SLAUNCH)) && (((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0)) ||
+																	((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == 0) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)))))
+					||	((!(webman_config->combo2 & C_VSHMENU)) &&  ((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0))) )
+					{
+						if(++init_delay < 5) {sys_ppu_thread_usleep(200000); continue;}
+
+						bool vsh_menu = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT);
+
+						unsigned int slot = get_vsh_plugin_slot_by_name(vsh_menu ? "VSH_MENU" : "sLaunch", false);
+
+						if(slot >= 7)
+						{
+							slot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); char arg[2] = {1, 0};
+							if(slot < 7) cobra_load_vsh_plugin(slot, vsh_menu ? "/dev_hdd0/plugins/wm_vsh_menu.sprx" : "/dev_hdd0/plugins/slaunch.sprx", (u8*)arg, 1);
+						}
+						break;
+					}
+#endif
 					if(!(webman_config->combo2 & PLAY_DISC) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L2))
 					{
 						char category[16], seg_name[40]; *category = *seg_name = NULL;

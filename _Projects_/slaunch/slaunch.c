@@ -5,13 +5,9 @@
 #include "include/mem.h"
 #include "include/blitting.h"
 
-#ifndef SLAUNCH_COMBO
-
 SYS_MODULE_INFO(sLaunch, 0, 1, 1);
 SYS_MODULE_START(slaunch_start);
 SYS_MODULE_STOP(slaunch_stop);
-
-#endif
 
 #define THREAD_NAME         "slaunch_thread"
 #define STOP_THREAD_NAME    "slaunch_stop_thread"
@@ -27,7 +23,7 @@ SYS_MODULE_STOP(slaunch_stop);
 #define STR_UNLOAD		"Unload webMAN"
 #define STR_QUIT		"Quit"
 
-#define APP_VERSION		"1.08"
+#define APP_VERSION		"1.09"
 
 typedef struct {
 	uint8_t  gmode;
@@ -136,7 +132,7 @@ uint8_t web_page=0;
 static uint8_t key_repeat=0, can_skip=0;
 
 static uint8_t opt_mode=0;
-static uint8_t unload_mode=0;
+static uint8_t unload_mode=1;
 
 static uint64_t tick=0x80;
 static int8_t   delta=5;
@@ -336,7 +332,7 @@ static void draw_side_menu_option(uint8_t option)
 	ctx.fg_color=(option==5 ? WHITE_TEXT : GRAY_TEXT);
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=5)*32, SM_Y+12*24, STR_SHUTDOWN);
 	ctx.fg_color=(option==6 ? WHITE_TEXT : GRAY_TEXT);
-	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=6)*32, SM_Y+14*24, unload_mode ? STR_UNLOAD : STR_QUIT);
+	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=6)*32, SM_Y+14*24, !unload_mode ? STR_QUIT : STR_UNLOAD);
 	ctx.fg_color=(option==7 ? WHITE_TEXT : GRAY_TEXT);
 	print_text(ctx.side, (CANVAS_W-SM_X), SM_TO+(option!=7)*32, SM_Y+20*24, web_page ? STR_FILEMNGR : STR_SETUP);
 
@@ -767,12 +763,15 @@ static void remove_game(void)
 ////////////////////////////////////////////////////////////////////////
 static void slaunch_thread(uint64_t arg)
 {
-
-#ifndef SLAUNCH_COMBO
-	if(!arg) sys_timer_sleep(12);										// wait 12s and not interfere with boot process
-	send_wm_request("/popup.ps3?sLaunch%20MOD%20" APP_VERSION);
-	//play_rco_sound("snd_system_ng");
-#endif
+	if(!arg)
+	{
+		sys_timer_sleep(12);										// wait 12s and not interfere with boot process
+		send_wm_request("/popup.ps3?sLaunch%20MOD%20" APP_VERSION);
+		unload_mode = 0;
+		//play_rco_sound("snd_system_ng");
+	}
+	else
+		unload_mode = 2;
 
 	for(uint8_t n = 0; n < 7; n++)
 	{
@@ -786,6 +785,12 @@ static void slaunch_thread(uint64_t arg)
 	{
 		if(!slaunch_running)
 		{
+			if(unload_mode > 2)
+			{
+				send_wm_request("/unloadprx.ps3?prx=sLaunch");
+				sys_ppu_thread_exit(0);
+			}
+
 			if(!IS_ON_XMB) {sys_timer_sleep(5); continue;} sys_timer_usleep(300000);
 
 			pdata.len = 0;
@@ -793,10 +798,10 @@ static void slaunch_thread(uint64_t arg)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
 			// remote start
-			if(peekq(SLAUNCH_PEEK_ADDR) == 0xDEADBABE)
+			if(arg || (peekq(SLAUNCH_PEEK_ADDR) == 0xDEADBABE))
 			{
 				start_VSH_Menu();
-				init_delay=0;
+				init_delay = 0; unload_mode = 5;
 				continue;
 			}
 
@@ -873,12 +878,12 @@ static void slaunch_thread(uint64_t arg)
 							if(option==6)
 							{
 								send_wm_request("/popup.ps3?sLaunch%20unloaded!");
-								if(unload_mode)
-									send_wm_request("/quit.ps3");
-								else
-								{
+
+								if(!unload_mode)
 									send_wm_request("/unloadprx.ps3?prx=sLaunch");
-								}
+								else
+									send_wm_request("/quit.ps3");
+
 								running=0;
 							}
 							if(option==7) {load_plugin_by_id(0x1B, (void *)web_browser);}
@@ -976,14 +981,12 @@ static void slaunch_thread(uint64_t arg)
 	sys_ppu_thread_exit(0);
 }
 
-#ifndef SLAUNCH_COMBO
-
 /***********************************************************************
 * start thread
 ***********************************************************************/
 int32_t slaunch_start(uint64_t arg)
 {
-	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, 0, -0x1d8, 0x2000, 1, THREAD_NAME);
+	sys_ppu_thread_create(&slaunch_tid, slaunch_thread, arg, -0x1d8, 0x2000, 1, THREAD_NAME);
 
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_RESIDENT;
@@ -1038,5 +1041,3 @@ int slaunch_stop(void)
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_STOP_OK;
 }
-
-#endif

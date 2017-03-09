@@ -326,7 +326,10 @@ struct platform_info {
 static uint8_t vsh_menu_config[sizeof(vsh_menu_Cfg)];
 static vsh_menu_Cfg *config = (vsh_menu_Cfg*) vsh_menu_config;
 
-static sys_ppu_thread_t vsh_menu_tid = -1;
+#define NONE -1
+#define SYS_PPU_THREAD_NONE        (sys_ppu_thread_t)NONE
+
+static sys_ppu_thread_t vsh_menu_tid = SYS_PPU_THREAD_NONE;
 static int32_t running = 1;
 static uint8_t menu_running = 0;	// vsh menu off(0) or on(1)
 static uint8_t clipboard_mode = 0;
@@ -346,6 +349,7 @@ static uint8_t drive_type[6];
 
 static uint8_t has_icon0 = 0;
 static uint8_t wm_unload = 0;
+static uint8_t unload_mode = 0;
 
 #define REFRESH_DIR  0
 
@@ -1268,20 +1272,14 @@ static void do_main_menu_action(void)
 
 static void do_rebug_menu_action(void)
 {
-	struct CellFsStat s;
-
 	buzzer(1);
 
 	switch(line)
 	{
 		case 0:
-
-			if(cellFsStat("/dev_hdd0/plugins/wm_vsh_menu.sprx", &s) == CELL_FS_SUCCEEDED)
-				send_wm_request("/unloadprx.ps3/dev_hdd0/plugins/wm_vsh_menu.sprx");
-			else
-				return;
-
+			send_wm_request("/unloadprx.ps3?prx=VSH_MENU");
 			break;
+
 		case 1:
 			toggle_normal_rebug_mode();
 			return;
@@ -1731,7 +1729,7 @@ static void draw_background_and_title(void)
 														(view == FILE_MANAGER && !last_game_view) ? curdir + curdir_offset :
 														(view == PLUGINS_MANAGER) ? "Plugins Manager"		:
 																					 "VSH Menu for webMAN") );
-	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.12");
+	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.13");
 }
 
 static void draw_menu_options(void)
@@ -2156,12 +2154,19 @@ static void vsh_menu_thread(uint64_t arg)
 		 strcpy(entry_str[1][7], (config->dnotify) ? "7: Startup Message : OFF\0" : "7: Startup Message : ON\0");
 	}
 
-	sys_timer_sleep(13);
-
-	if(!config->dnotify)
+	if(!arg)
 	{
-		vshtask_notify("VSH Menu loaded.\nHold [Select] to open it.");
+		sys_timer_sleep(13);	// wait 13s and not interfere with boot process
+
+		if(!config->dnotify)
+		{
+			vshtask_notify("VSH Menu loaded.\nHold [Select] to open it.");
+		}
+
+		unload_mode = 0;
 	}
+	else
+		unload_mode = 2;
 
 	//View_Find = getNIDfunc("paf", 0xF21655F3, 0);
 
@@ -2173,6 +2178,12 @@ static void vsh_menu_thread(uint64_t arg)
 	{
 		if(!menu_running)													 // VSH menu is not running, normal XMB execution
 		{
+			if(unload_mode > 2)
+			{
+				send_wm_request("/unloadprx.ps3?prx=VSH_MENU");
+				sys_ppu_thread_exit(0);
+			}
+
 			if(!IS_ON_XMB) {sys_timer_sleep(5); continue;} sys_timer_usleep(300000);
 
 			pdata.len = 0;
@@ -2180,9 +2191,10 @@ static void vsh_menu_thread(uint64_t arg)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
 			// remote start
-			if(peekq(VSH_MENU_PEEK_ADDR) == 0xDEADBEBE)
+			if(arg || (peekq(VSH_MENU_PEEK_ADDR) == 0xDEADBEBE))
 			{
-				start_VSH_Menu();
+				show_menu = 0, oldpad = PAD_SELECT;
+				start_VSH_Menu(); unload_mode = 5;
 				continue;
 			}
 
@@ -2331,10 +2343,8 @@ static void vsh_menu_thread(uint64_t arg)
 	dbg_fini();
 #endif
 
-	finalize_module();
-
-	uint64_t exit_code;
-	sys_ppu_thread_join(vsh_menu_tid, &exit_code);
+	if(menu_running)
+		stop_VSH_Menu();
 
 	sys_ppu_thread_exit(0);
 }
@@ -2344,7 +2354,7 @@ static void vsh_menu_thread(uint64_t arg)
 ***********************************************************************/
 int32_t vsh_menu_start(uint64_t arg)
 {
-	sys_ppu_thread_create(&vsh_menu_tid, vsh_menu_thread, 0, -0x1d8, 0x2000, 1, THREAD_NAME);
+	sys_ppu_thread_create(&vsh_menu_tid, vsh_menu_thread, arg, -0x1d8, 0x2000, 1, THREAD_NAME);
 
 	_sys_ppu_thread_exit(0);
 	return SYS_PRX_RESIDENT;
@@ -2357,14 +2367,13 @@ static void vsh_menu_stop_thread(uint64_t arg)
 {
 	if(menu_running) stop_VSH_Menu();
 
-	vshtask_notify("VSH Menu unloaded.");
+	if(unload_mode != 2) vshtask_notify("VSH Menu unloaded.");
 
 	running = 0;
-	sys_timer_usleep(500000); //Prevent unload too fast
 
 	uint64_t exit_code;
 
-	if(vsh_menu_tid != (sys_ppu_thread_t)-1)
+	if(vsh_menu_tid != SYS_PPU_THREAD_NONE)
 			sys_ppu_thread_join(vsh_menu_tid, &exit_code);
 
 	sys_ppu_thread_exit(0);
@@ -2396,8 +2405,6 @@ int vsh_menu_stop(void)
 
 	int ret = sys_ppu_thread_create(&t, vsh_menu_stop_thread, 0, 0, 0x2000, 1, STOP_THREAD_NAME);
 	if (ret == 0) sys_ppu_thread_join(t, &exit_code);
-
-	sys_timer_usleep(500000); // 0.5s
 
 	finalize_module();
 

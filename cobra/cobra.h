@@ -761,7 +761,7 @@ int cobra_write_config(CobraConfig *cfg);
  * EKRESOURCE -> a module is already loaded at that slot
  * Other -> error from kernel (invalid prx, etc)
  */
-int cobra_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_size);
+int cobra_load_vsh_plugin(unsigned int slot, const char *path, void *arg, uint32_t arg_size);
 
 
 /*

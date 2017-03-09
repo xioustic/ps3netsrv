@@ -53,7 +53,6 @@
 
 bool full = false;
 bool lite = false;
-bool vsh_menu = false;
 
 int sys_fs_mount(char const* deviceName, char const* deviceFileSystem, char const* devicePath, int writeProt)
 {
@@ -350,7 +349,6 @@ int main()
 
 	if(button & 0x04) full=true; else
 	if(button & 0x60) lite=true;  // circle / cross
-	if(button & 0x0F) vsh_menu=true; else vsh_menu = (sysLv2FsStat(PLUGINS_DIR "/wm_vsh_menu.sprx", &stat) == SUCCESS);  // r1/r2/l1/l2
 //---
 
 	sysLv2FsMkdir(TMP_DIR,   0777);
@@ -579,96 +577,31 @@ int main()
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 
 	// install vsh menu
-	if(vsh_menu && sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS)
+	if(sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS)
 	{
 		sysLv2FsMkdir(PLUGINS_DIR "/images", 0777);
 
 		// update images
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu.png",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu.png",   PLUGINS_DIR "/images/wm_vsh_menu.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_1.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_1.png", PLUGINS_DIR "/images/wm_vsh_menu_1.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_2.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_2.png", PLUGINS_DIR "/images/wm_vsh_menu_2.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_3.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_3.png", PLUGINS_DIR "/images/wm_vsh_menu_3.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_4.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_4.png", PLUGINS_DIR "/images/wm_vsh_menu_4.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_5.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_5.png", PLUGINS_DIR "/images/wm_vsh_menu_5.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_6.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_6.png", PLUGINS_DIR "/images/wm_vsh_menu_6.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_5.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_7.png", PLUGINS_DIR "/images/wm_vsh_menu_7.png");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/wm_vsh_menu_6.png", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/wm_vsh_menu_8.png", PLUGINS_DIR "/images/wm_vsh_menu_8.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu.png",   PLUGINS_DIR "/images/wm_vsh_menu.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_1.png", PLUGINS_DIR "/images/wm_vsh_menu_1.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_2.png", PLUGINS_DIR "/images/wm_vsh_menu_2.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_3.png", PLUGINS_DIR "/images/wm_vsh_menu_3.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_4.png", PLUGINS_DIR "/images/wm_vsh_menu_4.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_5.png", PLUGINS_DIR "/images/wm_vsh_menu_5.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_6.png", PLUGINS_DIR "/images/wm_vsh_menu_6.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_7.png", PLUGINS_DIR "/images/wm_vsh_menu_7.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_8.png", PLUGINS_DIR "/images/wm_vsh_menu_8.png");
 
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_fav.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_fav.jpg",   PLUGINS_DIR "/images/slaunch_fav.jpg");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PS1.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PS1.jpg",   PLUGINS_DIR "/images/slaunch_PS1.jpg");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PS2.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PS2.jpg",   PLUGINS_DIR "/images/slaunch_PS2.jpg");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PS3.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PS3.jpg",   PLUGINS_DIR "/images/slaunch_PS3.jpg");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_PSP.jpg",   &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_PSP.jpg",   PLUGINS_DIR "/images/slaunch_PSP.jpg");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_ROMS.jpg",  &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_ROMS.jpg",  PLUGINS_DIR "/images/slaunch_ROMS.jpg");
-		/* if(sysLv2FsStat(PLUGINS_DIR "/images/slaunch_video.jpg", &stat) != SUCCESS) */ CopyFile(APP_USRDIR "/images/slaunch_video.jpg", PLUGINS_DIR "/images/slaunch_video.jpg");
-
-		// append path if installing for first time
-		if(sysLv2FsStat(PLUGINS_DIR "/wm_vsh_menu.sprx", &stat) != SUCCESS)
-		{
-			if(is_cobra())
-			{
-				// append line to boot_plugins.txt
-				if(sysLv2FsStat(HDDROOT_DIR "/boot_plugins.txt", &stat) == SUCCESS)
-					f = fopen(HDDROOT_DIR "/boot_plugins.txt", "a");
-				else
-					f = fopen(HDDROOT_DIR "/boot_plugins.txt", "w");
-					fputs("\r\n" PLUGINS_DIR "/wm_vsh_menu.sprx", f);
-					fclose(f);
-			}
-			if(is_mamba())
-			{
-				// append line to mamba_plugins.txt
-				if(sysLv2FsStat(HDDROOT_DIR "/mamba_plugins.txt", &stat) == SUCCESS)
-					f = fopen(HDDROOT_DIR "/mamba_plugins.txt", "a");
-				else
-					f = fopen(HDDROOT_DIR "/mamba_plugins.txt", "w");
-					fputs("\r\n" PLUGINS_DIR "/wm_vsh_menu.sprx", f);
-					fclose(f);
-			}
-			if(sysLv2FsStat(HDDROOT_DIR "/prx_plugins.txt", &stat) == SUCCESS)
-			{
-				// append line to prx_plugins.txt
-				f = fopen(HDDROOT_DIR "/prx_plugins.txt", "a");
-				fputs("\r\n" PLUGINS_DIR "/wm_vsh_menu.sprx", f);
-				fclose(f);
-			}
-		}
-
-		CopyFile(APP_USRDIR "/wm_vsh_menu.sprx", PLUGINS_DIR "/wm_vsh_menu.sprx");
-
-		// append path if installing for first time
-		if(sysLv2FsStat(PLUGINS_DIR "/slaunch.sprx", &stat) != SUCCESS)
-		{
-			if(is_cobra())
-			{
-				// append line to boot_plugins.txt
-				if(sysLv2FsStat(HDDROOT_DIR "/boot_plugins.txt", &stat) == SUCCESS)
-					f = fopen(HDDROOT_DIR "/boot_plugins.txt", "a");
-				else
-					f = fopen(HDDROOT_DIR "/boot_plugins.txt", "w");
-					fputs("\r\n" PLUGINS_DIR "/slaunch.sprx", f);
-					fclose(f);
-			}
-			if(is_mamba())
-			{
-				// append line to mamba_plugins.txt
-				if(sysLv2FsStat(HDDROOT_DIR "/mamba_plugins.txt", &stat) == SUCCESS)
-					f = fopen(HDDROOT_DIR "/mamba_plugins.txt", "a");
-				else
-					f = fopen(HDDROOT_DIR "/mamba_plugins.txt", "w");
-					fputs("\r\n" PLUGINS_DIR "/slaunch.sprx", f);
-					fclose(f);
-			}
-			if(sysLv2FsStat(HDDROOT_DIR "/prx_plugins.txt", &stat) == SUCCESS)
-			{
-				// append line to prx_plugins.txt
-				f = fopen(HDDROOT_DIR "/prx_plugins.txt", "a");
-				fputs("\r\n" PLUGINS_DIR "/slaunch.sprx", f);
-				fclose(f);
-			}
-		}
+		CopyFile(APP_USRDIR "/images/slaunch_fav.jpg",   PLUGINS_DIR "/images/slaunch_fav.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PS1.jpg",   PLUGINS_DIR "/images/slaunch_PS1.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PS2.jpg",   PLUGINS_DIR "/images/slaunch_PS2.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PS3.jpg",   PLUGINS_DIR "/images/slaunch_PS3.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PSP.jpg",   PLUGINS_DIR "/images/slaunch_PSP.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_ROMS.jpg",  PLUGINS_DIR "/images/slaunch_ROMS.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_video.jpg", PLUGINS_DIR "/images/slaunch_video.jpg");
 
 		CopyFile(APP_USRDIR "/slaunch.sprx", PLUGINS_DIR "/slaunch.sprx");
+		CopyFile(APP_USRDIR "/wm_vsh_menu.sprx", PLUGINS_DIR "/wm_vsh_menu.sprx");
 	}
 
 	// skip update custom language file

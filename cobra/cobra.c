@@ -2369,7 +2369,7 @@ int sys_get_version2(uint16_t *version)
 	return (int)p1;
 }
 
-int cobra_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_size)
+int cobra_load_vsh_plugin(unsigned int slot, const char *path, void *arg, uint32_t arg_size)
 {
 	system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_LOAD_VSH_PLUGIN, slot, (uint64_t)(uint32_t)path, (uint64_t)(uint32_t)arg, arg_size);
 	return (int)p1;

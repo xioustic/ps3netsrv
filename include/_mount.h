@@ -10,8 +10,9 @@
 // [PS2]     PS2 extracted folders in /PS2DISC (needs PS2_DISC compilation flag)
 // [netemu]  Mount ps2/psx game with netemu
 
-
+#ifdef PKG_LAUNCHER
 char map_title_id[10];
+#endif
 
 typedef struct
 {
@@ -569,7 +570,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				bool is_error = ((islike(target, drives[usb]) && isDir(drives[usb]) == false)) || islike(target, source) || !sys_admin;
 
 				// show source path
-				sprintf(tempstr, "%s ", STR_COPYING); strcat(buffer, tempstr);
+				strcat(buffer, STR_COPYING); strcat(buffer, " ");
 				add_breadcrumb_trail(buffer, source); strcat(buffer, "<hr>");
 
 				// show image
@@ -827,7 +828,7 @@ static void do_umount(bool clean)
 		if(*map_title_id)
 		{
 			char gamei_mapping[32];
-			sprintf(gamei_mapping, "/dev_hdd0/game/%s", map_title_id);
+			sprintf(gamei_mapping, HDD0_GAME_DIR "%s", map_title_id);
 			sys_map_path(gamei_mapping, NULL);
 			sys_map_path(PKGLAUNCH_DIR, NULL);
 		}
@@ -928,7 +929,7 @@ static void cache_icon0_and_param_sfo(char *destpath)
 	// cache PARAM.SFO
 	if(file_exists(destpath) == false)
 	{
-		for(u8 n = 0; n < 10; n++)
+		for(u8 retry = 0; retry < 10; retry++)
 		{
 			if(file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", destpath, _4KB_) >= CELL_FS_SUCCEEDED) break;
 			sys_ppu_thread_usleep(500000);
@@ -936,10 +937,10 @@ static void cache_icon0_and_param_sfo(char *destpath)
 	}
 
 	// cache ICON0.PNG
-	*ext = NULL; strcat(ext, ".PNG");
+	strcpy(ext, ".PNG");
 	if((webman_config->nocov!=2) && file_exists(destpath) == false)
 	{
-		for(u8 n = 0; n < 10; n++)
+		for(u8 retry = 0; retry < 10; retry++)
 		{
 			if(file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", destpath, COPY_WHOLE_FILE) >= CELL_FS_SUCCEEDED) break;
 			sys_ppu_thread_usleep(500000);
@@ -1259,7 +1260,7 @@ static void mount_thread(u64 action)
 		if(pos)
 		{
 			sys_map_path(PKGLAUNCH_DIR, _path0);
-			strncpy(map_title_id, pos + 7, 9); map_title_id[9] = NULL;
+			get_value(map_title_id, pos + 7, 9);
 			sprintf(_path, "/dev_hdd0/game/%s", map_title_id);
 			sys_map_path(_path, _path0);
 
@@ -1810,7 +1811,7 @@ static void mount_thread(u64 action)
 					{
 						wait_for("/dev_bdvd", 5);
 
-						// re-mount with media type
+						// re-mount using proper media type
 						if(isDir("/dev_bdvd/PS3_GAME")) mount_unk = EMU_PS3; else
 						if(isDir("/dev_bdvd/VIDEO_TS")) mount_unk = EMU_DVD; else
 						if(file_exists("/dev_bdvd/SYSTEM.CNF") || strcasestr(_path, "PS2")) mount_unk = EMU_PS2_DVD; else

@@ -28,6 +28,9 @@
 #define PLAY_DISC (1<<9)
 #define INSTALPKG (1<<10)
 
+#define C_VSHMENU (1<<11)
+#define C_SLAUNCH (1<<12)
+
 #define REBUGMODE (1<<13)
 #define NORMAMODE (1<<14)
 #define DEBUGMENU (1<<15)
@@ -161,6 +164,11 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "pxr=1")) webman_config->combo2|=XMLREFRSH;
 	if(!strstr(param, "umt=1")) webman_config->combo2|=UMNT_GAME;
 	if(!strstr(param, "pld=1")) webman_config->combo2|=PLAY_DISC;
+
+#ifdef COBRA_ONLY
+	if(!strstr(param, "vs=1")) webman_config->combo2|=C_VSHMENU;
+	if(!strstr(param, "sl=1")) webman_config->combo2|=C_SLAUNCH;
+#endif
 
 #ifdef VIDEO_REC
 	if(!strstr(param, "vrc=1")) webman_config->combo2|=VIDRECORD;
@@ -499,8 +507,7 @@ static void setup_form(char *buffer, char *templn)
  #endif
 
 	uint8_t value, b;
-	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{display:none}td+td{text-align:left;white-space:nowrap}"
-					"</style>"
+	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{display:none}td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 					"<b><a class=\"tg\" href=\"javascript:tgl(cnt);\"> %s </a></b><br><div id=\"cnt\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
@@ -546,8 +553,8 @@ static void setup_form(char *buffer, char *templn)
 	add_check_box("psp", false, "PLAYSTATION\xC2\xAEPORTABLE", b ? " (" : _BR_, !(webman_config->cmask & PSP), buffer);
 	if(b) add_check_box("psl", false, STR_PSPL               ,     ")<br>"    ,  (webman_config->pspl)       , buffer);
 
-	add_check_box("blu", false, "Blu-ray\xE2\x84\xA2"        ,       " ("     , !(webman_config->cmask & BLU), buffer);
-	add_check_box("rxv", false, STR_RXVID                    ,       ")<br>"  ,  (webman_config->rxvid)      , buffer);
+	add_check_box("blu", false, "Blu-ray\xE2\x84\xA2"        ,     " ("       , !(webman_config->cmask & BLU), buffer);
+	add_check_box("rxv", false, STR_RXVID                    ,     ")<br>"    ,  (webman_config->rxvid)      , buffer);
 
 	add_check_box("dvd", false, "DVD "                       ,       STR_VIDLG, !(webman_config->cmask & DVD), buffer);
 #endif
@@ -913,6 +920,11 @@ static void setup_form(char *buffer, char *templn)
 	//combos
 	sprintf(templn, "</div>" HTML_BLU_SEPARATOR "<b><a class=\"tg\" href=\"javascript:tgl(cmb);\"> %s </a></b><br><div id=\"cmb\"><table width=\"800\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\"><tr><td nowrap valign=top>", STR_COMBOS2); strcat(buffer, templn);
 
+#ifdef COBRA_ONLY
+	add_check_box("vs", false, "VSH MENU",      " : <b>SELECT</b><br>"           , !(webman_config->combo2 & C_VSHMENU), buffer);
+	add_check_box("sl", false, "GAME MENU",     " : <b>START / L2+R2</b><br>"    , !(webman_config->combo2 & C_SLAUNCH), buffer);
+#endif
+
 #ifdef SYS_ADMIN_MODE
 	add_check_box("adm", false, "ADMIN/USER MODE", " : <b>L2+R2+&#8710;</b><br>" ,  (webman_config->combo & SYS_ADMIN),  buffer);
 #endif
@@ -994,7 +1006,7 @@ static void setup_form(char *buffer, char *templn)
 #endif
 
 #ifdef PKG_HANDLER
-	add_check_box("pkg", false, "INSTALL PKG",  " : <b>SELECT+R2+O</b><br>"      , !(webman_config->combo2 & INSTALPKG), buffer);
+	add_check_box("pkg", false, "INSTALL PKG",  " : <b>SELECT+R2+O</b><br>"    , !(webman_config->combo2 & INSTALPKG), buffer);
 #endif
 	add_check_box("pld", false, "PLAY DISC",    " : <b>L2+START</b><br>"
 							  "</td></tr></table>"                             , !(webman_config->combo2 & PLAY_DISC), buffer);

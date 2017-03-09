@@ -9,7 +9,7 @@
 typedef struct _netiso_args
 {
 	char server[0x40];
-	char path[0x420];
+	char path[MAX_PATH_LEN];
 	uint32_t emu_mode;
 	uint32_t num_tracks;
 	uint16_t port;
