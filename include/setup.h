@@ -217,7 +217,7 @@ static void setup_parse_settings(char *param)
 	webman_config->minfan = get_valuen(param, "mfan=", MIN_FANSPEED, 99); //%
 
 	webman_config->bind = 0;
-	if(strstr(param, "ip=1")) webman_config->bind = 1;
+	if(strstr(param, "bn=1")) webman_config->bind = 1;
 
 	pos = strstr(param, "pwd=");
 	if(pos) get_value(webman_config->ftp_password, pos + 4, 20);
@@ -645,9 +645,9 @@ static void setup_form(char *buffer, char *templn)
  #endif
 
 #ifdef LITE_EDITION
-	add_check_box("ip", false,  STR_ACCESS,   _BR_, (webman_config->bind) , buffer);
+	add_check_box("bn", false,  STR_ACCESS,   _BR_, (webman_config->bind) , buffer);
 #else
-	add_check_box("ip", false,  STR_ACCESS,  " : ", (webman_config->bind) , buffer);
+	add_check_box("bn", false,  STR_ACCESS,  " : ", (webman_config->bind) , buffer);
 
 	sprintf(templn, HTML_INPUT("aip", "%s", "15", "16") " Pwd: "
 					HTML_PASSW("pwd", "%s", "20", "20") "<br>", webman_config->allow_ip, webman_config->ftp_password); strcat(buffer, templn);
