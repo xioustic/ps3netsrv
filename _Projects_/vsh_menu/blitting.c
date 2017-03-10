@@ -90,7 +90,8 @@ static void font_init(void)
 	get_font_object();
 
 	// get id of current logged in user for the xRegistry query we do next
-	 user_id = xsetting_CC56EB2D()->GetCurrentUserNumber();
+	user_id = xsetting_CC56EB2D()->GetCurrentUserNumber();
+	if(user_id > 255) user_id=1;
 
 	// get current font style for the current logged in user
 	xsetting_CC56EB2D()->GetRegistryValue(user_id, 0x5C, &val);
@@ -277,7 +278,7 @@ static int32_t utf8_to_ucs4(uint8_t *utf8, uint32_t *ucs4)
 				c4 = (uint32_t)*utf8;
 
 				if((c4 & 0xC0) == 0x80)
-			    *ucs4 = ((c1  & 0x07) << 18) | ((c2 & 0x3F) << 12) | ((c3 & 0x3F) <<  6) | (c4 & 0x3F);
+				*ucs4 = ((c1  & 0x07) << 18) | ((c2 & 0x3F) << 12) | ((c3 & 0x3F) <<  6) | (c4 & 0x3F);
 				else
 				  len = *ucs4 = 0;
 			}
@@ -418,8 +419,8 @@ void set_foreground_color(uint32_t color)
 void set_font(float_t font_w, float_t font_h, float_t weight, int32_t distance)
 {
 	// max size is 32 * 32 pixels
-	if(font_w > 32.f && font_h > 32.f)
-	  font_w = font_h = 32.f;
+	if(font_w > 32.f) font_w = 32.f;
+	if(font_h > 32.f) font_h = 32.f;
 
 	// set font
 	FontSetScalePixel(&ctx.font, font_w, font_h);
@@ -467,14 +468,13 @@ int32_t print_text(int32_t x, int32_t y, const char *str)
 	memset(&glyph, 0, sizeof(Glyph));
 
 	// center text (only 1 line)
-	if(x == -1)
+	if(x == CENTER_TEXT)
 	{
 		while(1)                                  // get render length
 		{
 			utf8 += utf8_to_ucs4(utf8, &code);
 
-			if(code == 0)
-			break;
+			if(code == 0) break;
 
 			glyph = get_glyph(code);
 			len += glyph->metrics.Horizontal.advance + bitmap->distance;
@@ -489,11 +489,9 @@ int32_t print_text(int32_t x, int32_t y, const char *str)
 	{
 		utf8 += utf8_to_ucs4(utf8, &code);
 
-		if(code == 0)
-		{
-		  break;
-		}
-		else if(code == '\n')
+		if(code == 0) break;
+
+		if((code == '^') || ((code == '\n') && (x != CENTER_TEXT)))
 		{
 			o_x = x;
 			o_y += bitmap->horizontal_layout.lineHeight;

@@ -374,7 +374,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 									poke_lv1(lv2_offset + 0x10, 0x6C76325F73656C66ULL);
 
 									working = 0;
-									{ del_turnoff(); }
+									{ del_turnoff(0); }
 									save_file(WMNOSCAN, NULL, 0);
 									{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);} /*load LPAR id 1*/
 									sys_ppu_thread_exit(0);
@@ -749,7 +749,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				else
 				{
 					show_msg((char*)STR_CPYFINISH);
-					if(do_restart) { { del_turnoff(); } { BEEP2 } vsh_reboot();}
+					if(do_restart) { { del_turnoff(2); } vsh_reboot();}
 				}
 
 				setPluginInactive();

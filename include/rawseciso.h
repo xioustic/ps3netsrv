@@ -860,7 +860,7 @@ static void eject_thread(uint64_t arg)
 				fake_eject_event(BDVD_DRIVE);
 				sys_storage_ext_umount_discfile();
 
-				if(real_disctype != 0)
+				if(real_disctype != DISC_TYPE_NONE)
 				{
 					fake_insert_event(BDVD_DRIVE, real_disctype);
 				}
@@ -891,7 +891,7 @@ static void eject_thread(uint64_t arg)
 
 				sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
-				if(real_disctype != 0)
+				if(real_disctype != DISC_TYPE_NONE)
 				{
 					fake_eject_event(BDVD_DRIVE);
 				}
@@ -929,7 +929,7 @@ static void rawseciso_thread(uint64_t arg)
 	num_sections = 0;
 	CD_SECTOR_SIZE_2352 = 2352;
 
-	emu_mode = args->emu_mode & 1023;
+	emu_mode = args->emu_mode & 0x3FF;
 
 #ifdef RAWISO_PSX_MULTI
 	psxseciso_args *psx_args;
@@ -1069,7 +1069,7 @@ static void rawseciso_thread(uint64_t arg)
 
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
-	if(real_disctype != 0)
+	if(real_disctype != DISC_TYPE_NONE)
 	{
 		fake_eject_event(BDVD_DRIVE);
 	}
@@ -1114,7 +1114,7 @@ static void rawseciso_thread(uint64_t arg)
 		ret = sys_event_queue_receive(command_queue_ntfs, &event, 0);
 		if(ret != CELL_OK)
 		{
-			if((command_queue_ntfs == SYS_EVENT_QUEUE_NONE || eject_running == 2) && ret !=0)
+			if(command_queue_ntfs == SYS_EVENT_QUEUE_NONE || eject_running == 2)
 			{
 				if(!ntfs_running) break;
 
@@ -1122,6 +1122,7 @@ static void rawseciso_thread(uint64_t arg)
 
 				continue;
 			}
+
 			if(ret != (int) 0x80010013) {system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
 			//DPRINTF("sys_event_queue_receive failed: %x\n", ret);
 			break;
@@ -1211,17 +1212,22 @@ static void rawseciso_thread(uint64_t arg)
 		if(ret != CELL_OK) break;
 	}
 
-	ret = 0;
+	ret = CELL_OK;
 
 exit_rawseciso:
 
 	do_run = eject_running = 0;
 
+	if(command_queue_ntfs != SYS_EVENT_QUEUE_NONE)
+	{
+		sys_event_queue_destroy(command_queue_ntfs, SYS_EVENT_QUEUE_DESTROY_FORCE);
+	}
+
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 	fake_eject_event(BDVD_DRIVE);
 	sys_storage_ext_umount_discfile();
 
-	if(real_disctype != 0)
+	if(real_disctype != DISC_TYPE_NONE)
 	{
 		fake_insert_event(BDVD_DRIVE, real_disctype);
 	}

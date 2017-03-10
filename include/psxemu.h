@@ -14,6 +14,9 @@ static void select_ps1emu(char *path)
 
 	char msg[100];
 
+	sys_map_path("/dev_flash/ps1emu/ps1_netemu.self", NULL);
+	sys_map_path("/dev_flash/ps1emu/ps1_emu.self"   , NULL);
+
 	if(webman_config->ps1emu)
 	{
 		sys_map_path("/dev_flash/ps1emu/ps1_netemu.self", "///dev_flash/ps1emu/ps1_emu.self");
@@ -23,9 +26,6 @@ static void select_ps1emu(char *path)
 	}
 	else
 	{
-		sys_map_path("/dev_flash/ps1emu/ps1_netemu.self", NULL);
-		sys_map_path("/dev_flash/ps1emu/ps1_emu.self"   , NULL);
-
 		sprintf(msg, "%s %s", "ps1_emu.self", STR_ENABLED);
 	}
 

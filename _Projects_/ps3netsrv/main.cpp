@@ -410,10 +410,16 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 		return -1;
 	}
 
+	if(client->ro_file)
+	{
+		delete client->ro_file;
+		client->ro_file = NULL;
+	}
+
 	if((fp_len >= 10) && !strcmp(filepath, "/CLOSEFILE"))
 	{
 		free(filepath);
-		return 0;
+		return -1;
 	}
 
 	filepath = translate_path(filepath, 1, &viso);
@@ -421,11 +427,6 @@ static int process_open_cmd(client_t *client, netiso_open_cmd *cmd)
 	{
 		DPRINTF("Path cannot be translated. Connection with this client will be aborted.\n");
 		return -1;
-	}
-
-	if(client->ro_file)
-	{
-		delete client->ro_file;
 	}
 
 	if(viso == VISO_NONE)
@@ -1538,7 +1539,7 @@ int main(int argc, char *argv[])
 	SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 0x0F );
 #endif
 
-	printf("ps3netsrv build 20170106");
+	printf("ps3netsrv build 20170310");
 
 #ifdef WIN32
 	SetConsoleTextAttribute( GetStdHandle( STD_OUTPUT_HANDLE ), 0x04 );

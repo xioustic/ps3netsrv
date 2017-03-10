@@ -157,7 +157,7 @@ int save_file(const char *file, const char *mem, int64_t size)
 	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
 	cellFsChmod(file, MODE);
 
-	if( size < 0 )  {flags = CELL_FS_O_APPEND | CELL_FS_O_CREAT | CELL_FS_O_WRONLY; size = (size == APPEND_TEXT) ? 0 : -size;} else
+	if( size < 0 )  {flags = CELL_FS_O_APPEND | CELL_FS_O_CREAT | CELL_FS_O_WRONLY; size = (size == APPEND_TEXT) ? SAVE_ALL : -size;} else
 	if(!extcmp(file, "/PARAM.SFO", 10)) flags = CELL_FS_O_CREAT | CELL_FS_O_WRONLY;
 
 	if(cellFsOpen(file, flags, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
@@ -737,7 +737,7 @@ static void delete_history(bool delete_folders)
 	cellFsRmdir("/dev_hdd0/PKG");
 }
 
-static void del_turnoff(void)
+static void del_turnoff(u8 beeps)
 {
 	do_umount(false);
 	cellFsUnlink((char*)"/dev_hdd0/tmp/turnoff");
@@ -748,6 +748,9 @@ static void del_turnoff(void)
 #ifdef WEB_CHAT
 	cellFsUnlink(WMCHATFILE);
 #endif
+
+	if(beeps == 1) { BEEP1 }
+	if(beeps == 2) { BEEP2 }
 }
 
 #ifdef COPY_PS3

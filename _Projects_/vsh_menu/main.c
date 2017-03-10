@@ -1,37 +1,19 @@
-#include <arpa/inet.h>
-
-#include <sys/prx.h>
-#include <sys/ppu_thread.h>
-#include <sys/process.h>
-#include <sys/event.h>
 #include <sys/syscall.h>
-#include <sys/memory.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/sys_time.h>
-#include <sys/timer.h>
 #include <cell/pad.h>
 #include <cell/cell_fs.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <unistd.h>
-#include <math.h>
-#include <time.h>
-
-#include <netinet/in.h>
-
 #include "include/vsh_exports.h"
 
-#ifdef DEBUG
-#include "include/network.h"
-#endif
+#define MAX_PATH_LEN 512
 
 #include "include/misc.h"
 #include "include/mem.h"
 #include "include/blitting.h"
+#include "include/pad.h"
+#include "include/file.h"
+#include "include/network.h"
+#include "include/sys_info.h"
+#include "include/vsh_plugin.h"
 
 SYS_MODULE_INFO(VSH_MENU, 0, 1, 0);
 SYS_MODULE_START(vsh_menu_start);
@@ -40,14 +22,7 @@ SYS_MODULE_STOP(vsh_menu_stop);
 #define THREAD_NAME         "vsh_menu_thread"
 #define STOP_THREAD_NAME    "vsh_menu_stop_thread"
 
-#define VSH_MODULE_PATH     "/dev_blind/vsh/module/"
-#define VSH_ETC_PATH        "/dev_blind/vsh/etc/"
-
-#define VSH_MENU_PEEK_ADDR  0x8000000000000180
-
 #define IS_ON_XMB			(vshmain_EB757101() == 0)
-
-#define FAILED              -1
 
 #define WHITE               0xFFFFFFFF
 #define GREEN               0xFF00FF00
@@ -57,7 +32,6 @@ SYS_MODULE_STOP(vsh_menu_stop);
 
 #define MAX_LAST_GAMES	(5)
 
-#define MAX_PATH_LEN 512
 #define MAX_ITEMS	256
 
 enum menus
@@ -68,83 +42,6 @@ enum menus
 	FILE_MANAGER,
 	LAST_GAME,
 };
-
-typedef struct
-{
-	uint8_t usb0;
-	uint8_t usb1;
-	uint8_t usb2;
-	uint8_t usb3;
-	uint8_t usb6;
-	uint8_t usb7;
-	uint8_t netd0;
-	uint8_t lastp;
-	uint8_t autob;
-	uint8_t delay;
-	uint8_t bootd;
-	uint8_t boots;
-	uint8_t blind;
-	uint8_t nogrp;
-	uint8_t noset;
-	uint8_t cmask;
-	uint32_t netp0;
-	char neth0[16];
-	uint8_t poll;
-	uint8_t ftpd;
-	uint8_t warn;
-	uint8_t fanc;
-	uint8_t temp1;
-	uint8_t rxvid;
-	uint8_t bind;
-	uint8_t refr;
-	uint8_t manu;
-	uint8_t temp0;
-	uint8_t netd1;
-	uint32_t netp1;
-	char neth1[16];
-	uint8_t foot;
-	uint8_t nopad;
-	uint8_t nocov;
-	uint8_t nospoof;
-	uint8_t ps2temp;
-	uint8_t pspl;
-	uint8_t minfan;
-	uint16_t combo;
-	uint8_t sidps;
-	uint8_t spsid;
-	uint8_t spp;
-	uint8_t lang;
-	char vIDPS1[17];
-	char vIDPS2[17];
-	char vPSID1[17];
-	char vPSID2[17];
-	uint8_t tid;
-	uint8_t wmdn;
-	char autoboot_path[256];
-	uint8_t ps2l;
-	uint32_t combo2;
-	uint8_t homeb;
-	char home_url[256];
-	uint8_t netd2;
-	uint32_t netp2;
-	char neth2[16];
-	uint8_t profile;
-	char uaccount[9];
-	char allow_ip[16];
-	uint8_t noss;
-	uint8_t fixgame;
-	uint8_t bus;
-	uint8_t dev_sd;
-	uint8_t dev_ms;
-	uint8_t dev_cf;
-	uint8_t ps1emu;
-	uint8_t autoplay;
-	uint8_t use_filename;
-	uint32_t rec_video_format;
-	uint32_t rec_audio_format;
-	uint8_t keep_ccapi;
-	char padding[67];
-} __attribute__((packed)) WebmanCfg;
 
 ////////////////////////////////
 typedef struct
@@ -166,8 +63,9 @@ typedef struct
 	uint8_t dev_sd;
 	uint8_t dev_ms;
 	uint8_t dev_cf;
+	uint8_t ntfs;
 
-	uint8_t padding1[6];
+	uint8_t padding1[5];
 
 	// scan content settings
 
@@ -184,25 +82,31 @@ typedef struct
 	uint8_t tid;
 	uint8_t use_filename;
 	uint8_t launchpad_xml;
+	uint8_t launchpad_grp;
+	uint8_t ps3l;
+	uint8_t roms;
+	uint8_t mc_app; // allow allocation from app memory container
+	uint8_t info;
 
-	uint8_t padding2[20];
+	uint8_t padding2[15];
 
 	// start up settings
 
 	uint8_t wmstart;
 	uint8_t lastp;
 	uint8_t autob;
-	char	autoboot_path[256];
+	char    autoboot_path[256];
 	uint8_t delay;
 	uint8_t bootd;
 	uint8_t boots;
 	uint8_t nospoof;
 	uint8_t blind;
-	uint8_t spp;	//disable syscalls, offline: lock PSN, offline ingame
+	uint8_t spp;    //disable syscalls, offline: lock PSN, offline ingame
 	uint8_t noss;   //no singstar
 	uint8_t nosnd0; //no snd0.at3
+	uint8_t dsc;    //disable syscalls if physical disc is inserted
 
-	uint8_t padding3[5];
+	uint8_t padding3[4];
 
 	// fan control settings
 
@@ -222,8 +126,9 @@ typedef struct
 	uint8_t  keep_ccapi;
 	uint32_t combo;
 	uint32_t combo2;
+	uint8_t  sc8mode;
 
-	uint8_t padding5[22];
+	uint8_t padding5[21];
 
 	// ftp server settings
 
@@ -231,8 +136,8 @@ typedef struct
 	uint8_t  ftpd;
 	uint16_t ftp_port;
 	uint8_t  ftp_timeout;
-	char	 ftp_password[20];
-	char	 allow_ip[16];
+	char     ftp_password[20];
+	char     allow_ip[16];
 
 	uint8_t padding6[7];
 
@@ -247,7 +152,7 @@ typedef struct
 
 	uint8_t  netd[5];
 	uint16_t netp[5];
-	char	 neth[5][16];
+	char     neth[5][16];
 
 	uint8_t padding8[33];
 
@@ -257,15 +162,17 @@ typedef struct
 	uint8_t fixgame;
 	uint8_t ps1emu;
 	uint8_t autoplay;
+	uint8_t ps2emu;
 
-	uint8_t padding9[12];
+	uint8_t padding9[11];
 
 	// profile settings
 
 	uint8_t profile;
 	char uaccount[9];
+	uint8_t admin_mode;
 
-	uint8_t padding10[6];
+	uint8_t padding10[5];
 
 	// misc settings
 
@@ -309,19 +216,6 @@ typedef struct
 	char game[MAX_LAST_GAMES][MAX_PATH_LEN];
 } __attribute__((packed)) _lastgames;
 
-struct timeval {
-	int64_t tv_sec;			/* seconds */
-	int64_t tv_usec;		/* and microseconds */
-};
-
-static char FW[10];
-static char payload_type[64];
-static char kernel_type[64];
-static void get_firmware_version(void);
-
-struct platform_info {
-	uint32_t firmware_version;
-} info;
 
 static uint8_t vsh_menu_config[sizeof(vsh_menu_Cfg)];
 static vsh_menu_Cfg *config = (vsh_menu_Cfg*) vsh_menu_config;
@@ -331,7 +225,7 @@ static vsh_menu_Cfg *config = (vsh_menu_Cfg*) vsh_menu_config;
 
 static sys_ppu_thread_t vsh_menu_tid = SYS_PPU_THREAD_NONE;
 static int32_t running = 1;
-static uint8_t menu_running = 0;	// vsh menu off(0) or on(1)
+static uint8_t menu_running = 0;	// vsh menu 0=off / 1=on
 static uint8_t clipboard_mode = 0;
 
 int32_t vsh_menu_start(uint64_t arg);
@@ -342,451 +236,24 @@ static void vsh_menu_stop_thread(uint64_t arg);
 
 static char tempstr[1024];
 static uint16_t t_icon_X;
-static char netstr[64] = "";
-static char cfw_str[64] = "";
 static char drivestr[6][64];
 static uint8_t drive_type[6];
 
 static uint8_t has_icon0 = 0;
-static uint8_t wm_unload = 0;
 static uint8_t unload_mode = 0;
 
 #define REFRESH_DIR  0
 
-static char curdir[MAX_PATH_LEN] = "/";
+static char curdir[MAX_PATH_LEN];
 static char items[MAX_ITEMS][MAX_PATH_LEN];
 static uint8_t items_isdir[MAX_ITEMS];
 static uint16_t nitems = 0, cur_item = 0, curdir_offset = 0, cdir = 0;
 
 static char item_size[64];
 
-char *current_file[512];
-
 static void vsh_menu_thread(uint64_t arg);
 
-extern int32_t netctl_main_9A528B81(int32_t size, const char *ip);  // get ip addr of interface "eth0"
-
-/*
-int (*View_Find)(const char *) = NULL;
-
-static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
-{
-	// 0x10000 = ELF
-	// 0x10080 = segment 2 start
-	// 0x10200 = code start
-
-	uint32_t table = (*(uint32_t*)0x1008C) + 0x984; // vsh table address
-
-	while(((uint32_t)*(uint32_t*)table) != 0)
-	{
-		uint32_t* export_stru_ptr = (uint32_t*)*(uint32_t*)table; // ptr to export stub, size 2C, "sys_io" usually... Exports:0000000000635BC0 stru_635BC0:    ExportStub_s <0x1C00, 1, 9, 0x39, 0, 0x2000000, aSys_io, ExportFNIDTable_sys_io, ExportStubTable_sys_io>
-
-		const char* lib_name_ptr =  (const char*)*(uint32_t*)((char*)export_stru_ptr + 0x10);
-
-		if(strncmp(vsh_module, lib_name_ptr, strlen(lib_name_ptr))==0)
-		{
-			// we got the proper export struct
-			uint32_t lib_fnid_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x14);
-			uint32_t lib_func_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x18);
-			uint16_t count = *(uint16_t*)((char*)export_stru_ptr + 6); // number of exports
-			for(int i = 0; i < count; i++)
-			{
-				if(fnid == *(uint32_t*)((char*)lib_fnid_ptr + i*4))
-				{
-					// take address from OPD
-					return (void**)*((uint32_t*)(lib_func_ptr) + i) + offset;
-				}
-			}
-		}
-		table += 4;
-	}
-	return 0;
-}
-*/
-
-////////////////////////////////////////////////////////////////////////
-//			SYS_PPU_THREAD_EXIT, DIRECT OVER SYSCALL				//
-////////////////////////////////////////////////////////////////////////
-static inline void _sys_ppu_thread_exit(uint64_t val)
-{
-	system_call_1(41, val);
-}
-
-////////////////////////////////////////////////////////////////////////
-//						 GET MODULE BY ADDRESS						//
-////////////////////////////////////////////////////////////////////////
-static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
-{
-  system_call_1(461, (uint64_t)(uint32_t)addr);
-  return (int32_t)p1;
-}
-
-#define SC_PEEK_LV2 					(6)
-
-static inline uint64_t peekq(uint64_t addr)
-{
-	system_call_1(SC_PEEK_LV2, addr);
-	return (uint64_t) p1;
-}
-
-////////////////////////////////////////////////////////////////////////
-//                      GET CPU & RSX TEMPERATURES                  //
-////////////////////////////////////////////////////////////////////////
-static void get_temperature(uint32_t _dev, uint32_t *_temp)
-{
-	system_call_2(383, (uint64_t)(uint32_t) _dev, (uint64_t)(uint32_t) _temp);
-}
-
-////////////////////////////////////////////////////////////////////////
-//              DELETE TURNOFF FILE TO AVOID BAD SHUTDOWN            //
-////////////////////////////////////////////////////////////////////////
-static void soft_reboot(void)
-{
-	cellFsUnlink("/dev_hdd0/tmp/turnoff");
-	{system_call_3(379, 0x8201, NULL, 0);}
-	sys_ppu_thread_exit(0);
-}
-
-static void hard_reboot(void)
-{
-	cellFsUnlink("/dev_hdd0/tmp/turnoff");
-	{system_call_3(379, 0x1200, NULL, 0);}
-	sys_ppu_thread_exit(0);
-}
-
-static void shutdown_system(void)
-{
-	cellFsUnlink("/dev_hdd0/tmp/turnoff");
-	{system_call_4(379, 0x1100, 0, 0, 0);}
-	sys_ppu_thread_exit(0);
-}
-
-static int connect_to_webman(void)
-{
-	struct sockaddr_in sin;
-	int s;
-
-	sin.sin_family = AF_INET;
-	sin.sin_addr.s_addr = 0x7F000001; //127.0.0.1 (localhost)
-	sin.sin_port = htons(80);         //http port (80)
-	s = socket(AF_INET, SOCK_STREAM, 0);
-	if (s < 0)
-	{
-		return -1;
-	}
-
-	if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0)
-	{
-		return -1;
-	}
-
-	return s;
-}
-
-static void sclose(int *socket_e)
-{
-	if(*socket_e != -1)
-	{
-		shutdown(*socket_e, SHUT_RDWR);
-		socketclose(*socket_e);
-		*socket_e = -1;
-	}
-}
-
-static void send_wm_request(const char *cmd)
-{
-	// send command
-	int conn_s = -1;
-	conn_s = connect_to_webman();
-
-	struct timeval tv;
-	tv.tv_usec = 0;
-	tv.tv_sec = 3;
-	setsockopt(conn_s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
-	setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-	if(conn_s >= 0)
-	{
-		char wm_cmd[1048];
-		int cmd_len = sprintf(wm_cmd, "GET %s HTTP/1.0\r\n", cmd);
-		send(conn_s, wm_cmd, cmd_len, 0);
-		sclose(&conn_s);
-	}
-}
-
-
-////////////////////////////////////////////////////////////////////////
-//                      EJECT/INSERT DISC CMD                         //
-////////////////////////////////////////////////////////////////////////
-static void eject_insert(uint8_t eject, uint8_t insert)
-{
-	uint8_t atapi_cmnd2[56];
-	uint8_t* atapi_cmnd = atapi_cmnd2;
-	int dev_id;
-
-				memset(atapi_cmnd, 0, 56);
-				atapi_cmnd[0x00] = 0x1b;
-				atapi_cmnd[0x01] = 0x01;
-	if(eject)   atapi_cmnd[0x04] = 0x02;
-	if(insert)  atapi_cmnd[0x04] = 0x03;
-				atapi_cmnd[0x23] = 0x0c;
-
-	{system_call_4(600, 0x101000000000006ULL, 0, (uint64_t)(uint32_t) &dev_id, 0);}      //SC_STORAGE_OPEN
-	{system_call_7(616, dev_id, 1, (uint64_t)(uint32_t) atapi_cmnd, 56, NULL, 0, NULL);} //SC_STORAGE_INSERT_EJECT
-	{system_call_1(601, dev_id);}                                                        //SC_STORAGE_CLOSE
-	sys_timer_sleep(2);
-}
-
-////////////////////////////////////////////////////////////////////////
-//                      GET FIRMWARE VERSION                          //
-////////////////////////////////////////////////////////////////////////
-
-#define SYSCALL8_OPCODE_GET_MAMBA				0x7FFFULL
-#define SYSCALL8_OPCODE_GET_VERSION				0x7000
-#define SYSCALL8_OPCODE_GET_VERSION2			0x7001
-
-static int sys_get_version(uint32_t *version)
-{
-	system_call_2(8, SYSCALL8_OPCODE_GET_VERSION, (uint64_t)(uint32_t)version);
-	return (int)p1;
-}
-
-static int sys_get_version2(uint16_t *version)
-{
-	system_call_2(8, SYSCALL8_OPCODE_GET_VERSION2, (uint64_t)(uint32_t)version);
-	return (int)p1;
-}
-
-static int is_cobra_based(void)
-{
-	uint32_t version = 0x99999999;
-
-	if (sys_get_version(&version) < 0)
-		return 0;
-
-	if (version != 0x99999999) // If value changed, it is cobra
-		return 1;
-
-	return 0;
-}
-
-static int lv2_get_platform_info(struct platform_info *info)
-{
-	system_call_1(387, (uint32_t) info);
-	return (int32_t)p1;
-}
-
-static void get_firmware_version(void)
-{
-	lv2_get_platform_info(&info);
-	sprintf(FW, "%02X", info.firmware_version);
-}
-
-static void get_kernel_type(void)
-{
-	uint64_t type;
-	memset(kernel_type, 0, 64);
-	system_call_1(985, (uint32_t)&type);
-	if(type == 1) sprintf(kernel_type, "CEX"); else // Retail
-	if(type == 2) sprintf(kernel_type, "DEX"); else // Debug
-	if(type == 3) sprintf(kernel_type, "Debugger"); // Debugger
-}
-
-static void get_payload_type(void)
-{
-	if(!is_cobra_based()) return;
-
-	bool is_mamba; {system_call_1(8, SYSCALL8_OPCODE_GET_MAMBA); is_mamba = ((int)p1 ==0x666);}
-
-	uint16_t cobra_version; sys_get_version2(&cobra_version);
-	sprintf(payload_type, "%s %X.%X", is_mamba ? "Mamba" : "Cobra", cobra_version>>8, (cobra_version & 0xF) ? (cobra_version & 0xFF) : ((cobra_version>>4) & 0xF));
-}
-
-static void get_network_info(void)
-{
-	char netdevice[32];
-	char ipaddr[32];
-
-	net_info info1;
-	memset(&info1, 0, sizeof(net_info));
-	xsetting_F48C0548()->sub_44A47C(&info1);
-
-	if (info1.device == 0)
-	{
-		strcpy(netdevice, "LAN");
-	}
-	else if (info1.device == 1)
-	{
-		strcpy(netdevice, "WLAN");
-	}
-	else
-		strcpy(netdevice, "[N/A]");
-
-	int32_t size = 0x10;
-	char ip[size];
-	netctl_main_9A528B81(size, ip);
-
-	if (ip[0] == '\0')
-		strcpy(ipaddr, "[N/A]");
-	else
-		sprintf(ipaddr, "%s", ip);
-
-	sprintf(netstr, "Network connection :  %s\r\nIP address :  %s", netdevice, ipaddr);
-}
-
-#define SC_COBRA_SYSCALL8 8
-#define SYSCALL8_OPCODE_LOAD_VSH_PLUGIN          0x1EE7
-#define SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN        0x364F
-#define SYSCALL8_OPCODE_PS3MAPI                  0x7777
-#define PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO       0x0047
-#define PS3MAPI_OPCODE_UNLOAD_VSH_PLUGIN         0x0046
-
 char *strcasestr(const char *s1, const char *s2);
-
-static int cobra_load_vsh_plugin(unsigned int slot, char *path, void *arg, uint32_t arg_size)
-{
-	system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_LOAD_VSH_PLUGIN, slot, (uint64_t)(uint32_t)path, (uint64_t)(uint32_t)arg, arg_size);
-	return (int)p1;
-}
-
-static int cobra_unload_vsh_plugin(unsigned int slot)
-{
-	system_call_2(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_UNLOAD_VSH_PLUGIN, slot);
-	return (int)p1;
-}
-
-static char h2a(char hex)
-{
-	char c = hex;
-	if(c >= 0 && c <= 9)
-		c += '0';
-	else if(c >= 10 && c <= 15)
-		c += 55; //A-F
-	return c;
-}
-
-static void urlenc(char *dst, char *src)
-{
-	size_t j=0;
-	size_t n=strlen(src);
-	for(size_t i=0; i<n; i++,j++)
-	{
-			 if(src[i] == ' ') {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '0';}
-		else if(src[i] == ':') {dst[j++] = '%'; dst[j++] = '3'; dst[j] = 'A';}
-		else if(src[i] & 0x80)
-		{
-			dst[j++] = '%';
-			dst[j++] = h2a((unsigned char)src[i]>>4);
-			dst[j] = h2a(src[i] & 0xf);
-		}
-		else if(src[i] == 34) {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '2';}
-		else if(src[i] == 39) {dst[j++] = '%'; dst[j++] = '2'; dst[j] = '7';}
-		else dst[j] = src[i];
-	}
-	dst[j] = '\0';
-}
-
-static int isDir(const char* path)
-{
-	struct CellFsStat s;
-	if(cellFsStat(path, &s)==CELL_FS_SUCCEEDED)
-		return ((s.st_mode & CELL_FS_S_IFDIR) != 0);
-	else
-		return 0;
-}
-
-static size_t read_file(const char *file, char *data, size_t size, int32_t offset)
-{
-	int fd = 0; uint64_t pos, read_e = 0;
-
-	if(offset < 0) offset = 0; else memset(data, 0, size);
-
-	if(cellFsOpen(file, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-	{
-		if(cellFsLseek(fd, offset, CELL_FS_SEEK_SET, &pos) == CELL_FS_SUCCEEDED)
-		{
-			if(cellFsRead(fd, (void *)data, size, &read_e) != CELL_FS_SUCCEEDED) read_e = 0;
-		}
-		cellFsClose(fd);
-	}
-
-	return read_e;
-}
-
-static int file_exists(const char* path)
-{
-	struct CellFsStat s;
-	return (cellFsStat(path, &s)==CELL_FS_SUCCEEDED);
-}
-
-static int del(char *path, bool recursive)
-{
-	if(!isDir(path)) {return cellFsUnlink(path);}
-	if(strlen(path)<11 || !memcmp(path, "/dev_bdvd", 9) || !memcmp(path, "/dev_flash", 10) || !memcmp(path, "/dev_blind", 10)) return FAILED;
-
-	int fd;
-	uint64_t read;
-	CellFsDirent dir;
-	char entry[MAX_PATH_LEN];
-
-	if(cellFsOpendir(path, &fd) == CELL_FS_SUCCEEDED)
-	{
-		read = sizeof(CellFsDirent);
-		while(!cellFsReaddir(fd, &dir, &read))
-		{
-			if(!read) break;
-			if(dir.d_name[0] == '.' && (dir.d_name[1] == '.' || dir.d_name[1] == 0)) continue;
-
-			sprintf(entry, "%s/%s", path, dir.d_name);
-
-			if(isDir(entry))
-				{if(recursive) del(entry, recursive);}
-			else
-				cellFsUnlink(entry);
-		}
-		cellFsClosedir(fd);
-	}
-	else
-		return FAILED;
-
-	if(recursive) cellFsRmdir(path);
-
-	return CELL_FS_SUCCEEDED;
-}
-
-static unsigned int get_vsh_plugin_slot_by_name(const char *name, bool unload)
-{
-	char tmp_name[30];
-	char tmp_filename[256];
-	unsigned int slot, unused_slot = 0;
-
-	for (slot = 1; slot < 7; slot++)
-	{
-		memset(tmp_name, 0, sizeof(tmp_name));
-		memset(tmp_filename, 0, sizeof(tmp_filename));
-		{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_VSH_PLUGIN_INFO, (uint64_t)slot, (uint64_t)(uint32_t)tmp_name, (uint64_t)(uint32_t)tmp_filename); }
-
-		if(strstr(tmp_filename, name) || !strcmp(tmp_name, name))
-		{
-			if(strstr(tmp_filename, "webftp_server"))
-			{
-				if(unload) {if(wm_unload) continue; send_wm_request("/quit.ps3"); return 0;}
-				return wm_unload ? 0 : slot;
-			}
-			else
-			if(unload)
-			{
-				cobra_unload_vsh_plugin(slot);
-				return 0;
-			}
-			else
-				return slot;
-		}
-
-		if(unused_slot == 0 && strlen(tmp_name)==0) unused_slot = slot;
-	}
-	return unload ? unused_slot : 0;
-}
 
 static void start_VSH_Menu(void)
 {
@@ -826,8 +293,6 @@ static void start_VSH_Menu(void)
 
 	get_network_info();
 
-	sprintf(cfw_str, "Firmware : %c.%c%c %s %s", FW[0], FW[2], FW[3], kernel_type, payload_type);
-
 	// stop vsh pad
 	start_stop_vsh_pad(0);
 
@@ -862,227 +327,12 @@ static void stop_VSH_Menu(void)
 	sys_timer_usleep(100000);
 }
 
-////////////////////////////////////////////////////////////////////////
-//                       MOUNT DEV_BLIND                            //
-////////////////////////////////////////////////////////////////////////
-
-static void mount_dev_blind(void)
-{
-	system_call_8(837, (uint64_t)(char*)"CELL_FS_IOS:BUILTIN_FLSH1", (uint64_t)(char*)"CELL_FS_FAT", (uint64_t)(char*)"/dev_blind", 0, 0, 0, 0, 0);
-}
-
-static void swap_file(const char *path, const char *curfile, const char *rento, const char *newfile)
-{
-	char file1[64], file2[64], file3[64];
-
-	sprintf(file3, "%s%s", path, newfile);
-
-	if(file_exists(file3))
-	{
-		sprintf(file1, "%s%s", path, curfile);
-		sprintf(file2, "%s%s", path, rento);
-
-		cellFsRename(file1, file2);
-		cellFsRename(file3, file1);
-	}
-}
-
-//////////////////////////////////////////////////////////////////////
-//                      TOGGLE NORMAL/REBUG MODE                    //
-//////////////////////////////////////////////////////////////////////
-
-static void toggle_normal_rebug_mode(void)
-{
-	mount_dev_blind();
-
-	if(file_exists(VSH_MODULE_PATH "vsh.self.swp"))
-	{
-		stop_VSH_Menu();
-		vshtask_notify( "Normal Mode detected!\r\n"
-						"Switch to REBUG Mode...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.nrm", "index.dat.swp");
-		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.nrm", "version.txt.swp");
-		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.nrm", "vsh.self.swp");
-
-		soft_reboot();
-	}
-	else
-	if(file_exists(VSH_MODULE_PATH "vsh.self.nrm"))
-	{
-		stop_VSH_Menu();
-		vshtask_notify( "Rebug Mode detected!\r\n"
-						"Switch to Normal Mode...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		swap_file(VSH_ETC_PATH, "index.dat", "index.dat.swp", "index.dat.nrm");
-		swap_file(VSH_ETC_PATH, "version.txt", "version.txt.swp", "version.txt.nrm");
-		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.swp", "vsh.self.nrm");
-
-		soft_reboot();
-	}
-}
-
-////////////////////////////////////////////////////////////////////////
-//                       TOGGLE XMB MODE                              //
-////////////////////////////////////////////////////////////////////////
-
-static void toggle_xmb_mode(void)
-{
-	mount_dev_blind();
-
-	if(file_exists(VSH_MODULE_PATH "vsh.self.cexsp"))
-	{
-		stop_VSH_Menu();
-		vshtask_notify( "Debug XMB detected!\r\n"
-						"Switch to Retail XMB...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.dexsp", "vsh.self.cexsp");
-
-		soft_reboot();
-	}
-	else
-	if(file_exists(VSH_MODULE_PATH "vsh.self.dexsp"))
-	{
-		stop_VSH_Menu();
-		vshtask_notify( "Retail XMB detected!\r\n"
-						"Switch to Debug XMB...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		swap_file(VSH_MODULE_PATH, "vsh.self", "vsh.self.cexsp", "vsh.self.dexsp");
-
-		soft_reboot();
-	}
-}
-
-////////////////////////////////////////////////////////////////////////
-//                      TOGGLE DEBUG MENU                             //
-////////////////////////////////////////////////////////////////////////
-
-static void toggle_debug_menu(void)
-{
-	mount_dev_blind();
-
-	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.dex"))
-	{
-
-		stop_VSH_Menu();
-		vshtask_notify( "CEX QA Menu is active!\r\n"
-						"Switch to DEX Debug Menu...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.cex", "sysconf_plugin.sprx.dex");
-	}
-	else
-	if(file_exists(VSH_MODULE_PATH "sysconf_plugin.sprx.cex"))
-	{
-		stop_VSH_Menu();
-		vshtask_notify( "DEX Debug Menu is active!\r\n"
-						"Switch to CEX QA Menu...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		swap_file(VSH_MODULE_PATH, "sysconf_plugin.sprx", "sysconf_plugin.sprx.dex", "sysconf_plugin.sprx.cex");
-	}
-	sys_timer_sleep(1);
-	{system_call_3(838, (uint64_t)(char*)"/dev_blind", 0, 1);}
-}
-
-////////////////////////////////////////////////////////////////////////
-//                      DISABLE COBRA STAGE2                          //
-////////////////////////////////////////////////////////////////////////
-
-static void disable_cobra_stage2(void)
-{
-	stop_VSH_Menu();
-
-	if(is_cobra_based())
-	{
-		mount_dev_blind();
-
-		vshtask_notify("Cobra Mode detected!\r\nDisabling Cobra stage2...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		cellFsRename("/dev_blind/rebug/cobra/stage2.cex", "/dev_blind/rebug/cobra/stage2.cex.bak");
-		cellFsRename("/dev_blind/rebug/cobra/stage2.dex", "/dev_blind/rebug/cobra/stage2.dex.bak");
-		cellFsRename("/dev_blind/sys/stage2.bin", "/dev_blind/sys/stage2_disabled.bin");
-
-		soft_reboot();
-	}
-	else
-	{
-		vshtask_notify("Cobra Mode was NOT detected!");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-	}
-}
-
-////////////////////////////////////////////////////////////////////////
-//                      DISABLE Webman                                //
-////////////////////////////////////////////////////////////////////////
-
-static void disable_webman(void)
-{
-	stop_VSH_Menu();
-
-	if(file_exists("/dev_flash/vsh/module/webftp_server.sprx"))
-	{
-		mount_dev_blind();
-		vshtask_notify( "webMAN MOD is Enabled!\r\n"
-						"Now will be Disabled...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		cellFsRename("/dev_blind/vsh/module/webftp_server.sprx", "/dev_blind/vsh/module/webftp_server.sprx.vsh");
-		soft_reboot();
-	}
-	else if(file_exists("/dev_blind/vsh/module/webftp_server.sprx.vsh"))
-	{
-		mount_dev_blind();
-		vshtask_notify( "webMAN MOD Disabled!\r\n"
-						"Now will be Enabled...");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-
-		cellFsRename("/dev_blind/vsh/module/webftp_server.sprx.vsh", "/dev_blind/vsh/module/webftp_server.sprx");
-		soft_reboot();
-	}
-	else
-	{
-		vshtask_notify("webMAN MOD was not found on /dev_flash");
-		play_rco_sound("system_plugin", "snd_system_ok");
-		sys_timer_sleep(1);
-	}
-}
-
-static void recovery_mode(void)
-{
-	#define SC_UPDATE_MANAGER_IF				863
-	#define UPDATE_MGR_PACKET_ID_READ_EPROM		0x600B
-	#define UPDATE_MGR_PACKET_ID_WRITE_EPROM	0x600C
-	#define RECOVER_MODE_FLAG_OFFSET			0x48C61
-
-	stop_VSH_Menu();
-	vshtask_notify("Now PS3 will be restarted in Recovery Mode");
-	play_rco_sound("system_plugin", "snd_system_ok");
-	sys_timer_sleep(1);
-
-   {system_call_7(SC_UPDATE_MANAGER_IF, UPDATE_MGR_PACKET_ID_WRITE_EPROM, RECOVER_MODE_FLAG_OFFSET, 0x00, 0, 0, 0, 0);} // set recovery mode
-	hard_reboot();
-}
+#include "include/rebug.h"
 
 ////////////////////////////////////////////////////////////////////////
 //							BLITTING								//
 ////////////////////////////////////////////////////////////////////////
-static uint16_t line = 0;			 // current line into menu, init 0 (Menu Entry 1)
+static uint16_t line = 0;			 // current line into menu, init 0 [Menu Entry 1]
 #define MAX_MENU	 12
 #define MAX_MENU2	8
 
@@ -1167,30 +417,18 @@ static void do_main_menu_action(void)
 			// get fan_mode (0 = dynamic / 1 = manual)
 			if(line<3)
 			{
-			int fd = 0;
-			if(cellFsOpen("/dev_hdd0/tmp/wm_config.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-			{
+				int fd = 0;
+				if(cellFsOpen("/dev_hdd0/tmp/wm_config.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+				{
 
-				 uint8_t wmconfig[sizeof(WebmanCfg_v2)];
-				 WebmanCfg_v2 *webman_config = (WebmanCfg_v2*) wmconfig;
+					 uint8_t wmconfig[sizeof(WebmanCfg_v2)];
+					 WebmanCfg_v2 *webman_config = (WebmanCfg_v2*) wmconfig;
 
-				 cellFsRead(fd, (void *)wmconfig, sizeof(WebmanCfg), 0);
-				 cellFsClose(fd);
+					 cellFsRead(fd, (void *)wmconfig, sizeof(WebmanCfg_v2), 0);
+					 cellFsClose(fd);
 
-				 fan_mode = (webman_config->temp0 > 0); // manual
-			}
-			else
-			if(cellFsOpen("/dev_hdd0/tmp/wmconfig.bin", CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
-			{
-
-				 uint8_t wmconfig[sizeof(WebmanCfg)];
-				 WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
-
-				 cellFsRead(fd, (void *)wmconfig, sizeof(WebmanCfg), 0);
-				 cellFsClose(fd);
-
-				 fan_mode = (webman_config->temp0 > 0); // manual
-			}
+					 fan_mode = (webman_config->temp0 > 0); // manual
+				}
 			}
 
 			if(entry_mode[line] == (fan_mode ? 1 : 0)) {send_wm_request("/cpursx.ps3?dn"); buzzer(1);}
@@ -1569,7 +807,7 @@ static void do_plugins_manager_action(uint32_t curpad)
 {
 	nitems = line = 0;
 
-	int fd; char paths[10][48] = {"/dev_hdd0", "/dev_hdd0/plugins", "/dev_hdd0/plugins/ps3xpad", "/dev_hdd0/plugins/ps3_menu", "/dev_usb000", "/dev_usb001", "/dev_hdd0/game/UPDWEBMOD/USRDIR", "/dev_hdd0/game/UPDWEBMOD/USRDIR/official", "/dev_hdd0/tmp"};
+	int fd; const char *paths[10] = {"/dev_hdd0", "/dev_hdd0/plugins", "/dev_hdd0/plugins/ps3xpad", "/dev_hdd0/plugins/ps3_menu", "/dev_usb000", "/dev_usb001", "/dev_hdd0/game/UPDWEBMOD/USRDIR", "/dev_hdd0/game/UPDWEBMOD/USRDIR/official", "/dev_hdd0/tmp"};
 
 	// clear list
 	for(int i = 0; i < MAX_ITEMS; i++) {items[i][0] = 0; items_isdir[i] = 0;}
@@ -1724,12 +962,12 @@ static void draw_background_and_title(void)
 		 draw_png(1, 18, 208, 0, 0, ctx.png[1].w, ctx.png[1].h);
 
 	// print headline string, center(x = -1)
-	set_font(22.f, 23.f, 1.f, 1); print_text(-1, 8, ( (view == REBUG_MENU)		? "VSH Menu for Rebug"   :
-														(view == FILE_MANAGER &&  last_game_view) ? "LAST GAMES" :
-														(view == FILE_MANAGER && !last_game_view) ? curdir + curdir_offset :
-														(view == PLUGINS_MANAGER) ? "Plugins Manager"		:
-																					 "VSH Menu for webMAN") );
-	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.13");
+	set_font(22.f, 23.f, 1.f, 1); print_text(CENTER_TEXT, 8,  ( (view == REBUG_MENU)	  ? "VSH Menu for Rebug"    :
+																(view == FILE_MANAGER &&  last_game_view) ? "LAST GAMES" :
+																(view == FILE_MANAGER && !last_game_view) ? curdir + curdir_offset :
+																(view == PLUGINS_MANAGER) ? "Plugins Manager"		:
+																						    "VSH Menu for webMAN") );
+	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.14");
 }
 
 static void draw_menu_options(void)
@@ -2170,8 +1408,13 @@ static void vsh_menu_thread(uint64_t arg)
 
 	//View_Find = getNIDfunc("paf", 0xF21655F3, 0);
 
+	*payload_type = NULL;
+	*kernel_type = NULL;
+	*netstr = NULL;
+	*cfw_str = NULL;
+	sprintf(curdir,  "/");
+
 	get_firmware_version();
-	get_kernel_type();
 	memset(payload_type, 0, 64);
 
 	while(running)
@@ -2191,7 +1434,7 @@ static void vsh_menu_thread(uint64_t arg)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
 			// remote start
-			if(arg || (peekq(VSH_MENU_PEEK_ADDR) == 0xDEADBEBE))
+			if(arg)
 			{
 				show_menu = 0, oldpad = PAD_SELECT;
 				start_VSH_Menu(); unload_mode = 5;
@@ -2367,7 +1610,7 @@ static void vsh_menu_stop_thread(uint64_t arg)
 {
 	if(menu_running) stop_VSH_Menu();
 
-	if(unload_mode != 2) vshtask_notify("VSH Menu unloaded.");
+	if(unload_mode < 2) vshtask_notify("VSH Menu unloaded.");
 
 	running = 0;
 

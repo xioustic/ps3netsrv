@@ -1,7 +1,6 @@
 #define FTP_OK_150			"150 OK\r\n"						// File status okay; about to open data connection.
 #define FTP_OK_200			"200 OK\r\n"						// The requested action has been successfully completed.
 #define FTP_OK_TYPE_200		"200 TYPE OK\r\n"					// The requested action has been successfully completed.
-#define FTP_OK_TYPE_220		"220-VSH ftpd\r\n"					// Service ready for new user.
 #define FTP_OK_221			"221 BYE\r\n"						// Service closing control connection.
 #define FTP_OK_226			"226 OK\r\n"						// Closing data connection. Requested file action successful (for example, file transfer or file abort).
 #define FTP_OK_ABOR_226		"226 ABOR OK\r\n"					// Closing data connection. Requested file action successful
@@ -91,8 +90,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 	char remote_ip[16];
 	sprintf(remote_ip, "%s", inet_ntoa(conn_info.remote_adr));
-
-	ssend(conn_s_ftp, FTP_OK_TYPE_220); // Service ready for new user.
 
 	if(webman_config->bind && ((conn_info.local_adr.s_addr != conn_info.remote_adr.s_addr) && strncmp(remote_ip, webman_config->allow_ip, strlen(webman_config->allow_ip)) != 0))
 	{
@@ -350,9 +347,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							ssend(conn_s_ftp, FTP_OK_221); // Service closing control connection.
 							if(sysmem) sys_memory_free(sysmem);
 							working = 0;
-							{ del_turnoff(); }
 							if(_IS(cmd, "REBOOT")) save_file(WMNOSCAN, NULL, 0);
-							if(_IS(cmd, "SHUTDOWN")) {BEEP1; system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);} else {BEEP2; system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
+							if(_IS(cmd, "SHUTDOWN")) {del_turnoff(1); system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);} else {del_turnoff(2); system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 							sys_ppu_thread_exit(0);
 						}
 #ifdef USE_NTFS

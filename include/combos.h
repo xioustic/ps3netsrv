@@ -50,6 +50,9 @@
 
  SKIP AUTO-MOUNT   : L2+R2  (at startup only)   *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2
 
+ VSH MENU          : SELECT (hold down for few seconds)
+ sLaunch MENU      : L2+R2 or START
+
  Open File Manager : L2+R2+O                    *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_circle
  Open Games List   : L2+R2+R1+O                 *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_r1_circle
  Open System Info  : L2+R2+L1+O                 *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_l1_circle
@@ -65,6 +68,8 @@
 
 		for(n = 0; n < 10; n++)
 		{
+			if(!working) break;
+
 			if(show_persistent_popup == PERSIST) {goto show_persistent_popup;}
 			if(show_info_popup) {show_info_popup = false; goto show_popup;}
 
@@ -86,21 +91,14 @@
 				if(data.len > 0)
 				{
 #ifdef COBRA_ONLY
-					if( ((!(webman_config->combo2 & C_SLAUNCH)) && (((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0)) ||
-																	((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == 0) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)))))
-					||	((!(webman_config->combo2 & C_VSHMENU)) &&  ((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0))) )
+					if( ((!(webman_config->combo2 & C_SLAUNCH)) && (((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_START) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0)) ||                    // START
+																	((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == 0) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)))))   // L2+R2
+					||	((!(webman_config->combo2 & C_VSHMENU)) &&  ((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0))) )                   // SELECT
 					{
 						if(++init_delay < 5) {sys_ppu_thread_usleep(200000); continue;}
 
-						bool vsh_menu = (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT);
+						start_vsh_gui(data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT);
 
-						unsigned int slot = get_vsh_plugin_slot_by_name(vsh_menu ? "VSH_MENU" : "sLaunch", false);
-
-						if(slot >= 7)
-						{
-							slot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); char arg[2] = {1, 0};
-							if(slot < 7) cobra_load_vsh_plugin(slot, vsh_menu ? "/dev_hdd0/plugins/wm_vsh_menu.sprx" : "/dev_hdd0/plugins/slaunch.sprx", (u8*)arg, 1);
-						}
 						break;
 					}
 #endif
@@ -552,7 +550,7 @@ show_popup:
 						{
 							// power off
 							working = 0;
-							{ del_turnoff(); } { BEEP1 }
+							{ del_turnoff(1); }
 
 							{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
 
@@ -562,7 +560,7 @@ show_popup:
 						{
 							// lpar restart
 							working = 0;
-							{ del_turnoff(); }{ BEEP2 }
+							{ del_turnoff(2); }
 
 							{system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 
@@ -593,7 +591,7 @@ show_popup:
 						{
 							// vsh shutdown
 							working = 0;
-							{ del_turnoff(); }{ BEEP1 }
+							{ del_turnoff(1); }
 
 							vsh_shutdown(); // VSH shutdown
 
@@ -604,7 +602,7 @@ show_popup:
 						{
 							// vsh reboot
 							working = 0;
-							{ del_turnoff(); }{ BEEP2 }
+							{ del_turnoff(2); }
 
 							vsh_reboot(); // VSH reboot
 
@@ -763,7 +761,7 @@ show_popup:
 reboot:
 					// vsh reboot
 					working = 0;
-					{ del_turnoff(); }
+					{ del_turnoff(0); }
 					save_file(WMNOSCAN, NULL, 0);
 
 					vsh_reboot(); // VSH reboot
@@ -772,8 +770,6 @@ reboot:
 				}
 
 			}
-
-			if(!working) break;
 
 			sys_ppu_thread_usleep(300000);
 

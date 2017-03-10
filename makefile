@@ -35,7 +35,10 @@ PPU_PRX_LDLIBS 	+= -lcrashdump_system_export_stub \
 PPU_PRX_LDLIBS 	+= -lntfs_prx
 PPU_PRX_LDLIBS 	+= -lmd5
 
-PPU_CFLAGS += -Os -ffunction-sections -fdata-sections -fno-builtin-printf -nodefaultlibs -std=gnu99 -Wno-shadow -Wno-unused-parameter
+PPU_CFLAGS += -Os -ffunction-sections -fdata-sections \
+              -fno-builtin-printf -nodefaultlibs -std=gnu99 \
+              -Wno-shadow -Wno-unused-parameter
+
 #PPU_CFLAGS += -finline-limit=100
 
 ifeq ($(BUILD_TYPE), debug)

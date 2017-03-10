@@ -22,6 +22,8 @@
 
 #define PNG_MAX       4                // additional png bitmaps
 
+#define CENTER_TEXT  -1
+
 // get pixel offset into framebuffer by x/y coordinates
 #define OFFSET(x, y) (uint32_t)((((uint32_t)offset) + ((((int16_t)x) + \
                      (((int16_t)y) * (((uint32_t)pitch) / \

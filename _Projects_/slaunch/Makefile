@@ -26,6 +26,8 @@ PPU_PRX_LDLIBS 	+= -lfs_stub -lnet_stub -lrtc_stub -lio_stub -lnetctl_stub -ljpg
                    -lsdk_export_stub \
                    -lsys_io_export_stub
 
+
+
 PPU_CFLAGS += -Os -ffunction-sections -fdata-sections \
               -fno-builtin-printf -nodefaultlibs -std=gnu99 \
               -Wno-shadow -Wno-unused-parameter

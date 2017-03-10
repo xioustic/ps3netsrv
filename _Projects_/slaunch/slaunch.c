@@ -47,8 +47,6 @@ typedef struct {
 #define XMLMANPLS_DIR		"/dev_hdd0/game/XMBMANPLS"
 #define XMLMANPLS_IMAGES_DIR XMLMANPLS_DIR "/USRDIR/IMAGES"
 
-#define SLAUNCH_PEEK_ADDR  0x8000000000000180
-
 #define TYPE_ALL 0
 #define TYPE_PSX 1
 #define TYPE_PS2 2
@@ -798,7 +796,7 @@ static void slaunch_thread(uint64_t arg)
 				if(cellPadGetData(p, &pdata) == CELL_PAD_OK && pdata.len > 0) break;
 
 			// remote start
-			if(arg || (peekq(SLAUNCH_PEEK_ADDR) == 0xDEADBABE))
+			if(arg)
 			{
 				start_VSH_Menu();
 				init_delay = 0; unload_mode = 5;

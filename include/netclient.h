@@ -379,6 +379,7 @@ static void netiso_thread(uint64_t arg)
 	args = (netiso_args *)(uint32_t)arg; if(!args) sys_ppu_thread_exit(0);
 
 	emu_mode = args->emu_mode & 0xF;
+	CD_SECTOR_SIZE_2352 = 2352;
 
 	//DPRINTF("Hello VSH\n");
 
@@ -405,7 +406,7 @@ static void netiso_thread(uint64_t arg)
 	discsize = (uint64_t)ret64;
 
 	ret = sys_event_port_create(&result_port, 1, SYS_EVENT_PORT_NO_NAME);
-	if(ret != 0)
+	if(ret != CELL_OK)
 	{
 		//DPRINTF("sys_event_port_create failed: %x\n", ret);
 		goto exit_netiso;
@@ -413,7 +414,7 @@ static void netiso_thread(uint64_t arg)
 
 	sys_event_queue_attribute_initialize(queue_attr);
 	ret = sys_event_queue_create(&command_queue_net, &queue_attr, 0, 1);
-	if(ret != 0)
+	if(ret != CELL_OK)
 	{
 		//DPRINTF("sys_event_queue_create failed: %x\n", ret);
 		goto exit_netiso;
@@ -435,10 +436,9 @@ static void netiso_thread(uint64_t arg)
 		is_cd2352 = 0;
 	}
 
-	sys_memory_free((sys_addr_t)args); args = NULL;
 	sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
-	if(real_disctype != 0)
+	if(real_disctype != DISC_TYPE_NONE)
 	{
 		fake_eject_event(BDVD_DRIVE);
 	}
@@ -456,10 +456,10 @@ static void netiso_thread(uint64_t arg)
 
 	fake_insert_event(BDVD_DRIVE, real_disctype);
 
-	if(ret != 0)
+	if(ret != CELL_OK)
 	{
 		sys_event_port_destroy(result_port);
-		sys_ppu_thread_exit(0);
+		goto exit_netiso;
 	}
 
 	netiso_loaded = 1;
@@ -469,7 +469,7 @@ static void netiso_thread(uint64_t arg)
 		sys_event_t event;
 
 		ret = sys_event_queue_receive(command_queue_net, &event, 0);
-		if(ret != 0)
+		if(ret != CELL_OK)
 		{
 			//DPRINTF("sys_event_queue_receive failed: %x\n", ret);
 			break;
@@ -506,7 +506,7 @@ static void netiso_thread(uint64_t arg)
 		while(netiso_loaded)
 		{
 			ret = sys_event_port_send(result_port, ret, 0, 0);
-			if(ret == 0) break;
+			if(ret == CELL_OK) break;
 
 			if(ret == (int) 0x8001000A)
 			{   // EBUSY
@@ -529,7 +529,7 @@ exit_netiso:
 	fake_eject_event(BDVD_DRIVE);
 	sys_storage_ext_umount_discfile();
 
-	if(real_disctype != 0)
+	if(real_disctype != DISC_TYPE_NONE)
 	{
 		fake_insert_event(BDVD_DRIVE, real_disctype);
 	}
@@ -541,11 +541,13 @@ exit_netiso:
 
 	if(g_socket >= 0)
 	{
-		sclose(&g_socket);
+		shutdown(g_socket, SHUT_RDWR);
+		socketclose(g_socket);
+		g_socket = -1;
 	}
 
 	sys_event_port_disconnect(result_port);
-	if(sys_event_port_destroy(result_port) != 0)
+	if(sys_event_port_destroy(result_port) != CELL_OK)
 	{
 		//DPRINTF("Error destroyng result_port\n");
 	}

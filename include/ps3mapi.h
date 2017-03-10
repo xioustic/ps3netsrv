@@ -50,6 +50,9 @@
 
 #define PS3MAPI_FIND_FREE_SLOT						NULL
 
+#define unload_vsh_plugin(a) get_vsh_plugin_slot_by_name(a, true)
+#define get_free_slot(a)     get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false)
+
 ///////////// PS3MAPI END //////////////
 
 #if defined(REMOVE_SYSCALLS) || defined(PS3MAPI)
@@ -804,7 +807,7 @@ static void ps3mapi_vshplugin(char *buffer, char *templn, char *param)
 					char prx_path[STD_PATH_LEN];
 					get_value(prx_path, pos + 4, STD_PATH_LEN);
 
-					if (!uslot ) uslot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); // find free slot if slot == 0
+					if (!uslot ) uslot = get_free_slot(); // find free slot if slot == 0
 
 					if ( uslot ) {{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_LOAD_VSH_PLUGIN, (u64)uslot, (u64)(u32)prx_path, NULL, 0);}}
 				}
@@ -1522,7 +1525,7 @@ static void handleclient_ps3mapi(u64 conn_s_ps3mapi_p)
 							if(split)
 							{
 								unsigned int slot = val(param1);
-								if(!slot ) slot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false);
+								if(!slot ) slot = get_free_slot();
 								if( slot ) {{system_call_5(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_LOAD_VSH_PLUGIN, (u64)slot, (u64)(u32)param2, NULL, 0); }}
 								ssend(conn_s_ps3mapi, PS3MAPI_OK_200);
 							}
@@ -1719,5 +1722,12 @@ static unsigned int get_vsh_plugin_slot_by_name(const char *name, bool unload)
 		if(IS(tmp_name, name) || strstr(tmp_filename, name)) {if(unload) cobra_unload_vsh_plugin(slot); break;}
 	}
 	return slot;
+}
+
+static void start_vsh_gui(bool vsh_menu)
+{
+	unload_vsh_plugin(vsh_menu ? "VSH_MENU" : "sLaunch");
+	unsigned int slot = get_free_slot(); char arg[2] = {1, 0};
+	if(slot < 7) cobra_load_vsh_plugin(slot, vsh_menu ? "/dev_hdd0/plugins/wm_vsh_menu.sprx" : "/dev_hdd0/plugins/slaunch.sprx", (u8*)arg, 1);
 }
 #endif // #ifdef COBRA_ONLY

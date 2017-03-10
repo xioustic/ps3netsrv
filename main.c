@@ -199,31 +199,34 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define THREAD_PRIO_STOP		 0x000
 #define THREAD_PRIO_HIGH		 2000
 
+
+#define THREAD_STACK_SIZE_6KB		0x01800UL
 #define THREAD_STACK_SIZE_8KB		0x02000UL
 #define THREAD_STACK_SIZE_16KB		0x04000UL
+#define THREAD_STACK_SIZE_24KB		0x06000UL
 #define THREAD_STACK_SIZE_32KB		0x08000UL
 #define THREAD_STACK_SIZE_48KB		0x0C000UL
 #define THREAD_STACK_SIZE_64KB		0x10000UL
 #define THREAD_STACK_SIZE_96KB		0x18000UL
 #define THREAD_STACK_SIZE_128KB		0x20000UL
 
-#define THREAD_STACK_SIZE_FTP_SERVER	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_FTP_SERVER	THREAD_STACK_SIZE_6KB
 #define THREAD_STACK_SIZE_FTP_CLIENT	THREAD_STACK_SIZE_16KB
 
-#define THREAD_STACK_SIZE_WEB_SERVER	THREAD_STACK_SIZE_8KB
-#define THREAD_STACK_SIZE_WEB_CLIENT	THREAD_STACK_SIZE_48KB
+#define THREAD_STACK_SIZE_WEB_SERVER	THREAD_STACK_SIZE_6KB
+#define THREAD_STACK_SIZE_WEB_CLIENT	THREAD_STACK_SIZE_32KB
 
-#define THREAD_STACK_SIZE_NET_SERVER	THREAD_STACK_SIZE_8KB
-#define THREAD_STACK_SIZE_NET_CLIENT	THREAD_STACK_SIZE_32KB
+#define THREAD_STACK_SIZE_NET_SERVER	THREAD_STACK_SIZE_6KB
+#define THREAD_STACK_SIZE_NET_CLIENT	THREAD_STACK_SIZE_24KB
 
-#define THREAD_STACK_SIZE_PS3MAPI_SVR	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_PS3MAPI_SVR	THREAD_STACK_SIZE_6KB
 #define THREAD_STACK_SIZE_PS3MAPI_CLI	THREAD_STACK_SIZE_32KB
 
-#define THREAD_STACK_SIZE_NET_ISO		THREAD_STACK_SIZE_8KB
-#define THREAD_STACK_SIZE_NTFS_ISO		THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_NET_ISO		THREAD_STACK_SIZE_6KB
+#define THREAD_STACK_SIZE_NTFS_ISO		THREAD_STACK_SIZE_6KB
 
-#define THREAD_STACK_SIZE_STOP_THREAD	THREAD_STACK_SIZE_8KB
-#define THREAD_STACK_SIZE_INSTALL_PKG	THREAD_STACK_SIZE_8KB
+#define THREAD_STACK_SIZE_STOP_THREAD	THREAD_STACK_SIZE_6KB
+#define THREAD_STACK_SIZE_INSTALL_PKG	THREAD_STACK_SIZE_6KB
 #define THREAD_STACK_SIZE_POLL_THREAD	THREAD_STACK_SIZE_32KB
 #define THREAD_STACK_SIZE_UPDATE_XML	THREAD_STACK_SIZE_128KB
 #define THREAD_STACK_SIZE_MOUNT_GAME	THREAD_STACK_SIZE_48KB
@@ -924,8 +927,8 @@ static u8 check_password(char *param)
 static void restore_settings(void)
 {
 #ifdef COBRA_ONLY
-	get_vsh_plugin_slot_by_name((char *)"VSH_MENU", true); // unload vsh menu
-	get_vsh_plugin_slot_by_name((char *)"sLaunch",  true); // unload sLaunch
+	unload_vsh_plugin("VSH_MENU"); // unload vsh menu
+	unload_vsh_plugin("sLaunch");  // unload sLaunch
 #endif
 
 	for(u8 n = 0; n < 4; n++)
@@ -1682,7 +1685,8 @@ parse_request:
 				// /browser.ps3/<webman_cmd>               execute webMAN command on PS3 browser
 				// /browser.ps3$<explore_plugin_command>   execute explore_plugin command on XMB (http://www.psdevwiki.com/ps3/Explore_plugin#Example_XMB_Commands)
 				// /browser.ps3*<xmb_plugin_command>       execute xmb_plugin commands on XMB (http://www.psdevwiki.com/ps3/Xmb_plugin#Function_23_Examples)
-				// /browser.ps3$slaunch                    start slauch
+				// /browser.ps3$slaunch                    start slaunch
+				// /browser.ps3$vsh_menu                   start vsh_menu
 
 				char *param2 = param + 12, *url = param + 13;
 
@@ -1824,12 +1828,9 @@ parse_request:
    #endif // #ifdef COBRA_ONLY
 				if(IS_ON_XMB)
 				{   // in-XMB
-					if(islike(param2, "$slaunch") || islike(param2, "$vsh_menu"))
-					{
-						pokeq(SLAUNCH_PEEK_ADDR, (param2[1] == 's') ? 0xDEADBABE : 0xDEADBEBE);
-						sys_ppu_thread_sleep(1);
-						pokeq(SLAUNCH_PEEK_ADDR, 0);
-					}
+					if(islike(param2, "$vsh_menu")) start_vsh_gui(true);
+					else
+					if(islike(param2, "$slaunch")) start_vsh_gui(false);
 					else
    #ifdef XMB_SCREENSHOT
 					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param + 27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
@@ -2327,7 +2328,7 @@ parse_request:
 
 				if(sysmem) sys_memory_free(sysmem);
 
-				{ del_turnoff(); } { BEEP1 }
+				{ del_turnoff(1); }
 
 				if(param[13] == '?')
 					vsh_shutdown(); // shutdown using VSH
@@ -2377,7 +2378,7 @@ parse_request:
 
 				if(sysmem) sys_memory_free(sysmem);
 
-				{ del_turnoff(); } { BEEP2 }
+				{ del_turnoff(2); }
 
 				char *allow_scan = strstr(param,"?0");
 				if(allow_scan) *allow_scan = NULL; else save_file(WMNOSCAN, NULL, 0);
@@ -3138,7 +3139,7 @@ parse_request:
 							{
   #ifdef COBRA_ONLY
 								slot = get_valuen(param, "slot=", 0, 6);
-								if(!slot) slot = get_vsh_plugin_slot_by_name(PS3MAPI_FIND_FREE_SLOT, false); // find first free slot if slot == 0
+								if(!slot) slot = get_free_slot(); // find first free slot if slot == 0
   #else
 								slot = get_valuen(param, "slot=", 1, 6);
   #endif
@@ -3776,7 +3777,9 @@ static void wwwd_stop_thread(uint64_t arg)
 
 	restore_settings();
 
-	while(refreshing_xml) sys_ppu_thread_usleep(500000); // Prevent unload too fast
+	sys_ppu_thread_sleep(2);  // Prevent unload too fast (give time to other threads to finish)
+
+	while(refreshing_xml) sys_ppu_thread_usleep(500000);
 
 	uint64_t exit_code;
 
