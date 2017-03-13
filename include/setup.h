@@ -174,7 +174,7 @@ static void setup_parse_settings(char *param)
 	if(!strstr(param, "vrc=1")) webman_config->combo2|=VIDRECORD;
 #endif
 
-	webman_config->info = get_valuen(param, "xi=", 0, 2); // XMB info level
+	webman_config->info = get_valuen(param, "xi=", 0, 3); // XMB info level
 
 	if( strstr(param, "wn=1"))  webman_config->wmstart = 1;
 	if( strstr(param, "tid=1")) webman_config->tid  = 1;

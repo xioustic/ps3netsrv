@@ -99,7 +99,7 @@ typedef struct
 
 static uint32_t CD_SECTOR_SIZE_2352 = 2352;
 
-#ifndef NET_SUPPORT
+#ifdef NET_SUPPORT
 static uint8_t last_sect_buf[_4KB_] __attribute__((aligned(16)));
 #endif
 
