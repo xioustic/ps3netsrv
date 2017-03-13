@@ -279,7 +279,7 @@ static void ps3mapi_notify(char *buffer, char *templn, char *param)
 	sprintf(templn, "<form action=\"/notify" HTML_FORM_METHOD_FMT
 					"<table width=\"800\"><tr><td class=\"la\">"
 					"<textarea name=\"msg\" cols=\"111\" rows=\"2\" maxlength=\"199\">%s</textarea></td></tr>"
-					"<tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr></table></form>",
+					"<tr><td class=\"ra\"><br><input class=\"bs\" type=\"submit\" value=\" %s \"/></td></tr></table></form>",
 					HTML_FORM_METHOD, msg, "Send");
 
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR); else strcat(templn, "</td>");
@@ -381,7 +381,7 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 	else		 add_check_box("scd", false, "Disable Syscalls & Lock syscall 8"  , _BR_, false, buffer);
 #endif
 
-	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input id=\"b\" type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Disable");
+	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input class=\"bs\" id=\"b\" type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Disable");
 	strcat(buffer, templn);
 
 	if(!is_ps3mapi_home && islike(param, "/syscall.ps3mapi")) {ps3mapi_syscall8(buffer, templn, param);}
@@ -452,7 +452,7 @@ static void ps3mapi_syscall8(char *buffer, char *templn, char *param)
 	else
 		add_radio_button("mode", 4, "sc8_4", "Fully disabled (can't be re-enabled)", _BR_, false, buffer);
 
-	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Set");
+	sprintf(templn, "</td></tr><tr><td class=\"ra\"><br><input class=\"bs\" type=\"submit\" value=\" %s \"/></td></tr></form></table><br>", "Set");
 
 	if(!is_ps3mapi_home) strcat(templn, HTML_RED_SEPARATOR);
 	strcat(buffer, templn);
@@ -536,7 +536,7 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 
 	sprintf(templn, "<b><u>%s:</u></b> " HTML_INPUT("addr", "%llX", "16", "18")
 					"   <b><u>%s:</u></b> <input name=\"len\" type=\"number\" value=\"%i\" min=\"1\" max=\"2048\">"
-					"   <input type=\"submit\" value=\" %s \"/></form>", "Address", address, "Length", length, "Get");
+					"   <input class=\"bs\" type=\"submit\" value=\" %s \"/></form>", "Address", address, "Length", length, "Get");
 	strcat(buffer, templn);
 
 	if(pid != 0 && length != 0)
@@ -625,7 +625,7 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 					"<tr><td class=\"la\">"
 					"<textarea id=\"val\" name=\"val\" cols=\"111\" rows=\"3\" maxlength=\"199\">%s</textarea></td></tr>"
 					"<tr><td class=\"ra\"><br>"
-					"<input type=\"submit\" value=\" %s \"/></td></tr></table></form>", "Address", address, "Value", val_tmp, "Set");
+					"<input class=\"bs\" type=\"submit\" value=\" %s \"/></td></tr></table></form>", "Address", address, "Value", val_tmp, "Set");
 	strcat(buffer, templn);
 
 	if(pid != 0 && length != 0)
@@ -699,7 +699,7 @@ static void ps3mapi_setidps(char *buffer, char *templn, char *param)
 					"<br><b><u>%s:</u></b><br>" HTML_INPUT("idps1", "%016llX", "16", "18") HTML_INPUT("idps2", "%016llX", "16", "18") "</td>"
 					"<td class=\"la\">"
 					"<br><b><u>%s:</u></b><br>" HTML_INPUT("psid1", "%016llX", "16", "18") HTML_INPUT("psid2", "%016llX", "16", "18") "</td></tr>"
-					"<tr><td class=\"ra\"><br><input type=\"submit\" value=\" %s \"/></td></tr>"
+					"<tr><td class=\"ra\"><br><input class=\"bs\" type=\"submit\" value=\" %s \"/></td></tr>"
 					"</table></form><br>",
 					is_ps3mapi_home ? "" : "PS3MAPI --> ", "PS3 Commands", "Set IDPS/PSID",
 					HTML_FORM_METHOD, "IDPS", _new_IDPS[0], _new_IDPS[1], "PSID", _new_PSID[0], _new_PSID[1], "Set");
@@ -924,7 +924,7 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 	add_proc_list(buffer, templn, &pid);
 
 	if(is_ps3mapi_home)
-		sprintf(templn, "<input type=\"submit\" value=\" Set \" /></form>");
+		sprintf(templn, "<input class=\"bs\" type=\"submit\" value=\" Set \" /></form>");
 	else
 		sprintf(templn, "</form>");
 

@@ -1061,7 +1061,7 @@ static void setup_form(char *buffer, char *templn)
 	add_radio_button("s", 15, "s_4", "15 sec", _BR_, (value == 15), buffer);
 	strcat(buffer, "</div>");
 
-	sprintf(templn, HTML_RED_SEPARATOR "<input type=\"submit\" accesskey=\"S\" value=\" %s \"/>"
+	sprintf(templn, HTML_RED_SEPARATOR "<input class=\"bs\" type=\"submit\" accesskey=\"S\" value=\" %s \"/>"
 					"<script>function tgl(o){o.style.display=(o.style.display!='block')?'block':'none';}</script>"
 					"</form>", STR_SAVE); strcat(buffer, templn);
 

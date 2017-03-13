@@ -99,7 +99,9 @@ typedef struct
 
 static uint32_t CD_SECTOR_SIZE_2352 = 2352;
 
+#ifndef NET_SUPPORT
 static uint8_t last_sect_buf[_4KB_] __attribute__((aligned(16)));
+#endif
 
 #ifdef USE_INTERNAL_PLUGIN
 
@@ -699,7 +701,7 @@ static int process_read_cd_2352_cmd_iso(uint8_t *buf, uint32_t sector, uint32_t 
 	{
 		sys_addr_t addr;
 
-		int ret = sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr);
+		int ret = sys_memory_allocate(_128KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr); // 128KB to cache 48 sectors of up to 2448 bytes [48*2448 = 117,504 bytes]
 		if(ret != CELL_OK)
 		{
 			//DPRINTF("sys_memory_allocate failed: %x\n", ret);

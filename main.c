@@ -1824,10 +1824,12 @@ parse_request:
    #endif // #ifdef COBRA_ONLY
 				if(IS_ON_XMB)
 				{   // in-XMB
+   #ifdef COBRA_ONLY
 					if(islike(param2, "$vsh_menu")) start_vsh_gui(true);
 					else
 					if(islike(param2, "$slaunch")) start_vsh_gui(false);
 					else
+   #endif
    #ifdef XMB_SCREENSHOT
 					if(islike(param2, "$screenshot_xmb")) {sprintf(header, "%s", param + 27); saveBMP(header, false); sprintf(url, HTML_URL, header, header);} else
    #endif
