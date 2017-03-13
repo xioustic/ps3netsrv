@@ -15,7 +15,7 @@ enum ntfs_folders
 
 static u8 prepntfs_working = false;
 
-static int prepNTFS(u8 towait)
+static int prepNTFS(void)
 {
 	if(prepntfs_working) return 0;
 	prepntfs_working = true;
@@ -48,15 +48,9 @@ static int prepNTFS(u8 towait)
 	u64 read = 0;
 	char path[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], filename[STD_PATH_LEN];
 
-	if(mountCount == NTFS_UNMOUNTED)
-		for(u8 retry = 0; retry < 2; retry++)
-		{
-			mount_all_ntfs_volumes();
-			if(mountCount) break;
-			if(towait) sys_ppu_thread_sleep(2 * towait);
-		}
+	check_ntfs_volumes();
 
-	if(!towait || mountCount <= 0)
+	if(mountCount <= 0)
 	{
 		if(cellFsOpendir(WMTMP, &fd) == CELL_FS_SUCCEEDED)
 		{

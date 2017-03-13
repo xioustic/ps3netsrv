@@ -101,7 +101,7 @@ typedef struct
 	uint32_t numtracks;
 	uint16_t port;
 	uint8_t pad[6];
-	ScsiTrackDescriptor tracks[1];
+	ScsiTrackDescriptor tracks[32];
 } __attribute__((packed)) netiso_args;
 */
 
@@ -875,35 +875,18 @@ int cobra_mount_bd_disc_image(char *files[], unsigned int num)
 	return sys_storage_ext_mount_bd_discfile(num, files);
 }
 
-int cobra_mount_psx_disc_image_iso(char *file, TrackDef *tracks, unsigned int num_tracks)
-{
-	ScsiTrackDescriptor scsi_tracks[1];
-
-	if (!file || num_tracks > 1) return EINVAL;
-
-	memset(scsi_tracks, 0, sizeof(scsi_tracks));
-
-	for (unsigned int i = 0; i < num_tracks; i++)
-	{
-		scsi_tracks[i].adr_control = (!tracks[i].is_audio) ? 0x14 : 0x10;
-		scsi_tracks[i].track_number = i+1;
-		scsi_tracks[i].track_start_addr = tracks[i].lba;
-	}
-
-	return sys_storage_ext_mount_psx_discfile(file, num_tracks, scsi_tracks);
-}
 
 int cobra_mount_psx_disc_image(char *file, TrackDef *tracks, unsigned int num_tracks)
 {
-	ScsiTrackDescriptor scsi_tracks[32];
+	if (!file || !tracks || num_tracks > 32) return EINVAL;
 
-	if (!file || num_tracks > 32) return EINVAL;
+	ScsiTrackDescriptor scsi_tracks[num_tracks];
 
 	memset(scsi_tracks, 0, sizeof(scsi_tracks));
 
 	for (unsigned int i = 0; i < num_tracks; i++)
 	{
-		scsi_tracks[i].adr_control = (!tracks[i].is_audio) ? 0x14 : 0x10;
+		scsi_tracks[i].adr_control = (tracks[i].is_audio) ? 0x10 : 0x14;
 		scsi_tracks[i].track_number = i+1;
 		scsi_tracks[i].track_start_addr = tracks[i].lba;
 	}
@@ -913,19 +896,20 @@ int cobra_mount_psx_disc_image(char *file, TrackDef *tracks, unsigned int num_tr
 
 int cobra_mount_ps2_disc_image(char *files[], int num, TrackDef *tracks, unsigned int num_tracks)
 {
+	if (!files || !tracks || num_tracks > 1) return EINVAL;
+
 	ScsiTrackDescriptor scsi_tracks[1];
 
-	if (tracks)
+	memset(scsi_tracks, 0, sizeof(scsi_tracks));
+
+	for (unsigned int i = 0; i < num_tracks; i++)
 	{
-		for (unsigned int i = 0; i < num_tracks; i++)
-		{
-			scsi_tracks[i].adr_control = (!tracks[i].is_audio) ? 0x14 : 0x10;
-			scsi_tracks[i].track_number = i+1;
-			scsi_tracks[i].track_start_addr = tracks[i].lba;
-		}
+		scsi_tracks[i].adr_control = (tracks[i].is_audio) ? 0x10 : 0x14;
+		scsi_tracks[i].track_number = i+1;
+		scsi_tracks[i].track_start_addr = tracks[i].lba;
 	}
 
-	return sys_storage_ext_mount_ps2_discfile(num, files, num_tracks, (tracks) ? scsi_tracks : NULL);
+	return sys_storage_ext_mount_ps2_discfile(num, files, num_tracks, scsi_tracks);
 }
 
 int cobra_umount_disc_image(void)

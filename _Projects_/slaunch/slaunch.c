@@ -23,7 +23,7 @@ SYS_MODULE_STOP(slaunch_stop);
 #define STR_UNLOAD		"Unload webMAN"
 #define STR_QUIT		"Quit"
 
-#define APP_VERSION		"1.09"
+#define APP_VERSION		"1.10"
 
 typedef struct {
 	uint8_t  gmode;
@@ -170,10 +170,10 @@ static void load_background(void)
 	char path[64];
 
 	if(fav_mode)
-		sprintf(path, "%s_fav.jpg", "/dev_hdd0/plugins/images/slaunch");
+		sprintf(path, "%s_fav.jpg", "/dev_hdd0/tmp/wm_res/images/slaunch");
 	else if(gmode)
 	{
-		sprintf(path, "%s_%s.jpg", "/dev_hdd0/plugins/images/slaunch", game_type[gmode]);
+		sprintf(path, "%s_%s.jpg", "/dev_hdd0/tmp/wm_res/images/slaunch", game_type[gmode]);
 
 		if(!gmode || !file_exists(path)) sprintf(path, "%s.jpg", "/dev_hdd0/plugins/images/slaunch");
 	}

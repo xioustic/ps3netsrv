@@ -725,7 +725,7 @@ static void add_plugins_list(char *buffer, char *templn)
 									"/dev_usb001",
 									"/dev_hdd0/game/UPDWEBMOD/USRDIR",
 									"/dev_hdd0/game/UPDWEBMOD/USRDIR/official",
-									"/dev_hdd0/tmp"
+									"/dev_hdd0/tmp/wm_res"
 								};
 
 		for(u8 i = 0; i < 10; i++)
@@ -1728,6 +1728,6 @@ static void start_vsh_gui(bool vsh_menu)
 {
 	unload_vsh_plugin(vsh_menu ? "VSH_MENU" : "sLaunch");
 	unsigned int slot = get_free_slot(); char arg[2] = {1, 0};
-	if(slot < 7) cobra_load_vsh_plugin(slot, vsh_menu ? "/dev_hdd0/plugins/wm_vsh_menu.sprx" : "/dev_hdd0/plugins/slaunch.sprx", (u8*)arg, 1);
+	if(slot < 7) cobra_load_vsh_plugin(slot, vsh_menu ? WM_RES_PATH "/wm_vsh_menu.sprx" : WM_RES_PATH "/slaunch.sprx", (u8*)arg, 1);
 }
 #endif // #ifdef COBRA_ONLY

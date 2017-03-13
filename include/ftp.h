@@ -578,8 +578,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 						mode_t mode = NULL; char dirtype[2]; dirtype[1] = NULL;
 
+						size_t d_path_len = sprintf(filename, "%s/", d_path);
+						bool is_root = (d_path_len < 6);
+
 #ifdef USE_NTFS
 						DIR_ITER *pdir = NULL;
+
+						if(is_root) check_ntfs_volumes();
 
 						if(is_ntfs_path(d_path))
 						{
@@ -592,17 +597,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
-							size_t d_path_len = sprintf(filename, "%s/", d_path);
-
-							bool is_root = (d_path_len < 6);
-
 							CellFsDirent entry; u64 read_e;
 							u16 slen;
 
 							while(working)
 							{
 #ifdef USE_NTFS
-								if(is_ntfs) {if(ps3ntfs_dirnext(pdir, entry.d_name, &bufn) != CELL_OK) break; buf.st_mode = bufn.st_mode; buf.st_size = bufn.st_size;}
+								if(is_ntfs) {if(ps3ntfs_dirnext(pdir, entry.d_name, &bufn) != CELL_OK) break; buf.st_mode = bufn.st_mode, buf.st_size = bufn.st_size, buf.st_mtime = bufn.st_mtime;}
 								else
 #endif
 								if((cellFsReaddir(fd, &entry, &read_e) != CELL_FS_SUCCEEDED) || (read_e == 0)) break;
@@ -629,7 +630,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 										sprintf(filename + d_path_len, "%s", entry.d_name);
 
-										if(!is_ntfs) {cellFsStat(filename, &buf); cellRtcSetTime_t(&rDate, buf.st_mtime);}
+										if(!is_ntfs) cellFsStat(filename, &buf); cellRtcSetTime_t(&rDate, buf.st_mtime);
 
 										mode = buf.st_mode;
 
@@ -721,16 +722,15 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 				if(_IS(cmd, "PASV"))
 				{
 					rest = 0;
-					u8 pasv_retry = 0;
+					u8 pasv_retry = 0; cellRtcGetCurrentTick(&pTick); u32 pasv_port = (pTick.tick & 0xfeff00) >> 8;
 
-					for( ; pasv_retry < 10; pasv_retry++)
+					for( ; pasv_retry < 250; pasv_retry++, pasv_port++)
 					{
 						if(data_s >= 0) sclose(&data_s);
 						if(pasv_s >= 0) sclose(&pasv_s);
 
-						cellRtcGetCurrentTick(&pTick);
-						p1x = ( ( (pTick.tick & 0xfe0000) >> 16) & 0xff) | 0x80; // use ports 32768 -> 65279 (0x8000 -> 0xFEFF)
-						p2x = ( ( (pTick.tick & 0x00ff00) >>  8) & 0xff);
+						p1x = ( (pasv_port & 0xff00) >> 8) | 0x80; // use ports 32768 -> 65528 (0x8000 -> 0xFFF8)
+						p2x = ( (pasv_port & 0x00ff)     );
 
 						pasv_s = slisten(getPort(p1x, p2x), 1);
 
@@ -746,7 +746,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						}
 					}
 
-					if(pasv_retry >= 10)
+					if(pasv_retry >= 250)
 					{
 						ssend(conn_s_ftp, FTP_ERROR_451);	// Requested action aborted. Local error in processing.
 						if(pasv_s >= 0) sclose(&pasv_s);

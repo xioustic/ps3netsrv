@@ -45,6 +45,28 @@ static void mount_all_ntfs_volumes(void)
 	if (mountCount <= 0) {mountCount = NTFS_UNMOUNTED;}
 }
 
+static void check_ntfs_volumes(void)
+{
+	if(mountCount > 0)
+	{
+		DIR_ITER *pdir; char path[40];
+		for(int i = 0; i < mountCount; i++)
+		{
+			snprintf(path, sizeof(path), "%s:/", mounts[i].name);
+			pdir = ps3ntfs_diropen(path);
+			if(pdir) ps3ntfs_dirclose(pdir); else { mountCount = NTFS_UNMOUNTED; break; }
+		}
+	}
+
+	if(mountCount <= 0)
+		for(u8 retry = 0; retry < 2; retry++)
+		{
+			mount_all_ntfs_volumes();
+			if(mountCount) break;
+			sys_ppu_thread_sleep(2);
+		}
+}
+
 static DIR_ITER *ps3ntfs_opendir(char *path)
 {
 	if(mountCount <= 0) mount_all_ntfs_volumes();
@@ -698,7 +720,7 @@ static bool do_custom_combo(const char *filename)
 
 		loading_html++;
 		sys_ppu_thread_t t_id;
-		if(working) sys_ppu_thread_create(&t_id, handleclient, WM_FILE_REQUEST, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
+		if(working) sys_ppu_thread_create(&t_id, handleclient_www, WM_FILE_REQUEST, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_WEB);
 
 		return true;
 	}

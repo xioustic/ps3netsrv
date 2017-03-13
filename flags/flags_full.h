@@ -1,4 +1,5 @@
 //#define ENGLISH_ONLY	1	// uncomment for english only version
+//#define USE_INTERNAL_PLUGIN	1	// comment out to use internal rawseciso & netiso clients when raw_iso.sprx & netiso.sprx are unavailable
 #define WM_PROXY_SPRX	"eula_cddb_plugin"		// plugin used as xmb proxy to mount games
 
 //// EDITIONS ////

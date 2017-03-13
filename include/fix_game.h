@@ -56,8 +56,6 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 
 	memset(titleID, 0, 10);
 	memset(title, 0, 128);
 
-	u8 fcount = 0;
-
 	FOR_EACH_SFO_FIELD()
 	{
 		if(!memcmp((char *) &mem[str], "TITLE_ID", 8))
@@ -66,7 +64,7 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 
 #ifndef ENGLISH_ONLY
 			if(*TITLE_XX == NULL)
 #endif
-				if(++fcount >= 2) break;
+				if(*title) break;
 		}
 		else
 		if(!memcmp((char *) &mem[str], "TITLE", 6))
@@ -75,14 +73,14 @@ static void parse_param_sfo(unsigned char *mem, char *titleID, char *title, u16 
 #ifndef ENGLISH_ONLY
 			if(*TITLE_XX == NULL)
 #endif
-				if(++fcount >= 2) break;
+				if(*titleID) break;
 		}
 #ifndef ENGLISH_ONLY
 		else
 		if(!memcmp((char *) &mem[str], TITLE_XX, 9))
 		{
 			strncpy(title, (char *)mem + pos, 128);
-			if(++fcount > 2) break;
+			if(*titleID) break;
 		}
 #endif
 		READ_NEXT_SFO_FIELD()

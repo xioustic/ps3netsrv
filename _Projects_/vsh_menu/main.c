@@ -263,7 +263,8 @@ static void start_VSH_Menu(void)
 	for(uint8_t i = 0; i < 2; i++)
 	{
 		if(config->bgindex == 0) sprintf(sufix, ""); else sprintf(sufix, "_%i", config->bgindex);
-		sprintf(bg_image, "/dev_hdd0/wm_vsh_menu%s.png", sufix);
+		sprintf(bg_image, "/dev_hdd0/tmp/wm_res/images/wm_vsh_menu%s.png", sufix);
+		if(cellFsStat(bg_image, &s) == CELL_FS_SUCCEEDED) break; else sprintf(bg_image, "/dev_hdd0/wm_vsh_menu%s.png", sufix);
 		if(cellFsStat(bg_image, &s) == CELL_FS_SUCCEEDED) break; else sprintf(bg_image, "/dev_hdd0/plugins/wm_vsh_menu%s.png", sufix);
 		if(cellFsStat(bg_image, &s) == CELL_FS_SUCCEEDED) break; else sprintf(bg_image, "/dev_hdd0/littlebalup_vsh_menu%s.png", sufix);
 		if(cellFsStat(bg_image, &s) == CELL_FS_SUCCEEDED) break; else sprintf(bg_image, "/dev_hdd0/plugins/images/wm_vsh_menu%s.png", sufix);
@@ -967,7 +968,7 @@ static void draw_background_and_title(void)
 																(view == FILE_MANAGER && !last_game_view) ? curdir + curdir_offset :
 																(view == PLUGINS_MANAGER) ? "Plugins Manager"		:
 																						    "VSH Menu for webMAN") );
-	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.14");
+	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.15");
 }
 
 static void draw_menu_options(void)

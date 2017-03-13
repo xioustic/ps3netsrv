@@ -1389,7 +1389,7 @@ next_html_entry:
 					}
 		}
 #ifdef USE_NTFS
-		else if(retry && (filter0 == NTFS)) {prepNTFS(0); --retry; goto list_games;}
+		else if(retry && (filter0 == NTFS)) {prepNTFS(); --retry; goto list_games;}
 #endif
 
 #ifndef LITE_EDITION

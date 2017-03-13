@@ -834,22 +834,27 @@ static void do_umount(bool clean)
 		}
  #endif
 		{
+
+ #ifdef USE_INTERNAL_PLUGIN
 			sys_ppu_thread_t t_id;
 			uint64_t exit_code;
-
- #ifdef NET_SUPPORT
+  #ifdef NET_SUPPORT
 			sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 			sys_ppu_thread_join(t_id, &exit_code);
- #endif
+  #endif
 			sys_ppu_thread_create(&t_id, rawseciso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 			sys_ppu_thread_join(t_id, &exit_code);
+ #endif
 		}
 
-  #ifdef NET_SUPPORT
+#ifdef USE_INTERNAL_PLUGIN
+ #ifdef NET_SUPPORT
 		while(netiso_loaded || rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
  #else
 		while(rawseciso_loaded) {sys_ppu_thread_usleep(100000);}
  #endif
+#endif
+
 		{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
 	}
 
@@ -1109,7 +1114,7 @@ static void mount_thread(u64 action)
 
 	char netid = NULL;
 
- #ifdef NET_SUPPORT
+#ifdef NET_SUPPORT
 	if(islike(_path, "/net"))
 	{
 		netid = _path[4];
@@ -1209,47 +1214,7 @@ static void mount_thread(u64 action)
 	cellFsUnlink(WMNOSCAN); // remove wm_noscan if a PS2ISO has been mounted
 
 
-	// ------------------------------------------------------------------------------------------------------------
-	// launch ntfs psx & isos tagged [raw] with external rawseciso sprx (if available) (due support for multi PSX)
-	// ------------------------------------------------------------------------------------------------------------
 #ifdef COBRA_ONLY
- #ifdef FAKEISO
-	{
-		if(!extcmp(_path, ".ntfs[PSXISO]", 13) || (strstr(_path, ".ntfs[") != NULL && strstr(_path, "[raw]") != NULL))
-		{
-			u8 n;
-			const char *rawseciso_sprx[5] = { "/dev_flash/vsh/module/raw_iso.sprx",
-											  "/dev_hdd0/raw_iso.sprx",
-											  "/dev_hdd0/plugins/raw_iso.sprx",
-											  "/dev_hdd0/game/IRISMAN00/sprx_iso",
-											  WMTMP "/res/sman.ntf"};
-
-			for(n = 0; n < 5; n++)
-				if(file_exists(rawseciso_sprx[n])) break;
-
-			if(n < 5)
-			{
-				cellFsChmod(_path, MODE);
-
-				sys_addr_t addr = 0;
-				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
-				{
-					char *rawseciso_data = (char *)addr; ret = false;
-					uint64_t msiz = read_file(_path, rawseciso_data, _64KB_, 0);
-					if(msiz > sizeof(rawseciso_args))
-					{
-						do_umount(false); if(!extcmp(_path, ".ntfs[PSXISO]", 13)) {mount_unk = EMU_PSX; select_ps1emu(_path);}
-
-						if(cobra_load_vsh_plugin(0, (char*)rawseciso_sprx[n], (u8*)rawseciso_data, msiz) == CELL_OK) ret = true;
-					}
-					sys_memory_free(addr);
-
-					if(ret) goto exit_mount;
-				}
-			}
-		}
-	}
- #endif
 
 	// ------------------
 	// mount GAMEI game
@@ -1295,8 +1260,9 @@ static void mount_thread(u64 action)
 			goto mounting_done; //goto exit_mount;
 		}
 	}
- #endif
-#endif
+ #endif // #ifdef MOUNT_ROMS
+
+#endif // #ifdef COBRA_ONLY
 
 	// ------------------
 	// mount PS2 Classic
@@ -1460,6 +1426,7 @@ static void mount_thread(u64 action)
 				cobra_iso_list[n] = (char*)iso_list[n];
 			}
 
+
 			// ---------------
 			// mount NTFS ISO
 			// ---------------
@@ -1467,6 +1434,49 @@ static void mount_thread(u64 action)
 			char *ntfs_ext = strstr(_path, ".ntfs[");
 			if(ntfs_ext)
 			{
+	#ifdef USE_INTERNAL_PLUGIN
+				// ------------------------------------------------------------------------------------------------------------
+				// launch ntfs psx & isos tagged [raw] with external rawseciso sprx (if available) (due support for multi PSX)
+				// ------------------------------------------------------------------------------------------------------------
+				if(islike(ntfs_ext, ".ntfs[PSXISO]") || strstr(_path, "[raw]"))
+	#endif
+				{
+					u8 n;
+					const char *rawseciso_sprx[4] = { WM_RES_PATH "/raw_iso.sprx",
+													  VSH_MODULE_DIR "raw_iso.sprx",
+													  "/dev_hdd0/game/IRISMAN00/sprx_iso",
+													  WMTMP "/res/sman.ntf" };
+
+					for(n = 0; n < 4; n++)
+						if(file_exists(rawseciso_sprx[n])) break;
+
+					if(n < 4)
+					{
+						cellFsChmod(_path, MODE);
+
+						sys_addr_t addr = 0;
+						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
+						{
+							char *rawseciso_data = (char *)addr;
+							uint64_t msiz = read_file(_path, rawseciso_data, _64KB_, 0);
+							if(msiz > sizeof(rawseciso_args))
+							{
+								ret = (cobra_load_vsh_plugin(0, (char*)rawseciso_sprx[n], rawseciso_data, msiz) == CELL_OK);
+								sys_ppu_thread_sleep(1);
+							}
+							else
+								ret = false;
+
+							sys_memory_free(addr);
+
+	#ifdef USE_INTERNAL_PLUGIN
+							if(ret) goto exit_mount;
+	#endif
+						}
+					}
+				}
+
+	#ifdef USE_INTERNAL_PLUGIN
 				sys_addr_t addr = 0;
 				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 				{
@@ -1475,50 +1485,57 @@ static void mount_thread(u64 action)
 					{
 						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
-						wait_for("/dev_bdvd", 3);
-
-						if(IS(ntfs_ext, ".ntfs[PS3ISO]"))
-						{
-							get_name(templn, _path, NO_EXT);
-							cache_icon0_and_param_sfo(templn);
-	#ifdef FIX_GAME
-							fix_game(_path, titleID, webman_config->fixgame);
-	#endif
-						}
-
-						// cache PS2ISO or PSPISO to HDD0
-						bool is_ps2 = IS(ntfs_ext, ".ntfs[PS2ISO]");
-						bool is_psp = IS(ntfs_ext, ".ntfs[PSPISO]");
-
-						if(is_psp || is_ps2)
-						{
-							int fd;
-
-							if(cellFsOpendir("/dev_bdvd", &fd) == CELL_FS_SUCCEEDED)
-							{
-								CellFsDirent entry; u64 read_e;
-
-								while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
-								{
-									if(entry.d_name[0] != '.') break;
-								}
-								cellFsClosedir(fd);
-
-								if(entry.d_name[0] == NULL) goto exit_mount;
-
-								sprintf(_path, "/dev_bdvd/%s", entry.d_name);
-
-								if(file_exists(_path) == false) goto exit_mount;
-
-								if(is_ps2)
-									goto copy_ps2iso_to_hdd0;
-								else
-									goto copy_pspiso_to_hdd0;
-							}
-						}
+						sys_ppu_thread_sleep(1);
+						sys_memory_free(addr);
 					}
 					else
 						ret = false;
+				}
+	#endif //#ifdef USE_INTERNAL_PLUGIN
+
+				if(ret)
+				{
+					wait_for("/dev_bdvd", 3);
+
+					if(IS(ntfs_ext, ".ntfs[PS3ISO]"))
+					{
+						get_name(templn, _path, NO_EXT);
+						cache_icon0_and_param_sfo(templn);
+	#ifdef FIX_GAME
+						fix_game(_path, titleID, webman_config->fixgame);
+	#endif
+					}
+
+					// cache PS2ISO or PSPISO to HDD0
+					bool is_ps2 = IS(ntfs_ext, ".ntfs[PS2ISO]");
+					bool is_psp = IS(ntfs_ext, ".ntfs[PSPISO]");
+
+					if(is_psp || is_ps2)
+					{
+						int fd;
+
+						if(cellFsOpendir("/dev_bdvd", &fd) == CELL_FS_SUCCEEDED)
+						{
+							CellFsDirent entry; u64 read_e;
+
+							while((cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+							{
+								if(entry.d_name[0] != '.') break;
+							}
+							cellFsClosedir(fd);
+
+							if(entry.d_name[0] == NULL) goto exit_mount;
+
+							sprintf(_path, "/dev_bdvd/%s", entry.d_name);
+
+							if(file_exists(_path) == false) goto exit_mount;
+
+							if(is_ps2)
+								goto copy_ps2iso_to_hdd0;
+							else
+								goto copy_pspiso_to_hdd0;
+						}
+					}
 				}
 				goto exit_mount;
 			}
@@ -1531,112 +1548,119 @@ static void mount_thread(u64 action)
 
 			if(netid >= '0' && netid <= '4')
 			{
-				sys_addr_t sysmem = 0; netiso_svrid = NONE;
-				if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
+				netiso_svrid = (netid & 0x0F);
+				memset((void*)&netiso_args, 0, sizeof(_netiso_args));
+
+				if(is_netsrv_enabled(netiso_svrid) == false)
 				{
-					netiso_svrid = (netid & 0x0F);
-					netiso_args *_netiso_args = (netiso_args*)sysmem;
-					memset(_netiso_args, 0, _64KB_);
+					ret = false;
+					goto exit_mount;
+				}
 
-					if(is_netsrv_enabled(netiso_svrid) == false)
+				char *netpath = _path + 5;
+
+				size_t len = sprintf(netiso_args.path, "%s", netpath);
+
+				if(islike(netpath, "/PS3ISO")) mount_unk = netiso_args.emu_mode = EMU_PS3; else
+				if(islike(netpath, "/PS2ISO")) goto copy_ps2iso_to_hdd0;                     else
+				if(islike(netpath, "/PSPISO")) goto copy_pspiso_to_hdd0;                     else
+				if(islike(netpath, "/BDISO" )) mount_unk = netiso_args.emu_mode = EMU_BD;  else
+				if(islike(netpath, "/DVDISO")) mount_unk = netiso_args.emu_mode = EMU_DVD; else
+				if(islike(netpath, "/PSX")   )
+				{
+					TrackDef tracks[32];
+					unsigned int num_tracks = 1;
+
+					int ns = connect_to_remote_server(netiso_svrid);
+					if(ns >= 0)
 					{
-						sys_memory_free(sysmem); ret = false;
-						goto exit_mount;
-					}
-
-					char *netpath = _path + 5;
-
-					size_t len = sprintf(_netiso_args->path, "%s", netpath);
-
-					if(islike(netpath, "/PS3ISO")) mount_unk = _netiso_args->emu_mode = EMU_PS3; else
-					if(islike(netpath, "/PS2ISO")) goto copy_ps2iso_to_hdd0;                     else
-					if(islike(netpath, "/PSPISO")) goto copy_pspiso_to_hdd0;                     else
-					if(islike(netpath, "/BDISO" )) mount_unk = _netiso_args->emu_mode = EMU_BD;  else
-					if(islike(netpath, "/DVDISO")) mount_unk = _netiso_args->emu_mode = EMU_DVD; else
-					if(islike(netpath, "/PSX")   )
-					{
-						TrackDef tracks[32];
-						unsigned int num_tracks = 1;
-
-						int ns = connect_to_remote_server(netiso_svrid);
-						if(ns >= 0)
+						cellFsUnlink(TEMP_NET_PSXISO);
+						strcpy(netiso_args.path + len - 3, "CUE");
+						if(copy_net_file(TEMP_NET_PSXISO, netiso_args.path, ns, _4KB_) == FAILED)
 						{
+							strcpy(netiso_args.path + len - 3, "cue");
+							copy_net_file(TEMP_NET_PSXISO, netiso_args.path, ns, _4KB_);
+						}
+						sclose(&ns);
+
+						if(file_exists(TEMP_NET_PSXISO))
+						{
+							char *cue_buf = (char*)last_sect_buf;
+							int64_t cue_size = read_file(TEMP_NET_PSXISO, cue_buf, _4KB_, 0);
 							cellFsUnlink(TEMP_NET_PSXISO);
-							strcpy(_netiso_args->path + len - 3, "CUE");
-							if(copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_) == FAILED)
-							{
-								strcpy(_netiso_args->path + len - 3, "cue");
-								copy_net_file(TEMP_NET_PSXISO, _netiso_args->path, ns, _4KB_);
-							}
-							sclose(&ns);
 
-							if(file_exists(TEMP_NET_PSXISO))
-							{
-								char *cue_buf = (char*)sysmem;
-								int64_t cue_size = read_file(TEMP_NET_PSXISO, cue_buf, _4KB_, 0);
-								cellFsUnlink(TEMP_NET_PSXISO);
-
-								num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
-							}
-							memset(_netiso_args, 0, _4KB_);
+							num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
 						}
-
-						mount_unk = _netiso_args->emu_mode = EMU_PSX;
-						_netiso_args->num_tracks = num_tracks;
-						sprintf(_netiso_args->path, "%s", netpath);
-
-						ScsiTrackDescriptor *scsi_tracks = (ScsiTrackDescriptor *)_netiso_args->tracks;
-
-						if(num_tracks <= 1)
-						{
-							scsi_tracks[0].adr_control = 0x14;
-							scsi_tracks[0].track_number = 1;
-							scsi_tracks[0].track_start_addr = 0;
-						}
-
-						else
-						{
-							for(unsigned int t = 0; t < num_tracks; t++)
-							{
-								scsi_tracks[t].adr_control = (tracks[t].is_audio) ? 0x10 : 0x14;
-								scsi_tracks[t].track_number = t + 1;
-								scsi_tracks[t].track_start_addr = tracks[t].lba;
-							}
-						}
-
 					}
-					else if(islike(netpath, "/GAMES") || islike(netpath, "/GAMEZ"))
+
+					mount_unk = netiso_args.emu_mode = EMU_PSX;
+					netiso_args.num_tracks = num_tracks;
+					sprintf(netiso_args.path, "%s", netpath);
+
+					ScsiTrackDescriptor *scsi_tracks = (ScsiTrackDescriptor *)netiso_args.tracks;
+
+					if(num_tracks <= 1)
 					{
-						mount_unk = _netiso_args->emu_mode = EMU_PS3;
-						sprintf(_netiso_args->path, "/***PS3***%s", netpath);
+						scsi_tracks[0].adr_control = 0x14;
+						scsi_tracks[0].track_number = 1;
+						scsi_tracks[0].track_start_addr = 0;
 					}
+
 					else
 					{
-						mount_unk = _netiso_args->emu_mode = EMU_DVD;
-						if(!extcasecmp(netpath, ".iso", 4) || !extcasecmp(netpath, ".mdf", 4) || !extcasecmp(netpath, ".img", 4) || !extcasecmp(netpath, ".bin", 4)) ;
-						else
-							sprintf(_netiso_args->path, "/***DVD***%s", netpath);
+						for(unsigned int t = 0; t < num_tracks; t++)
+						{
+							scsi_tracks[t].adr_control = (tracks[t].is_audio) ? 0x10 : 0x14;
+							scsi_tracks[t].track_number = t + 1;
+							scsi_tracks[t].track_start_addr = tracks[t].lba;
+						}
 					}
 
-					sprintf(_netiso_args->server, "%s", webman_config->neth[netiso_svrid]);
-					_netiso_args->port = webman_config->netp[netiso_svrid];
-
-					sys_ppu_thread_create(&thread_id_net, netiso_thread, (uint64_t)sysmem, THREAD_PRIO, THREAD_STACK_SIZE_NET_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
-
-					if(_netiso_args->emu_mode == EMU_PS3)
-					{
-						wait_for("/dev_bdvd", 15);
-
-						get_name(templn, _path, GET_WMTMP);
-						cache_icon0_and_param_sfo(templn);
-
-						#ifdef FIX_GAME
-						fix_game(_path, titleID, webman_config->fixgame);
-						#endif
-					}
+				}
+				else if(islike(netpath, "/GAMES") || islike(netpath, "/GAMEZ"))
+				{
+					mount_unk = netiso_args.emu_mode = EMU_PS3;
+					sprintf(netiso_args.path, "/***PS3***%s", netpath);
 				}
 				else
-					ret = false;
+				{
+					mount_unk = netiso_args.emu_mode = EMU_DVD;
+					if(!extcasecmp(netpath, ".iso", 4) || !extcasecmp(netpath, ".mdf", 4) || !extcasecmp(netpath, ".img", 4) || !extcasecmp(netpath, ".bin", 4)) ;
+					else
+						sprintf(netiso_args.path, "/***DVD***%s", netpath);
+				}
+
+				sprintf(netiso_args.server, "%s", webman_config->neth[netiso_svrid]);
+				netiso_args.port = webman_config->netp[netiso_svrid];
+
+
+				u8 n;
+				const char *netiso_sprx[3] = { WM_RES_PATH "/netiso.sprx",
+											   VSH_MODULE_DIR "netiso.sprx",
+											   WMTMP "/res/sman.net"};
+
+				for(n = 0; n < 3; n++)
+					if(file_exists(netiso_sprx[n])) break;
+
+				if(n < 3)
+				{
+					ret = (cobra_load_vsh_plugin(0, (char*)netiso_sprx[n], &netiso_args, sizeof(_netiso_args)) == CELL_OK);
+				}
+#ifdef USE_INTERNAL_PLUGIN
+				else
+				sys_ppu_thread_create(&thread_id_net, netiso_thread, 0, THREAD_PRIO, THREAD_STACK_SIZE_NET_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NET);
+#endif
+				if(ret && (netiso_args.emu_mode == EMU_PS3))
+				{
+					wait_for("/dev_bdvd", 15);
+
+					get_name(templn, _path, GET_WMTMP);
+					cache_icon0_and_param_sfo(templn);
+
+					#ifdef FIX_GAME
+					fix_game(_path, titleID, webman_config->fixgame);
+					#endif
+				}
 
 				goto exit_mount;
 			}
@@ -1696,7 +1720,7 @@ static void mount_thread(u64 action)
 
 					if(file_exists(iso_list[0]))
 					{
-						int result = cobra_set_psp_umd(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/psp_icon.png");
+						int result = cobra_set_psp_umd(iso_list[0], NULL, (char*)"/dev_hdd0/tmp/wm_icons/psp_icon.png");
 
 						if(result) ret = false;
 					}
@@ -1788,7 +1812,7 @@ static void mount_thread(u64 action)
 						TrackDef tracks[1];
 						tracks[0].lba = 0;
 						tracks[0].is_audio = 0;
-						cobra_mount_psx_disc_image_iso(cobra_iso_list[0], tracks, 1);
+						cobra_mount_psx_disc_image(cobra_iso_list[0], tracks, 1);
 					}
 				}
 
@@ -2091,7 +2115,7 @@ install_mm_payload:
 			sprintf(expplg, "%s/none", app_sys);
 
 		if(action && file_exists(expplg))
-			add_to_map("/dev_flash/vsh/module/explore_plugin.sprx", expplg);
+			add_to_map(VSH_MODULE_DIR "explore_plugin.sprx", expplg);
 
 		//---------------
 		// New libfs.sprx

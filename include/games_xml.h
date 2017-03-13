@@ -41,7 +41,7 @@ static void refresh_xml(char *msg)
 	show_msg(msg);
 
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, handleclient_www, (u64)REFRESH_CONTENT, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 
 	while(refreshing_xml && working) sys_ppu_thread_usleep(200000);
 
@@ -269,7 +269,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 		if(!webman_config->refr || file_exists(MY_GAMES_XML) == false)
 		{
 			sys_ppu_thread_t t_id;
-			sys_ppu_thread_create(&t_id, handleclient, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
+			sys_ppu_thread_create(&t_id, handleclient_www, (u64)REFRESH_CONTENT, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_CMD);
 		}
 
 		return true; // mount autoboot & refresh xml
@@ -429,7 +429,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 	check_cover_folders(tempstr);
 
 #ifdef WM_PROXY_SPRX
-	bool use_wm_proxy = file_exists(TMP_DIR "/" WM_PROXY_SPRX ".sprx");
+	bool use_wm_proxy = file_exists(WM_RES_PATH "/wm_proxy.sprx");
 #endif
 
 #ifdef SLAUNCH_FILE
@@ -459,7 +459,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 		}
 
 #ifdef USE_NTFS
-		if(IS_NTFS && webman_config->ntfs) prepNTFS((conn_s_p == START_DAEMON));
+		if(IS_NTFS && webman_config->ntfs) prepNTFS();
 #endif
 		is_net = IS_NET;
 

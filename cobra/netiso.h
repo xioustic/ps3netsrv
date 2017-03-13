@@ -8,7 +8,18 @@ extern "C" {
 #endif
 
 #define NETISO_PORT	38008
-
+/*
+typedef struct
+{
+	char server[0x40];
+	char path[0x420];
+	uint32_t emu_mode;
+	uint32_t numtracks;
+	uint16_t port;
+	uint8_t pad[6];
+	ScsiTrackDescriptor tracks[32];
+} __attribute__((packed)) netiso_args;
+*/
 enum NETISO_CMD
 {
 	/* Closes the active ro file (if any) and open/stat a new one */

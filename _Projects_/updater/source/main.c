@@ -34,6 +34,7 @@
 #define LANG_DIR             TMP_DIR "/wm_lang"
 #define COMBO_DIR            TMP_DIR "/wm_combo"
 #define ICONS_DIR            TMP_DIR "/wm_icons"
+#define RES_DIR              TMP_DIR "/wm_res"
 
 #define XMLHOST_DIR          "/dev_hdd0/xmlhost/game_plugin"
 
@@ -354,6 +355,8 @@ int main()
 	sysLv2FsMkdir(TMP_DIR,   0777);
 	sysLv2FsMkdir(LANG_DIR,  0777);
 	sysLv2FsMkdir(COMBO_DIR, 0777);
+	sysLv2FsMkdir(ICONS_DIR, 0777);
+	sysLv2FsMkdir(RES_DIR,   0777);
 
 	// remove language files (old location)
 	sysLv2FsUnlink(TMP_DIR "/LANG_EN.TXT");
@@ -416,6 +419,8 @@ int main()
 	sysLv2FsUnlink(APP_USRDIR  "/jquery-1.11.3.min.js");
 	sysLv2FsUnlink(XMLHOST_DIR "/jquery-1.12.3.min.js");
 	sysLv2FsUnlink(APP_USRDIR  "/jquery-1.12.3.min.js");
+
+	sysLv2FsUnlink(TMP_DIR "/psp_icon.png");
 
 	// update languages
 	CopyFile(APP_USRDIR "/LANG_EN.TXT", LANG_DIR "/LANG_EN.TXT");
@@ -483,7 +488,8 @@ int main()
 
 	CopyFile(APP_USRDIR "/blank.png"            , ICONS_DIR "/blank.png"    );
 
-	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, TMP_DIR "/wm_online_ids.txt");
+	sysLv2FsUnlink(TMP_DIR "/wm_online_ids.txt");
+	CopyFile(APP_USRDIR "/wm_online_ids.txt"	, RES_DIR "/wm_online_ids.txt");
 
 	// webMAN LaunchPad icons
 	CopyFile(APP_USRDIR "/icon_lp_ps3.png"      , ICONS_DIR "/icon_lp_ps3.png");
@@ -565,7 +571,9 @@ int main()
 
 	sysLv2FsUnlink(XMLHOST_DIR "/mygames.xml");
 	sysLv2FsUnlink(TMP_DIR "/idle_plugin.sprx");
-	CopyFile(APP_USRDIR "/wm_proxy.sprx", TMP_DIR "/eula_cddb_plugin.sprx");
+	sysLv2FsUnlink(TMP_DIR "/eula_cddb_plugin.sprx");
+
+	CopyFile(APP_USRDIR "/wm_proxy.sprx", RES_DIR "/wm_proxy.sprx");
 
 	sysLv2FsUnlink(APP_USRDIR "webftp_server.sprx");
 	sysLv2FsUnlink(APP_USRDIR "webftp_server_ps3mapi.sprx");
@@ -577,31 +585,55 @@ int main()
 	sysLv2FsMkdir(PLUGINS_DIR, 0777);
 
 	// install vsh menu
-	if(sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS)
+	if(sysLv2FsStat(RES_DIR, &stat) == SUCCESS)
 	{
-		sysLv2FsMkdir(PLUGINS_DIR "/images", 0777);
+		sysLv2FsMkdir(RES_DIR "/images", 0777);
 
 		// update images
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu.png",   PLUGINS_DIR "/images/wm_vsh_menu.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_1.png", PLUGINS_DIR "/images/wm_vsh_menu_1.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_2.png", PLUGINS_DIR "/images/wm_vsh_menu_2.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_3.png", PLUGINS_DIR "/images/wm_vsh_menu_3.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_4.png", PLUGINS_DIR "/images/wm_vsh_menu_4.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_5.png", PLUGINS_DIR "/images/wm_vsh_menu_5.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_6.png", PLUGINS_DIR "/images/wm_vsh_menu_6.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_7.png", PLUGINS_DIR "/images/wm_vsh_menu_7.png");
-		CopyFile(APP_USRDIR "/images/wm_vsh_menu_8.png", PLUGINS_DIR "/images/wm_vsh_menu_8.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_1.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_2.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_3.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_4.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_5.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_6.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_7.png");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/wm_vsh_menu_8.png");
 
-		CopyFile(APP_USRDIR "/images/slaunch_fav.jpg",   PLUGINS_DIR "/images/slaunch_fav.jpg");
-		CopyFile(APP_USRDIR "/images/slaunch_PS1.jpg",   PLUGINS_DIR "/images/slaunch_PS1.jpg");
-		CopyFile(APP_USRDIR "/images/slaunch_PS2.jpg",   PLUGINS_DIR "/images/slaunch_PS2.jpg");
-		CopyFile(APP_USRDIR "/images/slaunch_PS3.jpg",   PLUGINS_DIR "/images/slaunch_PS3.jpg");
-		CopyFile(APP_USRDIR "/images/slaunch_PSP.jpg",   PLUGINS_DIR "/images/slaunch_PSP.jpg");
-		CopyFile(APP_USRDIR "/images/slaunch_ROMS.jpg",  PLUGINS_DIR "/images/slaunch_ROMS.jpg");
-		CopyFile(APP_USRDIR "/images/slaunch_video.jpg", PLUGINS_DIR "/images/slaunch_video.jpg");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/slaunch_fav.jpg");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/slaunch_PS1.jpg");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/slaunch_PS2.jpg");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/slaunch_PS3.jpg");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/slaunch_PSP.jpg");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/slaunch_ROMS.jpg");
+		sysLv2FsUnlink(PLUGINS_DIR "/images/slaunch_video.jpg");
 
-		CopyFile(APP_USRDIR "/slaunch.sprx", PLUGINS_DIR "/slaunch.sprx");
-		CopyFile(APP_USRDIR "/wm_vsh_menu.sprx", PLUGINS_DIR "/wm_vsh_menu.sprx");
+		sysLv2FsRmdir(PLUGINS_DIR "/images");
+
+		sysLv2FsUnlink(PLUGINS_DIR "/slaunch.sprx");
+		sysLv2FsUnlink(PLUGINS_DIR "/wm_vsh_menu.sprx");
+
+		// update images
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu.png",   RES_DIR "/images/wm_vsh_menu.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_1.png", RES_DIR "/images/wm_vsh_menu_1.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_2.png", RES_DIR "/images/wm_vsh_menu_2.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_3.png", RES_DIR "/images/wm_vsh_menu_3.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_4.png", RES_DIR "/images/wm_vsh_menu_4.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_5.png", RES_DIR "/images/wm_vsh_menu_5.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_6.png", RES_DIR "/images/wm_vsh_menu_6.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_7.png", RES_DIR "/images/wm_vsh_menu_7.png");
+		CopyFile(APP_USRDIR "/images/wm_vsh_menu_8.png", RES_DIR "/images/wm_vsh_menu_8.png");
+
+		CopyFile(APP_USRDIR "/images/slaunch_fav.jpg",   RES_DIR "/images/slaunch_fav.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PS1.jpg",   RES_DIR "/images/slaunch_PS1.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PS2.jpg",   RES_DIR "/images/slaunch_PS2.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PS3.jpg",   RES_DIR "/images/slaunch_PS3.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_PSP.jpg",   RES_DIR "/images/slaunch_PSP.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_ROMS.jpg",  RES_DIR "/images/slaunch_ROMS.jpg");
+		CopyFile(APP_USRDIR "/images/slaunch_video.jpg", RES_DIR "/images/slaunch_video.jpg");
+
+		CopyFile(APP_USRDIR "/slaunch.sprx", RES_DIR "/slaunch.sprx");
+		CopyFile(APP_USRDIR "/wm_vsh_menu.sprx", RES_DIR "/wm_vsh_menu.sprx");
 	}
 
 	// skip update custom language file
@@ -612,19 +644,25 @@ int main()
 	if(sysLv2FsStat(TMP_DIR "/wm_custom_combo", &stat))
 		CopyFile(APP_USRDIR "/wm_custom_combo", TMP_DIR "/wm_custom_combo");
 
-	CopyFile(APP_USRDIR "/libfs.sprx", TMP_DIR "/libfs.sprx");
+	sysLv2FsUnlink(TMP_DIR "/libfs.sprx");
+	CopyFile(APP_USRDIR "/libfs.sprx", RES_DIR "/libfs.sprx");
 
 	sysLv2FsStat(APP_USRDIR "/raw_iso.sprx", &stat);
 	u64 raw_iso_size = stat.st_size;
 
-	// copy raw_iso.sprx to dev_flash
-	if(sysLv2FsStat(FLASH_VSH_MODULE_DIR "/raw_iso.sprx", &stat) != SUCCESS || (stat.st_size != raw_iso_size))
-	{
-		if(sysLv2FsStat("/dev_blind", &stat) != SUCCESS)
-			sys_fs_mount("CELL_FS_IOS:BUILTIN_FLSH1", "CELL_FS_FAT", "/dev_blind", 0);
+	sysLv2FsStat(APP_USRDIR "/netiso.sprx", &stat);
+	u64 netiso_size = stat.st_size;
 
-		if(sysLv2FsStat("/dev_blind", &stat) == SUCCESS)
-			CopyFile(APP_USRDIR "/raw_iso.sprx", REBUG_VSH_MODULE_DIR "/raw_iso.sprx");
+	// copy raw_iso.sprx to dev_flash
+	if(sysLv2FsStat(RES_DIR "/raw_iso.sprx", &stat) != SUCCESS || (stat.st_size != raw_iso_size))
+	{
+		CopyFile(APP_USRDIR "/raw_iso.sprx", RES_DIR "/raw_iso.sprx");
+	}
+
+	// copy netiso.sprx to dev_flash
+	if(sysLv2FsStat(RES_DIR "/netiso.sprx", &stat) != SUCCESS || (stat.st_size != netiso_size))
+	{
+		CopyFile(APP_USRDIR "/netiso.sprx", RES_DIR "/netiso.sprx");
 	}
 
 	// copy raw_iso.sprx to dev_hdd (if failed to copy it to dev_flash)
@@ -639,9 +677,22 @@ int main()
 			CopyFile(APP_USRDIR "/raw_iso.sprx", HDDROOT_DIR "/raw_iso.sprx");
 	}
 
-	// copy standalone video recorder plugin (video_rec.sprx) to /plugins folder
-	if((sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS))
-		CopyFile(APP_USRDIR "/video_rec.sprx", PLUGINS_DIR "/video_rec.sprx");
+	// copy netiso.sprx to dev_hdd (if failed to copy it to dev_flash)
+	if(sysLv2FsStat(FLASH_VSH_MODULE_DIR "/netiso.sprx", &stat) != SUCCESS)
+	{
+		if(sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS)
+		{
+			CopyFile(APP_USRDIR "/netiso.sprx", PLUGINS_DIR "/netiso.sprx");
+			if(sysLv2FsStat(PLUGINS_DIR "/netiso.sprx", &stat) == SUCCESS) sysLv2FsUnlink(HDDROOT_DIR "/netiso.sprx");
+		}
+		else
+			CopyFile(APP_USRDIR "/netiso.sprx", HDDROOT_DIR "/netiso.sprx");
+	}
+
+	// copy standalone video recorder plugin (video_rec.sprx) to /wm_res folder
+	sysLv2FsUnlink(PLUGINS_DIR "/video_rec.sprx");
+	if((sysLv2FsStat(RES_DIR, &stat) == SUCCESS))
+		CopyFile(APP_USRDIR "/video_rec.sprx", RES_DIR "/video_rec.sprx");
 
 	// update PRX+Mamba Loader
 	if((sysLv2FsStat(IRISMAN_USRDIR "/webftp_server.sprx", &stat) == SUCCESS) || (sysLv2FsStat(IRISMAN_USRDIR "/webftp_server_ps3mapi.sprx", &stat) == SUCCESS))

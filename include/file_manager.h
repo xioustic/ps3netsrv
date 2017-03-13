@@ -467,7 +467,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 	DIR_ITER *pdir = NULL;
 
 	is_ntfs = is_ntfs_path(param);
-	if((is_root | is_ntfs) && (mountCount == NTFS_UNMOUNTED)) mount_all_ntfs_volumes();
+	if(is_root) check_ntfs_volumes(); else if(is_ntfs && (mountCount == NTFS_UNMOUNTED)) mount_all_ntfs_volumes();
 
 	if(is_ntfs)
 	{
@@ -679,8 +679,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					if(ps3ntfs_dirnext(pdir, entry.d_name, &bufn)) break;
 					if(entry.d_name[0] == '$' && param[12] == 0) continue;
 
-					buf.st_mode = bufn.st_mode;
-					buf.st_size = bufn.st_size;
+					buf.st_mode = bufn.st_mode, buf.st_size = bufn.st_size, buf.st_mtime = bufn.st_mtime;
 				}
 				else
 #endif
@@ -713,7 +712,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					}
 					if(templn[flen - 1] == '/') templn[flen--] = NULL;
 
-					cellFsStat(templn, &buf); cellRtcSetTime_t(&rDate, buf.st_mtime);
+					if(!is_ntfs) cellFsStat(templn, &buf); cellRtcSetTime_t(&rDate, buf.st_mtime);
 
 					sz = (unsigned long long)buf.st_size; dir_size += sz;
 

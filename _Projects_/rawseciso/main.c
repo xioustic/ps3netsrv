@@ -19,6 +19,11 @@
 #include "syscall8.h"
 #include "scsi.h"
 
+#define SC_COBRA_SYSCALL8				(8)
+#define SC_GET_PRX_MODULE_BY_ADDRESS	(461)
+#define SC_STOP_PRX_MODULE				(482)
+#define SC_PPU_THREAD_EXIT				(41)
+
 SYS_MODULE_INFO(RAWSECISO, 0, 1, 0);
 SYS_MODULE_START(rawseciso_start);
 SYS_MODULE_STOP(rawseciso_stop);
@@ -34,7 +39,9 @@ SYS_MODULE_STOP(rawseciso_stop);
 #define MIN(a, b)   ((a) <= (b) ? (a) : (b))
 #define ABS(a)      (((a) < 0) ? -(a) : (a))
 
-#define CD_CACHE_SIZE           (64)
+#define CD_CACHE_SIZE           (48)
+
+#define DISC_TYPE_NONE		0
 
 enum EMU_TYPE
 {
@@ -202,15 +209,6 @@ static inline uint64_t lv2peek(uint64_t lv2addr)
     return (uint64_t)p1;
 }
 
-static inline uint64_t sys8_memcpy(uint64_t dst, uint64_t src, uint64_t size)
-{
-
-    system_call_4(8, 2ULL, dst, src, size);
-    return (uint64_t)p1;
-
-}
-
-
 static inline int sysUsleep(uint32_t useconds)
 {
     system_call_1(141, useconds);
@@ -219,7 +217,7 @@ static inline int sysUsleep(uint32_t useconds)
 
 static inline int sys_shutdown(void)
 {
-    system_call_4(379,0x1100,0,0,0);
+    system_call_4(379, 0x1100, 0, 0, 0);
     return (int)p1;
 }
 
@@ -693,6 +691,11 @@ static inline void my_memcpy(uint8_t *dst, uint8_t *src, int size)
     for(int i = 0; i < size; i++) dst[i] = src[i];
 }
 
+static inline void my_memcpy64(uint64_t *dst, uint64_t src, int size)
+{
+    for(int64_t i = 0; i < size; i++) dst[i] = lv2peek(src + i*8ULL);
+}
+
 
 static uint32_t cached_cd_sector=0x80000000;
 
@@ -748,14 +751,14 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
                 {
                     copy_ptr = cd_cache;
                     copy_offset = dif;
-                    copy_size = remaining-dif;
+                    copy_size = remaining - dif;
                 }
             }
             else
             {
 
-                copy_ptr = cd_cache+((-dif)*CD_SECTOR_SIZE_2352);
-                copy_size = MIN((int)remaining, CD_CACHE_SIZE+dif);
+                copy_ptr = cd_cache + ((-dif) * CD_SECTOR_SIZE_2352);
+                copy_size = MIN((int)remaining, CD_CACHE_SIZE + dif);
             }
 
             if(copy_ptr)
@@ -790,7 +793,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
     {
         sys_addr_t addr;
 
-        int ret = sys_memory_allocate(192*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr);
+        int ret = sys_memory_allocate(128 * 1024, SYS_MEMORY_PAGE_SIZE_64K, &addr);
         if(ret != OK)
         {
             DPRINTF("sys_memory_allocate failed: %x\n", ret);
@@ -800,7 +803,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
         cd_cache = (uint8_t *)addr;
     }
 
-    if(process_read_iso_cmd(cd_cache, sector*CD_SECTOR_SIZE_2352, CD_CACHE_SIZE*CD_SECTOR_SIZE_2352) != 0)
+    if(process_read_iso_cmd(cd_cache, sector*CD_SECTOR_SIZE_2352, CD_CACHE_SIZE * CD_SECTOR_SIZE_2352) != CELL_OK)
         return FAILED;
 
     memcpy(buf, cd_cache, remaining*CD_SECTOR_SIZE_2352);
@@ -815,7 +818,7 @@ static void get_psx_track_datas(void)
     uint64_t lv2_addr = 0x8000000000000050ULL;
     lv2_addr+= 16ULL * psx_indx;
 
-    sys8_memcpy((uint64_t)(uint32_t) track_datas, lv2_addr, 16ULL);
+    my_memcpy64((uint64_t*)(uint32_t)track_datas, lv2_addr, 16ULL);
 
     int k = 4;
     num_tracks = 0;
@@ -831,7 +834,7 @@ static void get_psx_track_datas(void)
     else
     {
         lv2_addr = 0x8000000000000000ULL + (uint64_t) track_datas[2];
-        sys8_memcpy((uint64_t)(uint32_t) buff, lv2_addr, track_datas[3]);
+        my_memcpy64((uint64_t*)buff, lv2_addr, track_datas[3]);
 
         while(k < (int) track_datas[3])
         {
@@ -859,7 +862,7 @@ static int ejected_disc(void)
     static int counter = 0;
     int fd = NONE;
 
-    if(usb_device != 0ULL)
+    if(usb_device)
     {
         int r = sys_storage_get_device_info(usb_device, &disc_info);
         if(r == 0)
@@ -954,7 +957,7 @@ static void eject_thread(uint64_t arg)
                 fake_eject_event();
                 sys_storage_ext_umount_discfile();
 
-                if(real_disctype != 0)
+                if(real_disctype != DISC_TYPE_NONE)
                 {
                     fake_insert_event(real_disctype);
                 }
@@ -968,7 +971,7 @@ static void eject_thread(uint64_t arg)
                     sys_event_queue_t command_queue2 = command_queue;
                     command_queue = SYS_EVENT_QUEUE_NONE;
 
-                    if(sys_event_queue_destroy(command_queue2, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
+                    if(sys_event_queue_destroy(command_queue2, SYS_EVENT_QUEUE_DESTROY_FORCE) != CELL_OK)
                     {
                         DPRINTF("Failed in destroying command_queue\n");
                     }
@@ -976,7 +979,7 @@ static void eject_thread(uint64_t arg)
 
 
 
-                while(do_run!=0) sysUsleep(100000);
+                while(do_run) sysUsleep(100000);
 
                 psx_indx = (psx_indx + 1) & 7;
 
@@ -987,7 +990,7 @@ static void eject_thread(uint64_t arg)
 
                 sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
-                if(real_disctype != 0)
+                if(real_disctype != DISC_TYPE_NONE)
                 {
                     fake_eject_event();
                 }
@@ -1059,7 +1062,7 @@ static void rawseciso_thread(uint64_t arg)
     if(mode_file != 1)
     {
         size_sector = 512ULL;
-        if(args->device != 0)
+        if(args->device)
         {
             for(int i = 0; i < 16; i++)
             {
@@ -1131,7 +1134,7 @@ static void rawseciso_thread(uint64_t arg)
     {
         usb_device = args->device;
 
-        if(usb_device != 0)
+        if(usb_device)
         {
             ret = sys_storage_open(usb_device, 0, &handle, 0);
             if(ret != OK)
@@ -1165,7 +1168,7 @@ static void rawseciso_thread(uint64_t arg)
 
     sys_storage_ext_get_disc_type(&real_disctype, NULL, NULL);
 
-    if(real_disctype != 0)
+    if(real_disctype != DISC_TYPE_NONE)
     {
         fake_eject_event();
     }
@@ -1260,7 +1263,7 @@ static void rawseciso_thread(uint64_t arg)
                                 offset+= rd;
                                 buf = ((char *) buf) + rd;
 
-                                if(size != 0)
+                                if(size)
                                     ret = process_read_iso_cmd(buf, offset, size);
                             }
                         }
@@ -1311,7 +1314,7 @@ static void rawseciso_thread(uint64_t arg)
     fake_eject_event();
     sys_storage_ext_umount_discfile();
 
-    if(real_disctype != 0)
+    if(real_disctype != DISC_TYPE_NONE)
     {
         fake_insert_event(real_disctype);
     }
@@ -1326,7 +1329,7 @@ static void rawseciso_thread(uint64_t arg)
     if(discfd != NONE) cellFsClose(discfd);
 
     sys_event_port_disconnect(result_port);
-    if(sys_event_port_destroy(result_port) != 0)
+    if(sys_event_port_destroy(result_port) != CELL_OK)
     {
         DPRINTF("Error destroyng result_port\n");
     }
@@ -1339,16 +1342,17 @@ static void rawseciso_thread(uint64_t arg)
 
 int rawseciso_start(uint64_t arg)
 {
-    if(arg != 0)
+    if(arg)
     {
-        void *argp = (void *)(uint32_t)arg;
-        sys_addr_t addr;
+        uint64_t *argp = (uint64_t*)(uint32_t)arg;
+        sys_addr_t sysmem;
 
-        if(sys_memory_allocate(64*1024, SYS_MEMORY_PAGE_SIZE_64K, &addr) == 0)
+        if(sys_memory_allocate(64 * 1024, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
         {
-            memcpy((void *)addr, argp, 64*1024);
-            sys_ppu_thread_create(&thread_id, rawseciso_thread, (uint64_t)addr, -0x1d8, 0x2000, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME);
+            uint64_t *args = (uint64_t*)sysmem;
+            for(uint16_t i = 0; i < 0x2000; i++) args[i] = argp[i]; // copy arguments 64KB
 
+            sys_ppu_thread_create(&thread_id, rawseciso_thread, (uint64_t)(uint32_t)args, -0x1d8, 0x2000, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME);
         }
     }
     // Exit thread using directly the syscall and not the user mode library or we will crash
@@ -1366,7 +1370,7 @@ static void rawseciso_stop_thread(uint64_t arg)
 
     if(command_queue != SYS_EVENT_QUEUE_NONE)
     {
-        if(sys_event_queue_destroy(command_queue, SYS_EVENT_QUEUE_DESTROY_FORCE) != 0)
+        if(sys_event_queue_destroy(command_queue, SYS_EVENT_QUEUE_DESTROY_FORCE) != CELL_OK)
         {
             DPRINTF("Failed in destroying command_queue\n");
         }
@@ -1398,7 +1402,7 @@ static void finalize_module(void)
     meminfo[1] = 2;
     meminfo[3] = 0;
 
-    system_call_3(482, prx, 0, (uint64_t)(uint32_t)meminfo);
+    system_call_3(SC_STOP_PRX_MODULE, prx, 0, (uint64_t)(uint32_t)meminfo);
 }
 
 int rawseciso_stop(void)
