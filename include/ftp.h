@@ -787,10 +787,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										ssize_t read_e = 0;
 
 										ps3ntfs_seek64(fd, rest, SEEK_SET);
+
 										rest = 0;
+										err = CELL_FS_OK; ftp_ntfs_transfer_in_progress++;
 
 										ssend(conn_s_ftp, FTP_OK_150);
-										err = CELL_FS_OK;
 
 										while(working)
 										{
@@ -808,7 +809,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 												{err = FAILED; break;}
 										}
 
-										ps3ntfs_close(fd);
+										ps3ntfs_close(fd); ftp_ntfs_transfer_in_progress--;
 									}
 								}
 								else
@@ -818,13 +819,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 									u64 read_e = 0, pos; //, write_e
 
 									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
-									rest = 0;
 
 									//int optval = BUFFER_SIZE_FTP;
 									//setsockopt(data_s, SOL_SOCKET, SO_SNDBUF, &optval, sizeof(optval));
 
-									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
+									rest = 0;
 									err = CELL_FS_OK;
+
+									ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
 									while(working)
 									{
@@ -901,7 +903,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										ps3ntfs_seek64(fd, rest, SEEK_SET);
 
 										rest = 0;
-										err = CELL_FS_OK;
+										err = CELL_FS_OK; ftp_ntfs_transfer_in_progress++;
 
 										ssend(conn_s_ftp, FTP_OK_150);
 
@@ -918,7 +920,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 												break;
 										}
 
-										ps3ntfs_close(fd);
+										ps3ntfs_close(fd); ftp_ntfs_transfer_in_progress--;
 										if(!working || err != CELL_FS_OK) ps3ntfs_unlink(filename + 5);
 									}
 								}

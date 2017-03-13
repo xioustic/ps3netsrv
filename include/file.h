@@ -45,9 +45,11 @@ static void mount_all_ntfs_volumes(void)
 	if (mountCount <= 0) {mountCount = NTFS_UNMOUNTED;}
 }
 
+static u32 ftp_ntfs_transfer_in_progress = 0;
+
 static void check_ntfs_volumes(void)
 {
-	if(mountCount > 0)
+	if((mountCount > 0) && !ftp_ntfs_transfer_in_progress)
 	{
 		DIR_ITER *pdir; char path[40];
 		for(int i = 0; i < mountCount; i++)

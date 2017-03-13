@@ -111,8 +111,15 @@ static bool abort_autoplay(void)
 	return false;
 }
 
+#ifdef PKG_HANDLER
+static void unload_web_plugins(void);
+#endif
 static void explore_close_all(const char *path)
 {
+#ifdef PKG_HANDLER
+	unload_web_plugins();
+#endif
+
 	int view = View_Find("explore_plugin"); if(!view) return;
 
 	explore_interface = (explore_plugin_interface *)plugin_GetInterface(view, 1);
