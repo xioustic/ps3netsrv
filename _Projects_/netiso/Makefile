@@ -5,11 +5,11 @@ BUILD_TYPE     	= release
 
 ROOT_PATH = ../..
 
-LIBSTUB_DIR		= ../lib
+LIBSTUB_DIR		= $(ROOT_PATH)/lib
 PRX_DIR			= .
 INSTALL			= cp
 PEXPORTPICKUP		= ppu-lv2-prx-exportpickup
-PRX_LDFLAGS_EXTRA	= -L ../lib -Wl,--strip-unused-data
+PRX_LDFLAGS_EXTRA	= -L $(ROOT_PATH)/lib -Wl,--strip-unused-data
 
 CRT_HEAD                += $(shell ppu-lv2-gcc -print-file-name'='ecrti.o)
 CRT_HEAD                += $(shell ppu-lv2-gcc -print-file-name'='crtbegin.o)
@@ -38,7 +38,3 @@ all:
 	rm -r data objs $(PPU_PRX_TARGET) *.sym
 
 include $(CELL_MK_DIR)/sdk.target.mk
-
-
-
-

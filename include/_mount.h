@@ -6,12 +6,13 @@
 // [online]  Auto-disable syscalls
 // [offline] Auto-disable network
 // [gd]      Auto-enable external gameDATA
-// [raw]     Use raw_iso.sprx to mount the ISO (ntfs)
+// [raw]     Use internal rawseciso to mount the ISO (ntfs)
+// [net]     Use internal netiso to mount the ISO (netiso)
 // [PS2]     PS2 extracted folders in /PS2DISC (needs PS2_DISC compilation flag)
 // [netemu]  Mount ps2/psx game with netemu
 
 #ifdef PKG_LAUNCHER
-char map_title_id[10];
+static char map_title_id[10];
 #endif
 
 typedef struct
@@ -22,7 +23,7 @@ t_path_entries;
 
 typedef struct
 {
-	uint8_t last;
+	u8 last;
 	t_path_entries game[MAX_LAST_GAMES];
 } __attribute__((packed)) _lastgames;
 
@@ -52,7 +53,7 @@ static void auto_play(char *param)
 #endif
 	if(IS_ON_XMB && (strstr(param, "/PSPISO") == NULL) && (extcmp(param, ".BIN.ENC", 8) != 0))
 	{
-		uint8_t autoplay = webman_config->autoplay;
+		u8 autoplay = webman_config->autoplay;
 
 		CellPadData pad_data = pad_read();
 		bool atag = (strcasestr(param, AUTOPLAY_TAG)!=NULL) || (autoplay);
@@ -150,7 +151,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 		// ---------------
 		// init variables
 		// ---------------
-		uint8_t plen = 10; // /mount.ps3
+		u8 plen = 10; // /mount.ps3
 		enum icon_type default_icon = iPS3;
 
 #ifdef COPY_PS3
@@ -270,7 +271,6 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			// -----------------
 			char *filename = strrchr(_path, '/'), *icon = tempstr;
 			{
-				char buf[_4KB_];
 				char tempID[10], *d_name; *icon = *tempID = NULL;
 				u8 f0 = strstr(filename, ".ntfs[") ? NTFS : 0, f1 = strstr(_path, "PS2") ? 5 : strstr(_path, "PSX") ? 6 : strstr(_path, "PSP") ? 8 : 2, is_dir = isDir(source);
 
@@ -280,17 +280,22 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				*filename = NULL; // sets _path
 				d_name = filename + 1;
 
-				if(is_dir)
+				char *buf = malloc(_4KB_);
+				if(buf)
 				{
-					sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", _path, d_name);
-					get_title_and_id_from_sfo(templn, tempID, d_name, icon, buf, 0); f1 = 0;
-				}
+					if(is_dir)
+					{
+						sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", _path, d_name);
+						get_title_and_id_from_sfo(templn, tempID, d_name, icon, buf, 0); f1 = 0;
+					}
 #ifdef COBRA_ONLY
-				else
-				{
-					get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, FROM_MOUNT, strlen(d_name), buf);
-				}
+					else
+					{
+						get_name_iso_or_sfo(templn, tempID, icon, _path, d_name, f0, f1, FROM_MOUNT, strlen(d_name), buf);
+					}
 #endif
+					free(buf);
+				}
 				default_icon = get_default_icon(icon, _path, d_name, is_dir, tempID, NONE, 0, f0, f1);
 
 				*filename = '/';
@@ -331,7 +336,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 							sprintf(target, "%s", STR_ERROR);
 						else
 						{
-							uint64_t size = buf.st_size;
+							u64 size = buf.st_size;
 
 							enable_dev_blind(source);
 
@@ -359,9 +364,9 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 
 							if((cellFsStat(target, &buf) == CELL_FS_SUCCEEDED) && (buf.st_size == size))
 							{
-								uint64_t lv2_offset = 0x15DE78; // 4.xx CFW LV1 memory location for: /flh/os/lv2_kernel.self
+								u64 lv2_offset = 0x15DE78; // 4.xx CFW LV1 memory location for: /flh/os/lv2_kernel.self
 								if(peek_lv1(lv2_offset) != 0x2F666C682F6F732FULL)
-									for(uint64_t addr = 0x100000ULL; addr<0xFFFFF8ULL; addr+=4) // Find in 16MB
+									for(u64 addr = 0x100000ULL; addr<0xFFFFF8ULL; addr+=4) // Find in 16MB
 										if(peek_lv1(addr) == 0x2F6F732F6C76325FULL)             // /os/lv2_
 										{
 											lv2_offset=addr-4; break; // 0x12A2C0 on 3.55
@@ -532,7 +537,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					{
 						if(islike(source, "/dev_bdvd"))
 						{
-							{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+							{system_call_1(36, (u64) "/dev_bdvd");} // decrypt dev_bdvd files
 
 							sprintf(target, "%s/%s", "/dev_hdd0/GAMES", "My Disc Backup");
 
@@ -837,7 +842,7 @@ static void do_umount(bool clean)
 
  #ifdef USE_INTERNAL_PLUGIN
 			sys_ppu_thread_t t_id;
-			uint64_t exit_code;
+			u64 exit_code;
   #ifdef NET_SUPPORT
 			sys_ppu_thread_create(&t_id, netiso_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 			sys_ppu_thread_join(t_id, &exit_code);
@@ -1438,7 +1443,7 @@ static void mount_thread(u64 action)
 				// ------------------------------------------------------------------------------------------------------------
 				// launch ntfs psx & isos tagged [raw] with external rawseciso sprx (if available) (due support for multi PSX)
 				// ------------------------------------------------------------------------------------------------------------
-				if(islike(ntfs_ext, ".ntfs[PSXISO]") || strstr(_path, "[raw]"))
+				if(islike(ntfs_ext, ".ntfs[PSXISO]") || (!strstr(_path, "[raw]")))
 	#endif
 				{
 					u8 n;
@@ -1458,7 +1463,7 @@ static void mount_thread(u64 action)
 						if(sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) == CELL_OK)
 						{
 							char *rawseciso_data = (char *)addr;
-							uint64_t msiz = read_file(_path, rawseciso_data, _64KB_, 0);
+							u64 msiz = read_file(_path, rawseciso_data, _64KB_, 0);
 							if(msiz > sizeof(rawseciso_args))
 							{
 								ret = (cobra_load_vsh_plugin(0, (char*)rawseciso_sprx[n], rawseciso_data, msiz) == CELL_OK);
@@ -1470,7 +1475,7 @@ static void mount_thread(u64 action)
 							sys_memory_free(addr);
 
 	#ifdef USE_INTERNAL_PLUGIN
-							if(ret) goto exit_mount;
+							if(ret) goto mounted_ntfs;
 	#endif
 						}
 					}
@@ -1483,15 +1488,18 @@ static void mount_thread(u64 action)
 					char *rawseciso_data = (char*)addr;
 					if(read_file(_path, rawseciso_data, _64KB_, 0) > sizeof(rawseciso_args))
 					{
-						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)addr, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
+						sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (u64)addr, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
 						sys_ppu_thread_sleep(1);
-						sys_memory_free(addr);
 					}
 					else
 						ret = false;
+
+					sys_memory_free(addr);
 				}
 	#endif //#ifdef USE_INTERNAL_PLUGIN
+
+		mounted_ntfs:
 
 				if(ret)
 				{
@@ -1585,11 +1593,15 @@ static void mount_thread(u64 action)
 
 						if(file_exists(TEMP_NET_PSXISO))
 						{
-							char *cue_buf = (char*)last_sect_buf;
-							int64_t cue_size = read_file(TEMP_NET_PSXISO, cue_buf, _4KB_, 0);
-							cellFsUnlink(TEMP_NET_PSXISO);
+							char *cue_buf = malloc(_4KB_);
+							if(cue_buf)
+							{
+								s64 cue_size = read_file(TEMP_NET_PSXISO, cue_buf, _4KB_, 0);
+								cellFsUnlink(TEMP_NET_PSXISO);
 
-							num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
+								num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
+								free(cue_buf);
+							}
 						}
 					}
 
@@ -1642,7 +1654,7 @@ static void mount_thread(u64 action)
 				for(n = 0; n < 3; n++)
 					if(file_exists(netiso_sprx[n])) break;
 
-				if(n < 3)
+				if((n < 3) && (!strstr(_path, "[net]")))
 				{
 					ret = (cobra_load_vsh_plugin(0, (char*)netiso_sprx[n], &netiso_args, sizeof(_netiso_args)) == CELL_OK);
 				}
@@ -1921,7 +1933,7 @@ install_mm_payload:
 
 	// restore syscall table
 	{
-		uint64_t sc_null = peekq(SYSCALL_TABLE);
+		u64 sc_null = peekq(SYSCALL_TABLE);
 
 		if(peekq(SYSCALL_PTR(79)) == sc_null)
 		{
@@ -2131,8 +2143,8 @@ install_mm_payload:
 	}
 
 	//-----------------------------------------------//
-	uint64_t map_data  = (MAP_BASE);
-	uint64_t map_paths = (MAP_BASE) + (max_mapped + 1) * 0x20;
+	u64 map_data  = (MAP_BASE);
+	u64 map_paths = (MAP_BASE) + (max_mapped + 1) * 0x20;
 
 	for(u16 n = 0; n < 0x400; n += 8) pokeq(map_data + n, 0);
 
@@ -2302,7 +2314,7 @@ static bool mount_with_mm(const char *path, u8 action)
 	_path0 = (char*)path;
 
 	sys_ppu_thread_t t_id;
-	sys_ppu_thread_create(&t_id, mount_thread, (uint64_t)action, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_MOUNT_GAME, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_CMD);
+	sys_ppu_thread_create(&t_id, mount_thread, (u64)action, THREAD_PRIO_HIGH, THREAD_STACK_SIZE_MOUNT_GAME, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_CMD);
 
 	while(is_mounting && working) sys_ppu_thread_usleep(200000); // wait until thread mount game
 

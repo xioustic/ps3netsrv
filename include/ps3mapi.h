@@ -83,7 +83,7 @@ static int is_syscall_disabled(u32 sc)
 {
 	int ret_val = NONE;
 	{ system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_CHECK_SYSCALL, sc); ret_val = (int)p1;}
-	if(ret_val<0) {uint64_t sc_null = peekq(SYSCALL_TABLE); ret_val = (peekq(SYSCALL_PTR(sc)) == sc_null);}
+	if(ret_val<0) {u64 sc_null = peekq(SYSCALL_TABLE); ret_val = (peekq(SYSCALL_PTR(sc)) == sc_null);}
 
 	return ret_val;
 }
@@ -290,7 +290,7 @@ static void ps3mapi_syscall(char *buffer, char *templn, char *param)
 {
 	bool is_ps3mapi_home = (*param == ' ');
 
-	uint64_t sc_null = peekq(SYSCALL_TABLE);
+	u64 sc_null = peekq(SYSCALL_TABLE);
 
 	if(strstr(param, ".ps3mapi?"))
 	{
@@ -551,7 +551,7 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 		{
 			for(int i = 0; i < length; i++)
 			{
-				sprintf(templn, "%02X", (uint8_t)buffer_tmp[i]);
+				sprintf(templn, "%02X", (u8)buffer_tmp[i]);
 				strcat(buffer, templn);
 			}
 		}

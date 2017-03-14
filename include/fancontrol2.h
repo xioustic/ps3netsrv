@@ -3,7 +3,7 @@
 static void poll_start_play_time(void)
 {
 	#ifdef OFFLINE_INGAME
-	int32_t status = 0;
+	s32 status = 0;
 	#endif
 
 	if(IS_ON_XMB)
@@ -59,7 +59,7 @@ static void poll_start_play_time(void)
 	}
 }
 
-static void poll_thread(uint64_t poll)
+static void poll_thread(u64 poll)
 {
 	u8 to = 0;
 	u8 sec = 0;
@@ -226,8 +226,8 @@ static void poll_thread(uint64_t poll)
 		poll = webman_config->poll;
 		if((poll == 0) && (sec >= 120)) // check USB drives each 120 seconds
 		{
-			uint8_t f0 = 0;
-			uint32_t usb_handle = NONE, r;
+			u8 f0 = 0;
+			u32 usb_handle = NONE, r;
 
 			char tmp[_2KB_];
 			for(u8 i = 0; i < 6; i++)

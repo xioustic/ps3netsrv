@@ -17,7 +17,7 @@ static int parse_lba(const char *templn, bool use_pregap)
 	return ((tmin * 60 + tsec) * 75 + tfrm);
 }
 
-static int get_line(char *templn, const char *cue_buf, int buf_size, int start)
+static int get_line(char *templn, const char *cue_buf, const int buf_size, const int start)
 {
 	*templn = NULL;
 	int lp = start;
@@ -47,7 +47,7 @@ static int get_line(char *templn, const char *cue_buf, int buf_size, int start)
 	return lp;
 }
 
-static unsigned int parse_cue(char *templn, const char *cue_buf, int cue_size, TrackDef *tracks)
+static unsigned int parse_cue(char *templn, const char *cue_buf, const int cue_size, TrackDef *tracks)
 {
 	unsigned int num_tracks = 0;
 

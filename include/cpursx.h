@@ -35,7 +35,7 @@ static void get_net_info(char *net_type, char *ip)
 {
 	// returns net_type[8], ip[ip_size]
 
-	int32_t status = 0; xsetting_F48C0548()->GetSettingNet_enable(&status);
+	s32 status = 0; xsetting_F48C0548()->GetSettingNet_enable(&status);
 
 	if(status == 0) {strcpy(net_type, "OFFLINE"); *ip = NULL; return;}
 
@@ -104,7 +104,7 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 	t2f = (1.8f*(float)t2+32.f);
 
 	_meminfo meminfo;
-	{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+	{system_call_1(SC_GET_FREE_MEM, (u64)(u32) &meminfo);}
 
 	if((webman_config->fanc == DISABLED) && (get_fan_policy_offset > 0))
 	{

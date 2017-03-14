@@ -1,15 +1,15 @@
 /***********************************************************************
 * pause/continue rsx fifo
 *
-* uint8_t pause    = pause fifo (1), continue fifo (0)
+* u8 pause    = pause fifo (1), continue fifo (0)
 ***********************************************************************/
 #if defined(PS3_BROWSER) || defined(XMB_SCREENSHOT)
-static int32_t rsx_fifo_pause(uint8_t pause)
+static s32 rsx_fifo_pause(u8 pause)
 {
 	// lv2 sys_rsx_context_attribute()
-	system_call_6(0x2A2, 0x55555555ULL, (uint64_t)(pause ? 2 : 3), 0, 0, 0, 0);
+	system_call_6(0x2A2, 0x55555555ULL, (u64)(pause ? 2 : 3), 0, 0, 0, 0);
 
-	return (int32_t)p1;
+	return (s32)p1;
 }
 #endif
 
@@ -23,30 +23,30 @@ static int32_t rsx_fifo_pause(uint8_t pause)
 #define BASE          0xC0000000UL     // local memory base ea
 
 // get pixel offset into framebuffer by x/y coordinates
-#define OFFSET(x, y) (uint32_t)((((uint32_t)offset) + ((((int16_t)x) + \
-                     (((int16_t)y) * (((uint32_t)pitch) / \
-                     ((int32_t)4)))) * ((int32_t)4))) + (BASE))
+#define OFFSET(x, y) (u32)((((u32)offset) + ((((s16)x) + \
+                     (((s16)y) * (((u32)pitch) / \
+                     ((s32)4)))) * ((s32)4))) + (BASE))
 
-#define _ES32(v)((uint32_t)(((((uint32_t)v) & 0xFF000000) >> 24) | \
-							              ((((uint32_t)v) & 0x00FF0000) >> 8 ) | \
-							              ((((uint32_t)v) & 0x0000FF00) << 8 ) | \
-							              ((((uint32_t)v) & 0x000000FF) << 24)))
+#define _ES32(v)((u32)(((((u32)v) & 0xFF000000) >> 24) | \
+		               ((((u32)v) & 0x00FF0000) >> 8 ) | \
+		               ((((u32)v) & 0x0000FF00) << 8 ) | \
+		               ((((u32)v) & 0x000000FF) << 24)))
 
 // graphic buffers
 typedef struct _Buffer {
-	uint32_t *addr;               // buffer address
-	int32_t  w;                   // buffer width
-	int32_t  h;                   // buffer height
+	u32 *addr;               // buffer address
+	s32  w;                   // buffer width
+	s32  h;                   // buffer height
 } Buffer;
 
 // display values
-static uint32_t unk1 = 0, offset = 0, pitch = 0;
-static uint32_t h = 0, w = 0;
+static u32 unk1 = 0, offset = 0, pitch = 0;
+static u32 h = 0, w = 0;
 
 //static DrawCtx ctx;                                 // drawing context
 
 // screenshot
-uint8_t bmp_header[] = {
+u8 bmp_header[] = {
   0x42, 0x4D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x00, 0x00, 0x00, 0x28, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x18, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x12, 0x0B, 0x00, 0x00, 0x00, 0x00,
@@ -56,13 +56,13 @@ uint8_t bmp_header[] = {
 
 #ifndef __PAF_H__
 
-extern uint32_t paf_F476E8AA(void);  //  u32 get_display_width
+extern u32 paf_F476E8AA(void);  //  u32 get_display_width
 #define getDisplayWidth paf_F476E8AA
 
-extern uint32_t paf_AC984A12(void);  // u32 get_display_height
+extern u32 paf_AC984A12(void);  // u32 get_display_height
 #define getDisplayHeight paf_AC984A12
 
-extern int32_t paf_FFE0FBC9(uint32_t *pitch, uint32_t *unk1);  // unk1 = 0x12 color bit depth? ret 0
+extern s32 paf_FFE0FBC9(u32 *pitch, u32 *unk1);  // unk1 = 0x12 color bit depth? ret 0
 #define getDisplayPitch paf_FFE0FBC9
 
 #endif // __PAF_H__
@@ -74,7 +74,7 @@ extern int32_t paf_FFE0FBC9(uint32_t *pitch, uint32_t *unk1);  // unk1 = 0x12 co
 static void init_graphic(void)
 {
 	// get current display values
-	offset = *(uint32_t*)0x60201104;      // start offset of current framebuffer
+	offset = *(u32*)0x60201104;      // start offset of current framebuffer
 	getDisplayPitch(&pitch, &unk1);       // framebuffer pitch size
 	h = getDisplayHeight();               // display height
 	w = getDisplayWidth();                // display width
@@ -101,7 +101,7 @@ static void saveBMP(char *path, bool notify_bmp)
 	sys_memory_container_t mc_app = SYS_MEMORY_CONTAINER_NONE;
 	mc_app = vsh_memory_container_by_id(1);
 
-	const int32_t mem_size = _64KB_; // 64 KB (bmp data and frame buffer)
+	const s32 mem_size = _64KB_; // 64 KB (bmp data and frame buffer)
 
 	// max frame line size = 1920 pixel * 4(byte per pixel) = 7680 byte = 8 KB
 	// max bmp buffer size = 1920 pixel * 3(byte per pixel) = 5760 byte = 6 KB
@@ -117,15 +117,15 @@ static void saveBMP(char *path, bool notify_bmp)
 	init_graphic();
 
 	// calc buffer sizes
-	uint32_t line_frame_size = w * 4;
+	u32 line_frame_size = w * 4;
 
 	// alloc buffers
-	uint64_t *line_frame = (uint64_t*)sysmem;
-	uint8_t *bmp_buf = (uint8_t*)sysmem + line_frame_size; // start offset: 8 KB
+	u64 *line_frame = (u64*)sysmem;
+	u8 *bmp_buf = (u8*)sysmem + line_frame_size; // start offset: 8 KB
 
 
 	// set bmp header
-	uint32_t tmp = 0;
+	u32 tmp = 0;
 	tmp = _ES32(w*h*3+0x36);
 	memcpy(bmp_header + 2 , &tmp, 4);     // file size
 	tmp = _ES32(w);
@@ -138,16 +138,16 @@ static void saveBMP(char *path, bool notify_bmp)
 	// write bmp header
 	cellFsWrite(fd, (void *)bmp_header, sizeof(bmp_header), NULL);
 
-	uint32_t i, k, idx, ww = w/2;
+	u32 i, k, idx, ww = w/2;
 
 	// dump...
 	for(i = h; i > 0; i--)
 	{
 		for(k = 0; k < ww; k++)
-			line_frame[k] = *(uint64_t*)(OFFSET(k*2, i));
+			line_frame[k] = *(u64*)(OFFSET(k*2, i));
 
 		// convert line from ARGB to RGB
-		uint8_t *tmp_buf = (uint8_t*)line_frame;
+		u8 *tmp_buf = (u8*)line_frame;
 
 		idx = 0;
 
@@ -165,7 +165,7 @@ static void saveBMP(char *path, bool notify_bmp)
 	}
 
 	// padding
-	int32_t rest = (w*3) % 4, pad = 0;
+	s32 rest = (w*3) % 4, pad = 0;
 	if(rest)
 		pad = 4 - rest;
 	cellFsLseek(fd, pad, CELL_FS_SEEK_SET, 0);

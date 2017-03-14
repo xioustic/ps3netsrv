@@ -248,7 +248,7 @@ static char COVERS_PATH[100];//		= "";
 #define STR_RBGMENU		"MENU TOGGLE"
 
 /*
-static uint32_t get_xreg_value(const char *key, u32 default_value)
+static u32 get_xreg_value(const char *key, u32 default_value)
 {
 	int reg = NONE;
 	u32 reg_value = default_value;
@@ -316,7 +316,7 @@ static uint32_t get_xreg_value(const char *key, u32 default_value)
 }
 */
 
-static uint32_t get_system_language(uint8_t *lang)
+static u32 get_system_language(u8 *lang)
 {
 	//u32 val_lang = get_xreg_value("/setting/system/language", 1);
 
@@ -393,8 +393,8 @@ static uint32_t get_system_language(uint8_t *lang)
 
 static bool language(const char *key_name, char *label, const char *default_str)
 {
-	uint8_t c, i, key_len = strlen(key_name);
-	uint64_t bytes_read = 0;
+	u8 c, i, key_len = strlen(key_name);
+	u64 bytes_read = 0;
 	static size_t p = 0, lang_pos = 0, size = 0;
 
 	sprintf(label, "%s", default_str);

@@ -149,7 +149,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 			}
 #else
 			{
-				uint64_t freeSize = 0, devSize = 0;
+				u64 freeSize = 0, devSize = 0;
 
 #ifdef USE_NTFS
 				if(is_ntfs_path(templn))
@@ -160,7 +160,7 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 				}
 				else
 #endif
-				{system_call_3(SC_FS_DISK_FREE, (uint64_t)(uint32_t)(templn), (uint64_t)(uint32_t)&devSize, (uint64_t)(uint32_t)&freeSize);}
+				{system_call_3(SC_FS_DISK_FREE, (u64)(u32)(templn), (u64)(u32)&devSize, (u64)(u32)&freeSize);}
 
 				unsigned long long	free_mb    = (unsigned long long)(freeSize>>20),
 									free_kb    = (unsigned long long)(freeSize>>10),
@@ -436,7 +436,7 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 	strcat(buffer, swap);
 }
 
-static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, int8_t sort_by, int8_t sort_order, char *file_query)
+static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, s8 sort_by, s8 sort_order, char *file_query)
 {
 	struct CellFsStat buf;
 	int fd;
@@ -620,7 +620,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 					if(param[plen] == '/') param[plen] = NULL;
 
 					int is_directory = 0;
-					int64_t file_size;
+					s64 file_size;
 					u64 mtime, ctime, atime;
 					if(remote_stat(ns, param + 5, &is_directory, &file_size, &mtime, &ctime, &atime, &abort_connection) == 0)
 					{
@@ -633,7 +633,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 
 								send(conn_s, header, header_len, 0);
 
-								uint32_t bytes_read; int64_t boff = 0;
+								u32 bytes_read; s64 boff = 0;
 								while(boff < file_size)
 								{
 									bytes_read = read_remote_file(ns, (char*)buffer, boff, _64KB_, &abort_connection);
@@ -698,7 +698,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 				u8 ntmp = 1;
 				if(is_host) ntmp = mountCount + 1;
 
-				for (uint8_t u = 0; u < ntmp; u++)
+				for (u8 u = 0; u < ntmp; u++)
 				{
 					if(u) {sprintf(entry.d_name, "dev_%s", mounts[u-1].name);}
 #endif

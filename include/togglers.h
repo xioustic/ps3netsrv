@@ -207,7 +207,7 @@ static void toggle_ps2emu(void)
 	if(file_exists(REBUG_TOOLBOX "ps2_netemu.self"))
 	{
 		struct CellFsStat s;
-		uint64_t size1, size2;
+		u64 size1, size2;
 
 		// ---- Backup PS2Emus to Rebug Toolbox folder ----
 		if( file_exists(REBUG_TOOLBOX "ps2_netemu.self.cobra") == false )

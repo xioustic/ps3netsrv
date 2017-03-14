@@ -124,7 +124,7 @@ static void make_fb_xml(char *myxml)
 	save_file(FB_XML, myxml, size);
 }
 
-static u32 get_buffer_size(uint8_t footprint)
+static u32 get_buffer_size(u8 footprint)
 {
 	if((webman_config->mc_app == 0) && (footprint == USE_MC)) //mc_app
 	{
@@ -155,7 +155,7 @@ static u32 get_buffer_size(uint8_t footprint)
 	}
 }
 
-static void set_buffer_sizes(uint8_t footprint)
+static void set_buffer_sizes(u8 footprint)
 {
 	BUFFER_SIZE_ALL = get_buffer_size(footprint);
 	BUFFER_SIZE_FTP	= ( _128KB_);
@@ -294,7 +294,7 @@ static bool update_mygames_xml(u64 conn_s_p)
 		_meminfo meminfo;
 		set_buffer_sizes(webman_config->foot);
 
-		{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+		{system_call_1(SC_GET_FREE_MEM, (u64)(u32) &meminfo);}
 		if( meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) set_buffer_sizes(3); //MIN+
 		if (meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) set_buffer_sizes(1); //MIN
 		if((meminfo.avail<(BUFFER_SIZE_ALL+MIN_MEM)) || sys_memory_allocate((BUFFER_SIZE_ALL), SYS_MEMORY_PAGE_SIZE_64K, &sysmem) != CELL_OK)

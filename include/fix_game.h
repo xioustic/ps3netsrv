@@ -164,7 +164,7 @@ static bool getTitleID(char *filename, char *titleID, u8 opcode)
 	char paramsfo[_4KB_];
 	unsigned char *mem = (u8*)paramsfo;
 
-	uint64_t sfo_size = read_file(filename, paramsfo, _4KB_, 0);
+	u64 sfo_size = read_file(filename, paramsfo, _4KB_, 0);
 
 	if(sfo_size)
 	{
@@ -222,7 +222,7 @@ static void fix_game_folder(char *path)
 #endif
 
 		struct CellFsStat s;
-		CellFsDirent dir; uint64_t read_e;
+		CellFsDirent dir; u64 read_e;
 
 		while(working && (cellFsReaddir(fd, &dir, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
 		{
@@ -235,7 +235,7 @@ static void fix_game_folder(char *path)
 			{
 				if(cellFsStat(fix_game_path[plevel], &s) != CELL_FS_SUCCEEDED || s.st_size < 0x500) continue;
 
-				int fdw, offset; uint64_t bytes_read = 0; u64 ps3_sys_version = 0;
+				int fdw, offset; u64 bytes_read = 0; u64 ps3_sys_version = 0;
 
 				cellFsChmod(fix_game_path[plevel], MODE); fixed_count++; //fix file read-write permission
 
@@ -276,7 +276,7 @@ static void fix_game_folder(char *path)
 }
 
 #ifdef COBRA_ONLY
-static uint64_t getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 *start)
+static u64 getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 *start)
 {
 	for(u16 n = *start + 0x1F; n < (n1 - n2); n++)
 	{
@@ -291,7 +291,7 @@ static uint64_t getlba(const char *s1, u16 n1, const char *s2, u16 n2, u16 *star
 	return 0;
 }
 
-static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
+static void fix_iso(char *iso_file, u64 maxbytes, bool patch_update)
 {
 	struct CellFsStat buf;
 
@@ -308,12 +308,12 @@ static void fix_iso(char *iso_file, uint64_t maxbytes, bool patch_update)
 
 	if(cellFsOpen(iso_file, CELL_FS_O_RDWR, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		uint64_t chunk_size=_4KB_; char chunk[chunk_size]; u64 ps3_sys_version;
-		uint64_t bytes_read = 0, lba = 0, pos=0xA000ULL;
+		u64 chunk_size=_4KB_; char chunk[chunk_size]; u64 ps3_sys_version;
+		u64 bytes_read = 0, lba = 0, pos=0xA000ULL;
 
 		bool fix_sfo = true, fix_eboot = true, fix_ver = false;
 
-		uint64_t size = buf.st_size;
+		u64 size = buf.st_size;
 		if(maxbytes > 0 && size > maxbytes) size = maxbytes;
 		if(size > pos) size -= pos; else size = 0;
 
@@ -440,7 +440,7 @@ exit_fix:
 }
 #endif //#ifdef COBRA_ONLY
 
-static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
+static void fix_game(char *game_path, char *titleID, u8 fix_type)
 {
 	memset(titleID, 0, 10);
 
@@ -473,7 +473,7 @@ static void fix_game(char *game_path, char *titleID, uint8_t fix_type)
 			char paramsfo[_4KB_];
 			unsigned char *mem = (u8*)paramsfo;
 
-			uint64_t bytes_read = read_file(filename, paramsfo, _4KB_, 0);
+			u64 bytes_read = read_file(filename, paramsfo, _4KB_, 0);
 			if(is_sfo(mem))
 			{
 				// fix ps3 extra or bgm + remoteplay + ps3 extra

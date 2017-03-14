@@ -4,7 +4,7 @@
 
 static int get_cobra_ps2netemu_status(void)
 {
-	system_call_2(SC_COBRA_SYSCALL8, (uint64_t) SYSCALL8_OPCODE_ENABLE_PS2NETEMU, (uint64_t) PS2NETEMU_GET_STATUS);
+	system_call_2(SC_COBRA_SYSCALL8, (u64) SYSCALL8_OPCODE_ENABLE_PS2NETEMU, (u64) PS2NETEMU_GET_STATUS);
 	return (int)p1;
 }
 
@@ -14,7 +14,7 @@ static void enable_ps2netemu_cobra(int param)
 
 	if(status < 0 || status == param) return;
 
-	system_call_2(SC_COBRA_SYSCALL8, (uint64_t) SYSCALL8_OPCODE_ENABLE_PS2NETEMU, (uint64_t) param);
+	system_call_2(SC_COBRA_SYSCALL8, (u64) SYSCALL8_OPCODE_ENABLE_PS2NETEMU, (u64) param);
 }
 #endif
 

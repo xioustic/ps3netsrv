@@ -241,7 +241,7 @@ static bool get_cover_from_name(char *icon, const char *name, char *tempID)
 			strncpy(tempID, pos + 2, 10); //BCES/BLES/BCUS/BLUS/etc.
 		else if((pos = strstr(name, " [N")))
 			strncpy(tempID, pos + 2, 10); //NP*
-		else if((pos = strstr(name, " [N")))
+		else if((pos = strstr(name, " [S")))
 			strncpy(tempID, pos + 2, 10); //SLES/SCES/SCUS/SLUS/etc.
 		else
 			strncpy(tempID, name, 10);
@@ -503,7 +503,7 @@ static int get_title_and_id_from_sfo(char *templn, char *tempID, const char *ent
 
 	// read param.sfo
 	unsigned char *mem = (u8*)data;
-	uint64_t sfo_size = read_file(templn, data, _4KB_, 0);
+	u64 sfo_size = read_file(templn, data, _4KB_, 0);
 
 	// get titleID & title from PARAM.SFO
 	if(is_sfo(mem))
@@ -601,7 +601,7 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 #ifdef NET_SUPPORT
 static int add_net_game(int ns, netiso_read_dir_result_data *data, int v3_entry, char *neth, char *param, char *templn, char *tempstr, char *enc_dir_name, char *icon, char *tempID, u8 f1, u8 is_html)
 {
-	int abort_connection = 0, is_directory = 0; int64_t file_size; u64 mtime, ctime, atime;
+	int abort_connection = 0, is_directory = 0; s64 file_size; u64 mtime, ctime, atime;
 
 	if(!data[v3_entry].is_directory)
 	{

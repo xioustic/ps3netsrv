@@ -2,8 +2,8 @@
 
 __README IS STILL IN PROGRESS, IF YOU SEE ANY ERROR PLEASE TELL ME OR PUSH A COMMIT__
 
-webMAN MOD is an homebrew plugin with many features added on the original webMAN by Deank.
-We would like to integrate all existing features available on the PS3 Scene like a AIO plugin, and webMAN MOD was born.
+webMAN MOD is a homebrew plugin with many features added on the original webMAN/sMAN by Deank.
+We would like to integrate all existing features available on the PS3 Scene like an AIO plugin, and webMAN MOD was born.
 
 ## Current functionality
 ### General
@@ -28,7 +28,9 @@ We would like to integrate all existing features available on the PS3 Scene like
 
 ### webMAN MOD additional features
 - Easy installer/updater
-- New folder icons (by Brunolee)
+- VSH Menu integration (hold SELECT to show the menu)
+- sLaunch GUI integration (hold START or R2+L2 on XMB to show the GUI)
+- New folder icons (by Brunolee & Berion)
 - It can mount PS2 Classics games on PS2 Classic Launcher (.BIN.ENC)
 - It can auto-mount any custom folder or ISO. Official only can mount AUTOBOOT.ISO
 - Title ID can be displayed on XMB menu
@@ -51,7 +53,6 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Support last_game.txt / autoboot on nonCobra edition
 - "Offline" mode (blocks some PSN/tracking servers). Game updates still work in this mode. (v1.33.03)
 - XMBM+ integration when grouping of XMB content is disabled (v1.33.03)
-- VSH Menu integration
 - Extended Content Profile Grouping (v1.33.07)
 - PS3 Manager API Support (PS3MAPI)
 - Integrated Mysis video_rec plugin and get klicensee
@@ -64,7 +65,6 @@ We would like to integrate all existing features available on the PS3 Scene like
 - Display of Play time & startup time to SELECT+START and /cpursx.ps3 (Use SELECT+START+R2 to display Game ID, Title, play time and more in-Game info)
 - Include a virtual pad feature, you can control your console via http://pad.aldostools.org on web browser or with webPAD software (windows only)
 - dev_bdvd/PS3_UPDATE now is redirected when the plugin is loaded (and when a game is mounted) [This is intended to prevent an accidental update if a game disc is inserted in the drive]
-- VSH Menu for webMAN now can be installed optionally (Holding R1 when launching the Updater)
 - Added /play.ps3 to launch XMB Functions (e.g: /play.ps3?col=network&seg=seg_premo) <- this will start Remote Play server from XMB.
 - Once a game is mounted via html, if you click on the displayed icon the game will be launched on the PS3. This is nice to start the game once it's mounted from your mobile This option uses the new command /play.ps3
 - Support for auto-play any supported ISO, game folder or auto-open an URL link
@@ -104,6 +104,7 @@ Requirements for GNU/Linux:
 - 3141card for VSH Menu POC & Littlebalup for his enhancement/new features
 - jjolano (John Olano) for OpenFTP server
 - Estwald for NTFS library, rawseciso, fake iso, etc.
+- Brunolee & Berion for the graphics & icons
 - The team that ported NTFS library from PSL1ght to PS3 SDK (freddy38510, bguerville, Zar, deank, Joonie)
 - PSX-SCENE, PSX-PLACE, PLAYSTATIONHAX, PS3HAX & other scene websites/users, who translated, helped in the testing process
 

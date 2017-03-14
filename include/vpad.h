@@ -15,40 +15,40 @@
 #define SC_PAD_SET_DATA_INSERT_MODE		(573)
 #define SC_PAD_REGISTER_CONTROLLER		(574)
 
-static uint32_t vcombo = 0;
+static u32 vcombo = 0;
 
-static int32_t vpad_handle = NONE;
+static s32 vpad_handle = NONE;
 
-static inline void sys_pad_dbg_ldd_register_controller(uint8_t *data, int32_t *handle, uint8_t addr, uint32_t capability)
+static inline void sys_pad_dbg_ldd_register_controller(u8 *data, s32 *handle, u8 addr, u32 capability)
 {
 	// syscall for registering a virtual controller with custom capabilities
-	system_call_4(SC_PAD_REGISTER_CONTROLLER, (uint8_t *)data, (int32_t *)handle, addr, capability);
+	system_call_4(SC_PAD_REGISTER_CONTROLLER, (u8 *)data, (s32 *)handle, addr, capability);
 }
 
-static inline void sys_pad_dbg_ldd_set_data_insert_mode(int32_t handle, uint16_t addr, uint32_t *mode, uint8_t addr2)
+static inline void sys_pad_dbg_ldd_set_data_insert_mode(s32 handle, u16 addr, u32 *mode, u8 addr2)
 {
 	// syscall for controlling button data filter (allows a virtual controller to be used in games)
 	system_call_4(SC_PAD_SET_DATA_INSERT_MODE, handle, addr, *mode, addr2);
 }
 
-static int32_t register_ldd_controller(void)
+static s32 register_ldd_controller(void)
 {
 	// register ldd controller with custom device capability
 	if (vpad_handle < 0)
 	{
-		uint8_t data[0x114];
-		int32_t port;
-		uint32_t capability, mode, port_setting;
+		u8 data[0x114];
+		s32 port;
+		u32 capability, mode, port_setting;
 
 		capability = 0xFFFF; // CELL_PAD_CAPABILITY_PS3_CONFORMITY | CELL_PAD_CAPABILITY_PRESS_MODE | CELL_PAD_CAPABILITY_HP_ANALOG_STICK | CELL_PAD_CAPABILITY_ACTUATOR;
-		sys_pad_dbg_ldd_register_controller(data, (int32_t *)&(vpad_handle), 5, (uint32_t)capability << 1); //vpad_handle = cellPadLddRegisterController();
+		sys_pad_dbg_ldd_register_controller(data, (s32 *)&(vpad_handle), 5, (u32)capability << 1); //vpad_handle = cellPadLddRegisterController();
 		sys_ppu_thread_usleep(500000); // allow some time for ps3 to register ldd controller
 
 		if (vpad_handle < 0) return(vpad_handle);
 
 		// all pad data into games
 		mode = CELL_PAD_LDD_INSERT_DATA_INTO_GAME_MODE_ON; // = (1)
-		sys_pad_dbg_ldd_set_data_insert_mode((int32_t)vpad_handle, 0x100, (uint32_t *)&mode, 4);
+		sys_pad_dbg_ldd_set_data_insert_mode((s32)vpad_handle, 0x100, (u32 *)&mode, 4);
 
 		// set press and sensor mode on
 		port_setting = CELL_PAD_SETTING_PRESS_ON | CELL_PAD_SETTING_SENSOR_ON;
@@ -61,11 +61,11 @@ static int32_t register_ldd_controller(void)
 	return(CELL_PAD_OK);
 }
 
-static int32_t unregister_ldd_controller(void)
+static s32 unregister_ldd_controller(void)
 {
 	if (vpad_handle >= 0)
 	{
-		int32_t r = cellPadLddUnregisterController(vpad_handle);
+		s32 r = cellPadLddUnregisterController(vpad_handle);
 		if (r != CELL_OK) return(r);
 		vpad_handle = NONE;
 	}

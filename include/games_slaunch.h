@@ -16,11 +16,11 @@
 #ifdef SLAUNCH_FILE
 typedef struct // 1MB for 2000+1 titles
 {
-	uint8_t  type;
+	u8  type;
 	char     id[10];
-	uint8_t  path_pos; // start position of path
-	uint16_t icon_pos; // start position of icon
-	uint16_t padd;
+	u8  path_pos; // start position of path
+	u16 icon_pos; // start position of icon
+	u16 padd;
 	char     name[508]; // name + path + icon
 } __attribute__((packed)) _slaunch;
 

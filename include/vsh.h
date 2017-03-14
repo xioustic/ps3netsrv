@@ -1,11 +1,11 @@
-//int (*_cellGcmIoOffsetToAddress)(uint32_t, void**) = NULL;
+//int (*_cellGcmIoOffsetToAddress)(u32, void**) = NULL;
 int (*vshtask_notify)(int, const char *) = NULL;
 int (*View_Find)(const char *) = NULL;
 int (*plugin_GetInterface)(int,int) = NULL;
 
 #ifdef SYS_BGM
-uint32_t (*BgmPlaybackDisable)(int, void *) = NULL;
-uint32_t (*BgmPlaybackEnable)(int, void *) = NULL;
+u32 (*BgmPlaybackDisable)(int, void *) = NULL;
+u32 (*BgmPlaybackEnable)(int, void *) = NULL;
 #endif
 
 int (*vshmain_is_ss_enabled)(void) = NULL;
@@ -15,32 +15,32 @@ int opd[2] = {0, 0};
 
 #define EXPLORE_CLOSE_ALL   3
 
-static void * getNIDfunc(const char * vsh_module, uint32_t fnid, int32_t offset)
+static void * getNIDfunc(const char * vsh_module, u32 fnid, s32 offset)
 {
 	// 0x10000 = ELF
 	// 0x10080 = segment 2 start
 	// 0x10200 = code start
 
-	uint32_t table = (*(uint32_t*)0x1008C) + 0x984; // vsh table address
+	u32 table = (*(u32*)0x1008C) + 0x984; // vsh table address
 
-	while(((uint32_t)*(uint32_t*)table) != 0)
+	while(((u32)*(u32*)table) != 0)
 	{
-		uint32_t* export_stru_ptr = (uint32_t*)*(uint32_t*)table; // ptr to export stub, size 2C, "sys_io" usually... Exports:0000000000635BC0 stru_635BC0:    ExportStub_s <0x1C00, 1, 9, 0x39, 0, 0x2000000, aSys_io, ExportFNIDTable_sys_io, ExportStubTable_sys_io>
+		u32* export_stru_ptr = (u32*)*(u32*)table; // ptr to export stub, size 2C, "sys_io" usually... Exports:0000000000635BC0 stru_635BC0:    ExportStub_s <0x1C00, 1, 9, 0x39, 0, 0x2000000, aSys_io, ExportFNIDTable_sys_io, ExportStubTable_sys_io>
 
-		const char* lib_name_ptr =  (const char*)*(uint32_t*)((char*)export_stru_ptr + 0x10);
+		const char* lib_name_ptr =  (const char*)*(u32*)((char*)export_stru_ptr + 0x10);
 
 		if(strncmp(vsh_module, lib_name_ptr, strlen(lib_name_ptr)) == 0)
 		{
 			// we got the proper export struct
-			uint32_t lib_fnid_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x14);
-			uint32_t lib_func_ptr = *(uint32_t*)((char*)export_stru_ptr + 0x18);
-			uint16_t count = *(uint16_t*)((char*)export_stru_ptr + 6); // number of exports
+			u32 lib_fnid_ptr = *(u32*)((char*)export_stru_ptr + 0x14);
+			u32 lib_func_ptr = *(u32*)((char*)export_stru_ptr + 0x18);
+			u16 count = *(u16*)((char*)export_stru_ptr + 6); // number of exports
 			for(int i = 0; i < count; i++)
 			{
-				if(fnid == *(uint32_t*)((char*)lib_fnid_ptr + i*4))
+				if(fnid == *(u32*)((char*)lib_fnid_ptr + i*4))
 				{
 					// take address from OPD
-					return (void**)*((uint32_t*)(lib_func_ptr) + i) + offset;
+					return (void**)*((u32*)(lib_func_ptr) + i) + offset;
 				}
 			}
 		}
@@ -90,7 +90,7 @@ static void enable_ingame_screenshot(void)
 
 	if(vshmain_is_ss_enabled() == 0)
 	{
-		set_SSHT_ = (uint32_t*)&opd;
+		set_SSHT_ = (u32*)&opd;
 		memcpy(set_SSHT_, vshmain_is_ss_enabled, 8);
 		opd[0] -= 0x2C; // Sub before vshmain_981D7E9F sets Screenshot Flag
 		set_SSHT_(1);	// enable screenshot

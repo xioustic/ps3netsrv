@@ -5,7 +5,7 @@ static int ssend(int socket, const char *str)
 	return send(socket, str, strlen(str), 0);
 }
 
-static int connect_to_server_ex(const char *server, uint16_t port, bool rcv_timeout)
+static int connect_to_server_ex(const char *server, u16 port, bool rcv_timeout)
 {
 	struct sockaddr_in sin;
 	unsigned int temp;
@@ -56,7 +56,7 @@ static int connect_to_server_ex(const char *server, uint16_t port, bool rcv_time
 	return s;
 }
 
-static int connect_to_server(const char *server, uint16_t port)
+static int connect_to_server(const char *server, u16 port)
 {
 	return connect_to_server_ex(server, port, false);
 }

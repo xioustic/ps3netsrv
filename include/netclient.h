@@ -10,10 +10,10 @@ typedef struct
 {
 	char server[0x40];
 	char path[0x420];
-	uint32_t emu_mode;
-	uint32_t num_tracks;
-	uint16_t port;
-	uint8_t pad[6];
+	u32 emu_mode;
+	u32 num_tracks;
+	u16 port;
+	u8 pad[6];
 	ScsiTrackDescriptor tracks[32];
 } __attribute__((packed)) _netiso_args;
 
@@ -28,7 +28,7 @@ static int g_socket = NONE;
 
 static int netiso_svrid = NONE;
 
-static int read_remote_file(int s, void *buf, uint64_t offset, uint32_t size, int *abort_connection)
+static int read_remote_file(int s, void *buf, u64 offset, u32 size, int *abort_connection)
 {
 	netiso_read_file_cmd cmd;
 	netiso_read_file_result res;
@@ -83,7 +83,7 @@ static u32 detect_cd_sector_size(int fd)
 	return 2352;
 }
 
-static int64_t open_remote_file(int s, const char *path, int *abort_connection)
+static s64 open_remote_file(int s, const char *path, int *abort_connection)
 {
 	netiso_open_cmd cmd;
 	netiso_open_result res;
@@ -124,7 +124,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 	// detect CD sector size
 	if((emu_mode == EMU_PSX) && (res.file_size >= _64KB_) && (res.file_size <= 0x35000000UL))
 	{
-		sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
+		sys_addr_t sysmem = NULL; u64 chunk_size = _64KB_;
 		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
 			char *chunk = (char*)sysmem;
@@ -154,7 +154,7 @@ static int64_t open_remote_file(int s, const char *path, int *abort_connection)
 	return (res.file_size);
 }
 
-static int remote_stat(int s, const char *path, int *is_directory, int64_t *file_size, uint64_t *mtime, uint64_t *ctime, uint64_t *atime, int *abort_connection)
+static int remote_stat(int s, const char *path, int *is_directory, s64 *file_size, u64 *mtime, u64 *ctime, u64 *atime, int *abort_connection)
 {
 	netiso_stat_cmd cmd;
 	netiso_stat_result res;
@@ -200,7 +200,7 @@ static int remote_stat(int s, const char *path, int *is_directory, int64_t *file
 }
 
 #ifdef USE_INTERNAL_PLUGIN
-static int read_remote_file_critical(uint64_t offset, void *buf, uint32_t size)
+static int read_remote_file_critical(u64 offset, void *buf, u32 size)
 {
 	netiso_read_file_critical_cmd cmd;
 
@@ -224,7 +224,7 @@ static int read_remote_file_critical(uint64_t offset, void *buf, uint32_t size)
 	return CELL_OK;
 }
 
-static int process_read_cd_2048_cmd(uint8_t *buf, uint32_t start_sector, uint32_t sector_count)
+static int process_read_cd_2048_cmd(u8 *buf, u32 start_sector, u32 sector_count)
 {
 	netiso_read_cd_2048_critical_cmd cmd;
 
@@ -248,9 +248,9 @@ static int process_read_cd_2048_cmd(uint8_t *buf, uint32_t start_sector, uint32_
 	return CELL_OK;
 }
 
-static int process_read_iso_cmd(uint8_t *buf, uint64_t offset, uint32_t size)
+static int process_read_iso_cmd(u8 *buf, u64 offset, u32 size)
 {
-	uint64_t read_end;
+	u64 read_end;
 
 	//DPRINTF("read iso: %p %lx %x\n", buf, offset, size);
 	read_end = offset + size;
@@ -272,7 +272,7 @@ static int process_read_iso_cmd(uint8_t *buf, uint64_t offset, uint32_t size)
 	return read_remote_file_critical(offset, buf, size);
 }
 
-static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t remaining)
+static int process_read_cd_2352_cmd(u8 *buf, u32 sector, u32 remaining)
 {
 	int cache = 0;
 
@@ -282,9 +282,9 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 
 		if(ABS(dif) < CD_CACHE_SIZE)
 		{
-			uint8_t *copy_ptr = NULL;
-			uint32_t copy_offset = 0;
-			uint32_t copy_size = 0;
+			u8 *copy_ptr = NULL;
+			u32 copy_offset = 0;
+			u32 copy_size = 0;
 
 			if(dif > 0)
 			{
@@ -314,7 +314,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 
 				if(dif <= 0)
 				{
-					uint32_t newsector = cached_cd_sector + CD_CACHE_SIZE;
+					u32 newsector = cached_cd_sector + CD_CACHE_SIZE;
 					buf += ((newsector-sector) * CD_SECTOR_SIZE_2352);
 					sector = newsector;
 				}
@@ -340,7 +340,7 @@ static int process_read_cd_2352_cmd(uint8_t *buf, uint32_t sector, uint32_t rema
 			return ret;
 		}
 
-		cd_cache = (uint8_t *)addr;
+		cd_cache = (u8 *)addr;
 	}
 
 	if(process_read_iso_cmd(cd_cache, sector * CD_SECTOR_SIZE_2352, CD_CACHE_SIZE * CD_SECTOR_SIZE_2352) != 0)
@@ -356,7 +356,7 @@ static u8 netiso_loaded = 0;
 static sys_event_queue_t command_queue_net = NONE;
 static sys_ppu_thread_t thread_id_net = SYS_PPU_THREAD_NONE;
 
-static void netiso_thread(uint64_t arg)
+static void netiso_thread(u64 arg)
 {
 	unsigned int real_disctype;
 	ScsiTrackDescriptor *tracks;
@@ -383,13 +383,13 @@ static void netiso_thread(uint64_t arg)
 
 	int ret = emu_mode;
 
-	int64_t size = open_remote_file(g_socket, netiso_args.path, &ret);
+	s64 size = open_remote_file(g_socket, netiso_args.path, &ret);
 	if(size < 0)
 	{
 		goto exit_netiso;
 	}
 
-	discsize = (uint64_t)size;
+	discsize = (u64)size;
 
 	ret = sys_event_port_create(&result_port, 1, SYS_EVENT_PORT_NO_NAME);
 	if(ret != CELL_OK)
@@ -464,9 +464,9 @@ static void netiso_thread(uint64_t arg)
 
 		if(!netiso_loaded) break;
 
-		void *buf = (void *)(uint32_t)(event.data3>>32ULL);
-		uint64_t offset = event.data2;
-		uint32_t size = event.data3&0xFFFFFFFF;
+		void *buf = (void *)(u32)(event.data3>>32ULL);
+		u64 offset = event.data2;
+		u32 size = event.data3&0xFFFFFFFF;
 
 		switch(event.data1)
 		{
@@ -550,9 +550,9 @@ exit_netiso:
 	sys_ppu_thread_exit(0);
 }
 
-static void netiso_stop_thread(uint64_t arg)
+static void netiso_stop_thread(u64 arg)
 {
-	uint64_t exit_code;
+	u64 exit_code;
 	netiso_loaded = 0;
 	netiso_svrid = NONE;
 
@@ -686,7 +686,7 @@ static int read_remote_dir(int s, sys_addr_t *data /*netiso_read_dir_result_data
 	if(res.dir_size > 0)
 	{
 		sys_addr_t data1 = NULL;
-		for(int64_t retry = 25; retry > 0; retry--)
+		for(s64 retry = 25; retry > 0; retry--)
 		{
 			if(res.dir_size > (retry * 123)) res.dir_size = retry * 123;
 			len = (sizeof(netiso_read_dir_result_data)*res.dir_size);
@@ -717,7 +717,7 @@ static int read_remote_dir(int s, sys_addr_t *data /*netiso_read_dir_result_data
 	return (res.dir_size);
 }
 
-static int copy_net_file(const char *local_file, const char *remote_file, int ns, uint64_t maxbytes)
+static int copy_net_file(const char *local_file, const char *remote_file, int ns, u64 maxbytes)
 {
 	copy_aborted = false;
 
@@ -725,7 +725,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	if(file_exists(local_file)) return CELL_OK; // local file already exists
 
-	int64_t file_size = 0; int abort_connection = 0;
+	s64 file_size = 0; int abort_connection = 0;
 
 	//
 	int is_directory = 0; u64 mtime, ctime, atime;
@@ -738,7 +738,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 	if(file_size > 0)
 	{
-		sys_addr_t sysmem = NULL; uint64_t chunk_size = _64KB_;
+		sys_addr_t sysmem = NULL; u64 chunk_size = _64KB_;
 
 		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
@@ -746,9 +746,9 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 
 			if(cellFsOpen(local_file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fdw, NULL, 0) == CELL_FS_SUCCEEDED)
 			{
-				if(maxbytes > 0UL && (uint64_t)file_size > maxbytes) file_size = maxbytes;
+				if(maxbytes > 0UL && (u64)file_size > maxbytes) file_size = maxbytes;
 
-				if(chunk_size > (uint64_t)file_size) chunk_size = (uint64_t)file_size;
+				if(chunk_size > (u64)file_size) chunk_size = (u64)file_size;
 
 				int bytes_read, boff = 0;
 				while(boff < file_size)
@@ -760,7 +760,7 @@ static int copy_net_file(const char *local_file, const char *remote_file, int ns
 						cellFsWrite(fdw, (char*)chunk, bytes_read, NULL);
 
 					boff += bytes_read;
-					if(((uint64_t)bytes_read < chunk_size) || abort_connection) break;
+					if(((u64)bytes_read < chunk_size) || abort_connection) break;
 				}
 				cellFsClose(fdw);
 				cellFsChmod(local_file, MODE);

@@ -6,7 +6,7 @@
 
 #define NO_MSG							NULL
 
-int file_copy(const char *file1, char *file2, uint64_t maxbytes);
+int file_copy(const char *file1, char *file2, u64 maxbytes);
 
 static bool copy_in_progress = false;
 static bool dont_copy_same_size = true; // skip copy the file if it already exists in the destination folder with the same file size
@@ -33,7 +33,7 @@ static bool is_ntfs_path(const char *path)
 static void unmount_all_ntfs_volumes(void)
 {
 	if(mounts && (mountCount > 0))
-		for (uint8_t u = 0; u < mountCount; u++) ntfsUnmount(mounts[u].name, 1);
+		for (u8 u = 0; u < mountCount; u++) ntfsUnmount(mounts[u].name, 1);
 
 	if(mounts) free(mounts);
 }
@@ -85,7 +85,7 @@ static int sysLv2FsLink(const char *oldpath, const char *newpath)
 	return_to_user_prog(int);
 }
 
-static uint64_t get_free_space(const char *dev_name)
+static u64 get_free_space(const char *dev_name)
 {
 #ifdef USE_NTFS
 	if(is_ntfs_path(dev_name))
@@ -97,13 +97,13 @@ static uint64_t get_free_space(const char *dev_name)
 		return ((u64)vbuf.f_bfree * (u64)vbuf.f_bsize);
 	}
 #endif
-	uint32_t blockSize;
-	uint64_t freeSize;
+	u32 blockSize;
+	u64 freeSize;
 	if(cellFsGetFreeSize(dev_name, &blockSize, &freeSize)  == CELL_FS_SUCCEEDED) return (freeSize * blockSize);
 	return 0;
 }
 
-static int isDir(const char* path)
+static bool isDir(const char* path)
 {
 #ifdef USE_NTFS
 	if(is_ntfs_path(path))
@@ -121,6 +121,30 @@ static int isDir(const char* path)
 	else
 		return 0;
 }
+/*
+static s64 file_size(const char* path)
+{
+#ifdef USE_NTFS
+	if(is_ntfs_path(path))
+	{
+		char tmp[STD_PATH_LEN];
+		strcpy(tmp, path); tmp[10] = ':';
+		struct stat bufn;
+		if(ps3ntfs_stat(tmp + 5, &bufn) < 0) return FAILED;
+		return bufn.st_size;
+	}
+#endif
+
+	struct CellFsStat s;
+	if(cellFsStat(path, &s) != CELL_FS_SUCCEEDED) return FAILED;
+	return s.st_size;
+}
+
+static bool file_exists(const char* path)
+{
+	return (file_size(path) >= 0);
+}
+*/
 
 static bool file_exists(const char* path)
 {
@@ -158,9 +182,9 @@ static void mkdir_tree(char *path)
 }
 #endif
 
-size_t read_file(const char *file, char *data, size_t size, int32_t offset)
+size_t read_file(const char *file, char *data, size_t size, s32 offset)
 {
-	int fd = 0; uint64_t pos, read_e = 0;
+	int fd = 0; u64 pos, read_e = 0;
 
 	if(offset < 0) offset = 0; else memset(data, 0, size);
 
@@ -176,7 +200,7 @@ size_t read_file(const char *file, char *data, size_t size, int32_t offset)
 	return read_e;
 }
 
-int save_file(const char *file, const char *mem, int64_t size)
+int save_file(const char *file, const char *mem, s64 size)
 {
 	int fd = 0; u32 flags = CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY;
 	cellFsChmod(file, MODE);
@@ -231,15 +255,15 @@ static int file_concat(const char *file1, char *file2)
 	filepath_check(file2);
 
 	if(islike(file1, "/dvd_bdvd"))
-		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+		{system_call_1(36, (u64) "/dev_bdvd");} // decrypt dev_bdvd files
 
 	if(cellFsStat(file1, &buf) != CELL_FS_SUCCEEDED) return ret;
 
 	if(cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		uint64_t size = buf.st_size;
+		u64 size = buf.st_size;
 
-		sys_addr_t sysmem = 0; uint64_t chunk_size = _64KB_;
+		sys_addr_t sysmem = 0; u64 chunk_size = _64KB_;
 
 		if(sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK)
 		{
@@ -247,7 +271,7 @@ static int file_concat(const char *file1, char *file2)
 			if(cellFsOpen(file2, CELL_FS_O_CREAT | CELL_FS_O_RDWR | CELL_FS_O_APPEND, &fd2, 0, 0) == CELL_FS_SUCCEEDED)
 			{
 				char *chunk = (char*)sysmem;
-				uint64_t read = 0, written = 0, pos=0;
+				u64 read = 0, written = 0, pos=0;
 				copy_aborted = false;
 
 				while(size > 0)
@@ -282,7 +306,7 @@ static int file_concat(const char *file1, char *file2)
 }
 */
 
-int file_copy(const char *file1, char *file2, uint64_t maxbytes)
+int file_copy(const char *file1, char *file2, u64 maxbytes)
 {
 	struct CellFsStat buf, buf2;
 	int fd1, fd2;
@@ -340,7 +364,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 	}
 
 	if(islike(file1, "/dvd_bdvd"))
-		{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+		{system_call_1(36, (u64) "/dev_bdvd");} // decrypt dev_bdvd files
 
 #ifdef USE_NTFS
 	if(is_ntfs1)
@@ -359,7 +383,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 
 	if(is_ntfs1 || cellFsOpen(file1, CELL_FS_O_RDONLY, &fd1, NULL, 0) == CELL_FS_SUCCEEDED)
 	{
-		sys_addr_t sysmem = NULL; uint64_t chunk_size = (buf.st_size <= _64KB_) ? _64KB_ : _256KB_;
+		sys_addr_t sysmem = NULL; u64 chunk_size = (buf.st_size <= _64KB_) ? _64KB_ : _256KB_;
 
 		if(g_sysmem) sysmem = g_sysmem; else
 		{
@@ -371,7 +395,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 
 		if(sysmem || (!sysmem && sys_memory_allocate(chunk_size, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 		{
-			uint64_t size = buf.st_size, part_size = buf.st_size; u8 part = 0;
+			u64 size = buf.st_size, part_size = buf.st_size; u8 part = 0;
 			if(maxbytes > 0 && size > maxbytes) size = maxbytes;
 
 			if((part_size > 0xFFFFFFFFULL) && islike(file2, "/dev_usb"))
@@ -380,7 +404,7 @@ int file_copy(const char *file1, char *file2, uint64_t maxbytes)
 				part++; part_size = 0xFFFF0000ULL; //4Gb - 64kb
 			}
 
-			uint64_t read = 0, written = 0, pos = 0;
+			u64 read = 0, written = 0, pos = 0;
 			char *chunk = (char*)sysmem;
 			u16 flen = strlen(file2);
 next_part:
@@ -665,11 +689,11 @@ static int del(const char *path, u8 recursive)
 }
 #endif
 
-int wait_for(const char *path, uint8_t timeout)
+int wait_for(const char *path, u8 timeout)
 {
 	if(!path[0]) return FAILED;
 
-	for(uint8_t n = 0; n < (timeout * 20); n++)
+	for(u8 n = 0; n < (timeout * 20); n++)
 	{
 		if(file_exists(path)) return CELL_FS_SUCCEEDED;
 		if(!working) break;
@@ -829,8 +853,8 @@ static int read_text_line(int fd, char *line, unsigned int size, int *eof)
 	unsigned int i = 0, p = 0;
 	char buffer[MAX_LINE_LEN];
 
-	uint8_t ch;
-	uint64_t bytes_read = 0;
+	u8 ch;
+	u64 bytes_read = 0;
 
 	while(i < (size - 1))
 	{

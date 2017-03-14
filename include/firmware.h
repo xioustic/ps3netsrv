@@ -1,10 +1,10 @@
 #ifndef COBRA_ONLY
-static uint64_t base_addr = 0;
-static uint64_t open_hook = 0;
+static u64 base_addr = 0;
+static u64 open_hook = 0;
 
-static uint64_t sc_600 = 0;
-static uint64_t sc_604 = 0;
-static uint64_t sc_142 = 0;
+static u64 sc_600 = 0;
+static u64 sc_604 = 0;
+static u64 sc_142 = 0;
 #endif
 
 #define IS_CEX (dex_mode == 0)
@@ -13,13 +13,13 @@ static uint64_t sc_142 = 0;
 
 
 struct platform_info {
-	uint32_t firmware_version;
+	u32 firmware_version;
 } info;
 
 static int lv2_get_platform_info(struct platform_info *info)
 {
-	system_call_1(387, (uint32_t) info);
-	return (int32_t)p1;
+	system_call_1(387, (u32) info);
+	return (s32)p1;
 }
 
 static float get_firmware_version(void)
@@ -31,30 +31,30 @@ static float get_firmware_version(void)
 
 static int get_kernel_type(void)
 {
-	uint64_t type;
-	system_call_1(985, (uint32_t)&type); return (int)(type - 1);
+	u64 type;
+	system_call_1(985, (u32)&type); return (int)(type - 1);
 }
 
 static void detect_firmware(void)
 {
 	if((c_firmware > 3.40f) || SYSCALL_TABLE || syscalls_removed) return;
 
-	const uint64_t CEX = 0x4345580000000000ULL;
+	const u64 CEX = 0x4345580000000000ULL;
 
 #ifdef DEX_SUPPORT
-	const uint64_t DEX = 0x4445580000000000ULL;
+	const u64 DEX = 0x4445580000000000ULL;
 #endif
 #ifdef DECR_SUPPORT
-	const uint64_t DEH = 0x4445480000000000ULL;
+	const u64 DEH = 0x4445480000000000ULL;
 #endif
 
 	dex_mode = 0;
 
-	for(uint8_t lv2_offset = 1; lv2_offset < 0x10; lv2_offset++)
+	for(u8 lv2_offset = 1; lv2_offset < 0x10; lv2_offset++)
 	{
 		if(SYSCALL_TABLE) break;
 
-		LV2_OFFSET_ON_LV1 = (uint64_t)lv2_offset * 0x1000000ULL;
+		LV2_OFFSET_ON_LV1 = (u64)lv2_offset * 0x1000000ULL;
 		if(peekq(0x80000000002ED818ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_481;  c_firmware = (peekq(0x80000000002FCB68ULL) == 0x323031362F31302FULL) ? 4.81f : (peekq(0x80000000002FCB68ULL) == 0x323031352F31322FULL) ? 4.78f : (peekq(0x80000000002FCB68ULL) == 0x323031352F30382FULL) ? 4.76f : 4.75f;} else
 		if(peekq(0x80000000002ED808ULL) == CEX) {SYSCALL_TABLE = SYSCALL_TABLE_480;  c_firmware = 4.80f;}				else
 #ifndef LAST_FIRMWARE_ONLY
@@ -871,9 +871,9 @@ static void patch_lv2(void)
 }
 
 #ifndef LITE_EDITION
-static uint32_t GetApplicableVersion(void * data)
+static u32 GetApplicableVersion(void * data)
 {
 	system_call_8(863, 0x6011, 1, data, 0, 0, 0, 0, 0);
-	return_to_user_prog(uint32_t);
+	return_to_user_prog(u32);
 }
 #endif

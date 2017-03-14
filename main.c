@@ -1,3 +1,5 @@
+#define USE_INTERNAL_PLUGIN 1
+
 #include <sdk_version.h>
 #include <cellstatus.h>
 #include <cell/cell_fs.h>
@@ -33,6 +35,7 @@
 #include <sys/stat.h>
 
 #include "flags.h"
+#include "types.h"
 #include "include/timer.h"
 
 #ifdef REX_ONLY
@@ -64,7 +67,6 @@
 #define IS_ON_XMB		(GetCurrentRunningMode() == 0)
 #define IS_INGAME		(GetCurrentRunningMode() != 0)
 
-#include "types.h"
 #include "common.h"
 #include "cobra/cobra.h"
 #include "cobra/storage.h"
@@ -197,7 +199,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 #define THREAD_PRIO				-0x1d8
 #define THREAD_PRIO_FTP			-0x1d8
-#define THREAD_PRIO_NET			-0x1d8
+#define THREAD_PRIO_NET			 2000
 #define THREAD_PRIO_STOP		 0x000
 #define THREAD_PRIO_HIGH		 2000
 
@@ -245,7 +247,7 @@ SYS_MODULE_EXIT(wwwd_stop);
  #define PS3MAPI_OPCODE_PCHECK_SYSCALL8 			0x0094
  #define PS3MAPI_OPCODE_PDISABLE_SYSCALL8 			0x0093
 
-// static uint64_t ps3mapi_key = 0;
+// static u64 ps3mapi_key = 0;
  static int pdisable_sc8 = NONE;
  #define PS3MAPI_ENABLE_ACCESS_SYSCALL8		//if(syscalls_removed) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_REQUEST_ACCESS, ps3mapi_key); }
  #define PS3MAPI_DISABLE_ACCESS_SYSCALL8	//if(syscalls_removed && !is_mounting) { system_call_3(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_ACCESS_KEY, ps3mapi_key); }
@@ -401,17 +403,17 @@ static sys_ppu_thread_t thread_id_poll	= SYS_PPU_THREAD_NONE;
 #define WM_FILE_REQUEST		(0xC0FEBEB0)
 
 typedef struct {
-	uint32_t total;
-	uint32_t avail;
+	u32 total;
+	u32 avail;
 } _meminfo;
 
-static uint8_t profile = 0;
+static u8 profile = 0;
 
-static uint8_t loading_html = 0;
-static uint8_t refreshing_xml = 0;
+static u8 loading_html = 0;
+static u8 refreshing_xml = 0;
 
 #ifdef SYS_BGM
-static uint8_t system_bgm = 0;
+static u8 system_bgm = 0;
 #endif
 
 #define NTFS 			(12)
@@ -426,24 +428,24 @@ static bool do_restart = false;
  static char debug[256];
 #endif
 
-static volatile uint8_t wm_unload_combo = 0;
-static volatile uint8_t working = 1;
-static uint8_t max_mapped = 0;
+static volatile u8 wm_unload_combo = 0;
+static volatile u8 working = 1;
+static u8 max_mapped = 0;
 
 static bool syscalls_removed = false;
 
 static float c_firmware = 0.0f;
-static uint8_t dex_mode = 0;
+static u8 dex_mode = 0;
 
 #ifdef SYS_ADMIN_MODE
-static uint8_t sys_admin = 0;
-static uint8_t pwd_tries = 0;
+static u8 sys_admin = 0;
+static u8 pwd_tries = 0;
 #else
-static uint8_t sys_admin = 1;
+static u8 sys_admin = 1;
 #endif
 
 #ifdef OFFLINE_INGAME
-static int32_t net_status = NONE;
+static s32 net_status = NONE;
 #endif
 
 static u64 SYSCALL_TABLE = 0;
@@ -473,164 +475,164 @@ enum cp_mode_options
 ////////////////////////////////
 typedef struct
 {
-	uint16_t version;
+	u16 version;
 
-	uint8_t padding0[14];
+	u8 padding0[14];
 
-	uint8_t lang;
+	u8 lang;
 
 	// scan devices settings
 
-	uint8_t usb0;
-	uint8_t usb1;
-	uint8_t usb2;
-	uint8_t usb3;
-	uint8_t usb6;
-	uint8_t usb7;
-	uint8_t dev_sd;
-	uint8_t dev_ms;
-	uint8_t dev_cf;
-	uint8_t ntfs;
+	u8 usb0;
+	u8 usb1;
+	u8 usb2;
+	u8 usb3;
+	u8 usb6;
+	u8 usb7;
+	u8 dev_sd;
+	u8 dev_ms;
+	u8 dev_cf;
+	u8 ntfs;
 
-	uint8_t padding1[5];
+	u8 padding1[5];
 
 	// scan content settings
 
-	uint8_t refr;
-	uint8_t foot;
-	uint8_t cmask;
+	u8 refr;
+	u8 foot;
+	u8 cmask;
 
-	uint8_t nogrp;
-	uint8_t nocov;
-	uint8_t nosetup;
-	uint8_t rxvid;
-	uint8_t ps2l;
-	uint8_t pspl;
-	uint8_t tid;
-	uint8_t use_filename;
-	uint8_t launchpad_xml;
-	uint8_t launchpad_grp;
-	uint8_t ps3l;
-	uint8_t roms;
-	uint8_t mc_app; // allow allocation from app memory container
-	uint8_t info;
+	u8 nogrp;
+	u8 nocov;
+	u8 nosetup;
+	u8 rxvid;
+	u8 ps2l;
+	u8 pspl;
+	u8 tid;
+	u8 use_filename;
+	u8 launchpad_xml;
+	u8 launchpad_grp;
+	u8 ps3l;
+	u8 roms;
+	u8 mc_app; // allow allocation from app memory container
+	u8 info;
 
-	uint8_t padding2[15];
+	u8 padding2[15];
 
 	// start up settings
 
-	uint8_t wmstart;
-	uint8_t lastp;
-	uint8_t autob;
+	u8 wmstart;
+	u8 lastp;
+	u8 autob;
 	char    autoboot_path[256];
-	uint8_t delay;
-	uint8_t bootd;
-	uint8_t boots;
-	uint8_t nospoof;
-	uint8_t blind;
-	uint8_t spp;    //disable syscalls, offline: lock PSN, offline ingame
-	uint8_t noss;   //no singstar
-	uint8_t nosnd0; //no snd0.at3
-	uint8_t dsc;    //disable syscalls if physical disc is inserted
+	u8 delay;
+	u8 bootd;
+	u8 boots;
+	u8 nospoof;
+	u8 blind;
+	u8 spp;    //disable syscalls, offline: lock PSN, offline ingame
+	u8 noss;   //no singstar
+	u8 nosnd0; //no snd0.at3
+	u8 dsc;    //disable syscalls if physical disc is inserted
 
-	uint8_t padding3[4];
+	u8 padding3[4];
 
 	// fan control settings
 
-	uint8_t fanc;
-	uint8_t temp0;
-	uint8_t temp1;
-	uint8_t manu;
-	uint8_t ps2temp;
-	uint8_t nowarn;
-	uint8_t minfan;
+	u8 fanc;
+	u8 temp0;
+	u8 temp1;
+	u8 manu;
+	u8 ps2temp;
+	u8 nowarn;
+	u8 minfan;
 
-	uint8_t padding4[9];
+	u8 padding4[9];
 
 	// combo settings
 
-	uint8_t  nopad;
-	uint8_t  keep_ccapi;
-	uint32_t combo;
-	uint32_t combo2;
-	uint8_t  sc8mode;
+	u8  nopad;
+	u8  keep_ccapi;
+	u32 combo;
+	u32 combo2;
+	u8  sc8mode;
 
-	uint8_t padding5[21];
+	u8 padding5[21];
 
 	// ftp server settings
 
-	uint8_t  bind;
-	uint8_t  ftpd;
-	uint16_t ftp_port;
-	uint8_t  ftp_timeout;
+	u8  bind;
+	u8  ftpd;
+	u16 ftp_port;
+	u8  ftp_timeout;
 	char     ftp_password[20];
 	char     allow_ip[16];
 
-	uint8_t padding6[7];
+	u8 padding6[7];
 
 	// net server settings
 
-	uint8_t  netsrvd;
-	uint16_t netsrvp;
+	u8  netsrvd;
+	u16 netsrvp;
 
-	uint8_t padding7[13];
+	u8 padding7[13];
 
 	// net client settings
 
-	uint8_t  netd[5];
-	uint16_t netp[5];
+	u8  netd[5];
+	u16 netp[5];
 	char     neth[5][16];
 
-	uint8_t padding8[33];
+	u8 padding8[33];
 
 	// mount settings
 
-	uint8_t bus;
-	uint8_t fixgame;
-	uint8_t ps1emu;
-	uint8_t autoplay;
-	uint8_t ps2emu;
+	u8 bus;
+	u8 fixgame;
+	u8 ps1emu;
+	u8 autoplay;
+	u8 ps2emu;
 
-	uint8_t padding9[11];
+	u8 padding9[11];
 
 	// profile settings
 
-	uint8_t profile;
+	u8 profile;
 	char uaccount[9];
-	uint8_t admin_mode;
+	u8 admin_mode;
 
-	uint8_t padding10[5];
+	u8 padding10[5];
 
 	// misc settings
 
-	uint8_t default_restart;
-	uint8_t poll; // poll usb
+	u8 default_restart;
+	u8 poll; // poll usb
 
-	uint32_t rec_video_format;
-	uint32_t rec_audio_format;
+	u32 rec_video_format;
+	u32 rec_audio_format;
 
-	uint8_t auto_power_off; // 0 = prevent auto power off on ftp, 1 = allow auto power off on ftp (also on install.ps3, download.ps3)
+	u8 auto_power_off; // 0 = prevent auto power off on ftp, 1 = allow auto power off on ftp (also on install.ps3, download.ps3)
 
-	uint8_t padding12[5];
+	u8 padding12[5];
 
-	uint8_t homeb;
+	u8 homeb;
 	char home_url[255];
 
-	uint8_t padding11[32];
+	u8 padding11[32];
 
 	// spoof console id
 
-	uint8_t sidps;
-	uint8_t spsid;
+	u8 sidps;
+	u8 spsid;
 	char vIDPS1[17];
 	char vIDPS2[17];
 	char vPSID1[17];
 	char vPSID2[17];
 
-	uint8_t padding13[34];
+	u8 padding13[34];
 } /*__attribute__((packed))*/ WebmanCfg;
 
-static uint8_t wmconfig[sizeof(WebmanCfg)];
+static u8 wmconfig[sizeof(WebmanCfg)];
 static WebmanCfg *webman_config = (WebmanCfg*) wmconfig;
 
 static int save_settings(void);
@@ -652,7 +654,7 @@ static void restore_settings(void);
 static CellRtcTick rTick, gTick;
 
 #ifdef GET_KLICENSEE
-int npklic_struct_offset = 0; uint8_t klic_polling = 0;
+int npklic_struct_offset = 0; u8 klic_polling = 0;
 
 #define KLICENSEE_SIZE          0x10
 #define KLICENSEE_OFFSET        (npklic_struct_offset)
@@ -662,7 +664,7 @@ int npklic_struct_offset = 0; uint8_t klic_polling = 0;
 
 
 static bool is_mamba = false;
-static uint16_t cobra_version = 0;
+static u16 cobra_version = 0;
 
 static bool is_mounting = false;
 static bool copy_aborted = false;
@@ -682,7 +684,7 @@ static char paths [13][12] = {"GAMES", "GAMEZ", "PS3ISO", "BDISO", "DVDISO", "PS
 
 #ifdef COPY_PS3
 static char    cp_path[STD_PATH_LEN+1];   // cut/copy/paste buffer
-static uint8_t cp_mode = CP_MODE_NONE;  // 0 = none / 1 = copy / 2 = cut/move
+static u8 cp_mode = CP_MODE_NONE;  // 0 = none / 1 = copy / 2 = cut/move
 #endif
 
 #define ONLINE_TAG		"[online]"
@@ -717,11 +719,11 @@ static char local_ip[16] = "127.0.0.1";
 static void show_msg(char* msg);
 
 static bool file_exists(const char* path);
-static int isDir(const char* path);
+static bool isDir(const char* path);
 
-size_t read_file(const char *file, char *data, size_t size, int32_t offset);
-int save_file(const char *file, const char *mem, int64_t size);
-int wait_for(const char *path, uint8_t timeout);
+size_t read_file(const char *file, char *data, size_t size, s32 offset);
+int save_file(const char *file, const char *mem, s64 size);
+int wait_for(const char *path, u8 timeout);
 int val(const char *c);
 
 #include "include/html.h"
@@ -830,14 +832,14 @@ static char current_file[STD_PATH_LEN+1];
 #include "include/fancontrol2.h"
 #include "include/md5.h"
 
-static inline void _sys_ppu_thread_exit(uint64_t val)
+static inline void _sys_ppu_thread_exit(u64 val)
 {
 	system_call_1(SC_PPU_THREAD_EXIT, val); // prxloader = mandatory; cobra = optional; ccapi = don't use !!!
 }
 
 static inline sys_prx_id_t prx_get_module_id_by_address(void *addr)
 {
-	system_call_1(SC_GET_PRX_MODULE_BY_ADDRESS, (uint64_t)(uint32_t)addr);
+	system_call_1(SC_GET_PRX_MODULE_BY_ADDRESS, (u64)(u32)addr);
 	return (int)p1;
 }
 
@@ -1162,7 +1164,7 @@ static void handleclient_www(u64 conn_s_p)
 		if(conn_s_p == START_DAEMON)
 		{
 #ifdef COBRA_ONLY
-			uint8_t cconfig[15];
+			u8 cconfig[15];
 			CobraConfig *cobra_config = (CobraConfig*) cconfig;
 			memset(cobra_config, 0, 15);
 			cobra_read_config(cobra_config);
@@ -1260,7 +1262,7 @@ static void handleclient_www(u64 conn_s_p)
 		u8 retries = 0;
 
 again3:
-		{ system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo); }
+		{ system_call_1(SC_GET_FREE_MEM, (u64)(u32) &meminfo); }
 
 		if((meminfo.avail) < ( _64KB_ + MIN_MEM )) //leave if less than min memory
 		{
@@ -1299,7 +1301,7 @@ parse_request:
 
   {
 	u8 retry = 0, served = 0, is_binary = WEB_COMMAND;	// served http request?, is_binary: 0 = http command, 1 = file, 2 = folder listing
-	int8_t sort_order = 1, sort_by = 0;
+	s8 sort_order = 1, sort_by = 0;
 	u64 c_len = 0;
 
 	u8 is_cpursx = 0;
@@ -2066,7 +2068,7 @@ parse_request:
 				// /netstatus.ps3?stop-ps3mapi  stop ps3mapi server
 				// /netstatus.ps3?stop          stop ps3mapi+net+ftp servers
 
-				int32_t status = 0;
+				s32 status = 0;
 
 #ifdef PS3NET_SERVER
 				if( param[15] == 'n') status = net_working; else //netsrv
@@ -2263,7 +2265,7 @@ parse_request:
 
 			if(islike(param, "/minver.ps3"))
 			{
-				uint8_t data[0x20];
+				u8 data[0x20];
 				memset(data, 0, 0x20);
 
 				int ret = GetApplicableVersion(data);
@@ -2659,7 +2661,7 @@ parse_request:
 
 				size_t buffer_size = 0; if(sysmem) sys_memory_free(sysmem);
 
-				for(uint8_t n = MAX_PAGES; n > 0; n--)
+				for(u8 n = MAX_PAGES; n > 0; n--)
 					if(c_len >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; break;}
 
 				//if(!sysmem && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem)!=0)
@@ -2670,7 +2672,7 @@ parse_request:
 				}
 
 				if(islike(param, "/dev_bdvd"))
-					{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+					{system_call_1(36, (u64) "/dev_bdvd");} // decrypt dev_bdvd files
 
 				char *buffer = (char*)sysmem;
 				int fd;
@@ -2734,7 +2736,7 @@ parse_request:
 					BUFFER_SIZE_HTML = get_buffer_size(webman_config->foot);
 
 					_meminfo meminfo;
-					{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+					{system_call_1(SC_GET_FREE_MEM, (u64)(u32) &meminfo);}
 
 					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(3); //MIN+
 					if((meminfo.avail)<( (BUFFER_SIZE_HTML) + MIN_MEM)) BUFFER_SIZE_HTML = get_buffer_size(1); //MIN
@@ -3586,7 +3588,7 @@ exit_handleclient_www:
 	}
 */
 
-static void wwwd_thread(uint64_t arg)
+static void wwwd_thread(u64 arg)
 {
 
 	////////////////////////////////////////
@@ -3771,7 +3773,7 @@ int wwwd_start(size_t args, void *argp)
 	return SYS_PRX_RESIDENT;
 }
 
-static void wwwd_stop_thread(uint64_t arg)
+static void wwwd_stop_thread(u64 arg)
 {
 	working = 0;
 
@@ -3781,7 +3783,7 @@ static void wwwd_stop_thread(uint64_t arg)
 
 	while(refreshing_xml) sys_ppu_thread_usleep(500000);
 
-	uint64_t exit_code;
+	u64 exit_code;
 
 /*
 	sys_ppu_thread_t t_id;
@@ -3849,7 +3851,7 @@ static void stop_prx_module(void)
 	// int *result = NULL;
 	// {system_call_6(SC_STOP_PRX_MODULE, (u64)(u32)prx, 0, NULL, (u64)(u32)result, 0, NULL);}
 
-	uint64_t meminfo[5];
+	u64 meminfo[5];
 
 	meminfo[0] = 0x28;
 	meminfo[1] = 2;
@@ -3871,7 +3873,7 @@ int wwwd_stop(void)
 	sys_ppu_thread_t t_id;
 	int ret = sys_ppu_thread_create(&t_id, wwwd_stop_thread, NULL, THREAD_PRIO_STOP, THREAD_STACK_SIZE_STOP_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, STOP_THREAD_NAME);
 
-	uint64_t exit_code;
+	u64 exit_code;
 	if (ret == 0) sys_ppu_thread_join(t_id, &exit_code);
 
 	sys_ppu_thread_usleep(500000);

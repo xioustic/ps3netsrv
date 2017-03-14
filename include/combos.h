@@ -320,7 +320,7 @@ show_popup:
 								}
 
 								_meminfo meminfo;
-								{system_call_1(SC_GET_FREE_MEM, (uint64_t)(u32) &meminfo);}
+								{system_call_1(SC_GET_FREE_MEM, (u64)(u32) &meminfo);}
 
 								// detect aprox. time when a game is launched
 								poll_start_play_time();

@@ -6,7 +6,7 @@ static void calc_md5(char *filename, char *md5)
 {
 	int fd;
 
-	uint8_t _md5[16]; memset(_md5, 0, 16);
+	u8 _md5[16]; memset(_md5, 0, 16);
 
 	sys_addr_t sysmem = NULL; size_t buffer_size = _256KB_;
 
@@ -26,9 +26,9 @@ static void calc_md5(char *filename, char *md5)
 
 			cellMd5BlockInit(&workarea);
 
-			uint8_t *buf = (uint8_t *)sysmem;
+			u8 *buf = (u8 *)sysmem;
 
-			for(uint64_t nread = buffer_size; nread > 0; )
+			for(u64 nread = buffer_size; nread > 0; )
 			{
 				cellFsRead(fd, buf, buffer_size, &nread);
 
@@ -43,7 +43,7 @@ static void calc_md5(char *filename, char *md5)
 	}
 
 	// return md5 hash as a string
-	for(uint8_t i = 0; i < 16; i++) sprintf(md5 + 2*i, "%02x", _md5[i]);
+	for(u8 i = 0; i < 16; i++) sprintf(md5 + 2*i, "%02x", _md5[i]);
 }
 
 #endif

@@ -16,27 +16,27 @@ static char *hex_dump(char *buffer, int offset, int size)
 #define LV1_UPPER_MEMORY	0x8000000010000000ULL
 #define LV2_UPPER_MEMORY	0x8000000000800000ULL
 
-static void peek_chunk(uint64_t start, uint64_t size, uint8_t *buffer) // read from lv1
+static void peek_chunk(u64 start, u64 size, u8 *buffer) // read from lv1
 {
-	for(uint64_t t, i = 0; i < size; i += 8)
+	for(u64 t, i = 0; i < size; i += 8)
 	{
 		t = peek_lv1(start + i); memcpy(buffer + i, &t, 8);
 	}
 }
 
-static void dump_mem(char *file, uint64_t start, uint32_t dump_size)
+static void dump_mem(char *file, u64 start, u32 dump_size)
 {
 	{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
 
 	int fd;
-	uint32_t mem_size = _128KB_, addr;
+	u32 mem_size = _128KB_, addr;
 	sys_addr_t sys_mem = NULL;
 
 	if(start < 0x0000028080000000ULL) start |= 0x8000000000000000ULL;
 
 	if(sys_memory_allocate(mem_size, SYS_MEMORY_PAGE_SIZE_64K, &sys_mem) == CELL_OK)
 	{
-		uint8_t *mem_buf = (uint8_t*)sys_mem;
+		u8 *mem_buf = (u8*)sys_mem;
 
 		if(cellFsOpen(file, CELL_FS_O_CREAT | CELL_FS_O_TRUNC | CELL_FS_O_WRONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
@@ -58,7 +58,7 @@ static void dump_mem(char *file, uint64_t start, uint32_t dump_size)
 
 static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 {
-	char dump_file[MAX_PATH_LEN]; uint64_t start=0; uint32_t size=8;
+	char dump_file[MAX_PATH_LEN]; u64 start=0; u32 size=8;
 	strcat(buffer, "Dump: [<a href=\"/dump.ps3?mem\">Full Memory</a>] [<a href=\"/dump.ps3?lv1\">LV1</a>] [<a href=\"/dump.ps3?lv2\">LV2</a>]<hr>");
 
 	if(param[9] == '?' && param[10] >= '0')
@@ -71,7 +71,7 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 		if(param[10] == 'm' /*mem  */) {size=(dex_mode==1) ? 512 : 256;} else
 		{
 			start = convertH(param + 10);
-			if(start >= LV1_UPPER_MEMORY - ((uint64_t)(size * _1MB_))) start = LV1_UPPER_MEMORY - ((uint64_t)(size * _1MB_));
+			if(start >= LV1_UPPER_MEMORY - ((u64)(size * _1MB_))) start = LV1_UPPER_MEMORY - ((u64)(size * _1MB_));
 		}
 
 		char *pos = strstr(param, "&size=");
@@ -85,7 +85,7 @@ static void ps3mapi_mem_dump(char *buffer, char *templn, char *param)
 
 static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 {
-	uint64_t address, addr, byte_addr, fvalue, value=0, upper_memory=LV2_UPPER_MEMORY, found_address=0, step = 1;
+	u64 address, addr, byte_addr, fvalue, value=0, upper_memory=LV2_UPPER_MEMORY, found_address=0, step = 1;
 	u8 byte = 0, p = 0, lv1 = 0;
 	bool bits8 = false, bits16 = false, bits32 = false, found = false;
 	u8 flen=0;
@@ -173,9 +173,9 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		value  = convertH(v+1);
 		fvalue = peekq(address);
 
-		if(bits32) value = ((uint64_t)(value << 32) | (uint64_t)(fvalue & 0xffffffffULL));      else
-		if(bits16) value = ((uint64_t)(value << 48) | (uint64_t)(fvalue & 0xffffffffffffULL));  else
-		if(bits8)  value = ((uint64_t)(value << 56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
+		if(bits32) value = ((u64)(value << 32) | (u64)(fvalue & 0xffffffffULL));      else
+		if(bits16) value = ((u64)(value << 48) | (u64)(fvalue & 0xffffffffffffULL));  else
+		if(bits8)  value = ((u64)(value << 56) | (u64)(fvalue & 0xffffffffffffffULL));
 
 		pokeq(address, value);
 		found_address = address; found = true;
@@ -186,9 +186,9 @@ static void ps3mapi_find_peek_poke(char *buffer, char *templn, char *param)
 		value = convertH(v+1);
 		fvalue = peek_lv1(address);
 
-		if(bits32) value = ((uint64_t)(value << 32) | (uint64_t)(fvalue & 0xffffffffULL));      else
-		if(bits16) value = ((uint64_t)(value << 48) | (uint64_t)(fvalue & 0xffffffffffffULL));  else
-		if(bits8)  value = ((uint64_t)(value << 56) | (uint64_t)(fvalue & 0xffffffffffffffULL));
+		if(bits32) value = ((u64)(value << 32) | (u64)(fvalue & 0xffffffffULL));      else
+		if(bits16) value = ((u64)(value << 48) | (u64)(fvalue & 0xffffffffffffULL));  else
+		if(bits8)  value = ((u64)(value << 56) | (u64)(fvalue & 0xffffffffffffffULL));
 
 		poke_lv1(address, value);
 		found_address = address; found = true;

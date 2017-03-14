@@ -618,7 +618,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								u8 ntmp = 1;
 								if(is_host) ntmp = mountCount + 1;
 
-								for(uint8_t u = 0; u < ntmp; u++)
+								for(u8 u = 0; u < ntmp; u++)
 								{
 									if(u) sprintf(entry.d_name, "dev_%s:", mounts[u-1].name);
 #endif
@@ -688,13 +688,13 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							}
 							else
 							{
-								uint64_t mb_free;
+								u64 mb_free;
 #ifdef USE_NTFS
 								if(is_ntfs)
 								{
 									ps3ntfs_statvfs(d_path + 5, &vbuf);
 									d_path[10] = 0;
-									mb_free = (uint64_t)((vbuf.f_bfree * (vbuf.f_bsize>>10))>>10);
+									mb_free = (u64)((vbuf.f_bfree * (vbuf.f_bsize>>10))>>10);
 								}
 								else
 #endif
@@ -767,7 +767,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							int err = FTP_FILE_UNAVAILABLE;
 
 							if(islike(filename, "/dvd_bdvd"))
-								{system_call_1(36, (uint64_t) "/dev_bdvd");} // decrypt dev_bdvd files
+								{system_call_1(36, (u64) "/dev_bdvd");} // decrypt dev_bdvd files
 
 							if(ftp_active > 1)
 							{
@@ -1266,7 +1266,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 }
 
 
-static void ftpd_thread(uint64_t arg)
+static void ftpd_thread(u64 arg)
 {
 	int list_s = NONE;
 	ftp_active = 0;

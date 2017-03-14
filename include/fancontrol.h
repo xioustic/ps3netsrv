@@ -22,8 +22,8 @@ static u32 max_temp = MY_TEMP;
 #define SC_GET_FAN_POLICY				(409)
 #define SC_GET_TEMPERATURE				(383)
 
-uint64_t get_fan_policy_offset = 0;
-uint64_t set_fan_policy_offset = 0;
+u64 get_fan_policy_offset = 0;
+u64 set_fan_policy_offset = 0;
 
 static u64 backup[3];
 
@@ -31,7 +31,7 @@ static bool fan_ps2_mode = false; // temporary disable dynamic fan control
 
 static void get_temperature(u32 _dev, u32 *_temp)
 {
-	system_call_2(SC_GET_TEMPERATURE, (uint64_t)(u32) _dev, (uint64_t)(u32) _temp); *_temp >>= 24; // return °C
+	system_call_2(SC_GET_TEMPERATURE, (u64)(u32) _dev, (u64)(u32) _temp); *_temp >>= 24; // return °C
 }
 
 static int sys_sm_set_fan_policy(u8 arg0, u8 arg1, u8 arg2)

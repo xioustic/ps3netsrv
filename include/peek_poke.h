@@ -6,13 +6,13 @@
 #define SYSCALL8_OPCODE_PS3MAPI			0x7777
 #define PS3MAPI_OPCODE_LV1_POKE			0x1009
 
-static inline uint64_t peek_lv1(uint64_t addr)
+static inline u64 peek_lv1(u64 addr)
 {
-	system_call_1(SC_PEEK_LV1, (uint64_t) addr);
-	return (uint64_t) p1;
+	system_call_1(SC_PEEK_LV1, (u64) addr);
+	return (u64) p1;
 }
 
-static void poke_lv1( uint64_t addr, uint64_t value)
+static void poke_lv1( u64 addr, u64 value)
 {
 	if(!syscalls_removed)
 		{system_call_2(SC_POKE_LV1, addr, value);}
@@ -22,13 +22,13 @@ static void poke_lv1( uint64_t addr, uint64_t value)
 #endif
 }
 
-static inline uint64_t peekq(uint64_t addr) //lv2
+static inline u64 peekq(u64 addr) //lv2
 {
 	system_call_1(SC_PEEK_LV1, addr + LV2_OFFSET_ON_LV1); //old: {system_call_1(SC_PEEK_LV2, addr);}
-	return (uint64_t) p1;
+	return (u64) p1;
 }
 
-static void pokeq(uint64_t addr, uint64_t value) //lv2
+static void pokeq(u64 addr, u64 value) //lv2
 {
 	if(!syscalls_removed)
 		{system_call_2(SC_POKE_LV1, addr + LV2_OFFSET_ON_LV1, value);} // {system_call_2(SC_POKE_LV2, addr, value);}
@@ -41,7 +41,7 @@ static void pokeq(uint64_t addr, uint64_t value) //lv2
 #ifndef COBRA_ONLY
 static void remove_lv2_memory_protection(void)
 {
-	uint64_t HV_START_OFFSET = 0;
+	u64 HV_START_OFFSET = 0;
 
 	//Remove Lv2 memory protection
 	if(c_firmware==3.55f)
@@ -143,7 +143,7 @@ static void add_to_map(const char *path1, const char *path2)
 	}
 }
 
-static u16 string_to_lv2(char* path, uint64_t addr)
+static u16 string_to_lv2(char* path, u64 addr)
 {
 	u16 len  = (strlen(path) + 8) & 0x7f8;
 	len = RANGE(len, 8, 384);
@@ -154,8 +154,8 @@ static u16 string_to_lv2(char* path, uint64_t addr)
 	memset(data, 0, 384);
 	memcpy(data, path, len2);
 
-	uint64_t val = 0x0000000000000000ULL;
-	for(uint64_t n = 0; n < len; n += 8)
+	u64 val = 0x0000000000000000ULL;
+	for(u64 n = 0; n < len; n += 8)
 	{
 		memcpy(&val, &data[n], 8);
 		pokeq(addr + n, val);
@@ -166,11 +166,11 @@ static u16 string_to_lv2(char* path, uint64_t addr)
 
 #if defined(PS3MAPI) || defined(DEBUG_MEM) || defined(SPOOF_CONSOLEID)
 
-static uint64_t convertH(char *val)
+static u64 convertH(char *val)
 {
-	uint64_t ret = 0; char c;
+	u64 ret = 0; char c;
 
-	for(uint8_t buff, i = 0, n = 0; i < 16 + n; i++)
+	for(u8 buff, i = 0, n = 0; i < 16 + n; i++)
 	{
 		if(val[i]==' ') {n++; continue;}
 
@@ -204,22 +204,22 @@ static void Hex2Bin(const char* src, char* target)
 /*
 s32 lv2_get_platform_info(struct platform_info *info)
 {
-	system_call_1(SC_GET_PLATFORM_INFO, (uint64_t) info);
+	system_call_1(SC_GET_PLATFORM_INFO, (u64) info);
 	return_to_user_prog(s32);
 }
 
-s32 lv2_get_target_type(uint64_t *type)
+s32 lv2_get_target_type(u64 *type)
 {
-	lv2syscall1(985, (uint64_t) type);
+	lv2syscall1(985, (u64) type);
 	return_to_user_prog(s32);
 }
 
-uint64_t find_syscall_table()
+u64 find_syscall_table()
 {
-	uint64_t targettype;
+	u64 targettype;
 	lv2_get_target_type(&targettype);
 
-	for(uint64_t i = 0x8000000000340000ULL; i<0x8000000000400000ULL; i+=4)
+	for(u64 i = 0x8000000000340000ULL; i<0x8000000000400000ULL; i+=4)
 	{
 		if(peekq(i) == 0x3235352E3235352EULL) return (i + (targettype == 2) ? 0x1228 : 0x1220);
 	}

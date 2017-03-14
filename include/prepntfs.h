@@ -37,9 +37,9 @@ static int prepNTFS(void)
 
 	char prefix[2][8]={"/", "/PS3/"};
 
-	uint8_t  *plugin_args = NULL;
-	uint32_t *sectionsP = NULL;
-	uint32_t *sections_sizeP = NULL;
+	u8  *plugin_args = NULL;
+	u32 *sectionsP = NULL;
+	u32 *sections_sizeP = NULL;
 
 	cellFsMkdir(WMTMP, S_IRWXO | S_IRWXU | S_IRWXG | S_IFDIR);
 	cellFsChmod(WMTMP, S_IFDIR | 0777);
@@ -74,9 +74,9 @@ static int prepNTFS(void)
 		if(!addr && sys_memory_allocate(_64KB_, SYS_MEMORY_PAGE_SIZE_64K, &addr) != CELL_OK) goto exit_prepntfs;
 	}
 
-	plugin_args    = (uint8_t *)(addr);
-	sectionsP      = (uint32_t*)(addr + sizeof(rawseciso_args));
-	sections_sizeP = (uint32_t*)(addr + sizeof(rawseciso_args) + _32KB_);
+	plugin_args    = (u8 *)(addr);
+	sectionsP      = (u32*)(addr + sizeof(rawseciso_args));
+	sections_sizeP = (u32*)(addr + sizeof(rawseciso_args) + _32KB_);
 
 	size_t plen;
 
@@ -157,7 +157,7 @@ next_ntfs_entry:
 										sprintf(iso_path, "%s%i", iso_name, o);
 										if(file_exists(iso_path) == false) break;
 
-										parts += ps3ntfs_file_to_sectors(iso_path, sectionsP + (parts * sizeof(uint32_t)), sections_sizeP + (parts * sizeof(uint32_t)), MAX_SECTIONS - parts, 1);
+										parts += ps3ntfs_file_to_sectors(iso_path, sectionsP + (parts * sizeof(u32)), sections_sizeP + (parts * sizeof(u32)), MAX_SECTIONS - parts, 1);
 									}
 								}
 
@@ -204,7 +204,7 @@ next_ntfs_entry:
 									p_args->emu_mode = emu_mode;
 									p_args->num_sections = parts;
 
-									memcpy(plugin_args + sizeof(rawseciso_args) + (parts * sizeof(uint32_t)), sections_sizeP, parts * sizeof(uint32_t));
+									memcpy(plugin_args + sizeof(rawseciso_args) + (parts * sizeof(u32)), sections_sizeP, parts * sizeof(u32));
 
 									if(emu_mode == EMU_PSX)
 									{
@@ -216,7 +216,7 @@ next_ntfs_entry:
 										}
 
 										p_args->num_tracks = num_tracks;
-										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args + sizeof(rawseciso_args) + (2 * (parts * sizeof(uint32_t))));
+										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args + sizeof(rawseciso_args) + (2 * (parts * sizeof(u32))));
 
 										if(num_tracks <= 1)
 										{
@@ -237,7 +237,7 @@ next_ntfs_entry:
 
 									snprintf(path, sizeof(path), "%s/%s%s.ntfs[%s]", WMTMP, filename, SUFIX2(profile), paths[m]);
 
-									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args) + (2 * (parts * sizeof(uint32_t))) + (num_tracks * sizeof(ScsiTrackDescriptor)))); count++;
+									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args) + (2 * (parts * sizeof(u32))) + (num_tracks * sizeof(ScsiTrackDescriptor)))); count++;
 /*
 									plen = snprintf(path, sizeof(path), "%s/%s", WMTMP, dir.d_name);
 									nlen = snprintf(path0, sizeof(path0), "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
@@ -256,7 +256,7 @@ for_sfo:
 										{
 											if(isDir("/dev_bdvd")) do_umount(false);
 
-											sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (uint64_t)plugin_args, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
+											sys_ppu_thread_create(&thread_id_ntfs, rawseciso_thread, (u64)plugin_args, THREAD_PRIO, THREAD_STACK_SIZE_NTFS_ISO, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_NTFS);
 
 											wait_for("/dev_bdvd/PS3_GAME/PARAM.SFO", 2);
 

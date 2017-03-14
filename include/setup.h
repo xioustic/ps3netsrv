@@ -506,7 +506,7 @@ static void setup_form(char *buffer, char *templn)
 	close_language();
  #endif
 
-	uint8_t value, b;
+	u8 value, b;
 	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{display:none}td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 					"<b><a class=\"tg\" href=\"javascript:tgl(cnt);\"> %s </a></b><br><div id=\"cnt\">"
@@ -1078,8 +1078,8 @@ static void setup_form(char *buffer, char *templn)
 	#define VSH_GCM_OBJ			0x70A8A8 // 4.53cex
 	//#define VSH_GCM_OBJ		0x71A5F8 // 4.46dex
 
-	uint32_t *gcm_obj0 = VSH_GCM_OBJ + ((uint32_t) 0 << 4);
-	uint32_t *gcm_obj1 = VSH_GCM_OBJ + ((uint32_t) 1 << 4); // offset, pitch, width, height
+	u32 *gcm_obj0 = VSH_GCM_OBJ + ((u32) 0 << 4);
+	u32 *gcm_obj1 = VSH_GCM_OBJ + ((u32) 1 << 4); // offset, pitch, width, height
 
 
 	_cellGcmIoOffsetToAddress = getNIDfunc("sdk", 0x2a6fba9c, 0);

@@ -38,8 +38,8 @@ extern "C" {
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define u32 uint32_t
-#define s64 int64_t
+#define u32 u32
+#define s64 s64
 
 #ifndef ATTRIBUTE_ALIGN
 # define ATTRIBUTE_ALIGN(v)				__attribute__((aligned(v)))
@@ -72,7 +72,7 @@ extern "C" {
 #define FEATURE_PS3_USB             0x00000200
 #define FEATURE_PS3_BDVD            0x00000400
 
-typedef uint32_t sec_t;
+typedef u32 sec_t;
 
 typedef bool (* FN_MEDIUM_STARTUP)(void) ;
 typedef bool (* FN_MEDIUM_ISINSERTED)(void) ;
@@ -223,7 +223,7 @@ int ps3ntfs_unlink(const char *name);
 int ps3ntfs_chdir(const char *name);
 int ps3ntfs_rename(const char *oldName, const char *newName);
 int ps3ntfs_mkdir(const char *path, int mode);
-int ps3ntfs_file_to_sectors(const char *path, uint32_t *sec_out, uint32_t *size_out, int max, int phys);
+int ps3ntfs_file_to_sectors(const char *path, u32 *sec_out, u32 *size_out, int max, int phys);
 int ps3ntfs_get_fd_from_FILE(FILE *fp);
 
 typedef struct {
@@ -247,8 +247,8 @@ void NTFS_deinit_system_io(void);
 #define ST_RDONLY 0x0001
 #define ST_NOSUID 0x0002
 
-typedef uint32_t fsblkcnt_t;
-typedef uint32_t fsfilcnt_t;
+typedef u32 fsblkcnt_t;
+typedef u32 fsfilcnt_t;
 
 struct statvfs {
 	unsigned long f_bsize;

@@ -17,9 +17,6 @@
 #define USB_MASS_STORAGE_2(n)	(0x10300000000001FULL+(n-6)) /* For 6-127 */
 #define USB_MASS_STORAGE(n)		(((n) < 6) ? USB_MASS_STORAGE_1(n) : USB_MASS_STORAGE_2(n))
 
-#define	HDD_PARTITION(n)	(ATA_HDD | ((uint64_t)n<<32))
-#define FLASH_PARTITION(n)	(BUILTIN_FLASH | ((uint64_t)n<<32))
-
 #define DEVICE_TYPE_PS3_DVD	0xFF70
 #define DEVICE_TYPE_PS3_BD	0xFF71
 #define DEVICE_TYPE_PS2_CD	0xFF60
@@ -37,14 +34,14 @@ static void eject_insert(u8 eject, u8 insert);
 
 #ifdef COBRA_ONLY
 
-static int fake_insert_event(uint64_t devicetype, uint64_t disctype)
+static int fake_insert_event(u64 devicetype, u64 disctype)
 {
-	uint64_t param = (uint64_t)(disctype) << 32ULL;
+	u64 param = (u64)(disctype) << 32ULL;
 	sys_storage_ext_fake_storage_event(7, 0, devicetype);
 	return sys_storage_ext_fake_storage_event(3, param, devicetype);
 }
 
-static int fake_eject_event(uint64_t devicetype)
+static int fake_eject_event(u64 devicetype)
 {
 	sys_storage_ext_fake_storage_event(4, 0, devicetype);
 	return sys_storage_ext_fake_storage_event(8, 0, devicetype);
@@ -81,16 +78,16 @@ static void reset_usb_ports(char *_path)
 /*
 static u32 in_cobra(u32 *mode)
 {
-	system_call_2(SC_COBRA_SYSCALL8, (uint32_t) 0x7000, (uint32_t)mode);
-	return_to_user_prog(uint32_t);
+	system_call_2(SC_COBRA_SYSCALL8, (u32) 0x7000, (u32)mode);
+	return_to_user_prog(u32);
 }
 */
 
 /*
-static uint64_t syscall_837(const char *device, const char *format, const char *point, u32 a, u32 b, u32 c, void *buffer, u32 len)
+static u64 syscall_837(const char *device, const char *format, const char *point, u32 a, u32 b, u32 c, void *buffer, u32 len)
 {
 	system_call_8(SC_FS_MOUNT, (u64)device, (u64)format, (u64)point, a, b, c, (u64)buffer, len);
-	return_to_user_prog(uint64_t);
+	return_to_user_prog(u64);
 }
 */
 #endif
@@ -101,7 +98,7 @@ static void eject_insert(u8 eject, u8 insert)
 	u8* atapi_cmnd = atapi_cmnd2;
 	int dev_id;
 
-	{system_call_4(SC_STORAGE_OPEN, BDVD_DRIVE, 0, (uint64_t)(u32) &dev_id, 0);}
+	{system_call_4(SC_STORAGE_OPEN, BDVD_DRIVE, 0, (u64)(u32) &dev_id, 0);}
 
 	if(eject)
 	{
@@ -112,7 +109,7 @@ static void eject_insert(u8 eject, u8 insert)
 		atapi_cmnd[0x23] = 0x0c;
 
 		// Eject disc
-		{system_call_7(SC_STORAGE_INSERT_EJECT, dev_id, 1, (uint64_t)(u32) atapi_cmnd, 56, NULL, 0, NULL);}
+		{system_call_7(SC_STORAGE_INSERT_EJECT, dev_id, 1, (u64)(u32) atapi_cmnd, 56, NULL, 0, NULL);}
 
 		if(insert) sys_ppu_thread_sleep(2);
 	}
@@ -126,7 +123,7 @@ static void eject_insert(u8 eject, u8 insert)
 		atapi_cmnd[0x23] = 0x0c;
 
 		// Insert disc
-		{system_call_7(SC_STORAGE_INSERT_EJECT, dev_id, 1, (uint64_t)(u32) atapi_cmnd, 56, NULL, 0, NULL);}
+		{system_call_7(SC_STORAGE_INSERT_EJECT, dev_id, 1, (u64)(u32) atapi_cmnd, 56, NULL, 0, NULL);}
 	}
 
 	{system_call_1(SC_STORAGE_CLOSE, dev_id);}
