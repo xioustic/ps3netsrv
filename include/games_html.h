@@ -593,7 +593,10 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 		}
 	}
 	else
+	{
 		get_name(templn, entry_name, NO_EXT);
+		if((f1 >= 5 && f1 <=9) && (webman_config->info == 1 || webman_config->info == 2)) get_cover_from_name(icon, entry_name, tempID);
+	}
 
 	return CELL_OK;
 }

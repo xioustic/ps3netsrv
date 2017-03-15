@@ -199,7 +199,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 #define THREAD_PRIO				-0x1d8
 #define THREAD_PRIO_FTP			-0x1d8
-#define THREAD_PRIO_NET			 2000
+#define THREAD_PRIO_NET			-0x1d8
 #define THREAD_PRIO_STOP		 0x000
 #define THREAD_PRIO_HIGH		 2000
 

@@ -340,12 +340,12 @@ static uint16_t line = 0;			 // current line into menu, init 0 [Menu Entry 1]
 static uint8_t view = MAIN_MENU;
 static bool last_game_view = false;
 
-static uint8_t entry_mode[MAX_MENU] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static uint8_t entry_mode[MAX_MENU] = {0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 static char entry_str[2][MAX_MENU][32] = {
 											{
 											"0: Unmount Game",
-											"1: Mount /net0",
+											"1: sLaunch MOD",
 											"2: Fan (+)",
 											"3: Refresh XML",
 											"4: Toggle gameDATA",
@@ -412,6 +412,7 @@ static void do_main_menu_action(void)
 			if(entry_mode[line] == 4) {send_wm_request("/mount_ps3/net4");}
 			if(entry_mode[line] == 5) {send_wm_request("/unmap.ps3/dev_usb000");}
 			if(entry_mode[line] == 6) {send_wm_request("/remap.ps3/dev_usb000&to=/dev_hdd0/packages");}
+			if(entry_mode[line] == 7) {return_to_xmb(); play_rco_sound("system_plugin", "snd_system_ok"); send_wm_request("/browser.ps3$slaunch"); return;}
 
 			break;
 		case 2:
@@ -808,15 +809,15 @@ static void do_plugins_manager_action(uint32_t curpad)
 {
 	nitems = line = 0;
 
-	int fd; const char *paths[10] = {"/dev_hdd0", "/dev_hdd0/plugins", "/dev_hdd0/plugins/ps3xpad", "/dev_hdd0/plugins/ps3_menu", "/dev_usb000", "/dev_usb001", "/dev_hdd0/game/UPDWEBMOD/USRDIR", "/dev_hdd0/game/UPDWEBMOD/USRDIR/official", "/dev_hdd0/tmp"};
+	int fd; const char paths[8][32] = {"/dev_hdd0", "/dev_hdd0/plugins", "/dev_hdd0/plugins/ps3xpad", "/dev_hdd0/plugins/ps3_menu", "/dev_usb000", "/dev_usb001", "/dev_hdd0/game/UPDWEBMOD/USRDIR", "/dev_hdd0/tmp/wm_res"};
 
 	// clear list
-	for(int i = 0; i < MAX_ITEMS; i++) {items[i][0] = 0; items_isdir[i] = 0;}
+	for(int i = 0; i < MAX_ITEMS; i++) {items[i][0] = 0, items_isdir[i] = 0;}
 
 	nitems = line = 0;
 
 	// list plugins
-	for(uint8_t i = 0; i < 9; i++)
+	for(uint8_t i = 0; i < 8; i++)
 	if(cellFsOpendir(paths[i], &fd) == CELL_FS_SUCCEEDED)
 	{
 			CellFsDirent dir; uint64_t read = sizeof(CellFsDirent);
@@ -826,12 +827,11 @@ static void do_plugins_manager_action(uint32_t curpad)
 				if(!read || nitems>=MAX_ITEMS) break;
 				if(strstr(dir.d_name, ".sprx"))
 				{
-					dir.d_name[MAX_PATH_LEN-1]=0;
-					sprintf(items[nitems], "%s/%s", paths[i], dir.d_name);
+					snprintf(items[nitems], MAX_PATH_LEN-1, "%s/%s", paths[i], dir.d_name);
 
 					items_isdir[nitems] = get_vsh_plugin_slot_by_name(items[nitems], false);
 
-					sprintf(items[nitems], "/%s/%s", paths[i], dir.d_name);
+					snprintf(items[nitems], MAX_PATH_LEN-1, "/%s/%s", paths[i], dir.d_name);
 
 					if(items_isdir[nitems]) items[nitems][0]=' ';
 
@@ -968,7 +968,7 @@ static void draw_background_and_title(void)
 																(view == FILE_MANAGER && !last_game_view) ? curdir + curdir_offset :
 																(view == PLUGINS_MANAGER) ? "Plugins Manager"		:
 																						    "VSH Menu for webMAN") );
-	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.15");
+	set_font(14.f, 14.f, 1.f, 1); print_text(650, 8, "v1.16");
 }
 
 static void draw_menu_options(void)
@@ -1229,28 +1229,31 @@ static void change_current_folder(uint32_t curpad)
 	if(curpad & PAD_LEFT)  if(cdir>0) cdir--;
 	if(curpad & PAD_RIGHT) cdir++;
 
-	while(true)
-	{
-			if(cdir== 0) sprintf(curdir, "/");
-			if(cdir== 1) sprintf(curdir, "/dev_hdd0");
-			if(cdir== 2) sprintf(curdir, "/dev_hdd0/GAMES");
-			if(cdir== 3) sprintf(curdir, "/dev_hdd0/GAMEZ");
-			if(cdir== 4) sprintf(curdir, "/dev_hdd0/PS3ISO");
-			if(cdir== 5) sprintf(curdir, "/dev_hdd0/PS2ISO");
-			if(cdir== 6) sprintf(curdir, "/dev_hdd0/PSXISO");
-			if(cdir== 7) sprintf(curdir, "/dev_hdd0/PSPISO");
-			if(cdir== 8) sprintf(curdir, "/dev_hdd0/packages");
-			if(cdir== 9) sprintf(curdir, "/dev_hdd0/plugins");
-			if(cdir==10) sprintf(curdir, "/dev_hdd0/BDISO");
-			if(cdir==11) sprintf(curdir, "/dev_hdd0/DVDISO");
-			if(cdir==12) sprintf(curdir, "/dev_hdd0/game/BLES80608/USRDIR");
-			if(cdir==13) sprintf(curdir, "/dev_usb001");
-			if(cdir==14) sprintf(curdir, "/dev_usb001/GAMES");
-			if(cdir==15) sprintf(curdir, "/dev_usb001/PS3ISO");
-			if(cdir==16) sprintf(curdir, "/dev_usb000/PS3ISO");
-			if(cdir==17) sprintf(curdir, "/dev_usb000/GAMES");
-			if(cdir==18) sprintf(curdir, "/dev_usb000");
+	const char *paths[19] = {
+								"/",
+								"/dev_hdd0",
+								"/dev_hdd0/GAMES",
+								"/dev_hdd0/GAMEZ",
+								"/dev_hdd0/PS3ISO",
+								"/dev_hdd0/PS2ISO",
+								"/dev_hdd0/PSXISO",
+								"/dev_hdd0/PSPISO",
+								"/dev_hdd0/packages",
+								"/dev_hdd0/plugins",
+								"/dev_hdd0/BDISO",
+								"/dev_hdd0/DVDISO",
+								"/dev_hdd0/game/BLES80608/USRDIR",
+								"/dev_usb001",
+								"/dev_usb001/GAMES",
+								"/dev_usb001/PS3ISO",
+								"/dev_usb000/PS3ISO",
+								"/dev_usb000/GAMES",
+								"/dev_usb000"
+							};
 
+	for(;;)
+	{
+			sprintf(curdir, "%s", paths[cdir]);
 			if(isDir(curdir)) {curpad = REFRESH_DIR; break;}
 			if(curpad & PAD_LEFT) {if(cdir>0) cdir--;} else cdir++;
 			if(cdir > 18) cdir=0;
@@ -1261,7 +1264,7 @@ static void change_current_folder(uint32_t curpad)
 
 static void change_main_menu_options(uint32_t curpad)
 {
-	uint8_t last_opt = ((line==0) ? 2 : (line==1) ? 6 : (line==9) ? 4 : (line==2) ? 3 : (line==3) ? 5 : (line==6 || line==0xB) ? 1 : 0);
+	uint8_t last_opt = ((line==0) ? 2 : (line==1) ? 7 : (line==9) ? 4 : (line==2) ? 3 : (line==3) ? 5 : (line==6 || line==0xB) ? 1 : 0);
 
 	if(curpad & PAD_RIGHT) ++entry_mode[line];
 	else
@@ -1281,12 +1284,15 @@ static void change_main_menu_options(uint32_t curpad)
 		break;
 
 		case 0x1:	if(opt == 5)
-							sprintf(entry_str[view][line], "1: Unmap USB000");
-						else
-						if(opt == 6)
-							sprintf(entry_str[view][line], "1: Remap USB000 to HDD0");
-						else
-							sprintf(entry_str[view][line], "1: Mount /net%i", opt);
+						sprintf(entry_str[view][line], "1: Unmap USB000");
+					else
+					if(opt == 6)
+						sprintf(entry_str[view][line], "1: Remap USB000 to HDD0");
+					else
+					if(opt == 7)
+						sprintf(entry_str[view][line], "1: slaunch MOD");
+					else
+						sprintf(entry_str[view][line], "1: Mount /net%i", opt);
 		break;
 
 		case 0x2: strcpy(entry_str[view][line], ((opt == 1) ? "2: Fan (-)\0"	 :
@@ -1377,7 +1383,7 @@ static void vsh_menu_thread(uint64_t arg)
 	uint32_t oldpad = 0, curpad = 0;
 	CellPadData pdata;
 
-	uint32_t show_menu = 0;
+	uint32_t DELAY, show_menu = 0;
 
 	// init config
 	config->bgindex = 0;
@@ -1402,10 +1408,10 @@ static void vsh_menu_thread(uint64_t arg)
 			vshtask_notify("VSH Menu loaded.\nHold [Select] to open it.");
 		}
 
-		unload_mode = 0;
+		unload_mode = 0, DELAY = 3;
 	}
 	else
-		unload_mode = 2;
+		unload_mode = 2, DELAY = 1;
 
 	//View_Find = getNIDfunc("paf", 0xF21655F3, 0);
 
@@ -1446,7 +1452,7 @@ static void vsh_menu_thread(uint64_t arg)
 			{
 				if((pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT) && (pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0)) ++show_menu; else show_menu = 0;
 
-				if(show_menu > 3)			// Start VSH menu if SELECT button was pressed for few seconds
+				if(show_menu > DELAY)			// Start VSH menu if SELECT button was pressed for few seconds
 				{
 					show_menu = 0, oldpad = PAD_SELECT;
 					if(line & 1) line = 0;	// menu on first entry in list
@@ -1462,7 +1468,7 @@ static void vsh_menu_thread(uint64_t arg)
 			for(int32_t port=0; port<8; port++)
 			{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
 
-			if(curpad == oldpad && curpad == PAD_SELECT) ;
+			if(curpad == oldpad && (curpad & (PAD_SELECT | PAD_R1 | PAD_R2))) ;
 
 			else if(curpad)
 			{
