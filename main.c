@@ -366,7 +366,7 @@ static const u32 DMODE = (CELL_FS_S_IFDIR | 0777);
 #define MAX_LINE_LEN	640 // html games
 #define STD_PATH_LEN	263 // standard path len (260 characters in NTFS - Windows 10 removed this limit in 2016)
 #define MAX_PATH_LEN	512 // do not change!
-#define MAX_TEXT_LEN	2000 // should not exceed HTML_RECV_SIZE
+#define MAX_TEXT_LEN	1300 // should not exceed HTML_RECV_SIZE
 
 #define FAILED		-1
 
@@ -2566,6 +2566,9 @@ parse_request:
 
 					if(mountCount == NTFS_UNMOUNTED) mount_all_ntfs_volumes();
 
+					char *sort = strstr(param, "?sort=");
+					if(sort) {sort_by = sort[6]; if(strstr(sort, "desc")) sort_order = -1; *sort = NULL;}
+
 					param[10] = ':';
 					if(param[11] != '/') {param[11] = '/', param[12] = 0;}
 
@@ -3040,7 +3043,7 @@ parse_request:
 #ifdef USE_NTFS
 						if(islike(param + 12, "?ntfs") || islike(param + 12, "?prepntfs"))
 						{
-							mount_all_ntfs_volumes();
+							check_ntfs_volumes();
 
 							int ngames = 0; *header = NULL;
 							if(islike(param + 12, "?prepntfs")) {ngames = prepNTFS(); sprintf(header, " • <a href=\"%s\">%i %s</a>", WMTMP, ngames, STR_GAMES);}

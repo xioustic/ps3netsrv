@@ -191,11 +191,11 @@ next_ntfs_entry:
 											{
 												char *cue_buf = (char*)sysmem;
 												int cue_size = ps3ntfs_read(fd, (void *)cue_buf, _4KB_);
-												ps3ntfs_close(fd);
 
 												char *templn = path;
 												num_tracks = parse_cue(templn, cue_buf, cue_size, tracks);
 											}
+											ps3ntfs_close(fd);
 										}
 									}
 

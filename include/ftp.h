@@ -74,7 +74,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	int conn_s_ftp = (int)conn_s_ftp_p; // main communications socket
 
 #ifdef USE_NTFS
-	if(!ftp_active && mountCount == NTFS_UNMOUNTED && !refreshing_xml) mount_all_ntfs_volumes();
+	if(!ftp_active && mountCount == NTFS_UNMOUNTED && !refreshing_xml) check_ntfs_volumes();
 #endif
 
 	ftp_active++;
