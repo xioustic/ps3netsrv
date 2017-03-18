@@ -172,6 +172,10 @@ static void launch_disc(char *category, char *seg_name, bool execute)
 {
 	u8 n; int view;
 
+#ifdef COBRA_ONLY
+	unload_vsh_gui();
+#endif
+
 	for(n = 0; n < 15; n++) {if(abort_autoplay()) return; view = View_Find("explore_plugin"); if(!view) sys_ppu_thread_sleep(2); else break;}
 
 	if(IS(seg_name, "seg_device")) wait_for("/dev_bdvd", 10); if(n) sys_ppu_thread_sleep(3);

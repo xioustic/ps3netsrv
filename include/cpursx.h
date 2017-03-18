@@ -201,28 +201,35 @@ static void cpu_rsx_stats(char *buffer, char *templn, char *param, u8 is_ps3_htt
 
 	hdd_free = (int)(get_free_space("/dev_hdd0")>>20);
 
-	sprintf(param, "<hr><font size=\"42px\"><b><a class=\"s\" href=\"/cpursx.ps3?up\">"
-											"CPU: %i°C%s<br>"
-											"RSX: %i°C</a><hr>"
-											"<a class=\"s\" href=\"/cpursx.ps3?dn\">"
-											"CPU: %i°F%s<br>"
-											"RSX: %i°F</a><hr>"
-											"<a class=\"s\" href=\"/games.ps3\">"
-											"MEM: %'d KB</a><br>"
-											"<a href=\"%s\">HDD: %'d %s</a>%s<hr>"
-											"<a class=\"s\" href=\"/cpursx.ps3?mode\">"
-											"%s %i%% (0x%X)</a><br>",
+	sprintf(param,	"<hr><font size=\"42px\">"
+					"<b><a class=\"s\" href=\"/cpursx.ps3?up\">"
+					"CPU: %i°C%s<br>"
+					"RSX: %i°C</a><hr>"
+					"<a class=\"s\" href=\"/cpursx.ps3?dn\">"
+					"CPU: %i°F%s<br>"
+					"RSX: %i°F</a><hr>",
 					t1, max_temp1, t2,
-					t1f, max_temp2, t2f,
-					(meminfo.avail>>10), drives[0], hdd_free, STR_MBFREE, templn,
+					t1f, max_temp2, t2f); buffer += concat(buffer, param);
+
+	if(IS_ON_XMB && file_exists(WM_RES_PATH "/slaunch.sprx"))
+		sprintf(max_temp1, "/browser.ps3$slaunch");
+	else
+		sprintf(max_temp1, "/games.ps3");
+
+	sprintf(param,	"<a class=\"s\" href=\"%s\">"
+					"MEM: %'d KB</a><br>"
+					"<a href=\"%s\">HDD: %'d %s</a>%s<hr>"
+					"<a class=\"s\" href=\"/cpursx.ps3?mode\">"
+					"%s %i%% (0x%X)</a><br>",
+					max_temp1, (meminfo.avail>>10), drives[0], hdd_free, STR_MBFREE, templn,
 					STR_FANCH2, (int)((int)fan_speed*100)/255, fan_speed); buffer += concat(buffer, param);
 
-	if( !max_temp && !is_ps3_http)
-		sprintf( templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"self.location='/cpursx.ps3?fan='+this.value\"><hr>", webman_config->manu, DEFAULT_MIN_FANSPEED);
-	else
-		sprintf( templn, "<hr>");
+	if(!max_temp && !is_ps3_http)
+	{
+		sprintf(templn, "<input type=\"range\" value=\"%i\" min=\"%i\" max=\"95\" style=\"width:600px\" onchange=\"self.location='/cpursx.ps3?fan='+this.value\">", webman_config->manu, DEFAULT_MIN_FANSPEED); buffer += concat(buffer, templn);
+	}
 
-	buffer += concat(buffer, templn);
+	strcat(buffer, "<hr>");
 
 	CellRtcTick pTick; cellRtcGetCurrentTick(&pTick); u32 dd, hh, mm, ss;
 

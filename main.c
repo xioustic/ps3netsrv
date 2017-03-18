@@ -776,6 +776,7 @@ static void add_breadcrumb_trail(char *buffer, char *param);
 static void get_cpursx(char *cpursx);
 static void get_last_game(char *last_path);
 static void add_game_info(char *buffer, char *templn, bool is_cpursx);
+static void unload_vsh_gui(void);
 
 static bool from_reboot = false;
 static bool is_busy = false;
@@ -1827,9 +1828,9 @@ parse_request:
 				if(IS_ON_XMB)
 				{   // in-XMB
    #ifdef COBRA_ONLY
-					if(islike(param2, "$vsh_menu")) start_vsh_gui(true);
+					if(islike(param2, "$vsh_menu")) {start_vsh_gui(true); sprintf(param, "/cpursx.ps3"); goto html_response;}
 					else
-					if(islike(param2, "$slaunch")) start_vsh_gui(false);
+					if(islike(param2, "$slaunch")) {start_vsh_gui(false); sprintf(param, "/cpursx.ps3"); goto html_response;}
 					else
    #endif
    #ifdef XMB_SCREENSHOT

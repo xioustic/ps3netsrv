@@ -27,9 +27,10 @@
  DYNAMIC TEMP : SELECT+LEFT/RIGHT
  MANUAL TEMP  : SELECT+UP/DOWN
 
- REC VIDEO    : SELECT+R3
- REC VIDEO SET: SELECT+R3+L2  Select video rec setting
- REC VIDEO VAL: SELECT+R3+R2  Change value of video rec setting
+ REC VIDEO    : SELECT+R3          Record video using internal plugin (IN-GAME ONLY)
+ REC VIDEO PLG: SELECT+R3+L2+R2    Unload webMAN & Record video with video_rec plugin (IN-GAME ONLY)
+ REC VIDEO SET: SELECT+R3+L2       Select video rec setting
+ REC VIDEO VAL: SELECT+R3+R2       Change value of video rec setting
  XMB SCRNSHOT : L2+R2+SELECT+START
 
  USER/ADMIN   : L2+R2+TRIANGLE                  *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_triangle
@@ -50,8 +51,8 @@
 
  SKIP AUTO-MOUNT   : L2+R2  (at startup only)   *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2
 
- VSH MENU          : SELECT (hold down for few seconds)
- sLaunch MENU      : L2+R2 or START
+ VSH MENU          : SELECT (hold down for few seconds on XMB only)
+ sLaunch MENU      : L2+R2 or START (hold down for few seconds on XMB only)
 
  Open File Manager : L2+R2+O                    *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_circle
  Open Games List   : L2+R2+R1+O                 *or* Custom Combo -> /dev_hdd0/tmp/wm_combo/wm_custom_l2_r2_r1_circle
@@ -229,7 +230,18 @@
 						else
 						if(!(webman_config->combo2 & VIDRECORD) && data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_R3) // SELECT + R3
 						{
-							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2)
+							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2))// SELECT+R3+L2+R2  Record video with video_rec plugin (IN-GAME ONLY)
+							{
+								#define VIDEO_REC_PLUGIN  WM_RES_PATH "/video_rec.sprx"
+
+								if((!recording) && (IS_INGAME) && file_exists(VIDEO_REC_PLUGIN))
+								{
+									unsigned int slot = get_free_slot();
+									if((slot < 7) && cobra_load_vsh_plugin(slot, VIDEO_REC_PLUGIN, NULL, 0) == CELL_OK) goto quit_plugin; // unload webMAN to free resources
+								}
+							}
+							else
+							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L2)
 							{
 								rec_setting_to_change++; if(rec_setting_to_change>5) rec_setting_to_change = 0; 	// SELECT+R3+L2  Select video rec setting
 								set_setting_to_change(msg, "Change : ");
@@ -238,7 +250,7 @@
 								show_rec_format(msg);
 							}
 							else
-							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2)
+							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_R2)
 							{
 								set_setting_to_change(msg, "Changed : ");									// SELECT+R3+R2  Change value of video rec setting
 
@@ -263,7 +275,7 @@
 								show_rec_format(msg);
 							}
 							else
-								{memset(msg, 0, 256); toggle_video_rec(msg); n = 0;}
+								{memset(msg, 0, 256); toggle_video_rec(msg); n = 0;} // SELECT+R3  Record Video
 
 							break;
 						}
@@ -566,8 +578,9 @@ show_popup:
 
 							sys_ppu_thread_exit(0);
 						}
-						else if(!(webman_config->combo & UNLOAD_WM) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_R3) ) // L3+R3+R2 (quit webMAN)
+						else if(!(webman_config->combo & UNLOAD_WM) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_R3) ) // L3+R3+R2 (Quit / Unload webMAN)
 						{
+	quit_plugin:
 							wm_unload_combo = 1;
 
 							restore_settings();
