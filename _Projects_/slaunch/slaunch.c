@@ -888,7 +888,7 @@ static void slaunch_thread(uint64_t arg)
 
 								running=0;
 							}
-							if(option==7) send_wm_request(web_page ? "/browser.ps3/setup.ps3" : "/browser.ps3/");
+							if(option==7) send_wm_request(web_page ? "/browser.ps3/" : "/browser.ps3/setup.ps3");
 							break;
 						}
 						else
