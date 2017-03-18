@@ -566,8 +566,9 @@ int main()
 	CopyFile(APP_USRDIR "/vshmenu.png"   	, XMLMANPLS_IMAGES_DIR "/vshmenu.png");
 	CopyFile(APP_USRDIR "/webman.png"  		, XMLMANPLS_IMAGES_DIR "/webman.png");
 
-	CopyFile(APP_USRDIR "/icon_wm_eject.png", XMLMANPLS_IMAGES_DIR "/icon_wm_eject.png");
-	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  , XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
+	CopyFile(APP_USRDIR "/icon_wm_eject.png",  XMLMANPLS_IMAGES_DIR "/icon_wm_eject.png");
+	CopyFile(APP_USRDIR "/icon_wm_insert.png", XMLMANPLS_IMAGES_DIR "/icon_wm_insert.png");
+	CopyFile(APP_USRDIR "/icon_wm_ps3.png"  ,  XMLMANPLS_IMAGES_DIR "/icon_wm_ps3.png");
 
 	sysLv2FsUnlink(XMLHOST_DIR "/mygames.xml");
 	sysLv2FsUnlink(TMP_DIR "/idle_plugin.sprx");

@@ -29,10 +29,11 @@ typedef struct
 
 #define IS_COPY		9
 
-#define MOUNT_SILENT	0	// only mount game/folder
-#define MOUNT_NORMAL	1	// store last game + show msg + allow Auto-enable external gameDATA
+// mount_game actions:
+#define MOUNT_SILENT	0	// mount game/folder
+#define MOUNT_NORMAL	1	// mount game/folder + store last game + show msg + allow Auto-enable external gameDATA
 // MOUNT_EXT_GDATA		2	// mount /dev_usb/GAMEI as /dev_hdd0/game on non-Cobra edition
-// EXPLORE_CLOSE_ALL	3	// same MOUNT_NORMAL but close all first
+// EXPLORE_CLOSE_ALL	3	// MOUNT_NORMAL + close all first
 
 
 // /mount_ps3/<path>[?random=<x>[&emu={ ps1_netemu.self / ps1_emu.self / ps2_netemu.self / ps2_emu.self }][offline={0/1}]
@@ -228,7 +229,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 			}
 			else
 			{
-				mounted = mount_with_mm(source, MOUNT_NORMAL);
+				mounted = mount_game(source, MOUNT_NORMAL);
 			}
 
 			if(discboot == 1)
@@ -872,7 +873,7 @@ static void do_umount(bool clean)
 		//eject_insert(1, 1);
 
 		if(isDir("/dev_flash/pkg"))
-			mount_with_mm((char*)"/dev_flash/pkg", MOUNT_SILENT);
+			mount_game((char*)"/dev_flash/pkg", MOUNT_SILENT);
 	}
 
 #endif //#ifdef COBRA_ONLY
@@ -1003,12 +1004,11 @@ static void mount_autoboot(void)
 
 	if(do_mount)
 	{   // add some delay
-		if(webman_config->delay)      {sys_ppu_thread_sleep(5); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
+		if(webman_config->delay)      {sys_ppu_thread_sleep(3); wait_for(path, 2 * (webman_config->boots + webman_config->bootd));}
 #ifndef COBRA_ONLY
-		else if(islike(path, "/net"))  sys_ppu_thread_sleep(5);
-		if(strstr(path, ".ntfs[") == NULL)
+		if((!islike(path, "/net")) && (!strstr(path, ".ntfs[")))
 #endif
-		mount_with_mm(path, MOUNT_NORMAL); // mount path & do eject
+		mount_game(path, MOUNT_NORMAL); // mount path & do eject
 	}
 }
 
@@ -2307,7 +2307,7 @@ finish:
 	sys_ppu_thread_exit(0);
 }
 
-static bool mount_with_mm(const char *path, u8 action)
+static bool mount_game(const char *path, u8 action)
 {
 	if(is_mounting) return false; is_mounting = true;
 

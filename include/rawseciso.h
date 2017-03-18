@@ -119,7 +119,7 @@ static sys_ppu_thread_t thread_id_eject = SYS_PPU_THREAD_NONE;
 static int discfd = NONE;
 #endif
 
-volatile int eject_running = 0;
+volatile u8 eject_running = 0;
 
 u32 real_disctype;
 ScsiTrackDescriptor tracks[64];
@@ -128,7 +128,7 @@ sys_event_port_t result_port;
 
 static u8 rawseciso_loaded = 0;
 
-static volatile int do_run = 0;
+static volatile u8 do_run = 0;
 
 static int mode_file = 0, cd_sector_size_param = 0;
 
@@ -138,7 +138,7 @@ static sys_device_info_t disc_info;
 
 static u64 usb_device = 0ULL;
 
-static int ntfs_running = 0;
+static u8 ntfs_running = 0;
 
 static sys_device_handle_t handle = SYS_DEVICE_HANDLE_NONE;
 static sys_event_queue_t command_queue_ntfs = SYS_EVENT_QUEUE_NONE;
@@ -1140,7 +1140,7 @@ static void rawseciso_thread(u64 arg)
 				continue;
 			}
 
-			if(ret != (int) 0x80010013) {system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
+			if(ret != (int) 0x80010013) vsh_shutdown();
 			//DPRINTF("sys_event_queue_receive failed: %x\n", ret);
 			break;
 		}

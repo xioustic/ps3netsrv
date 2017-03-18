@@ -428,10 +428,10 @@ static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 	return slen + strlen(header);
 }
 
-int val(const char *c)
+static s64 val(const char *c)
 {
-	int previous_result = 0, result = 0;
-	int multiplier = 1;
+	s64 previous_result = 0, result = 0;
+	s64 multiplier = 1;
 
 	if(c && *c == '-')
 	{

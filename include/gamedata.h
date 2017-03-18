@@ -90,7 +90,7 @@ static int set_gamedata_status(u8 status, bool do_mount)
 	{
 		show_msg(msg);
 #ifndef COBRA_ONLY
-		mount_with_mm(gamei_path, MOUNT_EXT_GDATA);
+		mount_game(gamei_path, MOUNT_EXT_GDATA);
 #endif
 	}
 

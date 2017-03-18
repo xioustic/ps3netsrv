@@ -116,6 +116,8 @@ static void unload_web_plugins(void);
 #endif
 static void explore_close_all(const char *path)
 {
+	if(IS_INGAME) return;
+
 #ifdef PKG_HANDLER
 	unload_web_plugins();
 #endif

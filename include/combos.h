@@ -118,11 +118,11 @@
  #ifndef LITE_EDITION
 							if(!(webman_config->combo2 & MOUNTNET0) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_R2))
-							{if(is_netsrv_enabled(0)) mount_with_mm((char*)"/net0", EXPLORE_CLOSE_ALL);} // SELECT+SQUARE+R2 / SELECT+R2+SQUARE
+							{if(is_netsrv_enabled(0)) mount_game((char*)"/net0", EXPLORE_CLOSE_ALL);} // SELECT+SQUARE+R2 / SELECT+R2+SQUARE
 							else
 							if(!(webman_config->combo2 & MOUNTNET1) &&
 								(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] & CELL_PAD_CTRL_L2))
-							{if(is_netsrv_enabled(1)) mount_with_mm((char*)"/net1", EXPLORE_CLOSE_ALL);} // SELECT+SQUARE+L2 / SELECT+L2+SQUARE
+							{if(is_netsrv_enabled(1)) mount_game((char*)"/net1", EXPLORE_CLOSE_ALL);} // SELECT+SQUARE+L2 / SELECT+L2+SQUARE
 							else
  #endif
 #endif
@@ -485,7 +485,7 @@ show_popup:
 							else
 #endif
 							{
-								mount_with_mm((char*)"_prev", EXPLORE_CLOSE_ALL);
+								mount_game((char*)"_prev", EXPLORE_CLOSE_ALL);
 
 								n = 0;
 								break;
@@ -499,7 +499,7 @@ show_popup:
 							else
 #endif
 							{
-								mount_with_mm((char*)"_next", EXPLORE_CLOSE_ALL);
+								mount_game((char*)"_next", EXPLORE_CLOSE_ALL);
 
 								n = 0;
 								break;
@@ -552,7 +552,7 @@ show_popup:
 							working = 0;
 							{ del_turnoff(1); }
 
-							{system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);}
+							vsh_shutdown();
 
 							sys_ppu_thread_exit(0);
 						}

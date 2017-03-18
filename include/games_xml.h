@@ -251,7 +251,7 @@ static void set_buffer_sizes(u8 footprint)
 #endif
 }
 
-static bool update_mygames_xml(u64 conn_s_p)
+static bool scan_mygames_xml(u64 conn_s_p)
 {
 	if(conn_s_p == START_DAEMON)
 	{
@@ -1134,7 +1134,7 @@ static void update_xml_thread(u64 conn_s_p)
 	if(IS_ON_XMB)
 		while(View_Find("explore_plugin") == 0) sys_ppu_thread_sleep(1); // wait for explore_plugin
 
-	if(update_mygames_xml(conn_s_p)) mount_autoboot();
+	if(scan_mygames_xml(conn_s_p)) mount_autoboot();
 
 	refreshing_xml = 0;
 	sys_ppu_thread_exit(0);

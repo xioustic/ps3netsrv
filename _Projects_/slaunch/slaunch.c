@@ -800,6 +800,10 @@ static void slaunch_thread(uint64_t arg)
 			{
 				start_VSH_Menu();
 				init_delay = 0; unload_mode = 5;
+
+				// prevent set favorite with start button
+				while(slaunch_running) {pad_read(); if(curpad == PAD_START) sys_timer_usleep(20000); else break;}
+
 				continue;
 			}
 

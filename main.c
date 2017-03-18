@@ -359,8 +359,8 @@ static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
 
 ////////////
 
-#define MODE		0777
-#define DMODE		(CELL_FS_S_IFDIR | MODE)
+static const u32 MODE  = 0777;
+static const u32 DMODE = (CELL_FS_S_IFDIR | 0777);
 
 #define LINELEN			512 // file listing
 #define MAX_LINE_LEN	640 // html games
@@ -724,7 +724,7 @@ static bool isDir(const char* path);
 size_t read_file(const char *file, char *data, size_t size, s32 offset);
 int save_file(const char *file, const char *mem, s64 size);
 int wait_for(const char *path, u8 timeout);
-int val(const char *c);
+static s64 val(const char *c);
 
 #include "include/html.h"
 #include "include/peek_poke.h"
@@ -766,7 +766,7 @@ static void handleclient_www(u64 conn_s_p);
 
 static void do_umount(bool clean);
 static void mount_autoboot(void);
-static bool mount_with_mm(const char *_path, u8 do_eject);
+static bool mount_game(const char *_path, u8 do_eject);
 #ifdef COBRA_ONLY
 static void do_umount_iso(void);
 #endif
@@ -2158,16 +2158,23 @@ parse_request:
 				}
 				else
 				{
-					sprintf(param, "/dev_hdd0");
-
 					cellFsMkdir("/dev_hdd0/packages", DMODE);
-					cellFsMkdir("/dev_hdd0/GAMES",    DMODE);
-					cellFsMkdir("/dev_hdd0/PS3ISO",   DMODE);
-					cellFsMkdir("/dev_hdd0/PSXISO",   DMODE);
-					cellFsMkdir("/dev_hdd0/PS2ISO",   DMODE);
-					cellFsMkdir("/dev_hdd0/PSPISO",   DMODE);
-					cellFsMkdir("/dev_hdd0/DVDISO",   DMODE);
-					cellFsMkdir("/dev_hdd0/BDISO",    DMODE);
+					//cellFsMkdir("/dev_hdd0/GAMES",  DMODE);
+					//cellFsMkdir("/dev_hdd0/PS3ISO", DMODE);
+					//cellFsMkdir("/dev_hdd0/PSXISO", DMODE);
+					//cellFsMkdir("/dev_hdd0/PS2ISO", DMODE);
+					//cellFsMkdir("/dev_hdd0/PSPISO", DMODE);
+					//cellFsMkdir("/dev_hdd0/DVDISO", DMODE);
+					//cellFsMkdir("/dev_hdd0/BDISO",  DMODE);
+
+					for(u8 i = 0; i < 9; i++)
+					{
+						if(i == 1 || i == 7) continue;
+						sprintf(param, "%s/%s",  "/dev_hdd0", paths[i]);
+						cellFsMkdir(param, DMODE);
+					}
+
+					sprintf(param, "/dev_hdd0");
 
 					// Let the user create these folders manually or enable webman_config->autoplay
 					//cellFsMkdir("/dev_hdd0/GAMES"  AUTOPLAY_TAG, DMODE);

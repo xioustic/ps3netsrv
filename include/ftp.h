@@ -112,7 +112,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 	u8 loggedin = 0;			// whether the user is logged in or not
 
 	char cwd[STD_PATH_LEN];	// Current Working Directory
-	int rest = 0;			// for resuming file transfers
+	u64 rest = 0;			// for resuming file transfers
 
 	char cmd[16], param[STD_PATH_LEN], filename[STD_PATH_LEN], source[STD_PATH_LEN]; // used as source parameter in RNFR and COPY commands
 	char *cpursx = filename, *tempcwd = filename, *d_path = param, *pasv_output = param;
@@ -234,7 +234,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 					if(split)
 					{
 						ssend(conn_s_ftp, FTP_OK_REST_350); // Requested file action pending further information
-						rest = val(param);
+						rest = (u64)val(param);
 						dataactive = 1;
 					}
 					else
@@ -348,7 +348,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(sysmem) sys_memory_free(sysmem);
 							working = 0;
 							if(_IS(cmd, "REBOOT")) save_file(WMNOSCAN, NULL, 0);
-							if(_IS(cmd, "SHUTDOWN")) {del_turnoff(1); system_call_4(SC_SYS_POWER, SYS_SHUTDOWN, 0, 0, 0);} else {del_turnoff(2); system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
+							if(_IS(cmd, "SHUTDOWN")) {del_turnoff(1); vsh_shutdown();} else {del_turnoff(2); system_call_3(SC_SYS_POWER, SYS_REBOOT, NULL, 0);}
 							sys_ppu_thread_exit(0);
 						}
 #ifdef USE_NTFS
@@ -434,7 +434,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							}
 							else
 							{
-								mount_with_mm(cwd, 0);
+								mount_game(cwd, 0);
 							}
 						}
  #endif //#ifdef COBRA_ONLY
@@ -893,10 +893,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 #ifdef USE_NTFS
 								if(is_ntfs_path(filename))
 								{
-									if(rest | is_append)
-										fd = ps3ntfs_open(filename + 5, O_CREAT | O_WRONLY | (is_append ? O_APPEND : 0), MODE);
-									else
-										fd = ps3ntfs_open(filename + 5, O_CREAT | O_WRONLY | O_TRUNC, MODE);
+									fd = ps3ntfs_open(filename + 5, O_CREAT | O_WRONLY | ((rest | is_append) ? O_APPEND : O_TRUNC), MODE);
 
 									if(fd > 0)
 									{
@@ -926,14 +923,11 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 								}
 								else
 #endif
-								if(cellFsOpen(filename, CELL_FS_O_CREAT | CELL_FS_O_WRONLY | (is_append ? CELL_FS_O_APPEND : 0), &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+								if(cellFsOpen(filename, CELL_FS_O_CREAT | CELL_FS_O_WRONLY | ((rest | is_append) ? CELL_FS_O_APPEND : CELL_FS_O_TRUNC), &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 								{
 									u64 pos = 0;
 
-									if(rest || is_append)
-										cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
-									else
-										cellFsFtruncate(fd, 0);
+									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 
 									rest = 0;
 									err = CELL_FS_OK;
