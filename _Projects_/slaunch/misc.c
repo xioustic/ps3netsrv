@@ -127,20 +127,6 @@ unsigned int get_vsh_plugin_slot_by_name(const char *name)
 	return slot;
 }
 
-int load_plugin_by_id(int id, void *handler)
-{
-	xmm0_interface = (xmb_plugin_xmm0 *)paf_23AFB290((uint32_t)paf_F21655F3("xmb_plugin"), 0x584D4D30);
-	return xmm0_interface->LoadPlugin3(id, handler,0);
-}
-
-extern uint8_t web_page;
-
-void web_browser(void)
-{
-	webbrowser_interface = (webbrowser_plugin_interface *)paf_23AFB290((uint32_t)paf_F21655F3("webbrowser_plugin"), 1);
-	if(webbrowser_interface) webbrowser_interface->PluginWakeupWithUrl(web_page ? "http://127.0.0.1/" : "http://127.0.0.1/setup.ps3");
-}
-
 /*
 int unload_plugin_by_id(int id, void *handler)
 {

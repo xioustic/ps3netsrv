@@ -23,7 +23,7 @@ SYS_MODULE_STOP(slaunch_stop);
 #define STR_UNLOAD		"Unload webMAN"
 #define STR_QUIT		"Quit"
 
-#define APP_VERSION		"1.10"
+#define APP_VERSION		"1.11"
 
 typedef struct {
 	uint8_t  gmode;
@@ -646,7 +646,7 @@ static void start_VSH_Menu(void)
 		{
 			do_once = 0;
 			send_wm_request("/refresh_ps3");
-			load_plugin_by_id(0x1B, (void *)web_browser);
+			send_wm_request("/browser.ps3/setup.ps3");
 		}
 	}
 }
@@ -888,7 +888,7 @@ static void slaunch_thread(uint64_t arg)
 
 								running=0;
 							}
-							if(option==7) {load_plugin_by_id(0x1B, (void *)web_browser);}
+							if(option==7) send_wm_request(web_page ? "/browser.ps3/setup.ps3" : "/browser.ps3/");
 							break;
 						}
 						else
