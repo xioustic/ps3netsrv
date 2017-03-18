@@ -956,8 +956,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 	u8 mobile_mode = mode, launchpad_mode = (mode == LAUNCHPAD_MODE);
 
-	gmobile_mode = mobile_mode;
-
 #ifdef LAUNCHPAD
 	if(launchpad_mode) cellFsUnlink(LAUNCHPAD_FILE_XML); else
 #endif

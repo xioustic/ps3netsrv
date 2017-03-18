@@ -71,8 +71,6 @@
 #define RANGE(a, b, c)	((a) <= (b) ? (b) : (a) >= (c) ? (c) : (a))
 #define ISDIGIT(a)		('0' <= (unsigned char)(a) && (unsigned char)(a) <= '9')
 
-static bool gmobile_mode = false;
-
 int extcmp(const char *s1, const char *s2, size_t n);
 int extcasecmp(const char *s1, const char *s2, size_t n);
 char *strcasestr(const char *s1, const char *s2);
@@ -176,7 +174,7 @@ static bool urlenc_ex(char *dst, const char *src, bool gurl)
 			dst[j++] = '3';
 			dst[j] = (src[i] & 0xf) + '7'; // A | F
 		}
-		else if((src[i]==' ' && gurl) || src[i]=='\'' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+' || (gmobile_mode && src[i] == '\''))
+		else if((src[i]==' ' && gurl) || src[i]=='\'' || src[i]=='"' || src[i]=='%' || src[i]=='&' || src[i]=='+')
 		{
 			dst[j++] = '%';
 			dst[j++] = '2';

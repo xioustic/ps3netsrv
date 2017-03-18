@@ -164,11 +164,11 @@ int memcmp(const void* s1, const void* s2, size_t n)
 }
 
 
-size_t strlen(const char *s)
+size_t strlen(const char *str)
 {
-	const char *p = s;
-	while (*s) s++;
-	return s - p;
+	const char *start = str;
+	while (*str) str++;
+	return str - start;
 }
 
 

@@ -658,36 +658,24 @@ int main()
 	if(sysLv2FsStat(RES_DIR "/raw_iso.sprx", &stat) != SUCCESS || (stat.st_size != raw_iso_size))
 	{
 		CopyFile(APP_USRDIR "/raw_iso.sprx", RES_DIR "/raw_iso.sprx");
+
+		if(sysLv2FsStat(RES_DIR "/raw_iso.sprx", &stat) == SUCCESS)
+		{
+			sysLv2FsUnlink(PLUGINS_DIR "/raw_iso.sprx");
+			sysLv2FsUnlink(HDDROOT_DIR "/raw_iso.sprx");
+		}
 	}
 
 	// copy netiso.sprx to dev_flash
 	if(sysLv2FsStat(RES_DIR "/netiso.sprx", &stat) != SUCCESS || (stat.st_size != netiso_size))
 	{
 		CopyFile(APP_USRDIR "/netiso.sprx", RES_DIR "/netiso.sprx");
-	}
 
-	// copy raw_iso.sprx to dev_hdd (if failed to copy it to dev_flash)
-	if(sysLv2FsStat(FLASH_VSH_MODULE_DIR "/raw_iso.sprx", &stat) != SUCCESS)
-	{
-		if(sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS)
+		if(sysLv2FsStat(RES_DIR "/netiso.sprx", &stat) == SUCCESS)
 		{
-			CopyFile(APP_USRDIR "/raw_iso.sprx", PLUGINS_DIR "/raw_iso.sprx");
-			if(sysLv2FsStat(PLUGINS_DIR "/raw_iso.sprx", &stat) == SUCCESS) sysLv2FsUnlink(HDDROOT_DIR "/raw_iso.sprx");
+			sysLv2FsUnlink(PLUGINS_DIR "/netiso.sprx");
+			sysLv2FsUnlink(HDDROOT_DIR "/netiso.sprx");
 		}
-		else
-			CopyFile(APP_USRDIR "/raw_iso.sprx", HDDROOT_DIR "/raw_iso.sprx");
-	}
-
-	// copy netiso.sprx to dev_hdd (if failed to copy it to dev_flash)
-	if(sysLv2FsStat(FLASH_VSH_MODULE_DIR "/netiso.sprx", &stat) != SUCCESS)
-	{
-		if(sysLv2FsStat(PLUGINS_DIR, &stat) == SUCCESS)
-		{
-			CopyFile(APP_USRDIR "/netiso.sprx", PLUGINS_DIR "/netiso.sprx");
-			if(sysLv2FsStat(PLUGINS_DIR "/netiso.sprx", &stat) == SUCCESS) sysLv2FsUnlink(HDDROOT_DIR "/netiso.sprx");
-		}
-		else
-			CopyFile(APP_USRDIR "/netiso.sprx", HDDROOT_DIR "/netiso.sprx");
 	}
 
 	// copy standalone video recorder plugin (video_rec.sprx) to /wm_res folder

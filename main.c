@@ -2918,11 +2918,11 @@ parse_request:
  #ifdef COPY_PS3
 					if(copy_in_progress)
 					{
-						sprintf(templn, "%s%s %s (%i %s)", "<div id=\"cps\"><font size=2>", STR_COPYING, current_file, copied_count, STR_FILES);
+						sprintf(templn, "%s<a href=\"%s$abort\">&#9746 %s</a> %s (%i %s)", "<div id=\"cps\"><font size=2>", "/copy.ps3", STR_COPYING, current_file, copied_count, STR_FILES);
 					}
 					else if(fix_in_progress)
 					{
-						sprintf(templn, "%s%s %s (%i %s)", "<div id=\"cps\"><font size=2>", STR_FIXING, current_file, fixed_count, STR_FILES);
+						sprintf(templn, "%s<a href=\"%s$abort\">&#9746 %s</a> %s (%i %s)", "<div id=\"cps\"><font size=2>", "/fixgame.ps3", STR_FIXING, current_file, fixed_count, STR_FILES);
 					}
 					if((copy_in_progress || fix_in_progress) && file_exists(current_file))
 					{
@@ -2968,7 +2968,7 @@ parse_request:
 						sprintf(tempstr,"<form action=\"/edit.ps3\">"
 										"<input type=hidden name=\"f\" value=\"%s\">"
 										"<textarea name=\"t\" maxlength=%i style=\"width:800px;height:400px;\">%s</textarea><br>"
-										"<input type=submit value=\" %s \">",
+										"<input class=\"bs\" type=\"submit\" value=\" %s \">",
 										filename, MAX_TEXT_LEN, txt, STR_SAVE); strcat(pbuffer, tempstr);
 
 						// show filename link
