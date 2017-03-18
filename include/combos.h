@@ -230,6 +230,7 @@
 						else
 						if(!(webman_config->combo2 & VIDRECORD) && data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_R3) // SELECT + R3
 						{
+#ifdef COBRA_ONLY
 							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2))// SELECT+R3+L2+R2  Record video with video_rec plugin (IN-GAME ONLY)
 							{
 								#define VIDEO_REC_PLUGIN  WM_RES_PATH "/video_rec.sprx"
@@ -241,6 +242,7 @@
 								}
 							}
 							else
+#endif //#ifdef COBRA_ONLY
 							if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == CELL_PAD_CTRL_L2)
 							{
 								rec_setting_to_change++; if(rec_setting_to_change>5) rec_setting_to_change = 0; 	// SELECT+R3+L2  Select video rec setting
@@ -580,7 +582,11 @@ show_popup:
 						}
 						else if(!(webman_config->combo & UNLOAD_WM) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] & CELL_PAD_CTRL_R3) ) // L3+R3+R2 (Quit / Unload webMAN)
 						{
-	quit_plugin:
+#ifdef VIDEO_REC
+							#ifdef COBRA_ONLY
+							quit_plugin:
+							#endif
+#endif
 							wm_unload_combo = 1;
 
 							restore_settings();

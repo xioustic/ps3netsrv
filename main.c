@@ -769,6 +769,7 @@ static void mount_autoboot(void);
 static bool mount_game(const char *_path, u8 do_eject);
 #ifdef COBRA_ONLY
 static void do_umount_iso(void);
+static void unload_vsh_gui(void);
 #endif
 
 static size_t get_name(char *name, const char *filename, u8 cache);
@@ -776,7 +777,6 @@ static void add_breadcrumb_trail(char *buffer, char *param);
 static void get_cpursx(char *cpursx);
 static void get_last_game(char *last_path);
 static void add_game_info(char *buffer, char *templn, bool is_cpursx);
-static void unload_vsh_gui(void);
 
 static bool from_reboot = false;
 static bool is_busy = false;
