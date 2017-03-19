@@ -1417,7 +1417,6 @@ next_html_entry:
 							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';self.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
 							// separator
 							"<HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
-
 #ifndef EMBED_JS
 			if(file_exists(GAMES_SCRIPT_JS))
 			{

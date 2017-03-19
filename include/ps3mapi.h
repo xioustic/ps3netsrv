@@ -930,7 +930,7 @@ static void ps3mapi_gameplugin(char *buffer, char *templn, char *param)
 
 	strcat(buffer, templn);
 
-	if(pid != 0)
+	if(pid)
 	{
 		sprintf(templn,
 					"<table>"

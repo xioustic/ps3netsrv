@@ -787,7 +787,6 @@ reboot:
 
 					sys_ppu_thread_exit(0);
 				}
-
 			}
 
 			sys_ppu_thread_usleep(300000);

@@ -3583,22 +3583,6 @@ exit_handleclient_www:
 	sys_ppu_thread_exit(0);
 }
 
-/*
-	u64 sa=0x03300000ULL;
-	u64 offset=0;
-	for(u64 i=0;i<0x7700000;i+=8)
-	{
-		if( peek(0x8000000000000000ULL+i+sa	 ) == 0xFFFFFF00FFFFFF00ULL &&
-			peek(0x8000000000000000ULL+i+sa+8) == 0xFFFFFF00FFFFFF00ULL )
-		{
-			show_msg((char*)"Found match!");
-			offset=i+sa+16;
-			for(u64 i2=offset;i2<(offset+320*4*90);i2+=8)
-				poke(0x8000000000000000ULL+i2, 0x30405060708090A0ULL);
-		}
-	}
-*/
-
 static void wwwd_thread(u64 arg)
 {
 
