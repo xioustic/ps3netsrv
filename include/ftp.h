@@ -597,58 +597,69 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						{
 							ssend(conn_s_ftp, FTP_OK_150); // File status okay; about to open data connection.
 
-							CellFsDirent entry; u64 read_e;
+							CellFsDirectoryEntry entry; u32 read_f;
+							CellFsDirent entry_s; u64 read_e; // list root folder using the slower readdir
 							u16 slen;
 
 							while(working)
 							{
 #ifdef USE_NTFS
-								if(is_ntfs) {if(ps3ntfs_dirnext(pdir, entry.d_name, &bufn) != CELL_OK) break; buf.st_mode = bufn.st_mode, buf.st_size = bufn.st_size, buf.st_mtime = bufn.st_mtime;}
+								if(is_ntfs) {if(ps3ntfs_dirnext(pdir, entry.entry_name.d_name, &bufn) != CELL_OK) break; entry.attribute.st_mode = bufn.st_mode, entry.attribute.st_size = bufn.st_size, entry.attribute.st_mtime = bufn.st_mtime;}
 								else
 #endif
-								if((cellFsReaddir(fd, &entry, &read_e) != CELL_FS_SUCCEEDED) || (read_e == 0)) break;
+								if(is_root) {if((cellFsReaddir(fd, &entry_s, &read_e) != CELL_FS_SUCCEEDED) || (read_e == 0)) break; strcpy(entry.entry_name.d_name, entry_s.d_name);}
+								else
+								if(cellFsGetDirectoryEntries(fd, &entry, sizeof(entry), &read_f) || !read_f) break;
 
-								if(*wcard && strcasestr(entry.d_name, wcard) == NULL) continue;
+								if(*wcard && strcasestr(entry.entry_name.d_name, wcard) == NULL) continue;
 
-								if((entry.d_name[0]=='$' && d_path[12] == 0) || (*wcard && strcasestr(entry.d_name, wcard) == NULL)) continue;
+								if((entry.entry_name.d_name[0]=='$' && d_path[12] == 0) || (*wcard && strcasestr(entry.entry_name.d_name, wcard) == NULL)) continue;
 #ifdef USE_NTFS
 								// use host_root to expand all /dev_ntfs entries in root
-								bool is_host = is_root && ((mountCount > 0) && IS(entry.d_name, "host_root") && mounts);
+								bool is_host = is_root && ((mountCount > 0) && IS(entry.entry_name.d_name, "host_root") && mounts);
 
 								u8 ntmp = 1;
 								if(is_host) ntmp = mountCount + 1;
 
 								for(u8 u = 0; u < ntmp; u++)
 								{
-									if(u) sprintf(entry.d_name, "dev_%s:", mounts[u-1].name);
+									if(u) sprintf(entry.entry_name.d_name, "dev_%s:", mounts[u-1].name);
 #endif
 									if(nolist)
-										slen = sprintf(buffer, "%s\015\012", entry.d_name);
+										slen = sprintf(buffer, "%s\015\012", entry.entry_name.d_name);
 									else
 									{
-										if(is_root && (IS(entry.d_name, "app_home") || IS(entry.d_name, "host_root"))) continue;
+										if(is_root && IS(entry.entry_name.d_name, "host_root")) continue;
 
-										sprintf(filename + d_path_len, "%s", entry.d_name);
+										sprintf(filename + d_path_len, "%s", entry.entry_name.d_name);
 
-										if(!is_ntfs) cellFsStat(filename, &buf); cellRtcSetTime_t(&rDate, buf.st_mtime);
+										if(is_root)
+										{
+											cellFsStat(filename, &buf);
+											entry.attribute.st_mode  = buf.st_mode;
+											entry.attribute.st_size  = buf.st_size;
+											entry.attribute.st_mtime = buf.st_mtime;
+										}
 
-										mode = buf.st_mode;
+										cellRtcSetTime_t(&rDate, entry.attribute.st_mtime);
+
+										mode = entry.attribute.st_mode;
 
 										if(is_MLSx)
 										{
-											if(IS(entry.d_name, "."))	*dirtype =  'c'; else
-											if(IS(entry.d_name, ".."))	*dirtype =  'p'; else
+											if(IS(entry.entry_name.d_name, "."))	*dirtype =  'c'; else
+											if(IS(entry.entry_name.d_name, ".."))	*dirtype =  'p'; else
 																		*dirtype = '\0';
 
 											slen = sprintf(buffer, "%stype=%s%s;siz%s=%llu;modify=%04i%02i%02i%02i%02i%02i;UNIX.mode=0%i%i%i;UNIX.uid=root;UNIX.gid=root; %s\r\n",
 													is_MLSD ? "" : " ",
 													dirtype,
 													( (mode & S_IFDIR) != 0) ? "dir" : "file",
-													( (mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)buf.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
+													( (mode & S_IFDIR) != 0) ? "d" : "e", (unsigned long long)entry.attribute.st_size, rDate.year, rDate.month, rDate.day, rDate.hour, rDate.minute, rDate.second,
 													(((mode & S_IRUSR) != 0) * 4 + ((mode & S_IWUSR) != 0) * 2 + ((mode & S_IXUSR) != 0)),
 													(((mode & S_IRGRP) != 0) * 4 + ((mode & S_IWGRP) != 0) * 2 + ((mode & S_IXGRP) != 0)),
 													(((mode & S_IROTH) != 0) * 4 + ((mode & S_IWOTH) != 0) * 2 + ((mode & S_IXOTH) != 0)),
-													entry.d_name);
+													entry.entry_name.d_name);
 										}
 										else
 											slen = sprintf(buffer, "%s%s%s%s%s%s%s%s%s%s 1 root  root  %13llu %s %02i %02i:%02i %s\r\n",
@@ -662,8 +673,8 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 													(mode & S_IROTH) ? "r" : "-",
 													(mode & S_IWOTH) ? "w" : "-",
 													(mode & S_IXOTH) ? "x" : "-",
-													(unsigned long long)buf.st_size, smonth[rDate.month - 1], rDate.day,
-													rDate.hour, rDate.minute, entry.d_name);
+													(unsigned long long)entry.attribute.st_size, smonth[rDate.month - 1], rDate.day,
+													rDate.hour, rDate.minute, entry.entry_name.d_name);
 									}
 									if(send(data_s, buffer, slen, 0) < 0) break;
 									sys_ppu_thread_usleep(1000);

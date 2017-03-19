@@ -135,6 +135,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define COLDBOOT_PATH		"/dev_blind/vsh/resource/coldboot.raf"
 #define ORG_LIBFS_PATH		"/dev_flash/sys/external/libfs.sprx"
 #define NEW_LIBFS_PATH		"/dev_hdd0/tmp/wm_res/libfs.sprx"
+#define SLAUNCH_FILE		"/dev_hdd0/tmp/wmtmp/slist.bin"
 
 #define WM_VERSION			"1.47.04 MOD"
 

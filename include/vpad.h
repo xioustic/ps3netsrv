@@ -201,15 +201,17 @@ static void press_cancel_button(void)
 
 static CellPadData pad_read(void)
 {
+	CellPadInfo2 padinfo;
 	CellPadData pad_data; pad_data.len = 0;
 
-	for(u8 n = 0; n < 20; n++)
-	{
-		for(u8 p = 0; p < 8; p++)
-			if(cellPadGetData(p, &pad_data) == CELL_PAD_OK && pad_data.len > 0) return pad_data;
+	if(cellPadGetInfo2(&padinfo) == CELL_OK)
+		for(u8 n = 0; n < 20; n++)
+		{
+			for(u8 p = 0; p < 8; p++)
+				if((padinfo.port_status[p] == CELL_PAD_STATUS_CONNECTED) && (cellPadGetData(p, &pad_data) == CELL_PAD_OK) && (pad_data.len > 0)) return pad_data;
 
-		sys_ppu_thread_usleep(50000);
-	}
+			sys_ppu_thread_usleep(50000);
+		}
 
 	return pad_data;
 }

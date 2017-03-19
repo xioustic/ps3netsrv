@@ -63,6 +63,7 @@
 
 		u8 n, init_delay;
 
+		CellPadInfo2 padinfo;
 		CellPadData data; init_delay = 0;
 
 		#define PERSIST  100
@@ -76,17 +77,18 @@
 
 			//if(!webman_config->nopad)
 			{
+				data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] = data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] = data.len = 0;
+
 #ifdef VIRTUAL_PAD
 				if(vcombo)
 				{
 					data.len = 16; data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] = (vcombo & 0xFF); data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] = (vcombo & 0xFF00) >> 8; vcombo = 0;
 				}
-				else
+				else if(cellPadGetInfo2(&padinfo) == CELL_OK)
 #endif
 				{
-					data.len = 0;
 					for(u8 p = 0; p < 8; p++)
-						if(cellPadGetData(p, &data) == CELL_PAD_OK && data.len > 0) break;
+						if((padinfo.port_status[p] == CELL_PAD_STATUS_CONNECTED) && (cellPadGetData(p, &data) == CELL_PAD_OK) && (data.len > 0)) break;
 				}
 
 				if(data.len > 0)
@@ -99,6 +101,8 @@
 						if(++init_delay < 5) {sys_ppu_thread_usleep(200000); continue;}
 
 						start_vsh_gui(data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT);
+
+						sys_ppu_thread_sleep(3);
 
 						break;
 					}
@@ -239,6 +243,7 @@
 								{
 									unsigned int slot = get_free_slot();
 									if((slot < 7) && cobra_load_vsh_plugin(slot, VIDEO_REC_PLUGIN, NULL, 0) == CELL_OK) goto quit_plugin; // unload webMAN to free resources
+									sys_ppu_thread_sleep(3);
 								}
 							}
 							else

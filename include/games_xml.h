@@ -528,7 +528,7 @@ static bool scan_mygames_xml(u64 conn_s_p)
 #endif
 			//led(YELLOW, ON);
 			{
-				CellFsDirent entry; u64 read_e;
+				CellFsDirectoryEntry entry; u32 read_e;
 				int fd2 = 0, flen, plen;
 				char tempID[12];
 				u8 is_iso = 0;
@@ -549,7 +549,7 @@ static bool scan_mygames_xml(u64 conn_s_p)
 
 				plen = strlen(param);
 
-				while((!is_net && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+				while((!is_net && (!cellFsGetDirectoryEntries(fd, &entry, sizeof(entry), &read_e) && read_e > 0))
 #ifdef NET_SUPPORT
 					|| (is_net && (v3_entry < v3_entries))
 #endif
@@ -607,25 +607,25 @@ static bool scan_mygames_xml(u64 conn_s_p)
 					else
 #endif // #ifdef NET_SUPPORT
 					{
-						if(entry.d_name[0] == '.') continue;
+						if(entry.entry_name.d_name[0] == '.') continue;
 
 //////////////////////////////
 						subfolder = 0;
-						sprintf(subpath, "%s/%s", param, entry.d_name);
+						sprintf(subpath, "%s/%s", param, entry.entry_name.d_name);
 						if(IS_ISO_FOLDER && isDir(subpath) && cellFsOpendir(subpath, &fd2) == CELL_FS_SUCCEEDED)
 						{
-							strcpy(subpath, entry.d_name); subfolder = 1;
+							strcpy(subpath, entry.entry_name.d_name); subfolder = 1;
 next_xml_entry:
-							cellFsReaddir(fd2, &entry, &read_e);
+							cellFsGetDirectoryEntries(fd2, &entry, sizeof(entry), &read_e);
 							if(read_e < 1) {cellFsClosedir(fd2); fd2 = 0; continue;}
-							if(entry.d_name[0] == '.') goto next_xml_entry;
-							sprintf(templn, "%s/%s", subpath, entry.d_name); entry.d_name[0] = NULL; entry.d_namlen = concat(entry.d_name, templn);
+							if(entry.entry_name.d_name[0] == '.') goto next_xml_entry;
+							sprintf(templn, "%s/%s", subpath, entry.entry_name.d_name); entry.entry_name.d_name[0] = NULL; entry.entry_name.d_namlen = concat(entry.entry_name.d_name, templn);
 						}
 //////////////////////////////
 
 						if(key >= max_xmb_items) break;
 
-						flen = entry.d_namlen; is_iso = is_iso_file(entry.d_name, flen, f1, f0);
+						flen = entry.entry_name.d_namlen; is_iso = is_iso_file(entry.entry_name.d_name, flen, f1, f0);
 
 						if(IS_JB_FOLDER && !is_iso)
 						{
@@ -633,21 +633,21 @@ next_xml_entry:
 							if(IS_GAMEI_FOLDER)
 							{
 								// create game folder in /dev_hdd0/game and copy PARAM.SFO to prevent deletion of XMB icon when gameDATA is disabled
-								sprintf(tempstr, "//%s/%s/PARAM.SFO", HDD0_GAME_DIR, entry.d_name);
+								sprintf(tempstr, "//%s/%s/PARAM.SFO", HDD0_GAME_DIR, entry.entry_name.d_name);
 								if(file_exists(tempstr) == false)
 								{
-									sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
+									sprintf(templn, "%s/%s/PARAM.SFO", param, entry.entry_name.d_name);
 									mkdir_tree(tempstr); file_copy(templn, tempstr, COPY_WHOLE_FILE);
 								}
 
 								if(!webman_config->ps3l) continue;
 
-								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
-								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
+								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.entry_name.d_name); if(!file_exists(templn)) continue;
+								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.entry_name.d_name);
 							}
 							else
 #endif
-								sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
+								sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.entry_name.d_name);
 						}
 
 						if(is_iso || (IS_JB_FOLDER && file_exists(templn)))
@@ -656,34 +656,34 @@ next_xml_entry:
 
 							if(!is_iso)
 							{
-								get_title_and_id_from_sfo(templn, tempID, entry.d_name, icon, tempstr, 0);
+								get_title_and_id_from_sfo(templn, tempID, entry.entry_name.d_name, icon, tempstr, 0);
 							}
 							else
 							{
 #ifndef COBRA_ONLY
-								get_name(templn, entry.d_name, NO_EXT);
+								get_name(templn, entry.entry_name.d_name, NO_EXT);
 #else
-								if(get_name_iso_or_sfo(templn, tempID, icon, param, entry.d_name, f0, f1, uprofile, flen, tempstr) == FAILED) continue;
+								if(get_name_iso_or_sfo(templn, tempID, icon, param, entry.entry_name.d_name, f0, f1, uprofile, flen, tempstr) == FAILED) continue;
 #endif
 							}
 
-							get_default_icon(icon, param, entry.d_name, !is_iso, tempID, ns, abort_connection, f1, f0);
+							get_default_icon(icon, param, entry.entry_name.d_name, !is_iso, tempID, ns, abort_connection, f1, f0);
 #ifdef SLAUNCH_FILE
-							if(key < MAX_SLAUNCH_ITEMS) add_slaunch_entry(fdsl, "", param, entry.d_name, icon, templn, tempID, f1);
+							if(key < MAX_SLAUNCH_ITEMS) add_slaunch_entry(fdsl, "", param, entry.entry_name.d_name, icon, templn, tempID, f1);
 #endif
 							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
-							urlenc(enc_dir_name, entry.d_name);
+							urlenc(enc_dir_name, entry.entry_name.d_name);
 
 							// subfolder name
-							if((IS_NTFS) && entry.d_name[0] == '[')
+							if((IS_NTFS) && entry.entry_name.d_name[0] == '[')
 							{
-								strcpy(folder_name, entry.d_name); *folder_name = '/'; char *p = strstr(folder_name, "] "); if(p) *p = NULL;
+								strcpy(folder_name, entry.entry_name.d_name); *folder_name = '/'; char *p = strstr(folder_name, "] "); if(p) *p = NULL;
 							}
 							else
 							{
 								*folder_name = NULL;
-								char *p = strchr(entry.d_name, '/'); if(p) {*p = NULL; sprintf(folder_name, "/%s", entry.d_name); *p = '/';}
+								char *p = strchr(entry.entry_name.d_name, '/'); if(p) {*p = NULL; sprintf(folder_name, "/%s", entry.entry_name.d_name); *p = '/';}
 							}
 #ifdef WM_PROXY_SPRX
 							if(use_wm_proxy)
@@ -721,7 +721,7 @@ next_xml_entry:
 
 							sprintf(tempstr + read_e, "</Table>");
 
-							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key].value, key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, entry.d_name, item_count, xml_len, subfolder)) key++;
+							if(add_xmb_entry(f0, f1, plen + flen - 13, tempstr, templn, skey[key].value, key, myxml_ps3, myxml_ps2, myxml_psx, myxml_psp, myxml_dvd, myxml_roms, entry.entry_name.d_name, item_count, xml_len, subfolder)) key++;
 						}
 //////////////////////////////
 						if(subfolder) goto next_xml_entry;

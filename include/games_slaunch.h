@@ -1,5 +1,3 @@
-#define SLAUNCH_FILE		"/dev_hdd0/tmp/wmtmp/slist.bin"
-
 #define MAX_SLAUNCH_ITEMS	1000
 
 #define TYPE_ALL 0

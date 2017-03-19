@@ -438,7 +438,6 @@ static void add_breadcrumb_trail(char *pbuffer, char *param)
 
 static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, char *param, int conn_s, char *tempstr, char *header, u8 is_ps3_http, s8 sort_by, s8 sort_order, char *file_query)
 {
-	struct CellFsStat buf;
 	int fd;
 
 	CellRtcDateTime rDate;
@@ -659,7 +658,9 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		else
 #endif
 		{
-			CellFsDirent entry; u64 read_e;
+			CellFsDirectoryEntry entry; u32 read_f;
+			CellFsDirent entry_s; u64 read_e; // list root folder using the slower readdir
+			struct CellFsStat buf;
 
 			if(is_ntfs && !param[11])
 			{
@@ -676,49 +677,59 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 #ifdef USE_NTFS
 				if(is_ntfs)
 				{
-					if(ps3ntfs_dirnext(pdir, entry.d_name, &bufn)) break;
-					if(entry.d_name[0] == '$' && param[12] == 0) continue;
+					if(ps3ntfs_dirnext(pdir, entry.entry_name.d_name, &bufn)) break;
+					if(entry.entry_name.d_name[0] == '$' && param[12] == 0) continue;
 
-					buf.st_mode = bufn.st_mode, buf.st_size = bufn.st_size, buf.st_mtime = bufn.st_mtime;
+					entry.attribute.st_mode = bufn.st_mode, entry.attribute.st_size = bufn.st_size, entry.attribute.st_mtime = bufn.st_mtime;
 				}
 				else
 #endif
-				if((cellFsReaddir(fd, &entry, &read_e) != CELL_FS_SUCCEEDED) || (read_e == 0)) break;
+				if(is_root) {if((cellFsReaddir(fd, &entry_s, &read_e) != CELL_FS_SUCCEEDED) || (read_e == 0)) break; strcpy(entry.entry_name.d_name, entry_s.d_name);}
+				else
+				if(cellFsGetDirectoryEntries(fd, &entry, sizeof(entry), &read_f) || !read_f) break;
 
-				if(entry.d_name[0] == '.' && entry.d_name[1] == 0) continue;
+				if(entry.entry_name.d_name[0] == '.' && entry.entry_name.d_name[1] == 0) continue;
 				if(tlen > BUFFER_SIZE_HTML) break;
 				if(idx >= (max_entries-3)) break;
 
-				if(*file_query && (strcasestr(entry.d_name, file_query) == NULL)) continue;
+				if(*file_query && (strcasestr(entry.entry_name.d_name, file_query) == NULL)) continue;
 
 #ifdef USE_NTFS
 				// use host_root to expand all /dev_ntfs entries in root
-				bool is_host = is_root && ((mountCount > 0) && IS(entry.d_name, "host_root") && mounts);
+				bool is_host = is_root && ((mountCount > 0) && IS(entry.entry_name.d_name, "host_root") && mounts);
 
 				u8 ntmp = 1;
 				if(is_host) ntmp = mountCount + 1;
 
 				for (u8 u = 0; u < ntmp; u++)
 				{
-					if(u) {sprintf(entry.d_name, "dev_%s", mounts[u-1].name);}
+					if(u) {sprintf(entry.entry_name.d_name, "dev_%s", mounts[u-1].name);}
 #endif
 					if(is_root)
 					{
-						flen = sprintf(templn, "/%s", entry.d_name);
+						flen = sprintf(templn, "/%s", entry.entry_name.d_name);
 					}
 					else
 					{
-						flen = sprintf(templn, "%s/%s", param, entry.d_name);
+						flen = sprintf(templn, "%s/%s", param, entry.entry_name.d_name);
 					}
 					if(templn[flen - 1] == '/') templn[flen--] = NULL;
 
-					if(!is_ntfs) cellFsStat(templn, &buf); cellRtcSetTime_t(&rDate, buf.st_mtime);
+					if(is_root)
+					{
+						cellFsStat(templn, &buf);
+						entry.attribute.st_mode  = buf.st_mode;
+						entry.attribute.st_size  = buf.st_size;
+						entry.attribute.st_mtime = buf.st_mtime;
+					}
 
-					sz = (unsigned long long)buf.st_size; dir_size += sz;
+					cellRtcSetTime_t(&rDate, entry.attribute.st_mtime);
 
-					is_dir = (buf.st_mode & S_IFDIR); if(is_dir) dirs++;
+					sz = (unsigned long long)entry.attribute.st_size; dir_size += sz;
 
-					flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.d_name, fsize, rDate, sz, sf, false, show_icon0, is_ps3_http, skip_cmd, sort_by);
+					is_dir = (entry.attribute.st_mode & S_IFDIR); if(is_dir) dirs++;
+
+					flen = add_list_entry(param, plen, tempstr, is_dir, ename, templn, entry.entry_name.d_name, fsize, rDate, sz, sf, false, show_icon0, is_ps3_http, skip_cmd, sort_by);
 
 					if((flen == 0) || (flen >= _MAX_LINE_LEN)) continue; //ignore lines too long
 					memcpy(line_entry[idx].path, tempstr, FILE_MGR_KEY_LEN + flen + 1); idx++;

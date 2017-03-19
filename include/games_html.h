@@ -4,12 +4,12 @@
 
 #define ROMS_EXTENSIONS ".ZIP.GBA.NES.UNIF.GB.GBC.DMG.MD.SMD.GEN.SMS.GG.SG.IOS.FLAC.NGP.NGC.PCE.SGX.VB.VBOY.WS.WSC.FDS.EXE.WAD.IWAD.SMC.FIG.SFC.GD3.GD7.DX2.BSX.SWC.A26.PAK"
 
-#define IS_ISO_FOLDER (((f1>1) && (f1<10)) || (f1 == 12))
-#define IS_PS3_TYPE   ((f1<3) || (f1>=10))
-#define IS_BLU_TYPE   ((f1<4) || (f1>=10))
+#define IS_ISO_FOLDER (((f1>1) && (f1<10)) || (f1==12))
+#define IS_PS3_TYPE   ((f1<3) || (f1==10 || f1==11))
+#define IS_BLU_TYPE   ((f1<4) || (f1==10 || f1==11))
 #define IS_VID_FOLDER ((f1==3) || (f1==4))
 
-#define IS_JB_FOLDER    ((f1<2) || (f1>=10))
+#define IS_JB_FOLDER    ((f1<2) || (f1==10))
 #define IS_PS3_FOLDER   (f1==2)
 #define IS_BLU_FOLDER   (f1==3)
 #define IS_DVD_FOLDER   (f1==4)
@@ -1080,13 +1080,102 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #ifdef NET_SUPPORT
 			if(!b0 && strstr(param, "net" ))  {filter0 = 7, b0=3;}
 #endif
-			if(strstr(param, "?") != NULL && ((b0 == 0 && b1 == 0) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html") == NULL && strstr(param, "mobile") == NULL) strcpy(filter_name, strrchr(param, '?') + 1);
+			if(strstr(param, "?") != NULL && ((!b0 && !b1) || (strrchr(param, '?') > strchr(param, '?'))) && strstr(param, "?html") == NULL && strstr(param, "mobile") == NULL) strcpy(filter_name, strrchr(param, '?') + 1);
 		}
 
 		int ns = NONE; u8 uprofile = profile; enum icon_type default_icon;
 
 #ifdef NET_SUPPORT
 		if(g_socket >= 0 && open_remote_dir(g_socket, "/", &abort_connection) < 0) do_umount(false);
+#endif
+
+#ifdef SLAUNCH_FILE
+		if(!b0 && cellFsOpen(SLAUNCH_FILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
+		{
+			typedef struct // 1MB for 2000+1 titles
+			{
+				u8  type;
+				char     id[10];
+				u8  path_pos; // start position of path
+				u16 icon_pos; // start position of icon
+				u16 padd;
+				char     name[508]; // name + path + icon
+			} __attribute__((packed)) _slaunch; _slaunch slaunch; u64 read_e;
+
+			int flen, slen;
+
+			while(cellFsRead(fd, &slaunch, sizeof(_slaunch), &read_e) == CELL_FS_SUCCEEDED && read_e > 0)
+			{
+				if(idx >= max_entries || tlen >= BUFFER_MAXSIZE) break;
+
+				char *path = slaunch.name + slaunch.path_pos;
+				char *templn = slaunch.name;
+				char *param = path + 10;
+				char *tempID = slaunch.id;
+				char *icon = slaunch.name + slaunch.icon_pos;
+
+				if(*filter_name >= ' '  &&  !strcasestr(templn, filter_name) &&
+											!strcasestr(path,  filter_name)) continue;
+
+				u8 f1 = (slaunch.type == 1) ? 6 :
+						(slaunch.type == 2) ? 5 :
+						(slaunch.type == 3) ? 2 :
+						(slaunch.type == 4) ? 8 :
+						(slaunch.type == 5) ? 3 : 12;
+
+				if((f1 == 2) && strstr(param, "/GAME")) f1 = 0;
+
+				if(b1) {if((b1 >= 2) && ((f1 < b1) || IS_JB_FOLDER) && (filter1 < 3)); else if(filter1!=f1) continue;}
+				else
+					if(check_content(f1)) continue;
+
+				default_icon =  get_default_icon_by_type(f1);
+
+				templn[80] = NULL;
+
+				set_sort_key(tempstr, templn, HTML_KEY - launchpad_mode, 0, f1); // sort key
+
+ #ifdef LAUNCHPAD
+				if(launchpad_mode)
+				{
+					flen = sprintf(tempstr, "http://%s/%s", local_ip, path);
+					if(flen >= MAX_LINE_LEN) continue; //ignore lines too long
+					sprintf(line_entry[idx].path, "%s", tempstr);
+					flen = add_launchpad_entry(tempstr + HTML_KEY_LEN, templn, line_entry[idx].path, tempID, icon, false);
+				}
+				else
+ #endif
+				if(mobile_mode)
+				{
+					if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore names with quotes: cause syntax error in javascript: gamelist.js
+					for(unsigned char *c = (unsigned char *)templn; *c; c++) {if((*c == '"') || (*c < ' ')) *c = ' ';} // replace invalid chars
+
+					int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320, h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280, h = 280;}
+
+					flen = sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s\"},",
+									icon, w, h, templn, param + 10);
+				}
+				else
+				{
+					slen = strlen(templn);
+					do
+					{
+						flen = sprintf(tempstr + HTML_KEY_LEN, "%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
+										path + 10, idx, icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
+
+						slen -= 4; if(slen < 32) break;
+						templn[slen] = NULL;
+					}
+					while(flen > MAX_LINE_LEN);
+				}
+
+				if(flen > MAX_LINE_LEN) continue; //ignore lines too long
+				sprintf(line_entry[idx].path, "%s", tempstr); idx++;
+				tlen += (flen + div_size);
+			}
+			cellFsClose(fd);
+			filter0 = 99;
+		}
 #endif
 
 #ifdef USE_NTFS
@@ -1125,7 +1214,7 @@ list_games:
 				}
 #endif
 				if(b0) {if((b0 == 2) && (f0 < 7)); else if((b0 == 3) && (!IS_NTFS)); else if(filter0!=f0) continue;}
-				if(b1) {if((b1 >= 2) && ((f1 < b1) || (f1 >= 10)) && (filter1 < 3)); else if(filter1!=f1) continue;}
+				if(b1) {if((b1 >= 2) && ((f1 < b1) || IS_JB_FOLDER) && (filter1 < 3)); else if(filter1!=f1) continue;}
 				else
 					if(check_content(f1)) continue;
 
@@ -1166,7 +1255,7 @@ list_games:
 #endif
 
 
-				CellFsDirent entry; u64 read_e;
+				CellFsDirectoryEntry entry; u32 read_e;
 				int fd2 = 0, flen, slen;
 				char tempID[12];
 				u8 is_iso = 0;
@@ -1187,7 +1276,7 @@ list_games:
 
 				default_icon =  get_default_icon_by_type(f1);
 
-				while((!is_net && (cellFsReaddir(fd, &entry, &read_e) == CELL_FS_SUCCEEDED) && (read_e > 0))
+				while((!is_net && (!cellFsGetDirectoryEntries(fd, &entry, sizeof(entry), &read_e) && read_e > 0))
 #ifdef NET_SUPPORT
 					|| (is_net && (v3_entry < v3_entries))
 #endif
@@ -1244,37 +1333,37 @@ list_games:
 					else
 #endif // #ifdef NET_SUPPORT
 					{
-						if(entry.d_name[0] == '.') continue;
+						if(entry.entry_name.d_name[0] == '.') continue;
 
 //////////////////////////////
 						subfolder = 0;
-						sprintf(subpath, "%s/%s", param, entry.d_name);
+						sprintf(subpath, "%s/%s", param, entry.entry_name.d_name);
 						if(IS_ISO_FOLDER && isDir(subpath) && cellFsOpendir(subpath, &fd2) == CELL_FS_SUCCEEDED)
 						{
-							strcpy(subpath, entry.d_name); subfolder = 1;
+							strcpy(subpath, entry.entry_name.d_name); subfolder = 1;
 next_html_entry:
-							cellFsReaddir(fd2, &entry, &read_e);
+							cellFsGetDirectoryEntries(fd2, &entry, sizeof(entry), &read_e);
 							if(read_e < 1) {cellFsClosedir(fd2); fd2 = 0; continue;}
-							if(entry.d_name[0] == '.') goto next_html_entry;
-							sprintf(templn, "%s/%s", subpath, entry.d_name); entry.d_name[0] = NULL; entry.d_namlen = concat(entry.d_name, templn);
+							if(entry.entry_name.d_name[0] == '.') goto next_html_entry;
+							sprintf(templn, "%s/%s", subpath, entry.entry_name.d_name); entry.entry_name.d_name[0] = NULL; entry.entry_name.d_namlen = concat(entry.entry_name.d_name, templn);
 						}
 //////////////////////////////
 
 						if(idx >= max_entries || tlen >= BUFFER_MAXSIZE) break;
 
-						flen = entry.d_namlen; is_iso = is_iso_file(entry.d_name, flen, f1, f0);
+						flen = entry.entry_name.d_namlen; is_iso = is_iso_file(entry.entry_name.d_name, flen, f1, f0);
 
 						if(IS_JB_FOLDER && !is_iso)
 						{
 #ifdef PKG_LAUNCHER
 							if(IS_GAMEI_FOLDER)
 							{
-								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.d_name); if(!file_exists(templn)) continue;
-								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.d_name);
+								sprintf(templn, "%s/%s/USRDIR/EBOOT.BIN", param, entry.entry_name.d_name); if(!file_exists(templn)) continue;
+								sprintf(templn, "%s/%s/PARAM.SFO", param, entry.entry_name.d_name);
 							}
 							else
 #endif
-								sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.d_name);
+								sprintf(templn, "%s/%s/PS3_GAME/PARAM.SFO", param, entry.entry_name.d_name);
 						}
 
 						if(is_iso || (IS_JB_FOLDER && file_exists(templn)))
@@ -1283,26 +1372,26 @@ next_html_entry:
 
 							if(!is_iso)
 							{
-								get_title_and_id_from_sfo(templn, tempID, entry.d_name, icon, tempstr, 0);
+								get_title_and_id_from_sfo(templn, tempID, entry.entry_name.d_name, icon, tempstr, 0);
 							}
 							else
 							{
 #ifndef COBRA_ONLY
-								get_name(templn, entry.d_name, NO_EXT);
+								get_name(templn, entry.entry_name.d_name, NO_EXT);
 #else
-								if(get_name_iso_or_sfo(templn, tempID, icon, param, entry.d_name, f0, f1, uprofile, flen, tempstr) == FAILED) continue;
+								if(get_name_iso_or_sfo(templn, tempID, icon, param, entry.entry_name.d_name, f0, f1, uprofile, flen, tempstr) == FAILED) continue;
 #endif
 							}
 
 							if(*filter_name >= ' '  &&  !strcasestr(templn, filter_name) &&
 														!strcasestr(param,  filter_name) &&
-														!strcasestr(entry.d_name, filter_name)) {if(subfolder) goto next_html_entry; else continue;}
+														!strcasestr(entry.entry_name.d_name, filter_name)) {if(subfolder) goto next_html_entry; else continue;}
 
-							get_default_icon(icon, param, entry.d_name, !is_iso, tempID, ns, abort_connection, f0, f1);
+							get_default_icon(icon, param, entry.entry_name.d_name, !is_iso, tempID, ns, abort_connection, f0, f1);
 
 							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
-							urlenc(enc_dir_name, entry.d_name);
+							urlenc(enc_dir_name, entry.entry_name.d_name);
 
 							templn[80] = NULL;
 

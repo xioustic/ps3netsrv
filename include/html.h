@@ -312,6 +312,7 @@ static size_t prepare_header(char *buffer, const char *param, u8 is_binary)
 
 	int flen = strlen(param);
 
+	// get mime type
 	if(is_binary == BINARY_FILE)
 	{
 		char *ext = (char*)param + MAX(flen - 4, 0), *ext5 = (char*)param + MAX(flen - 5, 0);
