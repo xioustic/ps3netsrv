@@ -1,3 +1,8 @@
+#if defined(SPOOF_CONSOLEID) || defined(PS3MAPI)
+u64 IDPS[2] = {0, 0};
+u64 PSID[2] = {0, 0};
+#endif
+
 #ifdef SPOOF_CONSOLEID
 
 #define SC_GET_IDPS 					(870)
@@ -8,9 +13,6 @@ u64 idps_offset2 = 0;
 u64 psid_offset  = 0;
 
 u64 eid0_idps[2];
-
-u64 IDPS[2] = {0, 0};
-u64 PSID[2] = {0, 0};
 
 static void get_idps_psid(void)
 {
@@ -144,4 +146,4 @@ static void show_idps(char *msg)
 	sys_ppu_thread_sleep(2);
 }
 
-#endif
+#endif // #ifdef SPOOF_CONSOLEID

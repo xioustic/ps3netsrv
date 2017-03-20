@@ -1278,7 +1278,7 @@ static void ftpd_thread(u64 arg)
 	ftp_working = 1;
 
 relisten:
-	if(working && ftp_working) list_s = slisten(webman_config->ftp_port, 4);
+	if(working && ftp_working) list_s = slisten(webman_config->ftp_port, 12);
 	else goto end;
 
 	if(list_s < 0)

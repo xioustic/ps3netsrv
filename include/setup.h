@@ -507,7 +507,7 @@ static void setup_form(char *buffer, char *templn)
  #endif
 
 	u8 value, b;
-	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{display:none}td+td{text-align:left;white-space:nowrap}</style>"
+	sprintf(templn, "<style>#cnt,#cfg,#adv,#cmb,#wt{max-height:0px;overflow: hidden;transition:max-height 0.25s linear;}td+td{text-align:left;white-space:nowrap}</style>"
 					"<form action=\"/setup.ps3\" method=\"get\" enctype=\"application/x-www-form-urlencoded\" target=\"_self\">"
 					"<b><a class=\"tg\" href=\"javascript:tgl(cnt);\"> %s </a></b><br><div id=\"cnt\">"
 					"<table width=\"820\" border=\"0\" cellspacing=\"2\" cellpadding=\"0\">"
@@ -1062,7 +1062,8 @@ static void setup_form(char *buffer, char *templn)
 	strcat(buffer, "</div>");
 
 	sprintf(templn, HTML_RED_SEPARATOR "<input class=\"bs\" type=\"submit\" accesskey=\"S\" value=\" %s \"/>"
-					"<script>function tgl(o){o.style.display=(o.style.display!='block')?'block':'none';}</script>"
+					//"<script>function tgl(o){o.style.display=(o.style.display!='block')?'block':'none';}</script>"
+					"<script>function tgl(o){o.style.maxHeight=(o.style.maxHeight=='500px')?'0px':'500px';}</script>"
 					"</form>", STR_SAVE); strcat(buffer, templn);
 
 #ifndef LITE_EDITION

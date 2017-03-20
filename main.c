@@ -1709,11 +1709,13 @@ parse_request:
 					restore_blocked_urls();
 				}
 				else
+#ifdef SPOOF_CONSOLEID
 				if(islike(param2, "$show_idps"))
 				{
 					show_idps(header);
 				}
 				else
+#endif
 /*
 				if(islike(param2, "$registryInt(0x"))
 				{
@@ -3518,7 +3520,7 @@ parse_request:
 				}
 
 send_response:
-				if(mobile_mode && allow_retry_response) {allow_retry_response = false; goto mobile_response;}
+				if(mobile_mode && allow_retry_response) {allow_retry_response = false; *buffer = NULL; sprintf(param, "/games.ps3"); goto mobile_response;}
 
 				if(islike(param, "/mount.ps3?http"))
 					{http_response(conn_s, header, param, CODE_HTTP_OK, param + 11); break;}
@@ -3668,7 +3670,7 @@ relisten:
 	ssend(debug_s, "Listening on port 80...");
 #endif
 
-	if(working) list_s = slisten(WWWPORT, 4);
+	if(working) list_s = slisten(WWWPORT, 512);
 	else goto end;
 
 	if(list_s < 0)
@@ -3686,24 +3688,18 @@ relisten:
 		ssend(debug_s, " OK!\r\n");
 		#endif
 
-		u8 timeout = 0;
+		int conn_s; u8 timeout = 0;
 
 		while(working)
 		{
-			timeout = 0; sys_ppu_thread_usleep(1668);
+			timeout = 0;
 
-			while(working && (loading_html > 2))
+			while((loading_html > 8) && working)
 			{
-				#ifdef USE_DEBUG
-				sprintf(debug, "THREADS: %i\r\n", loading_html);
-				ssend(debug_s, debug);
-				#endif
-
-				sys_ppu_thread_usleep(120000);
-				if(++timeout > 250) loading_html = 0; // continue after 30 seconds
+				sys_ppu_thread_usleep(40000);
+				if(++timeout > 250) {loading_html = 0; sclose(&conn_s); goto relisten;} // continue after 10 seconds
 			}
 
-			int conn_s;
 			if(!working) goto end;
 
 			if((conn_s = accept(list_s, NULL, NULL)) > 0)
