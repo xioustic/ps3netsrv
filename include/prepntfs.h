@@ -46,7 +46,7 @@ static int prepNTFS(void)
 	cellFsUnlink((char*)WMTMP "/games.html");
 	int fd = NONE;
 	u64 read = 0;
-	char path[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], filename[STD_PATH_LEN];
+	char path[STD_PATH_LEN], subpath[STD_PATH_LEN], sufix[8], filename[STD_PATH_LEN]; char *path0 = filename;
 
 	check_ntfs_volumes();
 
@@ -78,7 +78,7 @@ static int prepNTFS(void)
 	sectionsP      = (u32*)(addr + sizeof(rawseciso_args));
 	sections_sizeP = (u32*)(addr + sizeof(rawseciso_args) + _32KB_);
 
-	size_t plen;
+	size_t plen, nlen, extlen;
 
 	for(i = 0; i < mountCount; i++)
 	{
@@ -148,7 +148,7 @@ next_ntfs_entry:
 									char iso_name[MAX_PATH_LEN], iso_path[MAX_PATH_LEN];
 
 									size_t nlen = sprintf(iso_name, "%s", path);
-									iso_name[nlen - 1] = '\0';
+									iso_name[nlen - 1] = '\0'; extlen = 6;
 
 									for(u8 o = 1; o < 64; o++)
 									{
@@ -160,6 +160,8 @@ next_ntfs_entry:
 										parts += ps3ntfs_file_to_sectors(iso_path, sectionsP + (parts * sizeof(u32)), sections_sizeP + (parts * sizeof(u32)), MAX_SECTIONS - parts, 1);
 									}
 								}
+								else
+									extlen = 4;
 
 								if(parts >= MAX_SECTIONS)
 								{
@@ -238,16 +240,17 @@ next_ntfs_entry:
 									snprintf(path, sizeof(path), "%s/%s%s.ntfs[%s]", WMTMP, filename, SUFIX2(profile), paths[m]);
 
 									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args) + (2 * (parts * sizeof(u32))) + (num_tracks * sizeof(ScsiTrackDescriptor)))); count++;
-/*
-									plen = snprintf(path, sizeof(path), "%s/%s", WMTMP, dir.d_name);
-									nlen = snprintf(path0, sizeof(path0), "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
 
-									if(get_image_file(path, plen - extlen)) goto for_sfo;
-									if(get_image_file(path0, nlen - extlen) == false) goto for_sfo;
+									nlen = snprintf(path0, sizeof(path0), "%s:%s%s%s/%s", mounts[i].name, prefix[n], paths[m], sufix, dir.d_name);
+									if(!get_image_file(path0, nlen - extlen)) goto next_entry; // not found image in NTFS
+
+									plen = snprintf(path, sizeof(path), "%s/%s", WMTMP, dir.d_name);
+									if( get_image_file(path, plen - extlen) ) goto next_entry; // found image in WMTMP
 
 									// copy external image
-									path[plen-3]=path0[nlen-3], path[plen-2]=path0[nlen-2], path[plen-1]=path0[nlen-1];
+									strcpy(path + plen - 3, path0 + nlen - 3);
 									file_copy(path0, path, COPY_WHOLE_FILE);
+/*
 for_sfo:
 									if(m == mPS3) // mount PS3ISO
 									{
@@ -265,7 +268,8 @@ for_sfo:
 												file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", path, COPY_WHOLE_FILE);
 
 												strcpy(path + plen - 3, "PNG");
-												file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", path, COPY_WHOLE_FILE);
+												if(file_exists(path) == false)
+													file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", path, COPY_WHOLE_FILE);
 											}
 
 											sys_ppu_thread_t t;
@@ -277,6 +281,7 @@ for_sfo:
 								}
 							}
 //////////////////////////////////////////////////////////////
+next_entry:
 							if(has_dirs) goto next_ntfs_entry;
 //////////////////////////////////////////////////////////////
 						}

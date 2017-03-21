@@ -61,10 +61,12 @@
 */
 		bool reboot = false;
 
-		u8 n, init_delay;
+		u8 n, init_delay, poll_pads;
+
+		CellPadData data; init_delay = 0;
 
 		CellPadInfo2 padinfo;
-		CellPadData data; init_delay = 0;
+		poll_pads = (cellPadGetInfo2(&padinfo) == CELL_OK);
 
 		#define PERSIST  100
 
@@ -84,8 +86,9 @@
 				{
 					data.len = 16; data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] = (vcombo & 0xFF); data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] = (vcombo & 0xFF00) >> 8; vcombo = 0;
 				}
-				else if(cellPadGetInfo2(&padinfo) == CELL_OK)
+				else
 #endif
+				if(poll_pads)
 				{
 					for(u8 p = 0; p < 8; p++)
 						if((padinfo.port_status[p] == CELL_PAD_STATUS_CONNECTED) && (cellPadGetData(p, &data) == CELL_PAD_OK) && (data.len > 0)) break;
@@ -242,8 +245,7 @@
 								if((!recording) && (IS_INGAME) && file_exists(VIDEO_REC_PLUGIN))
 								{
 									unsigned int slot = get_free_slot();
-									if((slot < 7) && cobra_load_vsh_plugin(slot, VIDEO_REC_PLUGIN, NULL, 0) == CELL_OK) goto quit_plugin; // unload webMAN to free resources
-									sys_ppu_thread_sleep(3);
+									if((slot < 7) && cobra_load_vsh_plugin(slot, VIDEO_REC_PLUGIN, NULL, 0) == CELL_OK) {sys_ppu_thread_sleep(3); goto quit_plugin;} // unload webMAN to free resources
 								}
 							}
 							else
