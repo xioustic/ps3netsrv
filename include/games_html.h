@@ -1115,7 +1115,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				char *icon = slaunch.name + slaunch.icon_pos;
 
 				if(*filter_name >= ' '  &&  !strcasestr(templn, filter_name) &&
-											!strcasestr(path,  filter_name)) continue;
+											!strcasestr(param,  filter_name)) continue;
 
 				u8 f1 = (slaunch.type == 1) ? 6 :
 						(slaunch.type == 2) ? 5 :
@@ -1131,8 +1131,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 				default_icon =  get_default_icon_by_type(f1);
 
-				templn[80] = NULL;
-
 				set_sort_key(tempstr, templn, HTML_KEY - launchpad_mode, 0, f1); // sort key
 
  #ifdef LAUNCHPAD
@@ -1147,7 +1145,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
  #endif
 				if(mobile_mode)
 				{
-					if(strchr(enc_dir_name, '"') || strchr(icon, '"')) continue; // ignore names with quotes: cause syntax error in javascript: gamelist.js
+					if(strchr(icon, '"')) continue; // ignore names with quotes: cause syntax error in javascript: gamelist.js
 					for(unsigned char *c = (unsigned char *)templn; *c; c++) {if((*c == '"') || (*c < ' ')) *c = ' ';} // replace invalid chars
 
 					int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320, h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280, h = 280;}
@@ -1160,8 +1158,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					slen = strlen(templn);
 					do
 					{
-						flen = sprintf(tempstr + HTML_KEY_LEN, "%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s%s/%s\">%s",
-										path + 10, idx, icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, "", enc_dir_name, templn);
+						flen = sprintf(tempstr + HTML_KEY_LEN, "%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s\">%s",
+										path + 10, idx, icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, templn);
 
 						slen -= 4; if(slen < 32) break;
 						templn[slen] = NULL;
