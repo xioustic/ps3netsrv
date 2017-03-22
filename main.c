@@ -1292,8 +1292,9 @@ again3:
 	{
 		struct timeval tv;
 		tv.tv_usec = 0;
-		tv.tv_sec = 5;
+		tv.tv_sec = 10;
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+		setsockopt(conn_s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
 		int optval = HTML_RECV_SIZE;
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVBUF, &optval, sizeof(optval));

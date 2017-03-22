@@ -319,6 +319,9 @@ static void stop_VSH_Menu(void)
 	// free heap memory
 	destroy_heap();
 
+	// prevent pass cross button to XMB
+	release_cross();
+
 	// continue rsx rendering
 	rsx_fifo_pause(0);
 
@@ -1380,9 +1383,6 @@ static void vsh_menu_thread(uint64_t arg)
 	dbg_printf("programstart:\n");
 #endif
 
-	uint32_t oldpad = 0, curpad = 0;
-	CellPadData pdata;
-
 	uint32_t DELAY, show_menu = 0;
 
 	// init config
@@ -1465,8 +1465,7 @@ static void vsh_menu_thread(uint64_t arg)
 		{
 			frame++; if(frame & 0x40) frame = 0; if(frame & 1) {draw_frame(); flip_frame();}
 
-			for(int32_t port=0; port<8; port++)
-			{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
+			pad_read();
 
 			if(curpad == oldpad && (curpad & (PAD_SELECT | PAD_R1 | PAD_R2))) ;
 

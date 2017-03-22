@@ -144,7 +144,12 @@ static int32_t rsx_fifo_pause(uint8_t pause)
 
 static void pad_read(void)
 {
-	// check only pad ports 0 and 1
-	for(int32_t port=0; port<2; port++)
+	// check only pad all ports
+	for(int32_t port=0; port<8; port++)
 		{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
+}
+
+static void release_cross(void)
+{
+	while(true) {pad_read(); if(curpad & PAD_CROSS) sys_timer_usleep(150000); else break;}
 }

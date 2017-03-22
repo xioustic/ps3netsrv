@@ -1297,6 +1297,7 @@ relisten:
 			sys_ppu_thread_usleep(100000);
 			int conn_s_ftp;
 			if(!working || !ftp_working) break;
+			if(ftp_active > 10) continue;
 
 			if(sys_admin && ((conn_s_ftp = accept(list_s, NULL, NULL)) > 0))
 			{

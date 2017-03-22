@@ -669,6 +669,9 @@ static void stop_VSH_Menu(void)
 	// save config
 	save_config();
 
+	// prevent pass cross button to XMB
+	release_cross();
+
 	// continue rsx rendering
 	rsx_fifo_pause(0);
 

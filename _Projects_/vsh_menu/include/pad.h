@@ -20,6 +20,8 @@ void MyPadGetData(int32_t port_no, CellPadData *data);
 #define PAD_CROSS    (1<<14)
 #define PAD_SQUARE   (1<<15)
 
+static CellPadData pdata;
+static uint32_t oldpad=0, curpad=0;
 
 /***********************************************************************
 * search and return vsh_process toc
@@ -120,4 +122,16 @@ void MyPadGetData(int32_t port_no, CellPadData *data)
 	system_call_4(0x1F6, (uint64_t)port, /*0x02*//*0x82*/0xFF, (uint64_t)(uint32_t)data+4, 0x80);
 
 	data->len = (int32_t)p1;
+}
+
+static void pad_read(void)
+{
+	// check only pad ports 0 and 1
+	for(int32_t port=0; port<8; port++)
+		{MyPadGetData(port, &pdata); curpad = (pdata.button[2] | (pdata.button[3] << 8)); if(curpad && (pdata.len > 0)) break;}  // use MyPadGetData() during VSH menu
+}
+
+static void release_cross(void)
+{
+	while(true) {pad_read(); if(curpad & PAD_CROSS) sys_timer_usleep(150000); else break;}
 }
