@@ -38,6 +38,7 @@ typedef struct {
 } _sconfig;
 
 #define IS_ON_XMB			(vshmain_EB757101() == 0)
+#define IS_INGAME			(vshmain_EB757101())
 
 #define MAX_GAMES 2000
 #define WMTMP				"/dev_hdd0/tmp/wmtmp"				// webMAN work/temp folder
@@ -762,6 +763,36 @@ static void remove_game(void)
 ////////////////////////////////////////////////////////////////////////
 //                      PLUGIN MAIN PPU THREAD                        //
 ////////////////////////////////////////////////////////////////////////
+
+static bool gui_allowed(bool popup)
+{
+	if(slaunch_running) return 0;
+
+	if(xsetting_CC56EB2D()->GetCurrentUserNumber()<0) // user not logged in
+	{
+		if(popup) {send_wm_request("/popup.ps3?Not%20logged%20in!"); sys_timer_sleep(2);}
+		return 0;
+	}
+
+	if(
+		IS_INGAME ||
+		FindLoadedPlugin("videoplayer_plugin") ||
+		FindLoadedPlugin("sysconf_plugin") ||
+		FindLoadedPlugin("netconf_plugin") ||
+		FindLoadedPlugin("software_update_plugin") ||
+		FindLoadedPlugin("photoviewer_plugin") ||
+		FindLoadedPlugin("audioplayer_plugin") ||
+		FindLoadedPlugin("bdp_plugin") ||
+		FindLoadedPlugin("download_plugin")
+	)
+	{
+		if(popup) {send_wm_request("/popup.ps3?Not%20in%20XMB!"); sys_timer_sleep(2);}
+		return 0;
+	}
+
+	return 1;
+}
+
 static void slaunch_thread(uint64_t arg)
 {
 	if(!arg)
@@ -801,8 +832,11 @@ static void slaunch_thread(uint64_t arg)
 			// remote start
 			if(arg)
 			{
+				unload_mode = 5;
+				if(!gui_allowed(1)) continue;
+
 				start_VSH_Menu();
-				init_delay = 0; unload_mode = 5;
+				init_delay = 0;
 
 				// prevent set favorite with start button
 				while(slaunch_running) {pad_read(); if(curpad == PAD_START) sys_timer_usleep(20000); else break;}
@@ -818,19 +852,13 @@ static void slaunch_thread(uint64_t arg)
 					((pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0) &&
 					 (pdata.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == (CELL_PAD_CTRL_START))) )
 				{
-					if(xsetting_CC56EB2D()->GetCurrentUserNumber()>=0) // user logged in
-					{
-						start_VSH_Menu();
-						init_delay=0;
+					if(!gui_allowed(1)) continue;
 
-						// prevent set favorite with start button
-						while(slaunch_running) {pad_read(); if(curpad == PAD_START) sys_timer_usleep(20000); else break;}
-					}
-					else
-					{
-						send_wm_request("/popup.ps3?Not%20logged%20in!");
-						sys_timer_sleep(2);
-					}
+					start_VSH_Menu();
+					init_delay=0;
+
+					// prevent set favorite with start button
+					while(slaunch_running) {pad_read(); if(curpad == PAD_START) sys_timer_usleep(20000); else break;}
 				}
 			}
 		}
