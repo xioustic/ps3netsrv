@@ -205,7 +205,7 @@ static CellPadData pad_read(void)
 	CellPadData pad_data; pad_data.len = 0;
 
 	if(cellPadGetInfo2(&padinfo) == CELL_OK)
-		for(u8 n = 0; n < 20; n++)
+		for(u8 n = 0; n < 4; n++)
 		{
 			for(u8 p = 0; p < 8; p++)
 				if((padinfo.port_status[p] == CELL_PAD_STATUS_CONNECTED) && (cellPadGetData(p, &pad_data) == CELL_PAD_OK) && (pad_data.len > 0)) return pad_data;

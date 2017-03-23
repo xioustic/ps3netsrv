@@ -202,6 +202,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define THREAD_PRIO_FTP			-0x1d8
 #define THREAD_PRIO_NET			-0x1d8
 #define THREAD_PRIO_STOP		 0x000
+#define THREAD_PRIO_POLL		 0x000
 #define THREAD_PRIO_HIGH		 2000
 
 
@@ -3634,7 +3635,7 @@ static void wwwd_thread(u64 arg)
 	sys_ppu_thread_t t_id;
 	sys_ppu_thread_create(&t_id, handleclient_www, (u64)START_DAEMON, THREAD_PRIO, THREAD_STACK_SIZE_WEB_CLIENT, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_CMD);
 
-	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO, THREAD_STACK_SIZE_POLL_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
+	sys_ppu_thread_create(&thread_id_poll, poll_thread, (u64)webman_config->poll, THREAD_PRIO_POLL, THREAD_STACK_SIZE_POLL_THREAD, SYS_PPU_THREAD_CREATE_JOINABLE, THREAD_NAME_POLL);
 
 #ifdef PS3NET_SERVER
 	if(!webman_config->netsrvd)

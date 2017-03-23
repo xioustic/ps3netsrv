@@ -962,7 +962,7 @@ static void cache_icon0_and_param_sfo(char *destpath)
 
 static void mount_autoboot(void)
 {
-	char path[STD_PATH_LEN+1];
+	char path[STD_PATH_LEN+1]; bool is_last_game = false;
 
 	// get autoboot path
 	if(webman_config->autob && (
@@ -974,7 +974,7 @@ static void mount_autoboot(void)
 		strcpy(path, (char *) webman_config->autoboot_path);
 	else if(webman_config->lastp)
 	{
-		get_last_game(path);
+		get_last_game(path); is_last_game = true;
 	}
 	else return;
 
@@ -1008,7 +1008,18 @@ static void mount_autoboot(void)
 #ifndef COBRA_ONLY
 		if((!islike(path, "/net")) && (!strstr(path, ".ntfs[")))
 #endif
-		mount_game(path, MOUNT_NORMAL); // mount path & do eject
+		if(is_last_game)
+		{
+			// prevent auto-launch game on boot (last game only). AUTOBOOT.ISO is allowed to auto-launch on boot
+			int discboot = 0xff;
+			xsetting_0AF1F161()->GetSystemDiscBootFirstEnabled(&discboot);
+			if(discboot) xsetting_0AF1F161()->SetSystemDiscBootFirstEnabled(0); // disable Disc Boot
+			mount_game(path, MOUNT_NORMAL);
+			sys_ppu_thread_sleep(5);
+			if(discboot) xsetting_0AF1F161()->SetSystemDiscBootFirstEnabled(1); // restore Disc Boot setting
+		}
+		else
+			mount_game(path, MOUNT_NORMAL);
 	}
 }
 

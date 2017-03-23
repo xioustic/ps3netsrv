@@ -1111,7 +1111,6 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 				char *path = slaunch.name + slaunch.path_pos;
 				char *templn = slaunch.name;
 				char *param = path + 10;
-				char *tempID = slaunch.id;
 				char *icon = slaunch.name + slaunch.icon_pos;
 
 				if(*filter_name >= ' '  &&  !strcasestr(templn, filter_name) &&
@@ -1139,7 +1138,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					flen = sprintf(tempstr, "http://%s/%s", local_ip, path);
 					if(flen >= MAX_LINE_LEN) continue; //ignore lines too long
 					sprintf(line_entry[idx].path, "%s", tempstr);
-					flen = add_launchpad_entry(tempstr + HTML_KEY_LEN, templn, line_entry[idx].path, tempID, icon, false);
+					flen = add_launchpad_entry(tempstr + HTML_KEY_LEN, templn, line_entry[idx].path, slaunch.id, icon, false);
 				}
 				else
  #endif

@@ -86,12 +86,9 @@ static void poll_thread(u64 poll)
 		{
 			t1 = t2 = 0;
 			get_temperature(0, &t1); // CPU: 3E030000 -> 3E.03°C -> 62.(03/256)°C
-			sys_ppu_thread_usleep(300000);
-
 			get_temperature(1, &t2); // RSX: 3E030000 -> 3E.03°C -> 62.(03/256)°C
-			sys_ppu_thread_usleep(200000);
 
-			if(!max_temp || fan_ps2_mode) continue; // if fan mode was changed to manual by another thread while doing usleep
+			//if(!max_temp || fan_ps2_mode) continue; // if fan mode was changed to manual by another thread while doing usleep
 
 			if(t2 > t1) t1 = t2;
 

@@ -101,12 +101,11 @@
 																	((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == 0) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == (CELL_PAD_CTRL_L2 | CELL_PAD_CTRL_R2)))))   // L2+R2
 					||	((!(webman_config->combo2 & C_VSHMENU)) &&  ((data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT) && (data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] == 0))) )                   // SELECT
 					{
-						if(++init_delay < 5) {sys_ppu_thread_usleep(200000); continue;}
+						if(data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] && (++init_delay < 5)) {sys_ppu_thread_usleep(100000); continue;}
 
 						start_vsh_gui(data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] == CELL_PAD_CTRL_SELECT);
 
-						sys_ppu_thread_sleep(3);
-
+						while(data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] | data.button[CELL_PAD_BTN_OFFSET_DIGITAL2]) data = pad_read();
 						break;
 					}
 #endif
