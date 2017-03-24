@@ -673,7 +673,7 @@ static void netsvrd_thread(u64 arg)
 	net_working = 1;
 
 relisten:
-	if(working && net_working) list_s = slisten(webman_config->netsrvp, 4);
+	if(working && net_working) list_s = slisten(webman_config->netsrvp, NET_BACKLOG);
 	else goto end;
 
 	if(list_s < 0)
@@ -693,7 +693,7 @@ relisten:
 			int conn_s_net;
 			if(!working || !net_working) break;
 
-			if((conn_s_net = accept(list_s, NULL, NULL)) > 0)
+			if((conn_s_net = accept(list_s, NULL, NULL)) >= 0)
 			{
 				// get client slot
 				int index = NONE;

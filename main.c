@@ -316,10 +316,19 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 ////////////
 
-#define FTPPORT			(21)
 #define WWWPORT			(80)
-#define PS3MAPIPORT		(7887)
+#define FTPPORT			(21)
 #define NETPORT			(38008)
+#define PS3MAPIPORT		(7887)
+
+#define	MAX_WWW_CC		(255)
+#define MAX_WWW_THREADS	(8)
+#define MAX_FTP_THREADS	(10)
+
+#define WWW_BACKLOG		(2001)
+#define	FTP_BACKLOG		(7)
+#define	NET_BACKLOG		(4)
+#define	PS3MAPI_BACKLOG	(4)
 
 int active_socket[4] = {NONE, NONE, NONE, NONE}; // 0=FTP, 1=WWW, 2=PS3MAPI, 3=PS3NETSRV
 
@@ -357,7 +366,7 @@ static u32 BUFFER_SIZE_DVD;
 static u32 BUFFER_SIZE_ROM	= (  _32KB_ / 2);
 #endif
 
-#define MAX_PAGES   (BUFFER_SIZE_ALL / _64KB_)
+#define MAX_PAGES   ((BUFFER_SIZE_ALL / (_64KB_ * MAX_WWW_THREADS)) + 1)
 
 ////////////
 
@@ -1233,6 +1242,9 @@ static void handleclient_www(u64 conn_s_p)
 	bool is_local = true;
 	sys_net_sockinfo_t conn_info_main;
 
+	u8 max_cc = 0;
+	u8 keep_alive = 0;
+
 	char cmd[16], header[HTML_RECV_SIZE], *mc = NULL;
 
  #ifdef WM_REQUEST
@@ -1293,8 +1305,9 @@ again3:
 	{
 		struct timeval tv;
 		tv.tv_usec = 0;
-		tv.tv_sec = 10;
+		tv.tv_sec  = 3;
 		setsockopt(conn_s, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+		tv.tv_sec  = 8;
 		setsockopt(conn_s, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
 
 		int optval = HTML_RECV_SIZE;
@@ -1318,6 +1331,7 @@ parse_request:
 	{
 		served++;
 		*header = NULL;
+		keep_alive = 0;
 
 		if(!mc)
 		{
@@ -1344,6 +1358,11 @@ parse_request:
 
 		if((*header == 'G') || ((recv(conn_s, header, HTML_RECV_SIZE, 0) > 0) && (*header == 'G') && (header[4] == '/'))) // serve only GET /xxx requests
 		{
+			if(strstr(header, "Connection: keep-alive"))
+			{
+				keep_alive = 1;
+			}
+
 			if(strstr(header, "x-ps3-browser")) is_ps3_http = 1; else
 			if(strstr(header, "Gecko/36"))  	is_ps3_http = 2; else
 												is_ps3_http = 0;
@@ -2672,10 +2691,16 @@ parse_request:
 
 			if(is_binary == BINARY_FILE) // binary file
 			{
+				if(keep_alive)
+				{
+					header_len += sprintf(header + header_len,  "Keep-Alive: timeout=3,max=250\r\n"
+																"Connection: keep-alive\r\n");
+				}
+
 				header_len += sprintf(header + header_len, "Content-Length: %llu\r\n\r\n", (unsigned long long)c_len);
 				send(conn_s, header, header_len, 0);
 
-				size_t buffer_size = 0; if(sysmem) sys_memory_free(sysmem);
+				size_t buffer_size = 0; if(sysmem) sys_memory_free(sysmem); sysmem = NULL;
 
 				for(u8 n = MAX_PAGES; n > 0; n--)
 					if(c_len >= ((n-1) * _64KB_) && sys_memory_allocate(n * _64KB_, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK) {buffer_size = n * _64KB_; break;}
@@ -3575,7 +3600,7 @@ exit_handleclient_www:
 
 	if(sysmem) {sys_memory_free(sysmem); sysmem = NULL;}
 
-	if(mc) goto parse_request;
+	if(mc || (keep_alive && (++max_cc < MAX_WWW_CC))) goto parse_request;
 
 	#ifdef USE_DEBUG
 	ssend(debug_s, "Request served.\r\n");
@@ -3672,7 +3697,7 @@ relisten:
 	ssend(debug_s, "Listening on port 80...");
 #endif
 
-	if(working) list_s = slisten(WWWPORT, 512);
+	if(working) list_s = slisten(WWWPORT, WWW_BACKLOG);
 	else goto end;
 
 	if(list_s < 0)
@@ -3695,8 +3720,7 @@ relisten:
 		while(working)
 		{
 			timeout = 0;
-
-			while((loading_html > 8) && working)
+			while((loading_html > MAX_WWW_THREADS) && working)
 			{
 				sys_ppu_thread_usleep(40000);
 				if(++timeout > 250) {loading_html = 0; sclose(&conn_s); goto relisten;} // continue after 10 seconds
@@ -3704,7 +3728,7 @@ relisten:
 
 			if(!working) goto end;
 
-			if((conn_s = accept(list_s, NULL, NULL)) > 0)
+			if((conn_s = accept(list_s, NULL, NULL)) >= 0)
 			{
 				loading_html++;
 

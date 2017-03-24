@@ -54,22 +54,22 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 
 	if( !is_dir && IS(name, "PARAM.SFO") )
 	{
-		char titleid[10], version[8], title[64]; strcpy(title, templn);
+		char titleid[10], version[8], title[128]; snprintf(title, 128, "%s", templn);
 
 		//get title & app version from PARAM.SFO
 		getTitleID(templn, version, GET_VERSION);
-		getTitleID(title, titleid, GET_TITLE_AND_ID); char *p = strstr(title, " ["); if(p) *p = NULL; //p = strstr(title, "\n"); if(p) *p = NULL;
+		getTitleID(title, titleid, GET_TITLE_AND_ID); char *p = strstr(title, " ["); if(p) *p = NULL; p = strstr(title, "\n"); if(p) *p = NULL;
 		get_cover_from_name(tempstr, strrchr(param, '/') + 1, titleid); // get title id from path (if title ID was not found in PARAM.SFO)
 		if(*version >= '0') {strcat(title, " v"); strcat(title, version);}
 		sprintf(tempstr, "%s%s", HDD0_GAME_DIR, titleid); bool has_updates_dir = file_exists(tempstr);
 
-		sprintf(tempstr, "<label title=\"%s\">%s</label></a>", title, name); strcpy(name, tempstr);
+		sprintf(tempstr, "<label title=\"%s\">%s</label></a>", title, name); snprintf(name, MAX_PATH_LEN - 1, "%s", tempstr);
 
 		// show title & link to patches folder
 		if(has_updates_dir)
-			sprintf(fsize, HTML_URL2, HDD0_GAME_DIR, titleid, title);
+			snprintf(fsize, MAX_PATH_LEN - 1, HTML_URL2, HDD0_GAME_DIR, titleid, title);
 		else
-			sprintf(fsize, "%s", title);
+			snprintf(fsize, MAX_PATH_LEN - 1, "%s", title);
 
 		// show title id & link to updates
 		if(*titleid && !islike(titleid, "NPWR"))
@@ -77,10 +77,10 @@ static int add_list_entry(char *param, int plen, char *tempstr, bool is_dir, cha
 		else
 			sprintf(tempstr, "<div class='sfo'>%s</div>", fsize);
 
-		sprintf(fsize, "%'llu %s%s", sz, sf, tempstr);
+		snprintf(fsize, MAX_PATH_LEN - 1, "%'llu %s%s", sz, sf, tempstr);
 
 		#ifdef FIX_GAME
-		if(has_updates_dir) sprintf(fsize, "<a href=\"/fixgame.ps3%s%s\">%'llu %s</a>%s", HDD0_GAME_DIR, titleid, sz, sf, tempstr);
+		if(has_updates_dir) snprintf(fsize, MAX_PATH_LEN - 1, "<a href=\"/fixgame.ps3%s%s\">%'llu %s</a>%s", HDD0_GAME_DIR, titleid, sz, sf, tempstr);
 		#endif
 	}
 #endif

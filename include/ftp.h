@@ -1278,7 +1278,7 @@ static void ftpd_thread(u64 arg)
 	ftp_working = 1;
 
 relisten:
-	if(working && ftp_working) list_s = slisten(webman_config->ftp_port, 12);
+	if(working && ftp_working) list_s = slisten(webman_config->ftp_port, FTP_BACKLOG);
 	else goto end;
 
 	if(list_s < 0)
@@ -1297,9 +1297,9 @@ relisten:
 			sys_ppu_thread_usleep(100000);
 			int conn_s_ftp;
 			if(!working || !ftp_working) break;
-			if(ftp_active > 10) continue;
+			if(ftp_active > MAX_FTP_THREADS) continue;
 
-			if(sys_admin && ((conn_s_ftp = accept(list_s, NULL, NULL)) > 0))
+			if(sys_admin && ((conn_s_ftp = accept(list_s, NULL, NULL)) >= 0))
 			{
 				sys_ppu_thread_t t_id;
 				if(working) sys_ppu_thread_create(&t_id, handleclient_ftp, (u64)conn_s_ftp, THREAD_PRIO_FTP, THREAD_STACK_SIZE_FTP_CLIENT, SYS_PPU_THREAD_CREATE_NORMAL, THREAD_NAME_FTPD);
