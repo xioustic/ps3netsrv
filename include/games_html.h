@@ -1150,7 +1150,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					int w = 260, h = 300; if(strstr(icon, "ICON0.PNG")) {w = 320, h = 176;} else if(strstr(icon, "icon_wm_")) {w = 280, h = 280;}
 
 					flen = sprintf(tempstr + HTML_KEY_LEN, "{img:\"%s\",width:%i,height:%i,desc:\"%s\",url:\"%s\"},",
-									icon, w, h, templn, param + 10);
+									icon, w, h, templn, param);
 				}
 				else
 				{
@@ -1158,7 +1158,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 					do
 					{
 						flen = sprintf(tempstr + HTML_KEY_LEN, "%s\"><img id=\"im%i\" src=\"%s\"%s%s%s class=\"gi\"></a></div><div class=\"gn\"><a href=\"%s\">%s",
-										path + 10, idx, icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, templn);
+										param, idx, icon, onerror_prefix, ((*onerror_prefix != NULL) && default_icon) ? wm_icons[default_icon] : "", onerror_suffix, param, templn);
 
 						slen -= 4; if(slen < 32) break;
 						templn[slen] = NULL;
