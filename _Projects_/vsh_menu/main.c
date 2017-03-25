@@ -23,6 +23,7 @@ SYS_MODULE_STOP(vsh_menu_stop);
 #define STOP_THREAD_NAME    "vsh_menu_stop_thread"
 
 #define IS_ON_XMB			(vshmain_EB757101() == 0)
+#define IS_INGAME			(vshmain_EB757101() != 0)
 
 #define WHITE               0xFFFFFFFF
 #define GREEN               0xFF00FF00
@@ -1376,6 +1377,35 @@ static void show_icon0(uint32_t curpad)
 ////////////////////////////////////////////////////////////////////////
 //                      PLUGIN MAIN PPU THREAD                        //
 ////////////////////////////////////////////////////////////////////////
+static bool gui_allowed(bool popup)
+{
+	if(menu_running) return 0;
+
+	if(xsetting_CC56EB2D()->GetCurrentUserNumber()<0) // user not logged in
+	{
+		if(popup) {send_wm_request("/popup.ps3?Not%20logged%20in!"); sys_timer_sleep(2);}
+		return 0;
+	}
+
+	if(
+		IS_INGAME ||
+		FindLoadedPlugin("videoplayer_plugin") ||
+		FindLoadedPlugin("sysconf_plugin") ||
+		FindLoadedPlugin("netconf_plugin") ||
+		FindLoadedPlugin("software_update_plugin") ||
+		FindLoadedPlugin("photoviewer_plugin") ||
+		FindLoadedPlugin("audioplayer_plugin") ||
+		FindLoadedPlugin("bdp_plugin") ||
+		FindLoadedPlugin("download_plugin")
+	)
+	{
+		if(popup) {send_wm_request("/popup.ps3?Not%20in%20XMB!"); sys_timer_sleep(2);}
+		return 0;
+	}
+
+	return 1;
+}
+
 static void vsh_menu_thread(uint64_t arg)
 {
 #ifdef DEBUG
@@ -1434,7 +1464,7 @@ static void vsh_menu_thread(uint64_t arg)
 				sys_ppu_thread_exit(0);
 			}
 
-			if(!IS_ON_XMB) {sys_timer_sleep(5); continue;} sys_timer_usleep(300000);
+			if(!gui_allowed(true)) {sys_timer_sleep(5); continue;} sys_timer_usleep(300000);
 
 			pdata.len = 0;
 			for(uint8_t p = 0; p < 8; p++)
@@ -1457,7 +1487,7 @@ static void vsh_menu_thread(uint64_t arg)
 					show_menu = 0, oldpad = PAD_SELECT;
 					if(line & 1) line = 0;	// menu on first entry in list
 
-					if(vshmain_EB757101() == 0) start_VSH_Menu();
+					if(gui_allowed(true)) start_VSH_Menu();
 				}
 			}
 		}

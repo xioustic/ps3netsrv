@@ -213,5 +213,6 @@ static CellPadData pad_read(void)
 			sys_ppu_thread_usleep(50000);
 		}
 
+	pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL1] = pad_data.button[CELL_PAD_BTN_OFFSET_DIGITAL2] = 0;
 	return pad_data;
 }

@@ -579,7 +579,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 						mode_t mode = NULL; char dirtype[2]; dirtype[1] = NULL;
 
 						size_t d_path_len = sprintf(filename, "%s/", d_path);
-						bool is_root = (d_path_len < 6);
+						bool is_root = (d_path_len < 6); if(is_root) d_path_len = sprintf(filename, "/");
 
 #ifdef USE_NTFS
 						DIR_ITER *pdir = NULL;
@@ -637,7 +637,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										{
 											cellFsStat(filename, &buf);
 											entry.attribute.st_mode  = buf.st_mode;
-											entry.attribute.st_size  = buf.st_size;
+											entry.attribute.st_size  = get_free_space(filename); // buf.st_size;
 											entry.attribute.st_mtime = buf.st_mtime;
 										}
 
@@ -700,20 +700,9 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							else
 							{
 								u64 mb_free;
-#ifdef USE_NTFS
-								if(is_ntfs)
-								{
-									ps3ntfs_statvfs(d_path + 5, &vbuf);
-									d_path[10] = 0;
-									mb_free = (u64)((vbuf.f_bfree * (vbuf.f_bsize>>10))>>10);
-								}
-								else
-#endif
-								{
-									char *slash = strchr(d_path + 1, '/');
-									if(slash) *slash = '\0';
-									mb_free = (get_free_space(d_path)>>20);
-								}
+								char *slash = strchr(d_path + 1, '/');
+								if(slash) *slash = '\0';
+								mb_free = (get_free_space(d_path)>>20);
 
 								sprintf(buffer, "226 [%s] [ %llu %s %s]\r\n", d_path, mb_free, STR_MBFREE, cpursx);
 								ssend(conn_s_ftp, buffer);
