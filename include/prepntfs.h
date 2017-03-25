@@ -58,7 +58,7 @@ static int prepNTFS(void)
 			while(!cellFsReaddir(fd, &dir, &read) && read)
 			{
 				ext = strstr(dir.d_name, ".ntfs[");
-				if(ext && !IS(ext, ".ntfs[BDFILE]")) {sprintf(path, "%s/%s", WMTMP, dir.d_name); cellFsUnlink(path);}
+				if(ext && !IS(ext, ".ntfs[BDFILE]") && !IS(ext, ".ntfs[PS2ISO]") && !IS(ext, ".ntfs[PSPISO]")) {sprintf(path, "%s/%s", WMTMP, dir.d_name); cellFsUnlink(path);}
 			}
 			cellFsClosedir(fd);
 		}
@@ -237,6 +237,7 @@ next_ntfs_entry:
 										}
 									}
 
+									filename[strlen(filename) - extlen] = NULL;
 									snprintf(path, sizeof(path), "%s/%s%s.ntfs[%s]", WMTMP, filename, SUFIX2(profile), paths[m]);
 
 									save_file(path, (char*)plugin_args, (sizeof(rawseciso_args) + (2 * (parts * sizeof(u32))) + (num_tracks * sizeof(ScsiTrackDescriptor)))); count++;

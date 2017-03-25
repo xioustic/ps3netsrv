@@ -125,7 +125,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 #ifdef USE_NTFS
 	struct stat bufn;
-	struct statvfs vbuf;
 
 	sprintf(buffer, "%i webMAN ftpd " WM_VERSION " [NTFS:%i]\r\n", 220, mountCount); ssend(conn_s_ftp, buffer);
 #else
