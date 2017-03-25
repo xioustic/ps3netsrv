@@ -18,6 +18,18 @@ td+td{text-align:right;white-space:nowrap}
 /*.gi{height:210px;width:267px;*/
 .gi{max-height:210px;max-width:260px;
 position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}
+
+@keyframes tilt {
+    0% {rotation:normal;}
+    50% {
+        -ms-transform: rotate(3deg); /* IE 9 */
+        -webkit-transform: rotate(3deg); /* Chrome, Safari, Opera */
+        transform: rotate(3deg);}
+    100% {rotation:normal;}
+}
+.gi:hover{animation-name:tilt;animation-duration: 0.5s;}
+
+
 .gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}
 .bu{background:#444;}.bf{background:#121;}
 
