@@ -330,6 +330,8 @@ SYS_MODULE_EXIT(wwwd_stop);
 #define	NET_BACKLOG		(4)
 #define	PS3MAPI_BACKLOG	(4)
 
+#define MAX_SLAUNCH_ITEMS	2000
+
 int active_socket[4] = {NONE, NONE, NONE, NONE}; // 0=FTP, 1=WWW, 2=PS3MAPI, 3=PS3NETSRV
 
 #define KB			     1024UL

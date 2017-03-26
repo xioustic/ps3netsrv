@@ -541,7 +541,7 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 
 	if(pid != 0 && length != 0)
 	{
-		sprintf(templn, "<br><br><b><u>%s:</u></b><br><br><textarea id=\"output\" name=\"output\" cols=\"111\" rows=\"10\" readonly=\"true\">", "Output");
+		sprintf(templn, "<br><b><u>%s:</u></b><br>", "Output");
 		strcat(buffer, templn);
 		char buffer_tmp[length + 1];
 		memset(buffer_tmp, 0, sizeof(buffer_tmp));
@@ -549,6 +549,52 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 		{system_call_6(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_PROC_MEM, (u64)pid, (u64)address, (u64)(u32)buffer_tmp, (u64)length); retval = (int)p1;}
 		if(0 <= retval)
 		{
+			// show hex dump
+			u8 byte = 0, p = 0;
+			u16 num_bytes = MIN(0x200, ((u16)((length+15)/0x10)*0x10));
+			for(u16 i = 0, n = 0; i < num_bytes; i++)
+			{
+				if(!p)
+				{
+					sprintf(templn, "%08X  ", (int)((address & 0xFFFFFFFFULL) + i));
+					buffer += concat(buffer, templn);
+				}
+
+				if(i >= length) buffer += concat(buffer, "&nbsp;&nbsp; ");
+				else
+				{
+					byte = (u8)buffer_tmp[i];
+
+					sprintf(templn, "%02X ", byte); buffer += concat(buffer, templn);
+				}
+
+				if(p == 0x7) buffer += concat(buffer, " ");
+
+				if(p == 0xF)
+				{
+					buffer += concat(buffer, " ");
+					for(u8 c = 0; c < 0x10; c++, n++)
+					{
+						if(n >= length) break;
+						byte = (u8)buffer_tmp[n];
+						if(byte<32 || byte>=127) byte='.';
+
+						if(byte==0x3C)
+							buffer += concat(buffer, "&lt;");
+						else if(byte==0x3E)
+							buffer += concat(buffer, "&gt;");
+						else
+							{sprintf(templn,"%c", byte); buffer += concat(buffer, templn);}
+					}
+					buffer += concat(buffer, "<br>");
+				}
+
+				p++; if(p>=0x10) p=0;
+			}
+			//
+
+			strcat(buffer, "<br><textarea id=\"output\" name=\"output\" cols=\"111\" rows=\"10\" readonly=\"true\">");
+
 			for(int i = 0; i < length; i++)
 			{
 				sprintf(templn, "%02X", (u8)buffer_tmp[i]);
@@ -563,7 +609,7 @@ static void ps3mapi_getmem(char *buffer, char *templn, char *param)
 
 #ifdef DEBUG_MEM
 	strcat(buffer, "Dump: [<a href=\"/dump.ps3?mem\">Full Memory</a>] [<a href=\"/dump.ps3?rsx\">RSX</a>] [<a href=\"/dump.ps3?lv1\">LV1</a>] [<a href=\"/dump.ps3?lv2\">LV2</a>]");
-	if(!is_ps3mapi_home) {sprintf(templn, " [<a href=\"/dump.ps3?%llx\">LV1 Dump 0x%llx</a>] [<a href=\"/peek.lv1?%llx\">LV1 Peek 0x%llx</a>]", address, address, address, address); strcat(buffer, templn);}
+	sprintf(templn, " [<a href=\"/dump.ps3?%llx\">LV1 Dump 0x%llx</a>] [<a href=\"/peek.lv1?%llx\">LV1 Peek</a>] [<a href=\"/peek.lv2?%llx\">LV2 Peek</a>]", address, address, address, address); strcat(buffer, templn);
 #endif
 	strcat(buffer, "<p>");
 
@@ -620,7 +666,7 @@ static void ps3mapi_setmem(char *buffer, char *templn, char *param)
 	if(*val_tmp == 0) sprintf(val_tmp, "00");
 
 	sprintf(templn, "<b><u>%s:</u></b> "  HTML_INPUT("addr", "%llX", "16", "18")
-					"<br><br><b><u>%s:</u></b><br><br>"
+					"<br><br><b><u>%s:</u></b><br>"
 					"<table width=\"800\">"
 					"<tr><td class=\"la\">"
 					"<textarea id=\"val\" name=\"val\" cols=\"111\" rows=\"3\" maxlength=\"199\">%s</textarea></td></tr>"

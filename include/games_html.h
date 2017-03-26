@@ -112,6 +112,12 @@ static const char ext[4][5] = {".jpg\0", ".png\0", ".PNG\0", ".JPG\0"};
 
 static const char *cpath[5] = {MM_ROOT_STD, MM_ROOT_STL, MM_ROOT_SSTL, "/dev_hdd0/GAMES", "/dev_hdd0/GAMEZ"};
 
+#ifdef SLAUNCH_FILE
+static int create_slaunch_file(void);
+static void add_slaunch_entry(int fd, const char *neth, const char *path, const char *filename, const char *icon, const char *name, const char *id, u8 f1);
+static void close_slaunch_file(int fd);
+#endif
+
 static bool HAS(char *icon)
 {
 	return ((*icon == 'h') || ((*icon == '/') && file_exists(icon) && (icon[strlen(icon) - 1] | 0x20) == 'g' ));
@@ -1074,6 +1080,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #endif
 
 #ifdef SLAUNCH_FILE
+		int fdsl = 0;
 		if(!b0 && cellFsOpen(SLAUNCH_FILE, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 		{
 			typedef struct // 1MB for 2000+1 titles
@@ -1157,6 +1164,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			cellFsClose(fd);
 			filter0 = 99;
 		}
+		else if(!b0 && !b1 && !filter_name[0]) fdsl = create_slaunch_file();
 #endif
 
 #ifdef USE_NTFS
@@ -1271,6 +1279,10 @@ list_games:
 
 						if(add_net_game(ns, data, v3_entry, neth, param, templn, tempstr, enc_dir_name, icon, tempID, f1, 1) == FAILED) {v3_entry++; continue;}
 
+#ifdef SLAUNCH_FILE
+						if(fdsl && (idx < MAX_SLAUNCH_ITEMS)) add_slaunch_entry(fdsl, neth, param, data[v3_entry].name, icon, templn, tempID, f1);
+#endif
+
 						if(*filter_name >=' '   && !strcasestr(templn, filter_name)
 												&& !strcasestr(param, filter_name)
 												&& !strcasestr(data[v3_entry].name, filter_name)) {v3_entry++; continue;}
@@ -1370,6 +1382,10 @@ next_html_entry:
 
 							get_default_icon(icon, param, entry.entry_name.d_name, !is_iso, tempID, ns, abort_connection, f0, f1);
 
+#ifdef SLAUNCH_FILE
+							if(fdsl && (idx < MAX_SLAUNCH_ITEMS)) add_slaunch_entry(fdsl, "", param, entry.entry_name.d_name, icon, templn, tempID, f1);
+#endif
+
 							if(webman_config->tid && HAS_TITLE_ID && strlen(templn) < 50 && strstr(templn, " [") == NULL) {sprintf(enc_dir_name, " [%s]", tempID); strcat(templn, enc_dir_name);}
 
 							urlenc(enc_dir_name, entry.entry_name.d_name);
@@ -1446,6 +1462,9 @@ next_html_entry:
 #endif
 		}
 
+#ifdef SLAUNCH_FILE
+		close_slaunch_file(fdsl);
+#endif
 
 		if(idx)
 		{   // sort html game items

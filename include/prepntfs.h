@@ -50,18 +50,16 @@ static int prepNTFS(void)
 
 	check_ntfs_volumes();
 
-	if(mountCount <= 0)
+	if(cellFsOpendir(WMTMP, &fd) == CELL_FS_SUCCEEDED)
 	{
-		if(cellFsOpendir(WMTMP, &fd) == CELL_FS_SUCCEEDED)
+		dlen = sprintf(path, "%s/", WMTMP);
+		char *ext, *path_file = path + dlen;
+		while(!cellFsReaddir(fd, &dir, &read) && read)
 		{
-			char *ext;
-			while(!cellFsReaddir(fd, &dir, &read) && read)
-			{
-				ext = strstr(dir.d_name, ".ntfs[");
-				if(ext && !IS(ext, ".ntfs[BDFILE]") && !IS(ext, ".ntfs[PS2ISO]") && !IS(ext, ".ntfs[PSPISO]")) {sprintf(path, "%s/%s", WMTMP, dir.d_name); cellFsUnlink(path);}
-			}
-			cellFsClosedir(fd);
+			ext = strstr(dir.d_name, ".ntfs[");
+			if(ext && ((mountCount <= 0) || (!IS(ext, ".ntfs[BDFILE]") && !IS(ext, ".ntfs[PS2ISO]") && !IS(ext, ".ntfs[PSPISO]")))) {sprintf(path_file, "%s", dir.d_name); cellFsUnlink(path);}
 		}
+		cellFsClosedir(fd);
 	}
 
 	sys_addr_t addr = NULL;
