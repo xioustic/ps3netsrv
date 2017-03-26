@@ -702,6 +702,15 @@ static u8 cp_mode = CP_MODE_NONE;  // 0 = none / 1 = copy / 2 = cut/move
 #define OFFLINE_TAG		"[offline]"
 #define AUTOPLAY_TAG	" [auto]"
 
+#define TYPE_ALL 0
+#define TYPE_PS1 1
+#define TYPE_PS2 2
+#define TYPE_PS3 3
+#define TYPE_PSP 4
+#define TYPE_VID 5
+#define TYPE_ROM 6
+#define TYPE_MAX 7
+
 static char wm_icons[12][60] = {WM_ICONS_PATH "/icon_wm_album_ps3.png", //024.png  [0]
 								WM_ICONS_PATH "/icon_wm_album_psx.png", //026.png  [1]
 								WM_ICONS_PATH "/icon_wm_album_ps2.png", //025.png  [2]
@@ -1384,7 +1393,7 @@ parse_request:
 				#ifdef WM_REQUEST
 				if(!wm_request)
 				#endif
-				http_response(conn_s, header, param, CODE_HTTP_OK, param);
+				http_response(conn_s, header, param, CODE_HTTP_OK, param); keep_alive = 0;
 				goto exit_handleclient_www;
 			}
 
@@ -1458,7 +1467,7 @@ parse_request:
 				if(!accept)
 				{
 					sprintf(param, "%s\nADMIN %s", STR_ERROR, STR_DISABLED);
-					http_response(conn_s, header, param, CODE_BAD_REQUEST, param);
+					http_response(conn_s, header, param, CODE_BAD_REQUEST, param); keep_alive = 0;
 					goto exit_handleclient_www;
 				}
 			}
@@ -1536,7 +1545,7 @@ parse_request:
 
 				sprintf(param, "ADMIN %s", sys_admin ? STR_ENABLED : STR_DISABLED);
 
-				if(!mc) http_response(conn_s, header, param, CODE_RETURN_TO_ROOT, param);
+				if(!mc) http_response(conn_s, header, param, CODE_RETURN_TO_ROOT, param); keep_alive = 0;
 
 				goto exit_handleclient_www;
 			}
@@ -1569,7 +1578,7 @@ parse_request:
 				buf_len = sprintf(header, HTML_RESPONSE_FMT,
 										  CODE_HTTP_OK, "/cpursx_ps3", HTML_HEADER, buffer, HTML_BODY_END);
 
-				send(conn_s, header, buf_len, 0);
+				send(conn_s, header, buf_len, 0); keep_alive = 0;
 
 				goto exit_handleclient_www;
 			}
@@ -2788,7 +2797,7 @@ parse_request:
 
 			if(!sysmem)
 			{
-				http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR);
+				http_response(conn_s, header, param, CODE_SERVER_BUSY, STR_ERROR); keep_alive = 0;
 				goto exit_handleclient_www;
 			}
 

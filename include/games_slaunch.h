@@ -1,14 +1,5 @@
 #define MAX_SLAUNCH_ITEMS	1000
 
-#define TYPE_ALL 0
-#define TYPE_PS1 1
-#define TYPE_PS2 2
-#define TYPE_PS3 3
-#define TYPE_PSP 4
-#define TYPE_VID 5
-#define TYPE_ROM 6
-#define TYPE_MAX 7
-
 #define SLAUNCH_PEEK_ADDR  0x8000000000000180
 
 #ifdef SLAUNCH_FILE

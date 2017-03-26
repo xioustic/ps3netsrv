@@ -437,7 +437,7 @@ static bool scan_mygames_xml(u64 conn_s_p)
 #endif
 
 #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
-	f1_len = webman_config->roms ? 13 : webman_config->ps3l ? 12 : 11;
+	f1_len = (webman_config->roms ? id_ROMS : webman_config->ps3l ? id_GAMEI : id_VIDEO) + 1;
 #endif
 
 	int ns = NONE; u8 uprofile = profile;
@@ -480,16 +480,16 @@ static bool scan_mygames_xml(u64 conn_s_p)
 #ifdef PKG_LAUNCHER
 			if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS)) continue;}
 #endif
-			if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
-			if(IS_NTFS)  {if(f1 > 8) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
+			if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[id_VIDEO], (IS_HDD0) ? "video" : "GAMES_DUP");}
+			if(IS_NTFS)  {if(f1 >= id_ISO) break; else if(IS_JB_FOLDER || (f1 == id_PSXGAMES)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
 #ifdef NET_SUPPORT
 			if(is_net)
 			{
-				if(f1 > 8) break; // ignore 9="ISO", 10="video", 11="GAMEI"
+				if(f1 >= id_ISO) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 			}
 #endif
-			if(check_content(f1)) continue;
+			if(check_content_type(f1)) continue;
 
 #ifdef NET_SUPPORT
 			if(is_net && (netiso_svrid == (f0-7)) && (g_socket != -1)) ns = g_socket; /* reuse current server connection */ else
@@ -738,10 +738,10 @@ next_xml_entry:
 //
 continue_reading_folder_xml:
 
-			if((uprofile > 0) && (f1 < 9)) {subfolder = uprofile = 0; goto read_folder_xml;}
+			if((uprofile > 0) && (f1 < id_ISO)) {subfolder = uprofile = 0; goto read_folder_xml;}
 			if(!IS_NTFS)
 			{
-				if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_xml;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_xml;}
+				if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_xml;} else if(li < 99 && f1 < id_ISO) {li = 99; goto subfolder_letter_xml;}
 			}
 //
 		}

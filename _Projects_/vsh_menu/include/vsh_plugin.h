@@ -50,7 +50,7 @@ static unsigned int get_vsh_plugin_slot_by_name(const char *name, bool unload)
 
 		if(strstr(tmp_filename, name) || !strcmp(tmp_name, name))
 		{
-			if(strstr(tmp_filename, "webftp_server"))
+			if(strstr(tmp_filename, "webftp_server") || strstr(tmp_filename, "sman.sprx"))
 			{
 				if(unload) {if(wm_unload) continue; send_wm_request("/quit.ps3"); return 0;}
 				return wm_unload ? 0 : slot;

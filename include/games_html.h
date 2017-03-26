@@ -4,21 +4,40 @@
 
 #define ROMS_EXTENSIONS ".ZIP.GBA.NES.UNIF.GB.GBC.DMG.MD.SMD.GEN.SMS.GG.SG.IOS.FLAC.NGP.NGC.PCE.SGX.VB.VBOY.WS.WSC.FDS.EXE.WAD.IWAD.SMC.FIG.SFC.GD3.GD7.DX2.BSX.SWC.A26.PAK"
 
-#define IS_ISO_FOLDER (((f1>1) && (f1<10)) || (f1==12))
-#define IS_PS3_TYPE   ((f1<3) || (f1==10 || f1==11))
-#define IS_BLU_TYPE   ((f1<4) || (f1==10 || f1==11))
-#define IS_VID_FOLDER ((f1==3) || (f1==4))
+// paths: 0="GAMES", 1="GAMEZ", 2="PS3ISO", 3="BDISO", 4="DVDISO", 5="PS2ISO", 6="PSXISO", 7="PSXGAMES", 8="PSPISO", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
-#define IS_JB_FOLDER    ((f1<2) || (f1==10))
-#define IS_PS3_FOLDER   (f1==2)
-#define IS_BLU_FOLDER   (f1==3)
-#define IS_DVD_FOLDER   (f1==4)
-#define IS_PS2_FOLDER   (f1==5)
-#define IS_PSX_FOLDER   ((f1==6) || (f1==7))
-#define IS_PSP_FOLDER   ((f1==8) || (f1==9))
-#define IS_VIDEO_FOLDER (f1==10)
-#define IS_GAMEI_FOLDER (f1==11)
-#define IS_ROMS_FOLDER  (f1==12)
+enum paths_ids
+{
+	id_GAMES    = 0,
+	id_GAMEZ    = 1,
+	id_PS3ISO   = 2,
+	id_BDISO    = 3,
+	id_DVDISO   = 4,
+	id_PS2ISO   = 5,
+	id_PSXISO   = 6,
+	id_PSXGAMES = 7,
+	id_PSPISO   = 8,
+	id_ISO      = 9,
+	id_VIDEO    = 10,
+	id_GAMEI    = 11,
+	id_ROMS     = 12,
+};
+
+#define IS_ISO_FOLDER (((f1>=id_PS3ISO) && (f1<=id_ISO)) || (f1==id_ROMS))
+#define IS_PS3_TYPE    ((f1<=id_PS3ISO) || (f1==id_VIDEO || (f1==id_GAMEI)))
+#define IS_BLU_TYPE    ((f1<=id_BDISO)  || (f1==id_VIDEO || (f1==id_GAMEI)))
+#define IS_VID_FOLDER  ((f1==id_BDISO)  || (f1==id_DVDISO))
+
+#define IS_JB_FOLDER    ((f1<=id_GAMEZ) || (f1==id_VIDEO))
+#define IS_PS3_FOLDER    (f1==id_PS3ISO)
+#define IS_BLU_FOLDER    (f1==id_BDISO)
+#define IS_DVD_FOLDER    (f1==id_DVDISO)
+#define IS_PS2_FOLDER    (f1==id_PS2ISO)
+#define IS_PSX_FOLDER   ((f1==id_PSXISO) || (f1==id_PSXGAMES))
+#define IS_PSP_FOLDER   ((f1==id_PSPISO) || (f1==id_ISO))
+#define IS_VIDEO_FOLDER  (f1==id_VIDEO)
+#define IS_GAMEI_FOLDER  (f1==id_GAMEI)
+#define IS_ROMS_FOLDER   (f1==id_ROMS)
 
 #define IS_HDD0       (f0 == 0)
 #define IS_NTFS       (f0 == NTFS)
@@ -76,9 +95,9 @@ enum icon_type
 #define SHOW_COVERS          ((webman_config->nocov == SHOW_MMCOVERS) || (webman_config->nocov == ONLINE_COVERS))
 
 #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
- static u8 f1_len = 13; //11 + GAMEI + ROMS
+ static u8 f1_len = 13;       // VIDEO + GAMEI + ROMS
 #else
- static const u8 f1_len = 11;
+ static const u8 f1_len = 11; // VIDEO
 #endif
 
 #ifdef LAUNCHPAD
@@ -441,9 +460,8 @@ no_icon0:
 	if((webman_config->nocov == SHOW_ICON0) && get_cover_from_name(icon, file, tempID)) return default_icon; // show mm cover as last option (if it's disabled)
 
 	//show the default icon by type
-	if(default_icon == iPS3)
 	{
-		sprintf(icon, "%s/%s", param + 6, filename);
+		sprintf(icon, "%s/%s", param + 6, file);
 
 			 if(strstr(icon, "PSX")) //if(strstr(param, "/PSX") || !extcmp(file, ".ntfs[PSXISO]", 13))
 			default_icon = iPSX;
@@ -453,45 +471,11 @@ no_icon0:
 			default_icon = iPSP;
 		else if(strstr(icon, "DVD")) //if(strstr(param, "/DVDISO") || !extcmp(file, ".ntfs[DVDISO]", 13))
 			default_icon = iDVD;
+		else if(strstr(icon, "BDISO")) //if(strstr(param, "/BDISO") || !extcmp(file, ".ntfs[BDISO]", 13))
+			default_icon = iBDVD;
+		else
+			default_icon = iPS3;
 	}
-
-#ifdef COBRA_ONLY
-	if(NO_ICON && IS_PS3_FOLDER && !IS_NTFS && !IS_NET && IS_INGAME)
-	{
-		sprintf(icon, "%s/%s", param, file);
-
-		//extact icon0.png from hdd/usb (not from ntfs)
-		if(file_exists(icon))
-		{
-			char *cobra_iso_list[1];
-			cobra_iso_list[0] = icon;
-
-			{ PS3MAPI_ENABLE_ACCESS_SYSCALL8 }
-
-			cobra_send_fake_disc_eject_event();
-			sys_timer_usleep(10000);
-			cobra_umount_disc_image();
-			cobra_mount_ps3_disc_image(cobra_iso_list, 1);
-			sys_timer_usleep(10000);
-			cobra_send_fake_disc_insert_event();
-			sys_timer_usleep(10000);
-
-			*icon = NULL;
-			wait_for("/dev_bdvd/PS3_GAME/PARAM.SFO", 3);
-
-			size_t len = get_name(icon, file, GET_WMTMP); strcat(icon, ".SFO");
-			file_copy("/dev_bdvd/PS3_GAME/PARAM.SFO", icon, COPY_WHOLE_FILE);
-			sprintf(icon + len, ".PNG");
-			file_copy("/dev_bdvd/PS3_GAME/ICON0.PNG", icon, COPY_WHOLE_FILE);
-
-			cobra_send_fake_disc_eject_event();
-			sys_timer_usleep(4000);
-			cobra_umount_disc_image();
-
-			{ PS3MAPI_DISABLE_ACCESS_SYSCALL8 }
-		}
-	}
-#endif
 
 	if(!HAS(icon)) strcpy(icon, wm_icons[default_icon]);
 	return default_icon;
@@ -595,7 +579,7 @@ static int get_name_iso_or_sfo(char *templn, char *tempID, char *icon, const cha
 	else
 	{
 		get_name(templn, entry_name, NO_EXT);
-		if((f1 >= 5 && f1 <=9) && (webman_config->info == 1 || webman_config->info == 2)) get_cover_from_name(icon, entry_name, tempID);
+		if((f1 >= 5 && f1 <= 9) && (webman_config->info == 1 || webman_config->info == 2)) get_cover_from_name(icon, entry_name, tempID);
 	}
 
 	return CELL_OK;
@@ -859,7 +843,7 @@ static int check_drive(u8 f0)
 	return CELL_OK;
 }
 
-static int check_content(u8 f1)
+static int check_content_type(u8 f1)
 {
 	if( (webman_config->cmask & PS3) && IS_PS3_TYPE   ) return FAILED; // 0="GAMES", 1="GAMEZ", 2="PS3ISO", 10="video"
 	if( (webman_config->cmask & BLU) && IS_BLU_FOLDER ) return FAILED;
@@ -1057,7 +1041,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		u8 div_size = mobile_mode ? 0 : GAME_DIV_SIZE;
 
 #if defined(PKG_LAUNCHER) || defined(MOUNT_ROMS)
-		f1_len = webman_config->roms ? 13 : webman_config->ps3l ? 12 : 11;
+		f1_len = (webman_config->roms ? id_ROMS : webman_config->ps3l ? id_GAMEI : id_VIDEO) + 1;
 #endif
 
 #ifdef LAUNCHPAD
@@ -1095,11 +1079,11 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			typedef struct // 1MB for 2000+1 titles
 			{
 				u8  type;
-				char     id[10];
+				char id[10];
 				u8  path_pos; // start position of path
 				u16 icon_pos; // start position of icon
 				u16 padd;
-				char     name[508]; // name + path + icon
+				char name[508]; // name + path + icon
 			} __attribute__((packed)) _slaunch; _slaunch slaunch; u64 read_e;
 
 			int flen, slen;
@@ -1110,23 +1094,23 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 				char *path = slaunch.name + slaunch.path_pos;
 				char *templn = slaunch.name;
-				char *param = path + 10;
+				char *param = path + 10; // remove /mount_ps3
 				char *icon = slaunch.name + slaunch.icon_pos;
 
 				if(*filter_name >= ' '  &&  !strcasestr(templn, filter_name) &&
 											!strcasestr(param,  filter_name)) continue;
 
-				u8 f1 = (slaunch.type == 1) ? 6 :
-						(slaunch.type == 2) ? 5 :
-						(slaunch.type == 3) ? 2 :
-						(slaunch.type == 4) ? 8 :
-						(slaunch.type == 5) ? 3 : 12;
+				u8 f1 = (slaunch.type == TYPE_PS1) ? id_PSXISO :
+						(slaunch.type == TYPE_PS2) ? id_PS2ISO :
+						(slaunch.type == TYPE_PS3) ? id_PS3ISO :
+						(slaunch.type == TYPE_PSP) ? id_PSPISO :
+						(slaunch.type == TYPE_VID) ? id_BDISO  : id_ROMS;
 
-				if((f1 == 2) && strstr(param, "/GAME")) f1 = 0;
+				if((f1 == id_PS3ISO) && strstr(param, "/GAME")) f1 = id_GAMES;
 
 				if(b1) {if((b1 >= 2) && ((f1 < b1) || IS_JB_FOLDER) && (filter1 < 3)); else if(filter1!=f1) continue;}
 				else
-					if(check_content(f1)) continue;
+					if(check_content_type(f1)) continue;
 
 				default_icon =  get_default_icon_by_type(f1);
 
@@ -1201,19 +1185,19 @@ list_games:
 #ifdef PKG_LAUNCHER
 				if(IS_GAMEI_FOLDER) {if(is_net || (IS_HDD0) || (IS_NTFS) || (!webman_config->ps3l)) continue;}
 #endif
-				if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[10], (IS_HDD0) ? "video" : "GAMES_DUP");}
-				if(IS_NTFS)  {if(f1 > 8) break; else if(IS_JB_FOLDER || (f1 == 7)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
+				if(IS_VIDEO_FOLDER) {if(is_net) continue; else strcpy(paths[id_VIDEO], (IS_HDD0) ? "video" : "GAMES_DUP");}
+				if(IS_NTFS)  {if(f1 >= id_ISO) break; else if(IS_JB_FOLDER || (f1 == id_PSXGAMES)) continue;} // 0="GAMES", 1="GAMEZ", 7="PSXGAMES", 9="ISO", 10="video", 11="GAMEI", 12="ROMS"
 
 #ifdef NET_SUPPORT
 				if(is_net)
 				{
-					if(f1 > 8) break; // ignore 9="ISO", 10="video", 11="GAMEI"
+					if(f1 >= id_ISO) break; // ignore 9="ISO", 10="video", 11="GAMEI"
 				}
 #endif
 				if(b0) {if((b0 == 2) && (f0 < 7)); else if((b0 == 3) && (!IS_NTFS)); else if(filter0!=f0) continue;}
 				if(b1) {if((b1 >= 2) && ((f1 < b1) || IS_JB_FOLDER) && (filter1 < 3)); else if(filter1!=f1) continue;}
 				else
-					if(check_content(f1)) continue;
+					if(check_content_type(f1)) continue;
 
 #ifdef NET_SUPPORT
 				if(is_net && (netiso_svrid == (f0-7)) && (g_socket != -1)) ns = g_socket; /* reuse current server connection */ else
@@ -1449,10 +1433,10 @@ next_html_entry:
 //
 	continue_reading_folder_html:
 
-				if((uprofile > 0) && (f1 < 9)) {subfolder = uprofile = 0; goto read_folder_html;}
+				if((uprofile > 0) && (f1 < id_ISO)) {subfolder = uprofile = 0; goto read_folder_html;}
 				if(!IS_NTFS)
 				{
-					if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_html;} else if(li < 99 && f1 < 9) {li = 99; goto subfolder_letter_html;}
+					if(is_net && ls && (li < 27)) {li++; goto subfolder_letter_html;} else if(li < 99 && f1 < id_ISO) {li = 99; goto subfolder_letter_html;}
 				}
 //
 			}

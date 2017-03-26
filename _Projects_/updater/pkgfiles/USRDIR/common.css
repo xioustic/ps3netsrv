@@ -11,9 +11,9 @@ table{border-spacing:0;border-collapse:collapse;}
 input:focus{border:2px solid #0099FF;}
 .propfont{font-family:"Courier New",Courier,monospace;text-shadow:1px 1px #101010;}
 @keyframes msg {
-  0%{color:#ffffff}
-  50%{color:#101010}
-  100%{color:#ffffff}
+	0%{color:#ffffff}
+	50%{color:#101010}
+	100%{color:#ffffff}
 }
 #rxml,#rhtm,#rcpy,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);animation-name:msg;animation-duration: 6s;animation-iteration-count:infinite;}
 body{background-color:#101010}body,a.s,td,th{color:#F0F0F0;white-space:nowrap;}
@@ -25,59 +25,61 @@ td+td{text-align:right;white-space:nowrap}
 position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}
 
 @keyframes tilt {
-    0% {rotation:normal;}
-    50% {
-        -ms-transform: rotate(3deg); /* IE 9 */
-        -webkit-transform: rotate(3deg); /* Chrome, Safari, Opera */
-        transform: rotate(3deg);}
-    100% {rotation:normal;}
+	0% {rotation:normal;}
+	50% {
+		-ms-transform: rotate(3deg); /* IE 9 */
+		-webkit-transform: rotate(3deg); /* Chrome, Safari, Opera */
+		transform: rotate(3deg);}
+	100% {rotation:normal;}
 }
-.gi:hover{animation-name:tilt;animation-duration: 0.5s;}
+.gi:active,.gi:hover{animation-name:tilt;animation-duration: 0.5s;}
 
 
 .gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}
 .bu{background:#444;}.bf{background:#121;}
 
 .tg {
-  display:inline-block;cursor:pointer;
-  background: #0566aa;
-  background-image: -webkit-linear-gradient(top, #0565aa, #01111a);
-  background-image: -moz-linear-gradient(top, #0565aa, #01111a);
-  background-image: -ms-linear-gradient(top, #0565aa, #01111a);
-  background-image: -o-linear-gradient(top, #0565aa, #01111a);
-  background-image: linear-gradient(to bottom, #0565aa, #01111a);
-  -webkit-border-radius: 7;
-  -moz-border-radius: 7;
-  border-radius: 7px;
-  font-family: Arial;
-  color: #ffffff;
-  font-size: 20px;
-  padding:4px 15px; margin:3px;
-  text-decoration: none;
+	display:inline-block;cursor:pointer;
+	background: #0566aa;
+	background-image:-webkit-linear-gradient(top, #0565aa, #01111a);
+	background-image:-moz-linear-gradient(top, #0565aa, #01111a);
+	background-image:-ms-linear-gradient(top, #0565aa, #01111a);
+	background-image:-o-linear-gradient(top, #0565aa, #01111a);
+	background-image:linear-gradient(to bottom, #0565aa, #01111a);
+	-webkit-border-radius: 7;
+	-moz-border-radius: 7;
+	border-radius: 7px;
+	font-family: Arial;
+	color: #ffffff;
+	font-size: 20px;
+	padding:4px 15px; margin:3px;
+	text-decoration: none;
 }
-
+.tg:active {
+	transform:translate(2px,2px);
+	transition-duration:0.3s;
+}
 @keyframes highlight {
-    from {color: #a0a0a0;}
-    to {color: #ffffff;}
+	from {color: #a0a0a0;}
+	to {color: #ffffff;}
 }
-
 .tg:hover {
-  background: #0977bb;
-  background-image: -webkit-linear-gradient(top, #0977bb, #01111f);
-  background-image: -moz-linear-gradient(top, #0977bb, #01111f);
-  background-image: -ms-linear-gradient(top, #0977bb, #01111f);
-  background-image: -o-linear-gradient(top, #0977bb, #01111f);
-  background-image: linear-gradient(to bottom, #0977bb, #01111f);
-  text-decoration: none;
-  animation-name: highlight;
-  animation-duration: 1s;
+	background: #0977bb;
+	background-image:-webkit-linear-gradient(top, #0977bb, #01111f);
+	background-image:-moz-linear-gradient(top, #0977bb, #01111f);
+	background-image:-ms-linear-gradient(top, #0977bb, #01111f);
+	background-image:-o-linear-gradient(top, #0977bb, #01111f);
+	background-image:linear-gradient(to bottom, #0977bb, #01111f);
+	text-decoration:none;
+	animation-name:highlight;
+	animation-duration:1s;
 }
 
 @keyframes bs_highlight {
-    from {background-color: #ccc;}
-    to {background-color: #048;}
+	from {background-color:#ccc;}
+	to {background-color:#048;}
 }
-
 .bs,input[type="button"]{border:1px;padding:6px 10px;border-radius:4px;cursor:pointer;}
 .bs:hover,input[type="button"]:hover{background:none #048;color:#FFF;animation-name:bs_highlight;animation-duration: 0.8s;}
+
 label:hover{text-shadow:1px 1px 5px #CCC;}
