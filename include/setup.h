@@ -39,7 +39,7 @@ static void setup_parse_settings(char *param)
 {
 	char *pos;
 
-	pos = strstr(param, "autop="); if(!pos) return;
+	pos = strstr(param, "&ic="); if(!pos) return;
 
 	memset(webman_config, 0, sizeof(WebmanCfg));
 

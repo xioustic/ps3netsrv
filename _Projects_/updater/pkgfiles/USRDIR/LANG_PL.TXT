@@ -1,4 +1,4 @@
-﻿STR_TRADBY			[<br/>|Tłumaczenie - mpq1671 | Oparte na pracy użytkownika Raskolnikow<br/></a><br/>]
+STR_TRADBY			[<br/>|Tłumaczenie - mpq1671 | Oparte na pracy użytkownika Raskolnikow<br/></a><br/>]
 
 STR_FILES				[Pliki]
 STR_GAMES				[Gry]

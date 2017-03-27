@@ -1,4 +1,4 @@
-﻿STR_TRADBY		[- Nederlandse vertaling door piaf (psx-scene)</a><br/>]
+STR_TRADBY		[- Nederlandse vertaling door piaf (psx-scene)</a><br/>]
 
 STR_FILES		[Bestanden]
 STR_GAMES		[Spellen]
