@@ -343,8 +343,9 @@ static u32 get_system_language(u8 *lang)
 		case 0x5:
 			*lang = 5;		//dut //Olandese
 			break;
-		case 0x6:
-			*lang = 6;		//por-por
+		case 0x6:			//por-por
+		case 0x11:			//por-bra
+			*lang = 6;
 			break;
 		case 0x7:
 			*lang = 7;		//rus
@@ -373,9 +374,6 @@ static u32 get_system_language(u8 *lang)
 		//	break;
 		case 0x10:
 			*lang = 9;		//pol
-			break;
-		case 0x11:
-			*lang = 12;		//por-bra
 			break;
 		//case 0x12:
 		//	*lang = 0;		//eng-uk

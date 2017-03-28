@@ -459,7 +459,7 @@ static bool scan_mygames_xml(u64 conn_s_p)
 		}
 
 #ifdef USE_NTFS
-		if(IS_NTFS && webman_config->ntfs) prepNTFS();
+		if(IS_NTFS && webman_config->ntfs) prepNTFS(0);
 #endif
 		is_net = IS_NET;
 

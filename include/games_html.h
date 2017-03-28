@@ -1043,6 +1043,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 		// filter html content
 		char filter_name[STD_PATH_LEN]; *filter_name = NULL;
 		u8 filter0, filter1, b0, b1; filter0 = filter1 = b0 = b1 = 0;
+		u8 clear_ntfs = 0;
 
 		u8 div_size = mobile_mode ? 0 : GAME_DIV_SIZE;
 
@@ -1059,7 +1060,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 #endif
 		{
 #ifdef COBRA_ONLY
-			if(strstr(param, "ntfs")) {filter0 = NTFS, b0 = 1;} else
+			if(strstr(param, "ntfs")) {filter0 = NTFS, b0 = 1; clear_ntfs = (strstr(param, "ntfs(0)") != NULL);} else
 #endif
 			for(u8 f0 = 0; f0 < 16; f0++) if(strstr(param, drives[f0])) {filter0 = f0, b0 = 1; break;}
 			for(u8 f1 = 0; f1 < f1_len; f1++) if(strstr(param, paths [f1])) {filter1 = f1, b1 = 1; break;}
@@ -1480,7 +1481,7 @@ next_html_entry:
 					}
 		}
 #ifdef USE_NTFS
-		else if(retry && (filter0 == NTFS)) {prepNTFS(); --retry; goto list_games;}
+		else if(retry && (filter0 == NTFS)) {prepNTFS(clear_ntfs); --retry; goto list_games;}
 #endif
 
 #ifndef LITE_EDITION

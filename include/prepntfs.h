@@ -15,7 +15,7 @@ enum ntfs_folders
 
 static u8 prepntfs_working = false;
 
-static int prepNTFS(void)
+static int prepNTFS(u8 clear)
 {
 	if(prepntfs_working) return 0;
 	prepntfs_working = true;
@@ -57,7 +57,7 @@ static int prepNTFS(void)
 		while(!cellFsReaddir(fd, &dir, &read) && read)
 		{
 			ext = strstr(dir.d_name, ".ntfs[");
-			if(ext && ((mountCount <= 0) || (!IS(ext, ".ntfs[BDFILE]") && !IS(ext, ".ntfs[PS2ISO]") && !IS(ext, ".ntfs[PSPISO]")))) {sprintf(path_file, "%s", dir.d_name); cellFsUnlink(path);}
+			if(ext && (clear || (mountCount <= 0) || (!IS(ext, ".ntfs[BDFILE]") && !IS(ext, ".ntfs[PS2ISO]") && !IS(ext, ".ntfs[PSPISO]")))) {sprintf(path_file, "%s", dir.d_name); cellFsUnlink(path);}
 		}
 		cellFsClosedir(fd);
 	}

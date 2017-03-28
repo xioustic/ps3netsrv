@@ -22,6 +22,8 @@ td+td{text-align:right;white-space:nowrap}
 .ic{position:absolute;top:5px;right:5px;left:5px;bottom:40px;}
 /*.gi{height:210px;width:267px;*/
 .gi{max-height:210px;max-width:260px;
+  -webkit-filter: drop-shadow(5px 5px 15px #000000); filter: drop-shadow(5px 5px 15px #000000);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=12, OffY=12, Color='#000000')"; filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=12, OffY=12, Color='#000')";
 position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}
 
 @keyframes tilt {

@@ -764,7 +764,7 @@ static s64 val(const char *c);
 static ntfs_md *mounts = NULL;
 static int mountCount = NTFS_UNMOUNTED;
 
-static int prepNTFS(void);
+static int prepNTFS(u8 clear);
 #endif
 
 int wwwd_start(size_t args, void *argp);
@@ -3082,13 +3082,14 @@ parse_request:
 						// /refresh.ps3?cover=<mode>  refresh XML using cover type (icon0, mm, disc, online)
 						// /refresh.ps3?ntfs          refresh NTFS volumes
 						// /refresh.ps3?prepntfs      refresh NTFS volumes & scan ntfs ISOs
+						// /refresh.ps3?prepntfs(0)   refresh NTFS volumes & scan ntfs ISOs
 #ifdef USE_NTFS
 						if(islike(param + 12, "?ntfs") || islike(param + 12, "?prepntfs"))
 						{
 							check_ntfs_volumes();
 
 							int ngames = 0; *header = NULL;
-							if(islike(param + 12, "?prepntfs")) {ngames = prepNTFS(); sprintf(header, " • <a href=\"%s\">%i %s</a>", WMTMP, ngames, STR_GAMES);}
+							if(islike(param + 12, "?prepntfs")) {ngames = prepNTFS(strchr(param, '0')!=NULL); sprintf(header, " • <a href=\"%s\">%i</a> <a href=\"/index.ps3?ntfs\">%s</a>", WMTMP, ngames, STR_GAMES);}
 
 							sprintf(param, "NTFS VOLUMES: %i%s", mountCount, header); is_busy = false;
 
