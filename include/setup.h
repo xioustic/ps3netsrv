@@ -43,8 +43,9 @@ static void setup_parse_settings(char *param)
 
 	memset(webman_config, 0, sizeof(WebmanCfg));
 
-	get_value(webman_config->autoboot_path, pos + 6, 255);
-	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
+	pos = strstr(param, "&autop=");
+	if(pos) get_value(webman_config->autoboot_path, pos + 7, 255);
+	if((webman_config->autoboot_path[0] != '/') && !islike(webman_config->autoboot_path, "http")) sprintf(webman_config->autoboot_path, "%s", DEFAULT_AUTOBOOT_PATH);
 
 	if(strstr(param, "u0=1")) webman_config->usb0 = 1;
 	if(strstr(param, "u1=1")) webman_config->usb1 = 1;
@@ -1224,7 +1225,7 @@ static void read_settings(void)
 	#endif
 
 	// set default autoboot path
-	if(webman_config->autoboot_path[0] == NULL) strcpy(webman_config->autoboot_path, DEFAULT_AUTOBOOT_PATH);
+	if((webman_config->autoboot_path[0] != '/') && !islike(webman_config->autoboot_path, "http")) sprintf(webman_config->autoboot_path, "%s", DEFAULT_AUTOBOOT_PATH);
 
 	// check stored data
 	if(webman_config->nowarn > 1) webman_config->nowarn = 0;
