@@ -1,4 +1,4 @@
-﻿STR_TRADBY		[- Traduction Française par M@tsumot0</a><br/>]
+STR_TRADBY		[- Traduction Française par M@tsumot0</a><br/>]
 
 STR_FILES		[Fichiers]
 STR_GAMES		[Jeux]

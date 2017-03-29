@@ -1,4 +1,4 @@
-﻿STR_TRADBY			[</a><br/>ﺓﺭﺎﻴﻛ ﺭﺪﻴﺣ Haider.Kiara ﺔﻄﺳاﻮﺑ ﺔﻴﺑﺮﻌﻟا ﺔﻤﺟﺮﺘﻟا - ]
+STR_TRADBY			[</a><br/>ﺓﺭﺎﻴﻛ ﺭﺪﻴﺣ Haider.Kiara ﺔﻄﺳاﻮﺑ ﺔﻴﺑﺮﻌﻟا ﺔﻤﺟﺮﺘﻟا - ]
 
 STR_FILES			[ﺕﺎﻔﻠﻣ]
 STR_GAMES			[ﺏﺎﻌﻟا]

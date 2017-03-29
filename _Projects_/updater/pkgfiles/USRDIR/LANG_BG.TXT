@@ -1,4 +1,4 @@
-﻿STR_TRADBY			[Dzver]
+STR_TRADBY			[Dzver]
 
 STR_FILES			[Файлове]
 STR_GAMES			[Игри]

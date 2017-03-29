@@ -1,4 +1,4 @@
-﻿STR_TRADBY			[- A nyelvi fájlt JohnDoe fordította magyarra (ps3-hack.hu).</a><br/>]
+STR_TRADBY			[- A nyelvi fájlt JohnDoe fordította magyarra (ps3-hack.hu).</a><br/>]
 
 STR_FILES			[Fájlok]
 STR_GAMES			[Játékok]

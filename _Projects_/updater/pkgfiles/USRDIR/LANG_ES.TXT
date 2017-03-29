@@ -1,4 +1,4 @@
-﻿STR_TRADBY	[- Traducción Español por piponito/juancambb (psx-scene.com)</a><br/>]
+STR_TRADBY	[- Traducción Español por piponito/juancambb (psx-scene.com)</a><br/>]
 
 STR_FILES			[Archivos]
 STR_GAMES			[Juegos]

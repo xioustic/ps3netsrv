@@ -1,4 +1,4 @@
-﻿STR_TRADBY		[- 日本語翻訳：皇帝(Rudolph)</a><br/>]
+STR_TRADBY		[- 日本語翻訳：皇帝(Rudolph)</a><br/>]
 
 STR_FILES		[ファイル]
 STR_GAMES		[ゲーム]

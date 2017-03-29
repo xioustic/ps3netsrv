@@ -1,4 +1,4 @@
-﻿STR_TRADBY			[- 語言由 小熊(smallbear) 翻譯</a><br/>]
+STR_TRADBY			[- 語言由 小熊(smallbear) 翻譯</a><br/>]
 
 STR_FILES			[檔案]
 STR_GAMES			[遊戲]

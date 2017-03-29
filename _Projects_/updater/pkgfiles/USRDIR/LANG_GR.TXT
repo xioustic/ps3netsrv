@@ -1,4 +1,4 @@
-﻿STR_TRADBY		[-Μετάφραση Ελληνικών απο τον GRDriftKing</a><br/>]
+STR_TRADBY		[-Μετάφραση Ελληνικών απο τον GRDriftKing</a><br/>]
 
 STR_FILES		[Αρχεία]
 STR_GAMES		[Παιχνίδια]

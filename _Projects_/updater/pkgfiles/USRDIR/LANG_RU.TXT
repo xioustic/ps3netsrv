@@ -1,4 +1,4 @@
-﻿STR_TRADBY			[<br>]
+STR_TRADBY			[<br>]
 
 STR_FILES			[Файлы]
 STR_GAMES			[Игры]

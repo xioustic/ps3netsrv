@@ -1,4 +1,4 @@
-﻿STR_TRADBY			[- Türkçe çeviri ozayturay tarafından (psx-scene.com)</a><br/>]
+STR_TRADBY			[- Türkçe çeviri ozayturay tarafından (psx-scene.com)</a><br/>]
 
 STR_FILES			[Dosyalar]
 STR_GAMES			[Oyunlar]
