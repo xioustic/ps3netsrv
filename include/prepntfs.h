@@ -168,6 +168,7 @@ next_ntfs_entry:
 								else if(parts > 0)
 								{
 									num_tracks = 1;
+									struct stat bufn; size_t cd_sector_size = 0;
 
 										 if(m == mPS3) emu_mode = EMU_PS3;
 									else if(m == mBLU) emu_mode = EMU_BD;
@@ -175,6 +176,21 @@ next_ntfs_entry:
 									else if(m == mPSX)
 									{
 										emu_mode = EMU_PSX;
+
+										if(ps3ntfs_stat(path, &bufn) < 0) continue;
+										cd_sector_size = default_cd_sector_size(bufn.st_size);
+
+										// detect CD sector size
+										fd = ps3ntfs_open(path, O_RDONLY, 0);
+										if(fd >= 0)
+										{
+											char buffer[0x10]; buffer[0xD] = '\0';
+											ps3ntfs_seek64(fd, 0x9320LL, SEEK_SET); ps3ntfs_read(fd, (void *)buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) cd_sector_size = 2352; else {
+											ps3ntfs_seek64(fd, 0x8020LL, SEEK_SET); ps3ntfs_read(fd, (void *)buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) cd_sector_size = 2048; else {
+											ps3ntfs_seek64(fd, 0x9220LL, SEEK_SET); ps3ntfs_read(fd, (void *)buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) cd_sector_size = 2336; else {
+											ps3ntfs_seek64(fd, 0x9920LL, SEEK_SET); ps3ntfs_read(fd, (void *)buffer, 0xC); if(memcmp(buffer, "PLAYSTATION ", 0xC) == 0) cd_sector_size = 2448; }}}
+											ps3ntfs_close(fd);
+										}
 
 										strcpy(path + plen - 3, "CUE");
 
@@ -215,7 +231,8 @@ next_ntfs_entry:
 											continue;
 										}
 
-										p_args->num_tracks = num_tracks;
+										p_args->num_tracks = num_tracks | (cd_sector_size<<4);
+
 										scsi_tracks = (ScsiTrackDescriptor *)(plugin_args + sizeof(rawseciso_args) + (2 * (parts * sizeof(u32))));
 
 										if(num_tracks <= 1)

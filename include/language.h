@@ -202,7 +202,7 @@ static char STR_MANUAL[32];//		= "Manual";
 
 static char STR_SAVE[24];//			= "Save";
 static char STR_SETTINGSUPD[192];//	= "Settings updated.<br><br>Click <a href=\"/restart.ps3\">here</a> to restart your PLAYSTATION®3 system.";
-static char STR_ERROR[16];//			= "Error!";
+static char STR_ERROR[16];//		= "Error!";
 
 static char STR_MYGAMES[32];//		= "webMAN Games";
 

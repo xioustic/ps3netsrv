@@ -612,7 +612,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 #endif
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
 
-				//if(strstr(param, "/PSX")) {sprintf(tempstr, " <font size=2>[CD %i • %s]</font>", CD_SECTOR_SIZE_2352, (webman_config->ps1emu) ? "ps1_netemu.self" : "ps1_emu.self"); strcat(buffer, tempstr);}
+				//if(strstr(param, "PSX")) {sprintf(tempstr, " <font size=2>[CD %i • %s]</font>", CD_SECTOR_SIZE_2352, (webman_config->ps1emu) ? "ps1_netemu.self" : "ps1_emu.self"); strcat(buffer, tempstr);}
 #ifdef PKG_LAUNCHER
 				is_gamei = strstr(param, "/GAMEI/");
 #endif
@@ -667,6 +667,9 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 					sprintf(tempstr, "<hr><a href=\"/play.ps3\"><img src=\"%s\" onerror=\"this.src='%s';\" border=0></a>"
 									 "<hr><a href=\"/dev_bdvd\">%s</a>", enc_dir_name, wm_icons[default_icon], mounted ? STR_GAMELOADED : STR_ERROR);
 				}
+
+				if(!mounted && !forced_mount && IS_INGAME) sprintf(tempstr + strlen(tempstr), " <a href=\"/mount_ps3%s\">/mount_ps3%s</a>", param + 10, param + 10);
+
 #ifndef ENGLISH_ONLY
 				close_language();
 #endif

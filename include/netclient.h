@@ -434,6 +434,7 @@ static void netiso_thread(u64 arg)
 	{
 		if(discsize % CD_SECTOR_SIZE_2352)
 		{
+			CD_SECTOR_SIZE_2352 = default_cd_sector_size(discsize);
 			discsize = discsize - (discsize % CD_SECTOR_SIZE_2352);
 		}
 	}

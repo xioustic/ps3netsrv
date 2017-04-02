@@ -150,6 +150,17 @@ static u64 discsize = 0;
 static int is_cd2352 = 0;
 static u8 *cd_cache = 0;
 
+static u32 default_cd_sector_size(size_t discsize)
+{
+	if(!(discsize % 0x930)) return 2352;
+	if(!(discsize % 0x920)) return 2336;
+	if(!(discsize % 0x940)) return 2368;
+	if(!(discsize % 0x990)) return 2448;
+	if(!(discsize % 0x800)) return 2048;
+
+	return 2352;
+}
+
 static int sys_storage_ext_mount_discfile_proxy(sys_event_port_t result_port, sys_event_queue_t command_queue_ntfs, int emu_type, u64 disc_size_bytes, u32 read_size, unsigned int trackscount, ScsiTrackDescriptor *tracks)
 {
 	system_call_8(SC_COBRA_SYSCALL8, SYSCALL8_OPCODE_MOUNT_DISCFILE_PROXY, result_port, command_queue_ntfs, emu_type, disc_size_bytes, read_size, trackscount, (u64)(u32)tracks);
@@ -1019,9 +1030,6 @@ static void rawseciso_thread(u64 arg)
 			CD_SECTOR_SIZE_2352 = (num_tracks & 0xFF00)>>4;
 		}
 
-		//if(CD_SECTOR_SIZE_2352 != 2352 && CD_SECTOR_SIZE_2352 != 2048 && CD_SECTOR_SIZE_2352 != 2336 && CD_SECTOR_SIZE_2352 != 2448) CD_SECTOR_SIZE_2352 = 2352;
-		if(CD_SECTOR_SIZE_2352 != 2352) cd_sector_size_param = CD_SECTOR_SIZE_2352<<4;
-
 		num_tracks &= 0xFF;
 
 		if(num_tracks)
@@ -1040,9 +1048,12 @@ static void rawseciso_thread(u64 arg)
 
 		if(discsize % CD_SECTOR_SIZE_2352)
 		{
+			CD_SECTOR_SIZE_2352 = default_cd_sector_size(discsize);
 			discsize = discsize - (discsize % CD_SECTOR_SIZE_2352);
 		}
 
+		//if(CD_SECTOR_SIZE_2352 != 2352 && CD_SECTOR_SIZE_2352 != 2048 && CD_SECTOR_SIZE_2352 != 2336 && CD_SECTOR_SIZE_2352 != 2448) CD_SECTOR_SIZE_2352 = 2352;
+		if(CD_SECTOR_SIZE_2352 != 2352) cd_sector_size_param = CD_SECTOR_SIZE_2352<<4;
 	}
 	else
 	{
