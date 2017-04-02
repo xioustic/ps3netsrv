@@ -981,6 +981,16 @@ static void restore_settings(void)
 
 static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_http, u8 is_cpursx, bool mount_ps3)
 {
+	if(strstr(param, "/sman.ps3") && file_exists(HTML_BASE_PATH "/sman.htm"))
+	{
+		read_file(HTML_BASE_PATH "/sman.htm", pbuffer, _32KB_, 0);
+
+		if(is_cpursx)
+			strcat(pbuffer, "<meta http-equiv=\"refresh\" content=\"6;URL=/cpursx.ps3?/sman.ps3\">");
+
+		return pbuffer;
+	}
+
 	sprintf(pbuffer, HTML_HEADER); char *buffer = pbuffer + HTML_HEADER_SIZE;
 
 	if(is_cpursx)
@@ -1424,6 +1434,7 @@ parse_request:
 							|| islike(param, "/mount")
 							|| islike(param, "/refresh.ps3")
 							|| islike(param, "/index.ps3")
+							|| islike(param, "/sman.ps3")
 							|| islike(param, "/games.ps3")
 							|| islike(param, "/play.ps3")
 
@@ -2559,6 +2570,7 @@ parse_request:
 
 			else if(islike(param, "/cpursx.ps3")
 				||  islike(param, "/index.ps3")
+				||  islike(param, "/sman.ps3")
 				||  islike(param, "/mount_ps3/")
 				||  islike(param, "/mount.ps3/")
  #ifdef PS2_DISC
@@ -2778,7 +2790,7 @@ parse_request:
 
 			if(show_info_popup || islike(param, "/cpursx.ps3")) is_cpursx = 1;
 			else
-			if((is_binary == FOLDER_LISTING) || islike(param, "/index.ps3"))
+			if((is_binary == FOLDER_LISTING) || islike(param, "/index.ps3") || islike(param, "/sman.ps3"))
 			{
 				sys_memory_container_t mc_app = get_app_memory_container();
 				if(mc_app && sys_memory_allocate_from_container(_3MB_, mc_app, SYS_MEMORY_PAGE_SIZE_1M, &sysmem) == CELL_OK) BUFFER_SIZE_HTML = _3MB_;
@@ -2831,6 +2843,7 @@ parse_request:
 					//CellGcmConfig config; cellGcmGetConfiguration(&config);
 					//sprintf(templn, "localAddr: %x", (u32) config.localAddress); strcat(pbuffer, templn);
 				}
+				else if(strstr(param, "/sman.ps3")) ;
 				else if(!mount_ps3)
 				{
 					{

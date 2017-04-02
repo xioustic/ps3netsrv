@@ -1004,7 +1004,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 	if(mobile_mode) {cellFsUnlink(GAMELIST_JS); buf_len = 0;}
 	else
 	{
-		if(islike(param, "/index.ps3?")) cellFsUnlink(WMTMP "/games.html");
+		if(islike(param, "/index.ps3?") || islike(param, "/sman.ps3?")) cellFsUnlink(WMTMP "/games.html");
 
 		if(cellFsStat(WMTMP "/games.html", &buf) == CELL_FS_SUCCEEDED && (buf.st_size > 10 && buf.st_size < BUFFER_MAXSIZE))
 		{
@@ -1499,7 +1499,7 @@ next_html_entry:
 #endif
 		if(mobile_mode)
 			sprintf(buffer, "slides = [");
-		else
+		else if(!islike(param, "/sman.ps3"))
 		{
 			sprintf(templn, // wait dialog div
 							"<div id=\"wmsg\"><H1>. . .</H1></div>"

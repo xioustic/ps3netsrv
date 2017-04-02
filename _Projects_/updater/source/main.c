@@ -450,6 +450,7 @@ int main()
 	sysLv2FsMkdir(XMLHOST_DIR, 0777);
 	CopyFile(APP_USRDIR "/mobile.html",    XMLHOST_DIR "/mobile.html");
 	CopyFile(APP_USRDIR "/background.gif", XMLHOST_DIR "/background.gif");
+	CopyFile(APP_USRDIR "/sman.htm",       XMLHOST_DIR "/sman.htm");
 
 	// copy javascripts
 	CopyFile(APP_USRDIR "/jquery.min.js",    XMLHOST_DIR "/jquery.min.js");  // jQuery v3.1.1
