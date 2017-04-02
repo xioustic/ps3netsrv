@@ -768,7 +768,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(islike(filename, "/dvd_bdvd"))
 								{system_call_1(36, (u64) "/dev_bdvd");} // decrypt dev_bdvd files
 
-							if(ftp_active > 1)
+							if(!sysmem && ftp_active > 1)
 							{
 								sys_memory_container_t mc_app = get_app_memory_container();
 								if(mc_app)	sys_memory_allocate_from_container(BUFFER_SIZE_FTP, mc_app, SYS_MEMORY_PAGE_SIZE_64K, &sysmem);
@@ -777,14 +777,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(sysmem || (!sysmem && sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 							{
 								char *buffer2 = (char*)sysmem;
+								int read_e = 0, pos;
 #ifdef USE_NTFS
 								if(is_ntfs_path(filename))
 								{
 									fd = ps3ntfs_open(filename + 5, O_RDONLY, 0);
+
 									if(fd > 0)
 									{
-										ssize_t read_e = 0;
-
 										ps3ntfs_seek64(fd, rest, SEEK_SET);
 
 										rest = 0;
@@ -795,17 +795,14 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 										while(working)
 										{
 											read_e = ps3ntfs_read(fd, (void *)buffer2, BUFFER_SIZE_FTP);
-											if(read_e >= 0)
+											if(read_e > 0)
 											{
-												if(read_e > 0)
-												{
-													if(send(data_s, buffer2, (size_t)read_e, 0)<0) {err = FAILED; break;}
-												}
-												else
-													break;
+												if(send(data_s, buffer2, (size_t)read_e, 0) < 0) {err = FAILED; break;}
 											}
-											else
+											else if(read_e < 0)
 												{err = FAILED; break;}
+											else
+												break;
 										}
 
 										ps3ntfs_close(fd); ftp_ntfs_transfer_in_progress--;
@@ -815,8 +812,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 #endif
 								if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 								{
-									u64 read_e = 0, pos; //, write_e
-
 									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 
 									//int optval = BUFFER_SIZE_FTP;

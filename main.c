@@ -323,7 +323,7 @@ SYS_MODULE_EXIT(wwwd_stop);
 
 #define	MAX_WWW_CC		(255)
 #define MAX_WWW_THREADS	(8)
-#define MAX_FTP_THREADS	(10)
+#define MAX_FTP_THREADS	(8)
 
 #define WWW_BACKLOG		(2001)
 #define	FTP_BACKLOG		(7)
