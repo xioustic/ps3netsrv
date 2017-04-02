@@ -631,7 +631,8 @@ typedef struct
 	u8 homeb;
 	char home_url[255];
 
-	u8 padding11[32];
+	u8 sman;
+	u8 padding11[31];
 
 	// spoof console id
 
@@ -1082,8 +1083,7 @@ static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_ht
 
 	char slider[40]; if(file_exists(MOBILE_HTML)) sprintf(slider, " [<a href=\"/games.ps3\">Slider</a>]"); else *slider = NULL;
 
-
-	size_t tlen = sprintf(templn, "<b>webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"/index.ps3\">%s</a>]%s", STR_TRADBY, STR_FILES, STR_GAMES, slider);
+	size_t tlen = sprintf(templn, "<b>webMAN " WM_VERSION " %s <font style=\"font-size:18px\">[<a href=\"/\">%s</a>] [<a href=\"%s\">%s</a>]%s", STR_TRADBY, STR_FILES, (webman_config->sman && file_exists(HTML_BASE_PATH "/sman.htm")) ? "/sman.ps3" : "/index.ps3", STR_GAMES, slider);
 
 #ifdef SYS_ADMIN_MODE
 	if(sys_admin)
@@ -2929,8 +2929,8 @@ parse_request:
 
 					sprintf(templn,  "%s%s XML%s\" %s'%s';\"> "
 									 "%s%s HTML%s\" %s'%s';\">",
-									 HTML_BUTTON, STR_REFRESH, SUFIX2(profile), HTML_ONCLICK, "/refresh.ps3';rxml.style.display='block",
-									 HTML_BUTTON, STR_REFRESH, SUFIX2(profile), HTML_ONCLICK, "/index.ps3?html';rhtm.style.display='block");
+									 HTML_BUTTON, STR_REFRESH, SUFIX2(profile), HTML_ONCLICK, "/refresh.ps3';document.getElementById('rxml').style.display='block",
+									 HTML_BUTTON, STR_REFRESH, SUFIX2(profile), HTML_ONCLICK, "/index.ps3?html';document.getElementById('rhtm').style.display='block");
 
 					pbuffer += concat(pbuffer, templn);
 

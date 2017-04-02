@@ -86,6 +86,7 @@ static void setup_parse_settings(char *param)
 
 	if(strstr(param, "ns=1")) webman_config->nosetup = 1;
 	if(strstr(param, "ng=1")) webman_config->nogrp   = 1;
+	if(strstr(param, "sm=1")) webman_config->sman    = 1;
 
 #ifdef NOSINGSTAR
 	if(strstr(param, "nss=1")) webman_config->noss = 1;
@@ -662,6 +663,8 @@ static void setup_form(char *buffer, char *templn)
 #ifdef NOSINGSTAR
 	add_check_box("nss", false, STR_NOSINGSTAR,  _BR_, (webman_config->noss), buffer);
 #endif
+
+	add_check_box("sm", false, "sMAN GUI",  _BR_, (webman_config->sman), buffer);
 
 //	add_check_box("np", false, STR_COMBOS,   _BR_, (webman_config->nopad), buffer);
 

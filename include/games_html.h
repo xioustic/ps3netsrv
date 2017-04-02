@@ -1011,6 +1011,8 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 			if(read_file(WMTMP "/games.html", (char*)(buffer + buf_len), buf.st_size, 0))
 			{
 				loading_games = 0; // return
+				if( islike(param, "/sman.ps3") &&  islike(buffer + buf_len, "<div id=\"wmsg\">")) loading_games = 1;
+				if(!islike(param, "/sman.ps3") && !islike(buffer + buf_len, "<div id=\"wmsg\">")) loading_games = 1;
 			}
 		}
 	}
@@ -1499,12 +1501,16 @@ next_html_entry:
 #endif
 		if(mobile_mode)
 			sprintf(buffer, "slides = [");
-		else if(!islike(param, "/sman.ps3"))
+		else if(islike(param, "/sman.ps3"))
+		{
+			sprintf(templn, "<script>document.getElementById('ngames').innerHTML='%'i %s';</script>", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
+		}
+		else
 		{
 			sprintf(templn, // wait dialog div
 							"<div id=\"wmsg\"><H1>. . .</H1></div>"
 							// show games count + find icon
-							"<a href=\"javascript:var s=prompt('Search:','');if(s){rhtm.style.display='block';self.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
+							"<a href=\"javascript:var s=prompt('Search:','');if(s){document.getElementById('rhtm').style.display='block';self.location='/index.ps3?'+escape(s)}\">%'i %s &#x1F50D;</a></font>"
 							// separator
 							"<HR><span style=\"white-space:normal;\">", idx, (strstr(param, "DI")!=NULL) ? STR_FILES : STR_GAMES); strcat(buffer, templn);
 #ifndef EMBED_JS

@@ -162,7 +162,7 @@ a.l_menu:hover{color:#006699;}
 	width:55%;
 }
 
-.gc{float:left;overflow:hidden;position:relative;text-align:center;width:240px;height:260px;margin:3px;border:1px dashed grey;}
+.gc{float:left;overflow:hidden;position:relative;text-align:center;width:240px;height:260px;margin:3px;border:1px dashed grey;zoom:0.9;}
 .ic{position:absolute;top:5px;right:5px;left:5px;bottom:40px;}
 .gi{height:200px;width:180px;position:absolute;bottom:0px;top:0px;left:20px;right:20px;margin:auto;
   -webkit-filter: drop-shadow(5px 5px 12px #101010); filter: drop-shadow(5px 5px 12px #101010);
@@ -180,6 +180,14 @@ a.l_menu:hover{color:#006699;}
 .gi:hover{animation-name:tilt;animation-duration:0.5s;}
 
 .gn{position:absolute;height:38px;width:220px;bottom:6px;right:10px;left:10px;text-align:center;}
+
+@keyframes msg {
+	0%{color:#ffffff}
+	50%{color:#101010}
+	100%{color:#ffffff}
+}
+#rxml,#rhtm,#wmsg{position:fixed;top:40%;left:30%;width:40%;height:90px;z-index:5;border:5px solid #ccc;border-radius:25px;padding:10px;color:#fff;text-align:center;background-image:-webkit-gradient(linear,0 0,0 100%,color-stop(0,#999),color-stop(0.02,#666),color-stop(1,#222));background-image:-moz-linear-gradient(top,#999,#666 2%,#222);animation-name:msg;animation-duration: 6s;animation-iteration-count:infinite;display:none;}
+
 -->
 </style>
 </head>
@@ -188,17 +196,27 @@ a.l_menu:hover{color:#006699;}
 <div class="top_line">&nbsp;</div>
 <div id="smv" class="smv">wMAN MOD</div>
 
+<font face="Helvetica">
+<div id="rxml"><H1>Refreshing XML ...</H1></div>
+<div id="rhtm"><H1>Loading Games ...</H1></div>
+<div id="wmsg"><H1>. . .</H1></div>
+
 <div id="top_action">
-	<a href="#" onclick="javascript:window.open('/refresh.ps3;/sman.ps3', '_self');" class="t_menu">Refresh</a>
+	<a href="#" onclick="javascript:document.getElementById('rxml').style.display='block';window.open('/refresh.ps3;/sman.ps3', '_self');" class="t_menu">Refresh</a>
 	<a href="#" onclick="javascript:window.open('/mount.ps3/unmount?/sman.ps3', '_self');" class="t_menu">Eject</a>
 	<a href="#" onclick="javascript:window.open('/restart.ps3', '_self');" class="t_menu">Restart</a>
 	<a href="#" onclick="javascript:window.open('/shutdown.ps3', '_self');" class="t_menu">Shutdown</a>
+
+	<span style="position:absolute;right:0px;top:15px;">
+	<a href="javascript:var s=prompt('Search:','');if(s){document.getElementById('rhtm').style.display='block';self.location='/sman.ps3?'+escape(s)}"><span id="ngames"></span> &nbsp; &#x1F50D;</a></font>
+	</span>
 </div>
 
 <div id="left_action">
-	<a href="#" onclick="javascript:window.open('/sman.ps3?', '_self');" class="b_games">Games</a>
+	<a href="#" onclick="javascript:document.getElementById('rhtm').style.display='block';window.open('/sman.ps3?', '_self');" class="b_games">Games</a>
 	<a href="#" onclick="javascript:window.open('/', '_self');" class="b_files">Files</a>
 	<a href="#" onclick="javascript:window.open('/setup.ps3', '_self');" class="b_setup">Setup</a>
 	<a href="#" onclick="javascript:window.open('/cpursx.ps3?/sman.ps3', '_self');" class="b_cpursx">CPU/RSX</a>
 </div>
+</font>
 <div id="content" class="propfont">
