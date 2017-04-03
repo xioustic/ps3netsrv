@@ -982,7 +982,7 @@ static void restore_settings(void)
 
 static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_http, u8 is_cpursx, bool mount_ps3)
 {
-	if(strstr(param, "/sman.ps3") && file_exists(HTML_BASE_PATH "/sman.htm"))
+	if((strstr(param, "/sman.ps3") || (webman_config->sman && islike(param, "/mount"))) && file_exists(HTML_BASE_PATH "/sman.htm"))
 	{
 		read_file(HTML_BASE_PATH "/sman.htm", pbuffer, _32KB_, 0);
 
@@ -2843,7 +2843,7 @@ parse_request:
 					//CellGcmConfig config; cellGcmGetConfiguration(&config);
 					//sprintf(templn, "localAddr: %x", (u32) config.localAddress); strcat(pbuffer, templn);
 				}
-				else if(strstr(param, "/sman.ps3")) ;
+				else if(strstr(param, "/sman.ps3")|| (webman_config->sman && islike(param, "/mount"))) ;
 				else if(!mount_ps3)
 				{
 					{

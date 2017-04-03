@@ -26,6 +26,12 @@ td+td{text-align:right;white-space:nowrap}
   -ms-filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=12, OffY=12, Color='#000000')"; filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=12, OffY=12, Color='#000')";
 position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}
 
+.gi,#mount img
+{
+  -webkit-filter: drop-shadow(5px 5px 12px #101010); filter: drop-shadow(5px 5px 12px #101010);
+  -ms-filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=12, OffY=12, Color='#101010')"; filter: "progid:DXImageTransform.Microsoft.Dropshadow(OffX=12, OffY=12, Color='#000')";
+}
+
 @keyframes tilt {
 	0% {rotation:normal;}
 	50% {
@@ -34,7 +40,7 @@ position:absolute;bottom:0px;top:0px;left:0px;right:0px;margin:auto;}
 		transform: rotate(3deg);}
 	100% {rotation:normal;}
 }
-.gi:active,.gi:hover{animation-name:tilt;animation-duration: 0.5s;}
+#mount img:hover,.gi:active,.gi:hover{animation-name:tilt;animation-duration: 0.5s;}
 
 
 .gn{position:absolute;height:38px;bottom:0px;right:7px;left:7px;text-align:center;}

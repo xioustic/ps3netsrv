@@ -610,6 +610,7 @@ static bool game_mount(char *buffer, char *templn, char *param, char *tempstr, b
 				else			language("STR_GAMETOM",  STR_GAMETOM,  "Game to mount");
 				close_language();
 #endif
+				strcat(buffer, "<div id=\"mount\">");
 				strcat(buffer, is_movie ? STR_MOVIETOM : STR_GAMETOM); strcat(buffer, ": "); add_breadcrumb_trail(buffer, source);
 
 				//if(strstr(param, "PSX")) {sprintf(tempstr, " <font size=2>[CD %i • %s]</font>", CD_SECTOR_SIZE_2352, (webman_config->ps1emu) ? "ps1_netemu.self" : "ps1_emu.self"); strcat(buffer, tempstr);}
