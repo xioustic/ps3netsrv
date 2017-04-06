@@ -1,6 +1,6 @@
 #define SC_FS_DISK_FREE		840
 
-#define ICON_STYLE			" style=\"position:fixed;top:118px;right:10px;max-height:176px;z-index:-1;display:none\" onerror=\"this.style.display='none';\""
+#define ICON_STYLE			"style=\"position:fixed;top:%ipx;right:%ipx;max-height:176px;z-index:-1;display:none\" onerror=\"this.style.display='none';\""
 
 u16 _LINELEN = LINELEN;
 u16 _MAX_PATH_LEN = MAX_PATH_LEN;
@@ -498,7 +498,7 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		char fsize[MAX_PATH_LEN], *swap = fsize;
 		u16 idx = 0, dirs = 0, flen; bool is_dir;
 		u32 tlen = 0, buf_len = 0;
-		char *sysmem_html = buffer + _6KB_;
+		char *sysmem_html = buffer + (webman_config->sman ? _12KB_ : _6KB_);
 
 		typedef struct
 		{
@@ -514,11 +514,11 @@ static bool folder_listing(char *buffer, u32 BUFFER_SIZE_HTML, char *templn, cha
 		u8 show_icon0 = jb_games || (islike(param, "/dev_hdd0/game") || islike(param, "/dev_hdd0/home/"));
 
 #ifndef LITE_EDITION
-		sprintf(templn, "<img id=\"icon\"%s>"
+		sprintf(templn, "<img id=\"icon\" " ICON_STYLE ">"
 						"<script>"
 						// show icon of item pointed with mouse
 						"function s(o,d){u=o.href;p=u.indexOf('.ps3');if(p>0)u=u.substring(p+4);if(d){p=u.indexOf('/PS3_');if(p<0)p=u.indexOf('/USRDIR');if(p>0)u=u.substring(0,p);u+='%s/ICON0.PNG';}icon.src=u;icon.style.display='block';}"
-						"</script>", ICON_STYLE, (jb_games ? "/PS3_GAME" : "")); strcat(buffer, templn);
+						"</script>", webman_config->sman ? 98 : 118, webman_config->sman ? 25 : 10, (jb_games ? "/PS3_GAME" : "")); strcat(buffer, templn);
 #endif
 
 		// breadcrumb trail //

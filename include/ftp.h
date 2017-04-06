@@ -777,7 +777,6 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 							if(sysmem || (!sysmem && sys_memory_allocate(BUFFER_SIZE_FTP, SYS_MEMORY_PAGE_SIZE_64K, &sysmem) == CELL_OK))
 							{
 								char *buffer2 = (char*)sysmem;
-								int read_e = 0, pos;
 #ifdef USE_NTFS
 								if(is_ntfs_path(filename))
 								{
@@ -792,6 +791,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 
 										ssend(conn_s_ftp, FTP_OK_150);
 
+										int read_e = 0;
 										while(working)
 										{
 											read_e = ps3ntfs_read(fd, (void *)buffer2, BUFFER_SIZE_FTP);
@@ -812,6 +812,7 @@ static void handleclient_ftp(u64 conn_s_ftp_p)
 #endif
 								if(cellFsOpen(filename, CELL_FS_O_RDONLY, &fd, NULL, 0) == CELL_FS_SUCCEEDED)
 								{
+									u64 read_e, pos;
 									cellFsLseek(fd, rest, CELL_FS_SEEK_SET, &pos);
 
 									//int optval = BUFFER_SIZE_FTP;

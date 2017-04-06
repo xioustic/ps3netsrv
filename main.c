@@ -982,12 +982,14 @@ static void restore_settings(void)
 
 static char *prepare_html(char *pbuffer, char *templn, char *param, u8 is_ps3_http, u8 is_cpursx, bool mount_ps3)
 {
-	if((strstr(param, "/sman.ps3") || (webman_config->sman && islike(param, "/mount"))) && file_exists(HTML_BASE_PATH "/sman.htm"))
+	if((webman_config->sman || strstr(param, "/sman.ps3")) && file_exists(HTML_BASE_PATH "/sman.htm"))
 	{
-		read_file(HTML_BASE_PATH "/sman.htm", pbuffer, _32KB_, 0);
+		read_file(HTML_BASE_PATH "/sman.htm", pbuffer, _12KB_, 0);
 
 		if(is_cpursx)
 			strcat(pbuffer, "<meta http-equiv=\"refresh\" content=\"6;URL=/cpursx.ps3?/sman.ps3\">");
+
+		if(param[1] != NULL && !strstr(param, ".ps3")) {strcat(pbuffer, "<base href=\""); urlenc(templn, param); strcat(templn, "/\">"); strcat(pbuffer, templn);}
 
 		return pbuffer;
 	}
@@ -2843,7 +2845,7 @@ parse_request:
 					//CellGcmConfig config; cellGcmGetConfiguration(&config);
 					//sprintf(templn, "localAddr: %x", (u32) config.localAddress); strcat(pbuffer, templn);
 				}
-				else if(strstr(param, "/sman.ps3")|| (webman_config->sman && islike(param, "/mount"))) ;
+				else if(webman_config->sman || strstr(param, "/sman.ps3")) ;
 				else if(!mount_ps3)
 				{
 					{

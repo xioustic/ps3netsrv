@@ -1024,7 +1024,7 @@ static bool game_listing(char *buffer, char *templn, char *param, char *tempstr,
 
 		u16 idx = 0;
 		u32 tlen = buf_len; buffer[tlen] = NULL;
-		char *sysmem_html = buffer + _8KB_;
+		char *sysmem_html = buffer + (webman_config->sman ? _12KB_ : _8KB_);
 
 		typedef struct
 		{
