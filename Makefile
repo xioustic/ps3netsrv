@@ -1,5 +1,5 @@
 OS =  linux
-BUILD_TYPE = release
+BUILD_TYPE = static
 
 OUTPUT := ps3netsrv
 OBJS=main.o compat.o File.o VIsoFile.o
