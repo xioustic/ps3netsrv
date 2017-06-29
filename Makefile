@@ -1,7 +1,7 @@
 OS =  linux
 BUILD_TYPE = release_static
 
-OUTPUT := ps3netsrv
+OUTPUT := ./bin/ps3netsrv64
 OBJS=main.o compat.o File.o VIsoFile.o
 CFLAGS=-Wall -I. -std=gnu99 -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
 LDFLAGS=-L. 
