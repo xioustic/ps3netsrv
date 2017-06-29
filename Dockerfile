@@ -1,6 +1,6 @@
 FROM debian:jessie
 
-ADD ./bin/ps3netsrv64 /
+ADD https://github.com/xioustic/ps3netsrv/raw/master/bin/ps3netsrv64 /
 
 RUN chmod +x ps3netsrv64 && mkdir /games
 
